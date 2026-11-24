@@ -6,6 +6,14 @@ import { type ReactNode, useId } from "react";
 import { AbsoluteFill, Easing, interpolate, spring } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  type BranchTreeElementId,
+  branchTreeTimeline,
+  buildTree,
+  EDGE,
+  treeShape,
+} from "./timeline";
 
 const { fontFamily: sans } = loadFont("normal", {
   weights: ["400", "500"],
@@ -52,6 +60,12 @@ export interface BranchTreeProps {
   grain?: boolean;
   theme?: "dark" | "light";
   speed?: number;
+  /**
+   * Moves, trims or stretches the root, each branch and the count, by the
+   * ids in `./timeline`.
+   * Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<BranchTreeElementId>;
 }
 
 const EASE_IO = Easing.bezier(0.65, 0, 0.35, 1);
@@ -80,67 +94,6 @@ const THEMES = {
     grain: 0.045,
   },
 } as const;
-
-const ROOT_IN = 4;
-const EDGE = 12;
-const LEAD = 2;
-const SIB = 2;
-const MAX_LEAVES = 96;
-
-interface TreeNode {
-  level: number;
-  parent: number;
-  sib: number;
-  sibs: number;
-  y: number;
-  path: number[];
-  children: number[];
-  arrive: number;
-  start: number;
-}
-
-function buildTree(depth: number, fan: number[], grow: number) {
-  const nodes: TreeNode[] = [
-    {
-      level: 0,
-      parent: -1,
-      sib: 0,
-      sibs: 1,
-      y: 0,
-      path: [],
-      children: [],
-      arrive: ROOT_IN,
-      start: ROOT_IN,
-    },
-  ];
-  let frontier = [0];
-  for (let l = 1; l <= depth; l++) {
-    const next: number[] = [];
-    const k = fan[l - 1];
-    for (const pi of frontier) {
-      const parent = nodes[pi];
-      for (let j = 0; j < k; j++) {
-        const start = parent.arrive + LEAD + Math.abs(j - (k - 1) / 2) * SIB;
-        const idx = nodes.length;
-        nodes.push({
-          level: l,
-          parent: pi,
-          sib: j,
-          sibs: k,
-          y: 0,
-          path: [...parent.path, j],
-          children: [],
-          arrive: start + grow,
-          start,
-        });
-        parent.children.push(idx);
-        next.push(idx);
-      }
-    }
-    frontier = next;
-  }
-  return { nodes, leaves: frontier };
-}
 
 /** The foreground at `scale`, around the frame's center; nothing extra at 1. */
 function ScaleLayer({
@@ -182,44 +135,46 @@ function Grain({ opacity }: { opacity: number }) {
   );
 }
 
-export function BranchTree({
-  depth = 3,
-  branching = [3, 4, 4],
-  title = "variants",
-  rootLabel = "1 component",
-  grow = EDGE,
-  fontWeight = 500,
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = sans,
-  scale = 1,
-  delay = 0,
-  grain = true,
-  theme = "dark",
-  speed = 1,
-}: BranchTreeProps) {
+export function BranchTree(props: BranchTreeProps) {
+  const {
+    depth = 3,
+    branching = [3, 4, 4],
+    title = "variants",
+    rootLabel = "1 component",
+    grow = EDGE,
+    fontWeight = 500,
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = sans,
+    scale = 1,
+    delay = 0,
+    grain = true,
+    theme = "dark",
+    speed = 1,
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width, height, fps } = useSceneConfig();
+  const { width, height, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    branchTreeTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const stageEl = tl.get("stage");
+  const pushEl = tl.get("push");
+  const rootEl = tl.get("root");
+  const rootLabelEl = tl.get("root-label");
+  const countEl = tl.get("count");
+  const titleEl = tl.get("title");
   const u = Math.min(width / 1280, height / 720);
   const p = THEMES[theme];
   const fg = ink ?? p.fg;
   const bgFill = background ?? p.bg;
 
-  const D = Math.min(5, Math.max(1, Math.round(depth)));
-  const raw = Array.isArray(branching) ? branching : [branching];
-  const fan: number[] = [];
-  let leafCount = 1;
-  for (let l = 0; l < D; l++) {
-    const want = Math.min(
-      6,
-      Math.max(1, Math.round(raw[Math.min(l, raw.length - 1)] ?? 2)),
-    );
-    const k = Math.max(1, Math.min(want, Math.floor(MAX_LEAVES / leafCount)));
-    fan.push(k);
-    leafCount *= k;
-  }
+  const { D, fan, leafCount } = treeShape(depth, branching);
 
   const { nodes, leaves } = buildTree(D, fan, grow);
 
@@ -255,45 +210,54 @@ export function BranchTree({
     }
   }
 
-  const lastArrive = Math.max(...leaves.map((i) => nodes[i].arrive));
-  const HIT = lastArrive + 6;
+  const HIT = countEl.start;
 
   const land = spring({
     frame: t - HIT,
     fps,
     config: { damping: 18, stiffness: 150, mass: 0.8 },
   });
-  const landO = interpolate(t, [HIT, HIT + 8], [0, 1], CLAMP);
-  const blur = interpolate(t, [HIT, HIT + 14], [1, 0], {
+  const landO = interpolate(
+    t,
+    [HIT, HIT + countEl.beat("fade")],
+    [0, 1],
+    CLAMP,
+  );
+  const blur = interpolate(t, [HIT, HIT + countEl.beat("blur")], [1, 0], {
     ...CLAMP,
     easing: EASE_OUT,
   });
-  const count = interpolate(t, [HIT, HIT + 24], [0.6, 1], {
+  const count = interpolate(t, [HIT, countEl.end], [0.6, 1], {
     ...CLAMP,
     easing: Easing.bezier(0.22, 1, 0.36, 1),
   });
-  const cap = interpolate(t, [HIT + 10, HIT + 28], [0, 1], {
+  const cap = interpolate(t, [titleEl.start, titleEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
-  const settle = interpolate(t, [HIT - 4, HIT + 18], [0, 1], {
-    ...CLAMP,
-    easing: EASE_IO,
-  });
+  const settle = interpolate(
+    t,
+    [HIT + countEl.beat("settleFrom"), HIT + countEl.beat("settleTo")],
+    [0, 1],
+    {
+      ...CLAMP,
+      easing: EASE_IO,
+    },
+  );
   const rootIn = spring({
-    frame: t - ROOT_IN,
+    frame: t - rootEl.start,
     fps,
     config: { damping: 16, stiffness: 160, mass: 0.7 },
   });
-  const rootLab = interpolate(t, [ROOT_IN + 2, ROOT_IN + 18], [0, 1], {
+  const rootLab = interpolate(t, [rootLabelEl.start, rootLabelEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
-  const push = interpolate(t, [0, 140], [0.965, 1.005], {
+  const push = interpolate(t, [pushEl.start, pushEl.end], [0.965, 1.005], {
     ...CLAMP,
     easing: EASE_IO,
   });
-  const stage = interpolate(t, [0, 8], [0.5, 1], CLAMP);
+  const stage = interpolate(t, [stageEl.start, stageEl.end], [0.5, 1], CLAMP);
 
   const stroke = Math.max(1, 1.25 * u);
   const leafR = Math.max(2.4, 3.4 * u);
@@ -303,7 +267,12 @@ export function BranchTree({
   const top = cy - treeH / 2;
   const tint = (y: number) => lerpHex(aur, (y - top) / treeH);
   const gid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
-  const drift = interpolate(t, [0, 150], [0, 1], { ...CLAMP, easing: EASE_IO });
+  const drift = interpolate(
+    t,
+    [pushEl.start, pushEl.start + pushEl.beat("drift")],
+    [0, 1],
+    { ...CLAMP, easing: EASE_IO },
+  );
 
   return (
     <AbsoluteFill style={{ background: bgFill, overflow: "hidden" }}>
@@ -311,7 +280,7 @@ export function BranchTree({
         <AbsoluteFill
           style={{
             // The push covers the labels inside it, which ride it all along.
-            transform: `scale(${push})${glide(t > 0 && t < 140)}`,
+            transform: `scale(${push})${glide(t > pushEl.start && t < pushEl.end)}`,
             transformOrigin: "45% 50%",
             opacity: stage,
           }}
@@ -337,13 +306,15 @@ export function BranchTree({
               </linearGradient>
             </defs>
             {nodes.map((n, i) => {
-              if (n.parent < 0 || t < n.start) return null;
+              if (n.parent < 0) return null;
+              const e = tl.get(`branch:${i}`);
+              if (t < e.start) return null;
               const par = nodes[n.parent];
               const px = xOf(par.level);
               const cx = xOf(n.level);
               const mx = px + (cx - px) * 0.5;
               const d = `M${px.toFixed(2)} ${par.y.toFixed(2)} C${mx.toFixed(2)} ${par.y.toFixed(2)} ${mx.toFixed(2)} ${n.y.toFixed(2)} ${cx.toFixed(2)} ${n.y.toFixed(2)}`;
-              const k = interpolate(t, [n.start, n.arrive], [0, 1], {
+              const k = interpolate(t, [e.start, e.end], [0, 1], {
                 ...CLAMP,
                 easing: EASE_GROW,
               });
@@ -368,21 +339,18 @@ export function BranchTree({
             })}
 
             {nodes.map((n, i) => {
-              if (n.level === 0 || t < n.arrive - 2) return null;
+              if (n.level === 0) return null;
+              const arrive = tl.get(`branch:${i}`).end;
+              if (t < arrive - 2) return null;
               const isLeaf = n.level === D;
               const s = spring({
-                frame: t - n.arrive + 1,
+                frame: t - arrive + 1,
                 fps,
                 config: isLeaf
                   ? { damping: 11, stiffness: 220, mass: 0.6 }
                   : { damping: 18, stiffness: 200, mass: 0.6 },
               });
-              const o = interpolate(
-                t,
-                [n.arrive - 2, n.arrive + 3],
-                [0, 1],
-                CLAMP,
-              );
+              const o = interpolate(t, [arrive - 2, arrive + 3], [0, 1], CLAMP);
               return (
                 <circle
                   key={`n${i}`}
@@ -402,14 +370,24 @@ export function BranchTree({
               fill="none"
               stroke={accent}
               strokeWidth={stroke * 1.4}
-              opacity={interpolate(t, [ROOT_IN, ROOT_IN + 6], [0, 1], CLAMP)}
+              opacity={interpolate(
+                t,
+                [rootEl.start, rootEl.start + rootEl.beat("ring")],
+                [0, 1],
+                CLAMP,
+              )}
             />
             <circle
               cx={rootX}
               cy={nodes[0].y}
               r={7 * u * (0.4 + 0.6 * rootIn)}
               fill={fg}
-              opacity={interpolate(t, [ROOT_IN, ROOT_IN + 5], [0, 1], CLAMP)}
+              opacity={interpolate(
+                t,
+                [rootEl.start, rootEl.start + rootEl.beat("dot")],
+                [0, 1],
+                CLAMP,
+              )}
             />
           </svg>
 

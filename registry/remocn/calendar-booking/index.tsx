@@ -9,6 +9,15 @@ import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
+import {
+  type ResolvedElement,
+  type Timing,
+  useTimeline,
+} from "@/lib/remocn/timeline";
+import {
+  type CalendarBookingElementId,
+  calendarBookingTimeline,
+} from "./timeline";
 
 const sans = loadSans("normal", { weights: ["400"], subsets: ["latin"] });
 const serif = loadSerif("normal", { weights: ["400"], subsets: ["latin"] });
@@ -67,6 +76,12 @@ export interface CalendarBookingProps {
   theme?: "light" | "dark";
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
+  /**
+   * Moves, trims or stretches the card, the push-in, the cursor's clicks
+   * and the success view, by the ids in `./timeline`. Frames on the scene
+   * timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<CalendarBookingElementId>;
 }
 
 const DEFAULT_HOST: BookingHost = {
@@ -133,14 +148,6 @@ const tween = (
   len: number,
   easing: (t: number) => number,
 ) => interpolate(f, [from, from + len], [0, 1], { ...CL, easing });
-
-const BEAT = {
-  card: 0,
-  cursor: 8,
-  day: 34,
-  slot: 66,
-  confirm: 88,
-};
 
 const PALETTES = {
   light: {
@@ -361,29 +368,44 @@ function geometry(tall: boolean, gridRows: number) {
   };
 }
 
-export function CalendarBooking({
-  host = DEFAULT_HOST,
-  event: eventProp,
-  slots = DEFAULT_SLOTS,
-  pick,
-  day = 18,
-  confirmLabel = "Confirm",
-  sentLabel = "Invite sent to your inbox",
-  bookedLabel = "You’re booked with",
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = sans.fontFamily,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "light",
-  ground,
-  groundParams,
-}: CalendarBookingProps) {
+export function CalendarBooking(props: CalendarBookingProps) {
+  const {
+    host = DEFAULT_HOST,
+    event: eventProp,
+    slots = DEFAULT_SLOTS,
+    pick,
+    day = 18,
+    confirmLabel = "Confirm",
+    sentLabel = "Invite sent to your inbox",
+    bookedLabel = "You’re booked with",
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = sans.fontFamily,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "light",
+    ground,
+    groundParams,
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width, height, fps } = useSceneConfig();
+  const { width, height, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    calendarBookingTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const cardEl = tl.get("card");
+  const cameraEl = tl.get("camera");
+  const cursorEl = tl.get("cursor");
+  const dayEl = tl.get("day");
+  const slotEl = tl.get("slot");
+  const confirmEl = tl.get("confirm");
+  const successEl = tl.get("success");
   const tall = height > width;
   const SW = tall ? 600 : 1280;
   const SH = tall ? (600 * height) / width : 720;
@@ -412,15 +434,23 @@ export function CalendarBooking({
   const pickIdx = wanted >= 0 ? wanted : Math.min(3, shown.length - 1);
   const pickLabel = shown[pickIdx] ?? "";
 
-  const cardOp = tween(frame, BEAT.card, 10, EASE.enter);
-  const dayFill = sp(BEAT.day, SPR.chip);
-  const widen = sp(BEAT.day + 2, SPR.heavy);
-  const split = sp(BEAT.slot + 1, SPR.card);
-  const morph = sp(BEAT.confirm + 2, SPR.morph);
+  const widenAt = dayEl.start + dayEl.beat("widenAt");
+  const morphAt = confirmEl.start + confirmEl.beat("morphAt");
+  const cardOp = tween(frame, cardEl.start, cardEl.length, EASE.enter);
+  const dayFill = sp(dayEl.start, SPR.chip);
+  const widen = sp(widenAt, SPR.heavy);
+  const split = sp(slotEl.start + slotEl.beat("splitAt"), SPR.card);
+  const morph = sp(morphAt, SPR.morph);
   const camAt = (f: number) =>
     1 +
-    0.03 * tween(f, 6, 80, EASE.camera) +
-    0.015 * tween(f, BEAT.confirm + 10, 60, EASE.camera);
+    0.03 * tween(f, cameraEl.start, cameraEl.length, EASE.camera) +
+    0.015 *
+      tween(
+        f,
+        confirmEl.start + confirmEl.beat("pushAt"),
+        confirmEl.beat("push"),
+        EASE.camera,
+      );
   const cam = camAt(frame);
   // The camera carries the whole scene, so its tilt covers everything under
   // it; the movers below tilt themselves only while it holds still.
@@ -436,15 +466,15 @@ export function CalendarBooking({
   const restX = (SW - G.done.w) / 2;
   const restY = (SH - G.done.h) / 2;
   const cardShiftAt = (f: number) => {
-    const wi = spAt(f, BEAT.day + 2, SPR.heavy);
-    const mo = spAt(f, BEAT.confirm + 2, SPR.morph);
+    const wi = spAt(f, widenAt, SPR.heavy);
+    const mo = spAt(f, morphAt, SPR.morph);
     const bw = G.narrow.w + (G.wide.w - G.narrow.w) * wi;
     const bh = G.narrow.h + (G.wide.h - G.narrow.h) * wi;
     const cw = bw + (G.done.w - bw) * mo;
     const ch = bh + (G.done.h - bh) * mo;
     return {
       x: (G.done.w - cw) / 2,
-      y: (G.done.h - ch) / 2 + (1 - spAt(f, BEAT.card, SPR.heavy)) * 36,
+      y: (G.done.h - ch) / 2 + (1 - spAt(f, cardEl.start, SPR.heavy)) * 36,
     };
   };
   const cardShift = cardShiftAt(frame);
@@ -452,17 +482,14 @@ export function CalendarBooking({
     !camMoving &&
     (stirs((f) => cardShiftAt(f).x, 5e-4) ||
       stirs((f) => cardShiftAt(f).y, 5e-4));
-  const confirmPressing =
-    !camMoving &&
-    !cardMoving &&
-    stirs(
-      (f) =>
-        clamp01(
-          spAt(f, BEAT.confirm - 2, SPR.chip) -
-            spAt(f, BEAT.confirm + 3, SPR.chip),
-        ),
-      1e-5,
+  /** How far a click's element has the button pressed, at frame `f`. */
+  const pressAt = (f: number, e: ResolvedElement<CalendarBookingElementId>) =>
+    clamp01(
+      spAt(f, e.start + e.beat("pressIn"), SPR.chip) -
+        spAt(f, e.start + e.beat("pressOut"), SPR.chip),
     );
+  const confirmPressing =
+    !camMoving && !cardMoving && stirs((f) => pressAt(f, confirmEl), 1e-5);
 
   const cellPos = (d: number) => {
     const idx = first + d - 1;
@@ -494,11 +521,21 @@ export function CalendarBooking({
   };
   const start = tall ? { x: 660, y: 1120 } : { x: 1360, y: 800 };
   const legs = [
-    { at: BEAT.cursor, from: start, to: dayPt, arc: 1 },
-    { at: BEAT.slot - 20, from: dayPt, to: slotPt, arc: -1 },
-    { at: BEAT.confirm - 16, from: slotPt, to: confirmPt, arc: 1 },
+    { at: cursorEl.start, from: start, to: dayPt, arc: 1 },
     {
-      at: BEAT.confirm + 10,
+      at: slotEl.start + slotEl.beat("legAt"),
+      from: dayPt,
+      to: slotPt,
+      arc: -1,
+    },
+    {
+      at: confirmEl.start + confirmEl.beat("legAt"),
+      from: slotPt,
+      to: confirmPt,
+      arc: 1,
+    },
+    {
+      at: confirmEl.start + confirmEl.beat("exitAt"),
       from: confirmPt,
       to: { x: confirmPt.x + 60, y: confirmPt.y + 110 },
       arc: -1,
@@ -515,20 +552,33 @@ export function CalendarBooking({
     curX += dx * p + (-dy / len) * bend * leg.arc;
     curY += dy * p + (dx / len) * bend * leg.arc;
   }
-  const pressOf = (at: number) =>
-    clamp01(sp(at - 2, SPR.chip) - sp(at + 3, SPR.chip));
-  const press = Math.max(
-    pressOf(BEAT.day),
-    pressOf(BEAT.slot),
-    pressOf(BEAT.confirm),
-  );
+  const pressOf = (e: ResolvedElement<CalendarBookingElementId>) =>
+    pressAt(frame, e);
+  const press = Math.max(pressOf(dayEl), pressOf(slotEl), pressOf(confirmEl));
   const curOp =
-    tween(frame, BEAT.cursor, 5, EASE.enter) *
-    (1 - tween(frame, BEAT.confirm + 22, 10, EASE.exit));
+    tween(frame, cursorEl.start, cursorEl.beat("fadeIn"), EASE.enter) *
+    (1 -
+      tween(
+        frame,
+        confirmEl.start + confirmEl.beat("fadeAt"),
+        confirmEl.beat("fade"),
+        EASE.exit,
+      ));
 
-  const bookOp = 1 - tween(frame, BEAT.confirm + 2, 7, EASE.exit);
-  const doneOp = tween(frame, BEAT.confirm + 7, 9, EASE.enter);
-  const slotHover = tween(frame, BEAT.slot - 6, 4, EASE.enter);
+  const bookOp =
+    1 - tween(frame, morphAt, confirmEl.beat("bookOut"), EASE.exit);
+  const doneOp = tween(
+    frame,
+    confirmEl.start + confirmEl.beat("doneAt"),
+    confirmEl.beat("done"),
+    EASE.enter,
+  );
+  const slotHover = tween(
+    frame,
+    slotEl.start + slotEl.beat("hoverAt"),
+    slotEl.beat("hover"),
+    EASE.enter,
+  );
   const wd = (first + day - 1) % 7;
   const end = shown[pickIdx + 1] ?? "";
 
@@ -648,8 +698,11 @@ export function CalendarBooking({
                   const pos = cellPos(d);
                   const appear = tween(
                     frame,
-                    3 + (idx % 7) * 0.7 + Math.floor(idx / 7) * 1.6,
-                    10,
+                    cardEl.start +
+                      cardEl.beat("gridAt") +
+                      (idx % 7) * cardEl.beat("col") +
+                      Math.floor(idx / 7) * cardEl.beat("row"),
+                    cardEl.beat("cell"),
                     EASE.soft,
                   );
                   return (
@@ -722,14 +775,24 @@ export function CalendarBooking({
                     alignItems: "center",
                     fontSize: 19,
                     color: c.text,
-                    opacity: tween(frame, BEAT.day + 8, 10, EASE.enter),
+                    opacity: tween(
+                      frame,
+                      dayEl.start + dayEl.beat("labelAt"),
+                      dayEl.beat("label"),
+                      EASE.enter,
+                    ),
                   }}
                 >
                   {WEEKDAY_LONG[wd].slice(0, 3)}&nbsp;
                   <span style={{ color: c.muted }}>{day}</span>
                 </div>
                 {shown.map((s, i) => {
-                  const inn = sp(BEAT.day + 10 + i * 2, SPR.card);
+                  const inn = sp(
+                    dayEl.start +
+                      dayEl.beat("slotsAt") +
+                      i * dayEl.beat("slotStagger"),
+                    SPR.card,
+                  );
                   const picked = i === pickIdx;
                   const sv = picked ? split : 0;
                   const pos = slotPos(i);
@@ -777,7 +840,7 @@ export function CalendarBooking({
                             color: "#FFFFFF",
                             opacity: clamp01(sv * 2),
                             boxShadow: "inset 0 1px 0 rgba(255,255,255,0.16)",
-                            transform: `scale(${1 - 0.04 * pressOf(BEAT.confirm)})${glide(confirmPressing)}`,
+                            transform: `scale(${1 - 0.04 * pressOf(confirmEl)})${glide(confirmPressing)}`,
                           }}
                         >
                           {confirmLabel}
@@ -789,7 +852,8 @@ export function CalendarBooking({
               </div>
               {morph > 0.01 ? (
                 <SuccessView
-                  frame={frame - BEAT.confirm - 6}
+                  frame={frame - successEl.start}
+                  el={successEl}
                   fps={fps}
                   c={c}
                   accent={accent}
@@ -931,6 +995,7 @@ function HostPanel({
 
 function SuccessView({
   frame,
+  el,
   fps,
   c,
   accent,
@@ -946,7 +1011,10 @@ function SuccessView({
   when,
   time,
 }: {
+  /** Frames since the success view began. */
   frame: number;
+  /** The `success` element; its beats time the view. */
+  el: ResolvedElement<CalendarBookingElementId>;
   fps: number;
   c: Palette;
   accent: string;
@@ -963,10 +1031,19 @@ function SuccessView({
   when: string;
   time: string;
 }) {
-  const disc = spring({ frame: frame - 2, fps, config: SPR.chip });
-  const tick = tween(frame, 6, 10, EASE.enter);
+  const disc = spring({
+    frame: frame - el.beat("discAt"),
+    fps,
+    config: SPR.chip,
+  });
+  const tick = tween(frame, el.beat("tickAt"), el.beat("tick"), EASE.enter);
   const item = (i: number): React.CSSProperties => {
-    const p = tween(frame, 4 + i * 3, 12, EASE.soft);
+    const p = tween(
+      frame,
+      el.beat("itemsAt") + i * el.beat("item"),
+      el.beat("itemRise"),
+      EASE.soft,
+    );
     return { opacity: p, transform: `translateY(${(1 - p) * 10}px)` };
   };
   const rows: [string, React.ReactNode][] = [

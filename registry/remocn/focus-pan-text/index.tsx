@@ -14,6 +14,17 @@ import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround, gshParams } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  BEAT,
+  DEFAULT_LINES,
+  FIRST_HOLD,
+  type FocusPanTextElementId,
+  focusPanTextTimeline,
+  holdOf,
+  linesOf,
+  wordsOf,
+} from "./timeline";
 
 const inter = loadFont("normal", {
   weights: ["300", "400"],
@@ -43,6 +54,12 @@ export interface FocusPanTextProps {
   /** Frames to hold the first frame before anything moves. */
   delay?: number;
   speed?: number;
+  /**
+   * Moves, trims or stretches the push, the focus moves, the payoff's words,
+   * the accent and the meta row, by the ids in `./timeline`. Frames on the
+   * scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<FocusPanTextElementId>;
 }
 
 const LIGHT_GROUND: Partial<GradientParams> = {
@@ -78,18 +95,6 @@ const THEMES = {
   },
 };
 
-const BEAT = {
-  decay: 0.8,
-  minHold: 18,
-  move: 14,
-  payoffMove: 24,
-  wordIn: 12,
-  wordStagger: 3,
-  accent: 20,
-  meta: 24,
-  hold: 48,
-};
-
 const TRACK = -0.022;
 const FONT_PX = 200;
 const MOVE = Easing.bezier(0.65, 0, 0.35, 1);
@@ -101,19 +106,9 @@ const CLAMP = {
   extrapolateRight: "clamp",
 } as const;
 
-const DEFAULT_LINES = [
-  "The security scan is clean.",
-  "All 48 checks passed.",
-  "Your domain is live.",
-  "You're ready to launch.",
-];
-
-const holdOf = (i: number, first: number) =>
-  Math.max(BEAT.minHold, Math.round(first * BEAT.decay ** i));
-
 export const focusPanTextLength = (
   lines: string[] = DEFAULT_LINES,
-  firstHold = 30,
+  firstHold = FIRST_HOLD,
 ) => {
   let t = 0;
   for (let i = 0; i < lines.length - 1; i++) t += holdOf(i, firstHold);
@@ -220,26 +215,32 @@ function ScaleLayer({
   );
 }
 
-export function FocusPanText({
-  lines = DEFAULT_LINES,
-  accentWord,
-  meta = "Just now",
-  accent,
-  ink,
-  theme = "dark",
-  ground,
-  groundParams,
-  firstHold = 30,
-  stagger = BEAT.wordStagger,
-  fontWeight = 400,
-  background,
-  fontFamily = inter.fontFamily,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-}: FocusPanTextProps) {
+export function FocusPanText(props: FocusPanTextProps) {
+  const {
+    lines = DEFAULT_LINES,
+    accentWord,
+    meta = "Just now",
+    accent,
+    ink,
+    theme = "dark",
+    ground,
+    groundParams,
+    fontWeight = 400,
+    background,
+    fontFamily = inter.fontFamily,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    timing,
+  } = props;
   const frame = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H, fps } = useSceneConfig();
+  const { width: W, height: H, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    focusPanTextTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const c = THEMES[theme];
   const inkC = ink ?? c.ink;
   const hi = accent ?? c.accent;
@@ -250,7 +251,7 @@ export function FocusPanText({
   const u = Math.min(W, H) / 720;
   const m = useMeasure(fontFamily, fontWeight);
 
-  const safeLines = lines.length > 0 ? lines : DEFAULT_LINES;
+  const safeLines = linesOf(lines);
   const last = safeLines.length - 1;
   const widest = m ? Math.max(...safeLines.map((l) => m(l))) : 10;
   const F = portrait ? W * 0.1 : Math.min(H * 0.16, (W * 1.12) / widest);
@@ -289,18 +290,17 @@ export function FocusPanText({
 
   const moves = useMemo(() => {
     const out: { at: number; len: number; line: number }[] = [];
-    let t = 0;
     for (let i = 1; i <= last; i++) {
-      t += holdOf(i - 1, firstHold);
-      out.push({
-        at: t,
-        len: i === last ? BEAT.payoffMove : BEAT.move,
-        line: i,
-      });
+      const e = tl.get(i === last ? "payoff" : `move:${i}`);
+      out.push({ at: e.start, len: e.length, line: i });
     }
     return out;
-  }, [last, firstHold]);
-  const payoffAt = moves.length ? moves[moves.length - 1].at : 0;
+  }, [last, tl]);
+  const payoff = tl.get("payoff");
+  const payoffAt = payoff.start;
+  const pushEl = tl.get("push");
+  const accentEl = tl.get("accent");
+  const metaEl = tl.get("meta");
 
   if (!m || rows.length === 0) {
     return (
@@ -338,20 +338,23 @@ export function FocusPanText({
     return f;
   };
   const f = focusAt(frame);
-  const fRest = focusAt(payoffAt + BEAT.payoffMove + BEAT.meta + BEAT.hold);
+  const fRest = focusAt(pushEl.end);
   const vel = Math.abs(f - focusAt(frame - 1));
   const motionBlur = Math.min(4 * u, vel * 9 * u);
 
-  const settle = interpolate(frame, [payoffAt, payoffAt + 40], [0, 1], {
-    ...CLAMP,
-    easing: MOVE,
-  });
-  const push = interpolate(
+  const settle = interpolate(
     frame,
-    [0, payoffAt + BEAT.payoffMove + BEAT.meta + BEAT.hold],
+    [payoffAt, payoffAt + payoff.beat("settle")],
     [0, 1],
-    { ...CLAMP, easing: PUSH },
+    {
+      ...CLAMP,
+      easing: MOVE,
+    },
   );
+  const push = interpolate(frame, [pushEl.start, pushEl.end], [0, 1], {
+    ...CLAMP,
+    easing: PUSH,
+  });
   const rx = 14 - 6 * settle;
   const ry = 16 - 7 * settle;
   const rz = -2.4 + 1.2 * settle;
@@ -368,7 +371,7 @@ export function FocusPanText({
   const hinge = W * (portrait ? 0.1 : 0.085);
   const zoom = 1 + 0.045 * push;
 
-  const payoffWords = safeLines[last].split(/\s+/).filter(Boolean);
+  const payoffWords = wordsOf(safeLines[last]);
   const accentIdx = (() => {
     if (accentWord) {
       const i = payoffWords.findIndex((w) =>
@@ -378,19 +381,18 @@ export function FocusPanText({
     }
     return payoffWords.length - 1;
   })();
-  const colorHit = interpolate(
-    frame,
-    [payoffAt + BEAT.accent, payoffAt + BEAT.accent + 10],
-    [0, 1],
-    { ...CLAMP, easing: COLOR },
-  );
+  const colorHit = interpolate(frame, [accentEl.start, accentEl.end], [0, 1], {
+    ...CLAMP,
+    easing: COLOR,
+  });
+  // Counted from the payoff, then the offset, as the springs always were.
   const accentPunch = spring({
-    frame: frame - payoffAt - BEAT.accent,
+    frame: frame - payoffAt - (accentEl.start - payoffAt),
     fps,
     config: { mass: 0.5, damping: 12, stiffness: 200 },
   });
   const metaIn = spring({
-    frame: frame - payoffAt - BEAT.meta,
+    frame: frame - payoffAt - (metaEl.start - payoffAt),
     fps,
     config: { mass: 0.8, damping: 18, stiffness: 160 },
   });
@@ -450,9 +452,12 @@ export function FocusPanText({
                       </span>
                     );
                   }
-                  const start = payoffAt + gi * stagger;
+                  const word = tl.get(`word:${gi}`);
                   const p = TYPE_IN(
-                    Math.min(1, Math.max(0, (frame - start) / BEAT.wordIn)),
+                    Math.min(
+                      1,
+                      Math.max(0, (frame - word.start) / word.length),
+                    ),
                   );
                   const isAccent = gi === accentIdx;
                   const punch = isAccent

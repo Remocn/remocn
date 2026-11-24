@@ -1,13 +1,15 @@
 "use client";
 
 import type React from "react";
-import { useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import {
   DEFAULT_STEP,
   hashRange,
   paperJitter,
   steppedRamp,
 } from "@/lib/remocn/stop-motion";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import { type PaperStickerElementId, paperStickerTimeline } from "./timeline";
 
 export interface PaperStickerProps {
   children: React.ReactNode;
@@ -18,20 +20,29 @@ export interface PaperStickerProps {
   borderColor?: string;
   maxTilt?: number;
   step?: number;
+  /**
+   * Moves, trims or stretches the slap, by the ids in `./timeline`.
+   * Frames on the scene timeline.
+   */
+  timing?: Timing<PaperStickerElementId>;
 }
 
-export function PaperSticker({
-  children,
-  at = 0,
-  seed = "sticker",
-  padding = "10px 16px",
-  background = "#fbfaf6",
-  borderColor = "rgba(38,36,44,0.55)",
-  maxTilt = 2.6,
-  step = DEFAULT_STEP,
-}: PaperStickerProps) {
+export function PaperSticker(props: PaperStickerProps) {
+  const {
+    children,
+    seed = "sticker",
+    padding = "10px 16px",
+    background = "#fbfaf6",
+    borderColor = "rgba(38,36,44,0.55)",
+    maxTilt = 2.6,
+    step = DEFAULT_STEP,
+    timing,
+  } = props;
   const frame = useSceneFrame();
-  const progress = steppedRamp(frame, at, at + 2 * step, { step });
+  const { durationInFrames } = useSceneConfig();
+  const tl = useTimeline(paperStickerTimeline, props, durationInFrames, timing);
+  const slap = tl.get("slap");
+  const progress = steppedRamp(frame, slap.start, slap.end, { step });
   if (progress === 0) return null;
 
   const tilt = hashRange(`${seed}:rot`, -maxTilt, maxTilt);

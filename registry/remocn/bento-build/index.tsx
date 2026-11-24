@@ -10,6 +10,16 @@ import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  type BentoBuildElementId,
+  type BentoVisual,
+  bentoBuildTimeline,
+  DEFAULT_HIGHLIGHTS,
+  DEFAULT_TILES,
+} from "./timeline";
+
+export type { BentoVisual };
 
 const { fontFamily: geist } = loadFont("normal", {
   weights: ["300", "400"],
@@ -20,13 +30,6 @@ const { fontFamily: monoFamily } = loadMono("normal", {
   subsets: ["latin"],
 });
 
-export type BentoVisual =
-  | "chart"
-  | "toggle"
-  | "code"
-  | "chips"
-  | "avatars"
-  | "none";
 export type BentoIconName =
   | "sparkles"
   | "bolt"
@@ -45,6 +48,9 @@ export interface BentoTile {
   span: [number, number];
   visual?: BentoVisual;
 }
+
+/** The default tiles from `./timeline`, typed for icons. */
+const defaultTiles: BentoTile[] = DEFAULT_TILES;
 
 export interface BentoBuildProps {
   tiles?: BentoTile[];
@@ -74,51 +80,14 @@ export interface BentoBuildProps {
   speed?: number;
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
+  /**
+   * Moves, trims or stretches the heading, single tiles and single spotlight
+   * holds, by the ids in `./timeline`. Frames on the scene timeline, after
+   * `delay` and `speed`.
+   */
+  timing?: Timing<BentoBuildElementId>;
 }
 
-const DEFAULT_TILES: BentoTile[] = [
-  {
-    title: "Renders you can measure.",
-    description: "Every export is tracked, so you know which beat lands.",
-    span: [2, 2],
-    visual: "chart",
-  },
-  {
-    title: "Motion presets.",
-    description: "Springs tuned for 30fps.",
-    span: [2, 1],
-    visual: "toggle",
-  },
-  {
-    title: "Own your code.",
-    description: "It lands in your repo.",
-    span: [1, 1],
-    visual: "code",
-  },
-  {
-    title: "Brand tokens.",
-    description: "One accent, whole video.",
-    span: [1, 1],
-    visual: "chips",
-  },
-  {
-    title: "124 components.",
-    description: "Transitions, text, captions and full scenes.",
-    span: [2, 1],
-    visual: "chips",
-  },
-  {
-    title: "Built for two.",
-    description: "Review cuts together, ship on time.",
-    span: [2, 1],
-    visual: "avatars",
-  },
-];
-
-const BUILD_STAGGER = 3;
-const HIGHLIGHT_START = 46;
-
-const HIGHLIGHT_LEN = 30;
 const ENTER = Easing.bezier(0.32, 0.72, 0, 1);
 const LIGHT = Easing.bezier(0.22, 1, 0.36, 1);
 const MOVE = Easing.bezier(0.65, 0, 0.35, 1);
@@ -685,29 +654,37 @@ function ScaleLayer({
   );
 }
 
-export function BentoBuild({
-  tiles = DEFAULT_TILES,
-  highlightOrder = [0, 1, 4],
-  eyebrow = "Features",
-  heading = "Everything a launch video needs.",
-  columns = 4,
-  stagger = BUILD_STAGGER,
-  hold = HIGHLIGHT_LEN,
-  radius = 18,
-  theme = "dark",
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = geist,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  ground,
-  groundParams,
-}: BentoBuildProps) {
+export function BentoBuild(props: BentoBuildProps) {
+  const {
+    tiles = defaultTiles,
+    highlightOrder = DEFAULT_HIGHLIGHTS,
+    eyebrow = "Features",
+    heading = "Everything a launch video needs.",
+    columns = 4,
+    radius = 18,
+    theme = "dark",
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = geist,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    ground,
+    groundParams,
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width, height, fps } = useSceneConfig();
+  const { width, height, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    bentoBuildTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const headEl = tl.get("head");
+  const cameraEl = tl.get("camera");
   const tall = height > width;
   const u = tall ? width / 760 : Math.min(width / 1280, height / 720);
   const themePal = palette(theme);
@@ -725,15 +702,20 @@ export function BentoBuild({
   const cellW = (gridW - gap * (cols - 1)) / cols;
   const cellH = (gridH - gap * (rowCount - 1)) / Math.max(1, rowCount);
 
-  const buildEnd = stagger * tiles.length + 26;
   const focusOf = (i: number, fr = frame) => {
     let v = 0;
     highlightOrder.forEach((idx, k) => {
       if (idx !== i) return;
-      const s = HIGHLIGHT_START + k * hold;
+      const spot = tl.get(`spot:${k}`);
+      const ease = spot.beat("ease");
       v += interpolate(
         fr,
-        [s - 5, s + 5, s + hold - 5, s + hold + 5],
+        [
+          spot.start - ease,
+          spot.start + ease,
+          spot.end - ease,
+          spot.end + ease,
+        ],
         [0, 1, 1, 0],
         { ...CL, easing: MOVE },
       );
@@ -748,7 +730,7 @@ export function BentoBuild({
 
   const camAt = (fr: number) => {
     const fs = tiles.map((_, i) => focusOf(i, fr));
-    const camIn = interpolate(fr, [0, buildEnd + 6], [0.97, 1], {
+    const camIn = interpolate(fr, [cameraEl.start, cameraEl.end], [0.97, 1], {
       extrapolateRight: "clamp",
       easing: LIGHT,
     });
@@ -786,8 +768,17 @@ export function BentoBuild({
   };
   const camMoving = camStep(frame, frame + 1) || camStep(frame - 1, frame);
 
-  const eyeIn = interpolate(frame, [0, 12], [0, 1], { ...CL, easing: LIGHT });
-  const headIn = interpolate(frame, [2, 18], [0, 1], { ...CL, easing: ENTER });
+  const eyeIn = interpolate(frame, [headEl.start, headEl.end], [0, 1], {
+    ...CL,
+    easing: LIGHT,
+  });
+  const headingAt = headEl.start + headEl.beat("headingAt");
+  const headIn = interpolate(
+    frame,
+    [headingAt, headingAt + headEl.beat("heading")],
+    [0, 1],
+    { ...CL, easing: ENTER },
+  );
   const headSize = tall ? 52 * u : 40 * u;
 
   return (
@@ -863,7 +854,8 @@ export function BentoBuild({
             const y = top + p.row * (cellH + gap);
             const w = p.cols * cellW + (p.cols - 1) * gap;
             const h = p.rows * cellH + (p.rows - 1) * gap;
-            const at = 4 + i * stagger;
+            const tileEl = tl.get(`tile:${i}`);
+            const at = tileEl.start;
 
             const cx = x + w / 2 - width / 2;
             const cy = y + h / 2 - height / 2;
@@ -883,10 +875,14 @@ export function BentoBuild({
             const tileMoving =
               Math.abs(moveAt(frame + 1) - move) > 1e-5 ||
               Math.abs(move - moveAt(frame - 1)) > 1e-5;
-            const lockAt = at + 12;
+            const lockAt = at + tileEl.beat("lock");
             const click = interpolate(
               frame,
-              [lockAt, lockAt + 2, lockAt + 7],
+              [
+                lockAt,
+                lockAt + tileEl.beat("clickPeak"),
+                lockAt + tileEl.beat("click"),
+              ],
               [0, 1, 0],
               CL,
             );
@@ -900,15 +896,23 @@ export function BentoBuild({
             const lift = 1 + 0.02 * f;
             const dim = 1 - 0.45 * Math.max(0, anyFocus - f);
 
-            const textIn = interpolate(frame, [at + 4, at + 16], [0, 1], {
-              ...CL,
-              easing: ENTER,
-            });
+            const textIn = interpolate(
+              frame,
+              [
+                at + tileEl.beat("textAt"),
+                at + tileEl.beat("textAt") + tileEl.beat("text"),
+              ],
+              [0, 1],
+              {
+                ...CL,
+                easing: ENTER,
+              },
+            );
             const reveal = spring({
-              frame: frame - (at + 8),
+              frame: frame - (at + tileEl.beat("revealAt")),
               fps,
               config: MORPH,
-              durationInFrames: 30,
+              durationInFrames: tileEl.beat("reveal"),
             });
             const big = p.rows > 1;
             const wide = p.cols > 1 && !big;

@@ -2,8 +2,10 @@
 
 import type React from "react";
 import { Easing, interpolate } from "remotion";
-import { useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import { type RolodexFlipElementId, rolodexFlipTimeline } from "./timeline";
 
 const clampOpts = {
   extrapolateLeft: "clamp" as const,
@@ -17,18 +19,19 @@ export interface RolodexFlipProps {
   flipDuration?: number;
   className?: string;
   style?: React.CSSProperties;
+  /**
+   * Moves, trims or stretches single flips, by the ids in `./timeline`.
+   * Frames on the scene timeline.
+   */
+  timing?: Timing<RolodexFlipElementId>;
 }
 
-export function RolodexFlip({
-  items,
-  from = 0,
-  interval = 20,
-  flipDuration = 10,
-  className,
-  style,
-}: RolodexFlipProps) {
+export function RolodexFlip(props: RolodexFlipProps) {
+  const { items, className, style, timing } = props;
   const glide = useGlide();
   const frame = useSceneFrame();
+  const { durationInFrames } = useSceneConfig();
+  const tl = useTimeline(rolodexFlipTimeline, props, durationInFrames, timing);
   const sizer = items.reduce((a, b) => (b.length > a.length ? b : a), "");
   return (
     <span
@@ -43,18 +46,21 @@ export function RolodexFlip({
     >
       <span style={{ visibility: "hidden" }}>{sizer}</span>
       {items.map((item, i) => {
-        const inStart = from + (i - 1) * interval + flipDuration / 2;
-        const outStart = from + i * interval;
+        // Word `i` turns in on flip `i` and out on flip `i + 1`.
+        const flipIn = i > 0 ? tl.get(`flip:${i}`) : undefined;
+        const flipOut =
+          i < items.length - 1 ? tl.get(`flip:${i + 1}`) : undefined;
 
         const poseAt = (f: number) => {
           let rotate = 0;
           let y = 0;
           let opacity = 1;
 
-          if (i > 0) {
+          if (flipIn) {
+            const inStart = flipIn.start + flipIn.beat("inAt");
             const pIn = interpolate(
               f,
-              [inStart, inStart + flipDuration],
+              [inStart, inStart + flipIn.beat("in")],
               [0, 1],
               { ...clampOpts, easing: Easing.out(Easing.cubic) },
             );
@@ -62,10 +68,10 @@ export function RolodexFlip({
             y = (1 - pIn) * 20;
             opacity = pIn;
           }
-          if (i < items.length - 1) {
+          if (flipOut) {
             const pOut = interpolate(
               f,
-              [outStart, outStart + flipDuration],
+              [flipOut.start, flipOut.start + flipOut.beat("out")],
               [0, 1],
               { ...clampOpts, easing: Easing.in(Easing.cubic) },
             );

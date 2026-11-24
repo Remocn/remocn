@@ -4,6 +4,8 @@ import type React from "react";
 import { useMemo } from "react";
 import { AbsoluteFill, Easing, interpolate, random } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import { type ParallaxDepthElementId, parallaxDepthTimeline } from "./timeline";
 
 export type ParallaxDepthLayer = {
   /** Full-frame content of the layer. Leave room past the edges for the truck. */
@@ -36,6 +38,11 @@ export type ParallaxDepthProps = {
   sunColor?: string;
   seed?: number;
   speed?: number;
+  /**
+   * Moves, trims or stretches the camera move, by the ids in `./timeline`.
+   * Frames on the scene timeline, after `speed`.
+   */
+  timing?: Timing<ParallaxDepthElementId>;
 };
 
 export const parallaxDepthDefaults = {
@@ -52,8 +59,6 @@ export const parallaxDepthDefaults = {
   seed: 3,
   speed: 1,
 };
-
-const DURATION = 60;
 
 // A ridge line built from a few seeded sine octaves, spanning three widths so it
 // never runs out while the camera trucks.
@@ -136,19 +141,28 @@ function useLandscape(colors: ParallaxDepthColors, seed: number) {
   }, [width, height, colors.sun, colors.far, colors.mid, colors.near, seed]);
 }
 
-export function ParallaxDepth({
-  layers,
-  distance = parallaxDepthDefaults.distance,
-  push = parallaxDepthDefaults.push,
-  direction = parallaxDepthDefaults.direction,
-  colors: colorOverrides,
-  skyColor,
-  sunColor,
-  seed = parallaxDepthDefaults.seed,
-  speed = parallaxDepthDefaults.speed,
-}: ParallaxDepthProps) {
+export function ParallaxDepth(props: ParallaxDepthProps) {
+  const {
+    layers,
+    distance = parallaxDepthDefaults.distance,
+    push = parallaxDepthDefaults.push,
+    direction = parallaxDepthDefaults.direction,
+    colors: colorOverrides,
+    skyColor,
+    sunColor,
+    seed = parallaxDepthDefaults.seed,
+    speed = parallaxDepthDefaults.speed,
+    timing,
+  } = props;
   const frame = useSceneFrame();
-  const { width, fps } = useSceneConfig();
+  const { width, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    parallaxDepthTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const moveEl = tl.get("move");
   const baseColors = { ...parallaxDepthDefaults.colors, ...colorOverrides };
   const colors = {
     ...baseColors,
@@ -159,7 +173,7 @@ export function ParallaxDepth({
   const stack = [...(layers ?? landscape)].sort((a, b) => b.depth - a.depth);
 
   const t = (frame * speed * 30) / fps;
-  const move = interpolate(t, [0, DURATION], [0, 1], {
+  const move = interpolate(t, [moveEl.start, moveEl.end], [0, 1], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
     easing: Easing.bezier(0.45, 0, 0.2, 1),

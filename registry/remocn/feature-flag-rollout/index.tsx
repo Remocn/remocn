@@ -9,6 +9,12 @@ import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_STEPS,
+  type FeatureFlagRolloutElementId,
+  featureFlagRolloutTimeline,
+} from "./timeline";
 
 const { fontFamily } = loadFont("normal", {
   weights: ["300", "400"],
@@ -66,6 +72,12 @@ export interface FeatureFlagRolloutProps {
   speed?: number;
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
+  /**
+   * Moves, trims or stretches the page coming in, the toggle click, single
+   * slider drags and the finish, by the ids in `./timeline`. Frames on the
+   * scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<FeatureFlagRolloutElementId>;
 }
 
 /** The foreground at `scale`, around the frame's center; nothing extra at 1. */
@@ -452,32 +464,45 @@ function GuardrailChart({
   );
 }
 
-export function FeatureFlagRollout({
-  flagName = "New checkout flow",
-  flagKey = "new-checkout-flow",
-  environment = "Production",
-  steps = [5, 25, 100],
-  totalUsers = 42800,
-  actor = "Maya Chen",
-  history = DEFAULT_HISTORY,
-  metrics = DEFAULT_METRICS,
-  doneLabel = "Fully rolled out",
-  passingLabel = "All passing",
-  stepGap = 48,
-  theme = "light",
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily: font = fontFamily,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  ground,
-  groundParams,
-}: FeatureFlagRolloutProps) {
+export function FeatureFlagRollout(props: FeatureFlagRolloutProps) {
+  const {
+    flagName = "New checkout flow",
+    flagKey = "new-checkout-flow",
+    environment = "Production",
+    steps = DEFAULT_STEPS,
+    totalUsers = 42800,
+    actor = "Maya Chen",
+    history = DEFAULT_HISTORY,
+    metrics = DEFAULT_METRICS,
+    doneLabel = "Fully rolled out",
+    passingLabel = "All passing",
+    theme = "light",
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily: font = fontFamily,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    ground,
+    groundParams,
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H, fps } = useSceneConfig();
+  const { width: W, height: H, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    featureFlagRolloutTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const app = tl.get("app");
+  const header = tl.get("header");
+  const stage = tl.get("stage");
+  const cursorEl = tl.get("cursor");
+  const toggle = tl.get("toggle");
+  const doneEl = tl.get("done");
   const pal = palette(theme);
   const fg = ink ?? pal.text;
   const tall = H > W * 1.2;
@@ -491,7 +516,7 @@ export function FeatureFlagRollout({
   const moved = (at: (f: number) => number) =>
     Math.abs(at(frame + 1) - at(frame)) > 1e-5 ||
     Math.abs(at(frame) - at(frame - 1)) > 1e-5;
-  const stepList = steps.length > 0 ? steps : [5, 25, 100];
+  const stepList = steps.length > 0 ? steps : DEFAULT_STEPS;
   const lastStep = stepList[stepList.length - 1];
 
   const WIN = tall
@@ -513,15 +538,25 @@ export function FeatureFlagRollout({
   const CHART_H = tall ? 104 : 74;
   const ROW = 46;
 
-  const T_TOGGLE = 30;
+  const T_TOGGLE = toggle.start;
+  const onAt = T_TOGGLE + toggle.beat("on");
   const drags = stepList.slice(1).map((to, k) => {
-    const grab = k === 0 ? 62 : 62 + stepGap * k;
-    return { from: stepList[k], to, grab, start: grab + 3, release: grab + 22 };
+    const e = tl.get(`drag:${k}`);
+    const grab = e.start;
+    return {
+      from: stepList[k],
+      to,
+      grab,
+      start: grab + e.beat("move"),
+      release: e.end,
+      e,
+    };
   });
-  const toggleOn = sp(T_TOGGLE + 2, CHIP);
-  const isOn = frame >= T_TOGGLE + 2;
+  const toggleOn = sp(onAt, CHIP);
+  const isOn = frame >= onAt;
 
-  let pct = stepList[0] * clamp(sp(T_TOGGLE + 4, MORPH), 0, 1);
+  let pct =
+    stepList[0] * clamp(sp(T_TOGGLE + toggle.beat("fill"), MORPH), 0, 1);
   for (const d of drags) {
     if (frame >= d.start)
       pct = lerp(d.from, d.to, clamp(sp(d.start, MORPH), 0, 1));
@@ -529,30 +564,35 @@ export function FeatureFlagRollout({
   const shownPct = Math.round(pct);
   const lastRelease = drags.length ? drags[drags.length - 1].release : T_TOGGLE;
   const fullyOut = frame >= lastRelease && shownPct >= 100;
-  const doneAt = lastRelease + 2;
+  const doneAt = doneEl.start;
   const done = sp(doneAt, CHIP);
 
   const added = [
     {
-      at: T_TOGGLE + 6,
+      at: T_TOGGLE + toggle.beat("row"),
       from: "Off",
       to: `${stepList[0]}%`,
     },
     ...drags.map((d) => ({
-      at: d.release + 2,
+      at: d.release + d.e.beat("rowAfter"),
       from: `${d.from}%`,
       to: `${d.to}%`,
     })),
   ];
   const markers = [
-    { t: T_TOGGLE + 2, label: `${stepList[0]}%` },
+    { t: onAt, label: `${stepList[0]}%` },
     ...drags.map((d) => ({ t: d.release, label: `${d.to}%` })),
   ];
 
-  const win = sp(0, HEAVY);
-  const winA = tween(frame, 0, 10);
-  const cam = tween(frame, 10, lastRelease + 50, camEase);
-  const stageIn = tween(frame, 6, 20);
+  const win = sp(app.start, HEAVY);
+  const winA = tween(frame, app.start, app.start + app.beat("fade"));
+  const cam = tween(
+    frame,
+    app.start + app.beat("camera"),
+    doneAt + doneEl.beat("camEnd"),
+    camEase,
+  );
+  const stageIn = tween(frame, stage.start, stage.end);
 
   const TOG = { x: WIN.w - PAD - 150, y: HEAD_H / 2 - 20 };
   const THUMB_R = 12;
@@ -568,11 +608,11 @@ export function FeatureFlagRollout({
     y: WIN.y + RIGHT.y + (tall ? 150 : 120),
   };
   const startPt = { x: D.w * 0.8, y: D.h + 40 };
-  const legs: [number, Pt, Pt][] = [[10, startPt, togglePt]];
+  const legs: [number, Pt, Pt][] = [[cursorEl.start, startPt, togglePt]];
   let prev = togglePt;
   for (const d of drags) {
-    legs.push([d.grab - 14, prev, thumbPt(d.from)]);
-    legs.push([d.release + 4, thumbPt(d.to), lookPt]);
+    legs.push([d.grab + d.e.beat("reach"), prev, thumbPt(d.from)]);
+    legs.push([d.release + d.e.beat("lookAfter"), thumbPt(d.to), lookPt]);
     prev = lookPt;
   }
   let cur: Pt = startPt;
@@ -580,23 +620,30 @@ export function FeatureFlagRollout({
     if (frame >= t0) cur = arcTo(a, b, sp(t0, CARD));
   }
   for (const d of drags) {
-    if (frame >= d.start && frame < d.release + 4) cur = thumbPt(pct);
+    if (frame >= d.start && frame < d.release + d.e.beat("lookAfter"))
+      cur = thumbPt(pct);
   }
   const clickPress = clamp(
-    sp(T_TOGGLE - 3, CHIP) - sp(T_TOGGLE + 2, CHIP),
+    sp(T_TOGGLE + toggle.beat("press"), CHIP) - sp(onAt, CHIP),
     0,
     1.2,
   );
   const dragHold = Math.max(
     0,
     ...drags.map((d) =>
-      clamp(sp(d.grab - 2, CHIP) - sp(d.release, CHIP), 0, 1.2),
+      clamp(sp(d.grab + d.e.beat("hold"), CHIP) - sp(d.release, CHIP), 0, 1.2),
     ),
   );
   const press = Math.max(clickPress, dragHold);
   const cursorA =
-    tween(frame, 10, 16) *
-    (1 - tween(frame, lastRelease + 40, lastRelease + 48, exitEase));
+    tween(frame, cursorEl.start, cursorEl.end) *
+    (1 -
+      tween(
+        frame,
+        doneAt + doneEl.beat("leave"),
+        doneAt + doneEl.beat("leaveEnd"),
+        exitEase,
+      ));
 
   const users = (totalUsers * pct) / 100;
   const statusLabel = !isOn
@@ -639,7 +686,7 @@ export function FeatureFlagRollout({
     1 +
     0.04 *
       clamp(spAt(f, doneAt, CHIP), 0, 1.4) *
-      (1 - clamp(spAt(f, doneAt + 6, MORPH), 0, 1));
+      (1 - clamp(spAt(f, doneAt + doneEl.beat("settle"), MORPH), 0, 1));
   const bigPct = (size: number, color: string) => (
     <div
       style={{
@@ -704,7 +751,7 @@ export function FeatureFlagRollout({
                   style={{
                     fontSize: 26,
                     color: pal.stageMuted,
-                    opacity: tween(frame, 4, 14),
+                    opacity: tween(frame, header.start, header.end),
                   }}
                 >
                   {environment} rollout
@@ -985,7 +1032,8 @@ export function FeatureFlagRollout({
                 const live = treatAt(m, i, q);
                 const ctrl = controlAt(m, i, q);
                 const top = RIGHT.y + 40 + i * (tall ? 232 : 186);
-                const a = tween(frame, 8 + i * 4, 20 + i * 4);
+                const metric = tl.get(`metric:${i}`);
+                const a = tween(frame, metric.start, metric.end);
                 return (
                   <div
                     key={m.label}

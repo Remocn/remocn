@@ -4,6 +4,11 @@ import type React from "react";
 import { AbsoluteFill, interpolate, spring } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  type AccordionUnfoldElementId,
+  accordionUnfoldTimeline,
+} from "./timeline";
 
 export type AccordionUnfoldProps = {
   /** Lockup printed across the card. Use a color that reads on `color`. Falls back to a placeholder "remocn" lockup. */
@@ -18,6 +23,11 @@ export type AccordionUnfoldProps = {
   /** Fold angle of each pleat at the start, in degrees. */
   foldAngle?: number;
   speed?: number;
+  /**
+   * Moves, trims or stretches the card's lift and the unfold, by the ids in
+   * `./timeline`. Frames on the scene timeline, after `speed`.
+   */
+  timing?: Timing<AccordionUnfoldElementId>;
 };
 
 export const accordionUnfoldDefaults = {
@@ -29,7 +39,6 @@ export const accordionUnfoldDefaults = {
   speed: 1,
 };
 
-const START = 4;
 const clamp = {
   extrapolateLeft: "clamp" as const,
   extrapolateRight: "clamp" as const,
@@ -88,19 +97,35 @@ function PlaceholderLockup({
 }
 
 export function AccordionUnfold(props: AccordionUnfoldProps) {
-  const { children, panels, color, shade, backgroundColor, foldAngle, speed } =
-    { ...accordionUnfoldDefaults, ...props };
+  const {
+    children,
+    panels,
+    color,
+    shade,
+    backgroundColor,
+    foldAngle,
+    speed,
+    timing,
+  } = { ...accordionUnfoldDefaults, ...props };
   const glide = useGlide();
   const frame = useSceneFrame();
-  const { width, height, fps } = useSceneConfig();
+  const { width, height, fps, durationInFrames } = useSceneConfig();
   const t = frame * Math.max(0, speed);
+  const tl = useTimeline(
+    accordionUnfoldTimeline,
+    props,
+    durationInFrames * Math.max(0, speed),
+    timing,
+  );
+  const card = tl.get("card");
+  const unfold = tl.get("unfold");
   const n = Math.max(2, Math.round(panels));
   const cardW = Math.round(Math.min(width * 0.66, height * 1.3));
   const cardH = Math.round(Math.min(height * 0.4, cardW * 0.4));
   const pw = cardW / n;
 
   const open = spring({
-    frame: t - START,
+    frame: t - unfold.start,
     fps,
     config: { damping: 15, stiffness: 70, mass: 0.9 },
   });
@@ -108,12 +133,17 @@ export function AccordionUnfold(props: AccordionUnfoldProps) {
   const rad = (theta * Math.PI) / 180;
   // Keep the pleated stack centered while its projected width grows.
   const shift = (cardW - cardW * Math.cos(rad)) / 2;
-  const lift = interpolate(t, [0, START + 2], [0.92, 1], clamp);
-  const appear = interpolate(t, [0, 3], [0, 1], clamp);
+  const lift = interpolate(t, [card.start, card.end], [0.92, 1], clamp);
+  const appear = interpolate(
+    t,
+    [card.start, card.start + card.beat("fade")],
+    [0, 1],
+    clamp,
+  );
   const flat = Math.abs(theta) < 0.3;
   // The pleats exist only while the card lifts and unfolds; once flat, the
   // card is plain again and only a sub-pixel slide on x is left.
-  const folding = (lift < 1 && speed > 0) || (!flat && t > START);
+  const folding = (lift < 1 && speed > 0) || (!flat && t > unfold.start);
 
   const print = (offset: number) => (
     <div

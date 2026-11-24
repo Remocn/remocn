@@ -7,6 +7,13 @@ import { useId } from "react";
 import { AbsoluteFill, Easing, interpolate, spring } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_LINES,
+  MAX_GREYS,
+  type SlopeChartElementId,
+  slopeChartTimeline,
+} from "./timeline";
 
 const { fontFamily: sans } = loadSans("normal", {
   weights: ["400", "500"],
@@ -46,17 +53,13 @@ export interface SlopeChartProps {
   grain?: boolean;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches the axes, each grey line, the hero line's climb
+   * and the stat's landing, by the ids in `./timeline`. Frames on the scene
+   * timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<SlopeChartElementId>;
 }
-
-const DEFAULT_LINES: SlopeLine[] = [
-  { before: 14, after: 16 },
-  { before: 20, after: 18 },
-  { before: 10, after: 13 },
-  { before: 24, after: 22 },
-  { before: 17, after: 20 },
-  { before: 3, after: 5 },
-  { before: 28, after: 27 },
-];
 
 const DEFAULT_HIGHLIGHT: SlopeLine = { before: 6, after: 41 };
 
@@ -94,13 +97,6 @@ const THEMES = {
     grain: 0.045,
   },
 } as const;
-
-const AXES = [0, 16] as const;
-const GREY_AT = 12;
-const GREY_STAGGER = 4;
-const GREY_DRAW = 24;
-const CLIMB = [60, 100] as const;
-const HIT = 98;
 
 function Grain({ opacity }: { opacity: number }) {
   const id = `g${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
@@ -182,37 +178,47 @@ function ScaleLayer({
   );
 }
 
-export function SlopeChart({
-  lines = DEFAULT_LINES,
-  highlight = DEFAULT_HIGHLIGHT,
-  value = "6.8×",
-  label = "more launch videos shipped",
-  beforeLabel = "Before",
-  afterLabel = "After",
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = sans,
-  stagger = GREY_STAGGER,
-  climbAt = CLIMB[0],
-  scale = 1,
-  delay = 0,
-  grain = true,
-  speed = 1,
-  theme = "dark",
-}: SlopeChartProps) {
+export function SlopeChart(props: SlopeChartProps) {
+  const {
+    lines = DEFAULT_LINES,
+    highlight = DEFAULT_HIGHLIGHT,
+    value = "6.8×",
+    label = "more launch videos shipped",
+    beforeLabel = "Before",
+    afterLabel = "After",
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = sans,
+    scale = 1,
+    delay = 0,
+    grain = true,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H, fps } = useSceneConfig();
+  const { width: W, height: H, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    slopeChartTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const axesEl = tl.get("axes");
+  const headingsEl = tl.get("headings");
+  const climbEl = tl.get("climb");
+  const hitEl = tl.get("hit");
   const u = Math.min(W / 1280, H / 720);
   const p = THEMES[theme];
   const fg = ink ?? p.fg;
   const stage = background ?? p.bg;
   const hole = background && background !== "transparent" ? background : p.bg;
-  const climbR = [climbAt, climbAt + CLIMB[1] - CLIMB[0]] as const;
-  const hitAt = HIT + climbAt - CLIMB[0];
+  const climbAt = climbEl.start;
+  const hitAt = hitEl.start;
 
-  const greys = lines.slice(0, 8);
+  const greys = lines.slice(0, MAX_GREYS);
   const all = [...greys, highlight];
   const max = Math.max(1, ...all.flatMap((l) => [l.before, l.after]));
   const min = Math.min(0, ...all.flatMap((l) => [l.before, l.after]));
@@ -223,21 +229,34 @@ export function SlopeChart({
   const yBot = H * 0.8;
   const yOf = (v: number) => yBot - ((v - min) / (max - min)) * (yBot - yTop);
 
-  const axisIn = interpolate(t, AXES, [0, 1], { ...CLAMP, easing: EASE_IO });
-  const axisLabelIn = interpolate(t, [6, 22], [0, 1], {
+  const axisIn = interpolate(t, [axesEl.start, axesEl.end], [0, 1], {
     ...CLAMP,
-    easing: EASE_OUT,
+    easing: EASE_IO,
   });
+  const axisLabelIn = interpolate(
+    t,
+    [headingsEl.start, headingsEl.end],
+    [0, 1],
+    {
+      ...CLAMP,
+      easing: EASE_OUT,
+    },
+  );
   // The chart sits centred alone; the frame eases over as the number lands.
   const camera = (tt: number) => {
-    const push = interpolate(tt, [0, hitAt + 30], [0, 1], {
+    const push = interpolate(tt, [0, hitAt + hitEl.beat("settle")], [0, 1], {
       ...CLAMP,
       easing: EASE_IO,
     });
-    const slide = interpolate(tt, [climbR[0] + 8, hitAt + 14], [0, 1], {
-      ...CLAMP,
-      easing: EASE_IO,
-    });
+    const slide = interpolate(
+      tt,
+      [climbAt + climbEl.beat("slideAt"), hitAt + hitEl.beat("slideEnd")],
+      [0, 1],
+      {
+        ...CLAMP,
+        easing: EASE_IO,
+      },
+    );
     return { s: 0.975 + 0.025 * push, x: W * 0.11 * (1 - slide) };
   };
   const { s: camScale, x: camX } = camera(t);
@@ -250,11 +269,12 @@ export function SlopeChart({
   };
   const camMoving = camStep(t - speed, t) || camStep(t, t + speed);
 
-  const climb = interpolate(t, climbR, [0, 1], {
+  const climb = interpolate(t, [climbAt, climbEl.end], [0, 1], {
     ...CLAMP,
     easing: CLIMB_EASE,
   });
-  const dim = interpolate(t, [climbR[0] - 2, climbR[0] + 20], [0, 1], {
+  const dimAt = climbAt + climbEl.beat("dimAt");
+  const dim = interpolate(t, [dimAt, dimAt + climbEl.beat("dim")], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
@@ -277,7 +297,7 @@ export function SlopeChart({
   const wStart = 2.2 * u;
   const wTip = (2.2 + 5.4 * climb) * u;
   const startDot = spring({
-    frame: t - climbR[0] + 6,
+    frame: t - (climbAt + climbEl.beat("dot")),
     fps,
     config: { damping: 14, stiffness: 180, mass: 0.6 },
   });
@@ -287,15 +307,25 @@ export function SlopeChart({
     fps,
     config: { damping: 15, stiffness: 170, mass: 0.7 },
   });
-  const hitO = interpolate(t, [hitAt, hitAt + 6], [0, 1], CLAMP);
-  const ring = interpolate(t, [hitAt, hitAt + 26], [0, 1], {
+  const hitO = interpolate(
+    t,
+    [hitAt, hitAt + hitEl.beat("fade")],
+    [0, 1],
+    CLAMP,
+  );
+  const ring = interpolate(t, [hitAt, hitEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
-  const lab = interpolate(t, [hitAt + 8, hitAt + 26], [0, 1], {
-    ...CLAMP,
-    easing: EASE_OUT,
-  });
+  const lab = interpolate(
+    t,
+    [hitAt + hitEl.beat("labelAt"), hitEl.end],
+    [0, 1],
+    {
+      ...CLAMP,
+      easing: EASE_OUT,
+    },
+  );
 
   const valueSize = 156 * u;
   const gradId = `${useId().replace(/[^a-zA-Z0-9_-]/g, "")}-limb`;
@@ -305,8 +335,9 @@ export function SlopeChart({
   const greyEls: React.ReactNode[] = [];
   const greyDots: React.ReactNode[] = [];
   greys.forEach((l, i) => {
-    const start = GREY_AT + i * stagger;
-    const prog = interpolate(t, [start, start + GREY_DRAW], [0, 1], {
+    const e = tl.get(`line:${i}`);
+    const start = e.start;
+    const prog = interpolate(t, [start, e.end], [0, 1], {
       ...CLAMP,
       easing: DRAW_EASE,
     });
@@ -329,13 +360,8 @@ export function SlopeChart({
         opacity={o}
       />,
     );
-    const a = interpolate(t, [start, start + 6], [0, 1], CLAMP);
-    const b = interpolate(
-      t,
-      [start + GREY_DRAW - 4, start + GREY_DRAW + 4],
-      [0, 1],
-      CLAMP,
-    );
+    const a = interpolate(t, [start, start + e.beat("dot")], [0, 1], CLAMP);
+    const b = interpolate(t, [e.end - 4, e.end + 4], [0, 1], CLAMP);
     greyDots.push(
       <circle
         key={`a${i}`}
@@ -484,7 +510,9 @@ export function SlopeChart({
 
           {all.map((l, i) => {
             const isHl = i === all.length - 1;
-            const start = isHl ? climbR[0] - 6 : GREY_AT + i * stagger;
+            const start = isHl
+              ? climbAt + climbEl.beat("value")
+              : tl.get(`line:${i}`).start;
             const a = interpolate(t, [start + 2, start + 14], [0, 1], {
               ...CLAMP,
               easing: EASE_OUT,
@@ -515,7 +543,7 @@ export function SlopeChart({
           })}
 
           {greys.map((l, i) => {
-            const end = GREY_AT + i * stagger + GREY_DRAW;
+            const end = tl.get(`line:${i}`).end;
             const a = interpolate(t, [end - 4, end + 10], [0, 1], {
               ...CLAMP,
               easing: EASE_OUT,

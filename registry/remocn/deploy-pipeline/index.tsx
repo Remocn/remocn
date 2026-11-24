@@ -16,21 +16,23 @@ import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_LOGS,
+  type DeployLogLine,
+  type DeployLogTone,
+  type DeployPipelineElementId,
+  deployPipelineTimeline,
+  logLinesOf,
+} from "./timeline";
+
+export type { DeployLogLine, DeployLogTone };
 
 const geist = loadGeist("normal", {
   weights: ["300", "400"],
   subsets: ["latin"],
 });
 const mono = loadMono("normal", { weights: ["400"], subsets: ["latin"] });
-
-export type DeployLogTone = "default" | "muted" | "success" | "warn";
-
-export interface DeployLogLine {
-  text: string;
-  tone?: DeployLogTone;
-  /** Frames to wait after the previous line (default 3). */
-  wait?: number;
-}
 
 export interface DeployPipelineProps {
   project?: string;
@@ -65,38 +67,13 @@ export interface DeployPipelineProps {
   theme?: "light" | "dark";
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
+  /**
+   * Moves, trims or stretches the panel, the build, single log lines and
+   * the ready state, by the ids in `./timeline`. Frames on the scene
+   * timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<DeployPipelineElementId>;
 }
-
-const DEFAULT_LOGS: DeployLogLine[] = [
-  { text: "Running build in Washington, D.C., USA (East) – iad1", wait: 0 },
-  { text: "Build machine configuration: 4 cores, 8 GB" },
-  { text: "Cloning git.kitebase.dev/remocn-web (branch main, commit a4f9c21)" },
-  { text: "Cloning completed: 412.000ms", wait: 7 },
-  { text: "Restored build cache from previous deployment (8kQ2v1Xa)" },
-  { text: 'Running "bun install"' },
-  {
-    text: 'Warning: "engines": { "node": ">=20" } will upgrade the runtime on the next major',
-    tone: "warn",
-  },
-  { text: "bun install v1.2.4 (a3f1e2c4)", tone: "muted", wait: 4 },
-  { text: "312 packages installed [4.21s]", wait: 11 },
-  { text: 'Running "bun run build"' },
-  { text: "  Creating an optimized production build ...", wait: 4 },
-  { text: "✓ Compiled successfully in 9.8s", tone: "success", wait: 13 },
-  { text: "✓ Generating static pages (24/24)", tone: "success", wait: 6 },
-  {
-    text: "Route                         Size   First load",
-    tone: "muted",
-    wait: 5,
-  },
-  { text: "┌ ○ /                       5.21 kB       112 kB", wait: 2 },
-  { text: "├ ○ /docs                   3.08 kB       109 kB", wait: 2 },
-  { text: "├ ƒ /api/render                 0 B       101 kB", wait: 2 },
-  { text: "└ ○ /changelog              1.84 kB       104 kB", wait: 2 },
-  { text: "Build completed in /out [21s]", wait: 6 },
-  { text: "Deploying outputs...", wait: 5 },
-  { text: "Deployment completed", tone: "success", wait: 10 },
-];
 
 const HEAVY = { mass: 1, damping: 26, stiffness: 120 };
 const CARD = { mass: 0.8, damping: 18, stiffness: 160 };
@@ -107,7 +84,6 @@ const EXIT = Easing.bezier(0.55, 0, 1, 0.45);
 const CAMERA = Easing.bezier(0.87, 0, 0.13, 1);
 const CL = { extrapolateLeft: "clamp", extrapolateRight: "clamp" } as const;
 const clamp = (v: number, lo = 0, hi = 1) => Math.min(hi, Math.max(lo, v));
-const LOG_START = 16;
 const ROW_H = 24;
 
 function hash(n: number) {
@@ -285,33 +261,44 @@ function ScaleLayer({
   );
 }
 
-export function DeployPipeline({
-  project = "remocn-web",
-  deploymentId = "7Hq2xKfaW",
-  commitMessage = "feat: launch video components",
-  commitSha = "a4f9c21",
-  branch = "main",
-  domain = "remocn-web.kitebase.app",
-  logs = DEFAULT_LOGS,
-  buildSeconds = 21,
-  preview,
-  environment = "Production",
-  logsTitle = "Build logs",
-  visitLabel = "Visit",
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = geist.fontFamily,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-  ground,
-  groundParams,
-}: DeployPipelineProps) {
+export function DeployPipeline(props: DeployPipelineProps) {
+  const {
+    project = "remocn-web",
+    deploymentId = "7Hq2xKfaW",
+    commitMessage = "feat: launch video components",
+    commitSha = "a4f9c21",
+    branch = "main",
+    domain = "remocn-web.kitebase.app",
+    logs = DEFAULT_LOGS,
+    buildSeconds = 21,
+    preview,
+    environment = "Production",
+    logsTitle = "Build logs",
+    visitLabel = "Visit",
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = geist.fontFamily,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    ground,
+    groundParams,
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width, height, fps } = useSceneConfig();
+  const { width, height, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    deployPipelineTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const winEl = tl.get("panel");
+  const build = tl.get("build");
+  const readyEl = tl.get("ready");
   const tall = height > width;
   const SW = tall ? 720 : 1280;
   const SH = tall ? 1280 : 720;
@@ -338,53 +325,62 @@ export function DeployPipeline({
   const LOG_HEAD = 52;
   const LOG_ROWS = Math.floor((WIN.h - LOG_TOP - LOG_HEAD - 12) / ROW_H);
 
-  const lines = logs.map((l) => (typeof l === "string" ? { text: l } : l));
-  const ats: number[] = [];
-  let at = LOG_START;
-  lines.forEach((l, i) => {
-    at += l.wait ?? (i === 0 ? 0 : 3);
-    ats.push(at);
-  });
-  const readyAt = (ats[ats.length - 1] ?? LOG_START) + 8;
+  const lines = logLinesOf(logs);
+  const lineEls = lines.map((_, i) => tl.get(`line:${i}`));
+  const buildAt = build.start;
+  const readyAt = readyEl.start;
   const ready = frame >= readyAt;
-  const building = frame >= LOG_START && !ready;
-  const elapsed = interpolate(
-    frame,
-    [LOG_START, readyAt],
-    [0, buildSeconds],
-    CL,
-  );
-  const msPerFrame = (buildSeconds * 1000) / Math.max(1, readyAt - LOG_START);
+  const building = frame >= buildAt && !ready;
+  const elapsed = interpolate(frame, [buildAt, readyAt], [0, buildSeconds], CL);
+  const msPerFrame = (buildSeconds * 1000) / Math.max(1, readyAt - buildAt);
   const baseMs = (2 * 60 + 11) * 1000 + 204;
 
-  const win = sp(0, HEAVY);
-  const winFade = ease(0, 12);
+  const win = sp(winEl.start, HEAVY);
+  const winFade = ease(winEl.start, winEl.end);
   const camAt = (f: number) =>
-    interpolate(f, [0, 180], [1, 1.035], { ...CL, easing: CAMERA });
+    interpolate(
+      f,
+      [winEl.start, winEl.start + winEl.beat("push")],
+      [1, 1.035],
+      {
+        ...CL,
+        easing: CAMERA,
+      },
+    );
   const cam = camAt(frame);
   // The window rises on a spring and the camera pushes in on it for the whole
   // build, so its tilt covers every line inside.
   const winAt = (f: number) =>
-    (1 - spAt(f, 0, HEAVY)) * 60 +
-    (0.96 + 0.04 * spAt(f, 0, HEAVY)) * camAt(f) * (WIN.h / 2);
+    (1 - spAt(f, winEl.start, HEAVY)) * 60 +
+    (0.96 + 0.04 * spAt(f, winEl.start, HEAVY)) * camAt(f) * (WIN.h / 2);
   const winMoving =
     Math.abs(winAt(frame + 1) - winAt(frame)) > 1e-3 ||
     Math.abs(winAt(frame) - winAt(frame - 1)) > 1e-3;
-  const headIn = ease(4, 20);
+  const headIn = ease(
+    winEl.start + winEl.beat("headAt"),
+    winEl.start + winEl.beat("headEnd"),
+  );
 
-  const appear = ats.map((t) => ease(t, t + 6));
+  const appear = lineEls.map((e) => ease(e.start, e.end));
   const total = appear.reduce((a, b) => a + b, 0);
   const scroll = Math.max(0, total - LOG_ROWS) * ROW_H;
 
-  const previewS = sp(readyAt + 2, MORPH);
-  const previewFade = ease(readyAt + 2, readyAt + 14);
-  const skeletonOut = 1 - ease(readyAt, readyAt + 8, EXIT);
-  const visitS = sp(readyAt + 10, CARD);
+  const previewS = sp(readyAt + readyEl.beat("previewAt"), MORPH);
+  const previewFade = ease(
+    readyAt + readyEl.beat("previewAt"),
+    readyAt + readyEl.beat("previewEnd"),
+  );
+  const skeletonOut =
+    1 - ease(readyAt, readyAt + readyEl.beat("skeleton"), EXIT);
+  const visitAt = readyAt + readyEl.beat("visitAt");
+  const visitS = sp(visitAt, CARD);
   const checkS = sp(readyAt, CHIP);
-  const statusSwap = ease(readyAt, readyAt + 8);
+  const statusSwap = ease(readyAt, readyAt + readyEl.beat("swap"));
   const shimmer = ((frame * 1.6) % 160) - 30;
   const statusColor = ready ? c.success : building ? c.amber : c.faint;
-  const pulse = ready ? clamp((frame - readyAt) / 24) : (frame % 26) / 26;
+  const pulse = ready
+    ? clamp((frame - readyAt) / readyEl.beat("pulse"))
+    : (frame % 26) / 26;
 
   const seconds = Math.floor(elapsed);
   const statusLabel = ready ? "Ready" : building ? "Building" : "Queued";
@@ -442,7 +438,7 @@ export function DeployPipeline({
       </Field>
       <Field label="Duration" c={c}>
         <span style={{ fontVariantNumeric: "tabular-nums" }}>
-          {frame < LOG_START ? "–" : `${seconds}s`}
+          {frame < buildAt ? "–" : `${seconds}s`}
         </span>
       </Field>
       {tall ? null : (
@@ -550,7 +546,7 @@ export function DeployPipeline({
                   Building
                   <span style={{ color: c.muted }}>
                     {" "}
-                    · {frame < LOG_START ? 0 : seconds}s
+                    · {frame < buildAt ? 0 : seconds}s
                   </span>
                 </span>
               )}
@@ -593,7 +589,13 @@ export function DeployPipeline({
                   height: 2,
                   width: `${(elapsed / buildSeconds) * 100}%`,
                   background: accent,
-                  opacity: 1 - ease(readyAt + 2, readyAt + 12, EXIT),
+                  opacity:
+                    1 -
+                    ease(
+                      readyAt + readyEl.beat("barOutAt"),
+                      readyAt + readyEl.beat("barOutEnd"),
+                      EXIT,
+                    ),
                 }}
               />
               <span style={{ color: c.text }}>{project}</span>
@@ -614,7 +616,7 @@ export function DeployPipeline({
                 {deploymentId}
               </span>
               <div style={{ marginLeft: "auto" }} />
-              {frame >= readyAt + 10 ? (
+              {frame >= visitAt ? (
                 <div
                   style={{
                     display: "flex",
@@ -743,7 +745,7 @@ export function DeployPipeline({
                   fontVariantNumeric: "tabular-nums",
                 }}
               >
-                {frame < LOG_START ? "" : `${seconds}s`}
+                {frame < buildAt ? "" : `${seconds}s`}
               </span>
               {ready ? (
                 <div
@@ -808,7 +810,7 @@ export function DeployPipeline({
                           : c.text;
                   const ms =
                     baseMs +
-                    (ats[i] - LOG_START) * msPerFrame +
+                    (lineEls[i].start - buildAt) * msPerFrame +
                     Math.floor(hash(i) * 90);
                   return (
                     <div

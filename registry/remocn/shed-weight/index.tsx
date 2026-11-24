@@ -12,6 +12,12 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  cutCount,
+  type ShedWeightElementId,
+  shedWeightTimeline,
+} from "./timeline";
 
 const bricolage = loadVariableFont("normal", { subsets: ["latin"] });
 
@@ -36,6 +42,11 @@ export interface ShedWeightProps {
   delay?: number;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches single cuts of the stack, by the ids in
+   * `./timeline`. Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<ShedWeightElementId>;
 }
 
 const THEMES = {
@@ -63,12 +74,6 @@ const WGHT = 460;
 const TRACK_SMALL = 0.012;
 const TRACK_LARGE = -0.036;
 const RATIO = 1.42;
-
-const FIRST_AT = 4;
-const STEP_MIN = 6;
-const STEP_MAX = 11;
-const RULE_LEN = 14;
-const RISE_LEN = 16;
 
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
 const EASE_IN_OUT = Easing.bezier(0.65, 0, 0.35, 1);
@@ -214,28 +219,36 @@ function ScaleLayer({
   );
 }
 
-export function ShedWeight({
-  text = "Sharp at any size.",
-  sizes = 6,
-  showSizes = true,
-  fontWeight = WGHT,
-  ratio = RATIO,
-  accent,
-  ink,
-  background,
-  fontFamily = bricolage.fontFamily,
-  grain = true,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: ShedWeightProps) {
+export function ShedWeight(props: ShedWeightProps) {
+  const {
+    text = "Sharp at any size.",
+    sizes = 6,
+    showSizes = true,
+    fontWeight = WGHT,
+    ratio = RATIO,
+    accent,
+    ink,
+    background,
+    fontFamily = bricolage.fontFamily,
+    grain = true,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H } = useSceneConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    shedWeightTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const c = THEMES[theme];
   const spot = accent ?? c.accent;
-  const n = Math.max(2, Math.min(9, Math.round(sizes)));
+  const n = cutCount(sizes);
   const m = useMetrics(text, n, fontFamily, fontWeight);
 
   const transparent = background === "transparent";
@@ -272,13 +285,6 @@ export function ShedWeight({
     bases[k - 1] = bases[k] - lead(k) * F * stretch;
 
   const list = cuts(n);
-  const startAt: number[] = [];
-  let at = FIRST_AT;
-  for (let k = 0; k < n; k++) {
-    startAt.push(at);
-    const u = n > 1 ? k / (n - 1) : 1;
-    at += STEP_MIN + (STEP_MAX - STEP_MIN) * u;
-  }
 
   return (
     <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
@@ -287,14 +293,16 @@ export function ShedWeight({
           const size = F * scaleOf(k);
           const base = bases[k];
           const last = k === n - 1;
+          const cut = tl.get(`cut:${k}`);
+          const ruleAt = cut.start + cut.beat("rule");
           const ruleP = interpolate(
             t,
-            [startAt[k] - 4, startAt[k] - 4 + RULE_LEN],
+            [ruleAt, ruleAt + cut.beat("ruleLen")],
             [0, 1],
             { ...CLAMP, easing: EASE_IN_OUT },
           );
           const riseAt = (tt: number) =>
-            interpolate(tt, [startAt[k], startAt[k] + RISE_LEN], [0, 1], {
+            interpolate(tt, [cut.start, cut.end], [0, 1], {
               ...CLAMP,
               easing: EASE_OUT,
             });

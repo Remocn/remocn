@@ -7,6 +7,12 @@ import type React from "react";
 import { AbsoluteFill, Easing, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  PREROLL,
+  type SpeedTrapElementId,
+  speedTrapTimeline,
+} from "./timeline";
 
 const { fontFamily: sora } = loadFont("normal", {
   weights: ["400", "500"],
@@ -87,6 +93,12 @@ export interface SpeedTrapProps {
   delay?: number;
   theme?: "dark" | "light";
   speed?: number;
+  /**
+   * Moves, trims or stretches the track, the labels, the push, the count,
+   * the lock, the banner, the mark, the delta and the comparison, by the ids
+   * in `./timeline`. Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<SpeedTrapElementId>;
 }
 
 // Beat sheet (internal clock = frame + 3, 30fps, speed 1):
@@ -100,8 +112,6 @@ export interface SpeedTrapProps {
 //  50–70   last year's mark drops onto the bar, the delta slice between the
 //          two marks lights up, the comparison line slides out under it
 //  70–     poster hold
-const COUNT_AT = 3;
-const LOCK_AT = 42;
 
 const SLAM = Easing.bezier(0.22, 1, 0.36, 1);
 const RUN = Easing.bezier(0.3, 0.55, 0.25, 1);
@@ -161,43 +171,63 @@ function ScaleLayer({
   );
 }
 
-export function SpeedTrap({
-  value = 348,
-  previous = 300,
-  max = 360,
-  unit = "km/h",
-  banner = "Top speed",
-  previousLabel = "2025",
-  comparison = "vs last year",
-  label = "Speed trap · Sector 3",
-  lockAt = LOCK_AT,
-  sectors = 3,
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = sora,
-  logo,
-  scale = 1,
-  delay = 0,
-  theme = "dark",
-  speed = 1,
-}: SpeedTrapProps) {
+export function SpeedTrap(props: SpeedTrapProps) {
+  const {
+    value = 348,
+    previous = 300,
+    max = 360,
+    unit = "km/h",
+    banner = "Top speed",
+    previousLabel = "2025",
+    comparison = "vs last year",
+    label = "Speed trap · Sector 3",
+    sectors = 3,
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = sora,
+    logo,
+    scale = 1,
+    delay = 0,
+    theme = "dark",
+    speed = 1,
+    timing,
+  } = props;
   const glide = useGlide();
   // Starts three frames in, so frame 0 already shows the bar snapping out.
-  const t = Math.max(0, useSceneFrame() - delay) * speed + 3;
-  const { width: W, height: H } = useSceneConfig();
+  const t = Math.max(0, useSceneFrame() - delay) * speed + PREROLL;
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    speedTrapTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  // The schedule counts scene frames; `t` runs `PREROLL` ahead of them.
+  const at = (id: SpeedTrapElementId) => tl.get(id).start + PREROLL;
+  const trackEl = tl.get("track");
+  const labelsEl = tl.get("labels");
+  const pushEl = tl.get("push");
+  const countEl = tl.get("count");
+  const lockEl = tl.get("lock");
+  const bannerEl = tl.get("banner");
+  const markEl = tl.get("mark");
+  const deltaEl = tl.get("delta");
+  const compEl = tl.get("comparison");
+  const lockAt = at("lock");
+  const bannerAt = at("banner");
   const c = THEMES[theme];
   const fg = ink ?? c.ink;
   const u = Math.min(W / 1280, H / 720);
 
   // ── Readout ───────────────────────────────────────────────────────────────
-  const run = RUN(ramp(t, COUNT_AT, lockAt - COUNT_AT));
+  const run = RUN(ramp(t, at("count"), countEl.length));
   const locked = t >= lockAt;
   const now = locked ? value : Math.floor(value * run);
   const digits = String(Math.max(0, Math.round(value))).length;
   const shown = String(now).padStart(digits, " ");
-  const lockKick = kick(t - lockAt, 9);
-  const barFlash = locked && t < lockAt + 2 ? 1 : 0;
+  const lockKick = kick(t - lockAt, lockEl.length);
+  const barFlash = locked && t < lockAt + lockEl.beat("flash") ? 1 : 0;
 
   // ── Layout ────────────────────────────────────────────────────────────────
   const marginX = 76 * u;
@@ -213,19 +243,24 @@ export function SpeedTrap({
   const cellW = 0.64 * numFs;
   const numTop = barY - 64 * u - numFs * 0.98;
 
-  const trackIn = SLAM(ramp(t, 0, 8));
-  const labelsIn = ramp(t, 3, 8);
+  const trackIn = SLAM(ramp(t, at("track"), trackEl.length));
+  const labelsIn = ramp(t, at("labels"), labelsEl.length);
   const fillFrac = (locked ? value : value * run) / max;
 
-  const bannerIn = SLAM(ramp(t, lockAt + 2, 6));
-  const bannerBlink = t >= lockAt + 11 && t < lockAt + 14 ? 0 : 1;
-  const markIn = SLAM(ramp(t, lockAt + 8, 8));
-  const deltaIn = SLAM(ramp(t, lockAt + 13, 8));
-  const compIn = SLAM(ramp(t, lockAt + 16, 10));
+  const bannerIn = SLAM(ramp(t, bannerAt, bannerEl.beat("wipe")));
+  const bannerBlink =
+    t >= bannerAt + bannerEl.beat("blinkAt") && t < bannerAt + bannerEl.length
+      ? 0
+      : 1;
+  const markIn = SLAM(ramp(t, at("mark"), markEl.length));
+  const deltaIn = SLAM(ramp(t, at("delta"), deltaEl.length));
+  const compIn = SLAM(ramp(t, at("comparison"), compEl.length));
 
   const zoomAt = (f: number) =>
-    (1 + 0.035 * Easing.bezier(0.65, 0, 0.35, 1)(ramp(f, 0, lockAt))) *
-    (1 + 0.012 * kick(f - lockAt, 9));
+    (1 +
+      0.035 *
+        Easing.bezier(0.65, 0, 0.35, 1)(ramp(f, at("push"), pushEl.length))) *
+    (1 + 0.012 * kick(f - lockAt, lockEl.length));
   const zoom = zoomAt(t);
   // The push and the kick chain into each other, so the camera is tested on
   // its neighbouring frames rather than on one progress.
@@ -347,7 +382,7 @@ export function SpeedTrap({
               clipPath: `inset(0 ${(1 - bannerIn) * 100}% 0 0)`,
               opacity: bannerBlink,
               background:
-                t < lockAt + 4
+                t < bannerAt + bannerEl.beat("white")
                   ? "#FFFFFF"
                   : `linear-gradient(100deg, ${FLUTED[2]} 0%, #FF9A5E 100%)`,
               display: "flex",
@@ -479,7 +514,7 @@ export function SpeedTrap({
               top: barY - 48 * u,
               color: fg,
               opacity: markIn,
-              transform: `translateY(${(1 - markIn) * 10 * u}px)${glide(midway(ramp(t, lockAt + 8, 8)) && !camMoving)}`,
+              transform: `translateY(${(1 - markIn) * 10 * u}px)${glide(midway(ramp(t, at("mark"), markEl.length)) && !camMoving)}`,
               whiteSpace: "nowrap",
             }}
           >
@@ -502,7 +537,7 @@ export function SpeedTrap({
                 alignItems: "baseline",
                 gap: 14 * u,
                 paddingTop: 18 * u,
-                transform: `translateY(${-(1 - compIn) * 90 * u}px)${glide(midway(ramp(t, lockAt + 16, 10)) && !camMoving)}`,
+                transform: `translateY(${-(1 - compIn) * 90 * u}px)${glide(midway(ramp(t, at("comparison"), compEl.length)) && !camMoving)}`,
                 whiteSpace: "nowrap",
               }}
             >

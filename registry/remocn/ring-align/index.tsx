@@ -5,6 +5,19 @@ import type React from "react";
 import { useId } from "react";
 import { AbsoluteFill, Easing, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  BEAM_GAP,
+  DEFAULT_WORD,
+  FIRST_LOCK,
+  HOLD,
+  LOCK_STEP,
+  type RingAlignElementId,
+  ringAlignTimeline,
+  ringCount,
+  TAIL,
+  TAIL_DELAY,
+} from "./timeline";
 
 const { fontFamily: display } = loadDisplay("normal", {
   weights: ["500"],
@@ -35,15 +48,12 @@ export interface RingAlignProps {
   grain?: boolean;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches single ring locks and the beam, by the ids in
+   * `./timeline`. Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<RingAlignElementId>;
 }
-
-const FIRST_LOCK = 30;
-const LOCK_STEP = 8;
-const BEAM_GAP = 4;
-const BEAM = 14;
-const TAIL_DELAY = 8;
-const TAIL = 16;
-const HOLD = 32;
 
 export const ringAlignLength = (rings = 6, stagger = LOCK_STEP) =>
   FIRST_LOCK + (rings - 1) * stagger + BEAM_GAP + TAIL_DELAY + TAIL + HOLD;
@@ -126,28 +136,35 @@ function ScaleLayer({
   );
 }
 
-export function RingAlign({
-  word = "Aligned.",
-  rings = 6,
-  accent = "#3B5BFD",
-  stagger = LOCK_STEP,
-  dotSize = 3.1,
-  ink,
-  background,
-  fontFamily = display,
-  scale = 1,
-  delay = 0,
-  grain = true,
-  speed = 1,
-  theme = "dark",
-}: RingAlignProps) {
+export function RingAlign(props: RingAlignProps) {
+  const {
+    word = DEFAULT_WORD,
+    rings = 6,
+    accent = "#3B5BFD",
+    dotSize = 3.1,
+    ink,
+    background,
+    fontFamily = display,
+    scale = 1,
+    delay = 0,
+    grain = true,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H } = useSceneConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    ringAlignTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const isLight = theme === "light";
   const bg = isLight ? "#F5F4F0" : "#0A0A0B";
   const fg = ink ?? (isLight ? "#141416" : "#EEEEF0");
   const u = Math.min(W, H) / 720;
-  const n = Math.max(3, Math.min(9, Math.round(rings)));
+  const n = ringCount(rings);
   const cx = W / 2;
   const cy = H / 2;
 
@@ -158,8 +175,8 @@ export function RingAlign({
   const dotR = dotSize * u;
   const pitch = 17 * u;
 
-  const lastLock = FIRST_LOCK + (n - 1) * stagger;
-  const beamStart = lastLock + BEAM_GAP;
+  const beam = tl.get("beam");
+  const beamStart = beam.start;
 
   const ringPaths: { d: string; opacity: number }[] = [];
   for (let k = 0; k < n; k++) {
@@ -167,17 +184,25 @@ export function RingAlign({
     const r = rOut - ((rOut - rIn) * k) / (n - 1);
     const count = Math.round((Math.PI * 2 * r) / pitch);
     const gap = 2 * Math.asin(Math.min(0.98, (band / 2 + pad) / r));
-    const lockAt = FIRST_LOCK + k * stagger;
+    const ring = tl.get(`ring:${k}`);
+    const lockAt = ring.start;
+    const spin = ring.beat("spin");
     const dir = k % 2 === 0 ? 1 : -1;
     const offset = dir * Math.PI * (1.35 + hash(k * 4.1) * 0.5);
-    const x = Math.min(1, Math.max(0, t / lockAt));
+    const x = Math.min(1, Math.max(0, (t - (lockAt - spin)) / spin));
     let rot = offset * (1 - LOCK(x));
     const since = t - lockAt;
     if (since > 0) {
       rot +=
         -dir * 0.012 * Math.sin((since / 7) * Math.PI) * Math.exp(-since / 4);
     }
-    const lit = interpolate(since, [-2, 6], [0.42, 1], CLAMP);
+    const lightAt = ring.beat("lightAt");
+    const lit = interpolate(
+      since,
+      [lightAt, lightAt + ring.beat("light")],
+      [0.42, 1],
+      CLAMP,
+    );
     const segs: string[] = [];
     for (let j = 0; j < count; j++) {
       const a = (j / count) * Math.PI * 2 + rot;
@@ -189,14 +214,16 @@ export function RingAlign({
     ringPaths.push({ d: segs.join(""), opacity: lit });
   }
 
-  const head =
-    W * WIPE(interpolate(t, [beamStart, beamStart + BEAM], [0, 1], CLAMP));
+  const head = W * WIPE(interpolate(t, [beam.start, beam.end], [0, 1], CLAMP));
   const tail =
     W *
     TAIL_EASE(
       interpolate(
         t,
-        [beamStart + TAIL_DELAY, beamStart + TAIL_DELAY + TAIL],
+        [
+          beamStart + beam.beat("tailAt"),
+          beamStart + beam.beat("tailAt") + beam.beat("tail"),
+        ],
         [0, 1],
         CLAMP,
       ),
@@ -207,7 +234,7 @@ export function RingAlign({
   const [g0, g1, g2, g3] = GLOW;
   const drift = interpolate(
     t,
-    [beamStart, ringAlignLength(n, stagger)],
+    [beamStart, beamStart + beam.beat("drift")],
     [0, 1],
     CLAMP,
   );

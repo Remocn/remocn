@@ -1,6 +1,20 @@
 "use client";
 
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import {
+  type ResolvedTimeline,
+  resolve,
+  type Timing,
+  useTimeline,
+} from "@/lib/remocn/timeline";
+import {
+  ERASE,
+  HOLD,
+  holdOf,
+  SETTLE,
+  type SquiggleElementId,
+  squiggleTimeline,
+} from "./timeline";
 
 export type SquiggleShape = "wave" | "zigzag" | "loops" | "coil";
 export type SquiggleJoin = "miter" | "round";
@@ -21,6 +35,11 @@ export interface SquiggleProps {
   delay?: number;
   speed?: number;
   className?: string;
+  /**
+   * Moves, trims or stretches the draw, the settle and the erase, by the ids
+   * in `./timeline`. Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<SquiggleElementId>;
 }
 
 type Paint = "color" | "className";
@@ -45,7 +64,9 @@ export interface SquiggleCurveInput {
   unit?: number;
 }
 
-export const squiggleDefaults: Required<Omit<SquiggleProps, "className">> = {
+export const squiggleDefaults: Required<
+  Omit<SquiggleProps, "className" | "timing">
+> = {
   shape: "wave",
   x: 0.375,
   y: 0.5,
@@ -56,7 +77,7 @@ export const squiggleDefaults: Required<Omit<SquiggleProps, "className">> = {
   weight: 3,
   color: "#ffffff",
   settle: 0.5,
-  hold: 12,
+  hold: HOLD,
   erase: true,
   delay: 0,
   speed: 1,
@@ -64,9 +85,6 @@ export const squiggleDefaults: Required<Omit<SquiggleProps, "className">> = {
 
 type SmoothShape = Exclude<SquiggleShape, "zigzag">;
 
-const DRAW = 24;
-const SETTLE = 36;
-const ERASE = 18;
 const SWIM = 1.5;
 const EXIT_SWIM = 0.5;
 const TAIL = 14;
@@ -101,20 +119,36 @@ function smoothstep(value: number) {
   return t * t * (3 - 2 * t);
 }
 
+/** The schedule without `timing`; it does not read the scene length. */
+const scheduleOf = (options: Pick<SquiggleOptions, "hold" | "erase">) =>
+  resolve(squiggleTimeline(options, { length: 0 }));
+
+/**
+ * The draw, settle and erase spans the helpers below read. `tl` is the
+ * resolved schedule; without it the one `options` give, with no `timing`.
+ */
 export function getSquiggleTimeline(
   options: Pick<SquiggleOptions, "hold" | "erase"> = {},
+  tl: ResolvedTimeline<SquiggleElementId> = scheduleOf(options),
 ) {
-  const hold = Math.max(0, finite(options.hold, squiggleDefaults.hold));
+  const hold = holdOf(options.hold);
   const erase = options.erase !== false;
-  const eraseStart = SETTLE + hold;
-  const eraseEnd = eraseStart + ERASE;
-  const end = erase ? eraseEnd : SETTLE;
+  const draw = tl.get("draw");
+  const settle = tl.get("settle");
+  const wipe = erase ? tl.get("erase") : undefined;
+  const eraseStart = wipe ? wipe.start : SETTLE + hold;
+  const eraseLength = wipe ? wipe.length : ERASE;
+  const eraseEnd = eraseStart + eraseLength;
+  const end = erase ? eraseEnd : settle.end;
   return {
-    draw: DRAW,
-    settle: SETTLE,
+    draw: draw.length,
+    drawAt: draw.start,
+    settle: settle.length,
+    settleAt: settle.start,
     hold,
     erase,
     eraseStart,
+    eraseLength,
     eraseEnd,
     end,
     duration: end + (erase ? TAIL : REST),
@@ -145,9 +179,13 @@ export function getSquiggleTime(
   return (elapsed * 30 * rateOf(options.speed)) / fps;
 }
 
-export function getSquiggleHead(time: number) {
-  if (!(time > 0)) return 0;
-  return easeOutQuart(Math.min(1, time / DRAW));
+export function getSquiggleHead(
+  time: number,
+  timeline: SquiggleTimeline = getSquiggleTimeline(),
+) {
+  const t = time - timeline.drawAt;
+  if (!(t > 0)) return 0;
+  return easeOutQuart(Math.min(1, t / timeline.draw));
 }
 
 export function getSquiggleTail(
@@ -155,21 +193,26 @@ export function getSquiggleTail(
   timeline: SquiggleTimeline = getSquiggleTimeline(),
 ) {
   if (!timeline.erase) return 0;
-  const progress = (time - timeline.eraseStart) / ERASE;
+  const progress = (time - timeline.eraseStart) / timeline.eraseLength;
   if (!(progress > 0)) return 0;
   return easeInOutCubic(Math.min(1, progress));
 }
 
-export function getSquiggleCalm(time: number) {
-  if (!(time > 0)) return 0;
-  return easeInOutSine(Math.min(1, time / SETTLE));
+export function getSquiggleCalm(
+  time: number,
+  timeline: SquiggleTimeline = getSquiggleTimeline(),
+) {
+  const t = time - timeline.settleAt;
+  if (!(t > 0)) return 0;
+  return easeInOutSine(Math.min(1, t / timeline.settle));
 }
 
 export function getSquigglePhase(
   time: number,
   timeline: SquiggleTimeline = getSquiggleTimeline(),
 ) {
-  const swim = time > 0 ? easeOutCubic(Math.min(1, time / SETTLE)) : 0;
+  const t = time - timeline.settleAt;
+  const swim = t > 0 ? easeOutCubic(Math.min(1, t / timeline.settle)) : 0;
   return SWIM * swim + EXIT_SWIM * getSquiggleTail(time, timeline);
 }
 
@@ -285,19 +328,24 @@ export function getSquigglePath(points: readonly SquigglePoint[]) {
   return path;
 }
 
-export function getSquiggleState(frame: number, options: SquiggleOptions = {}) {
+/** `tl` is the resolved schedule; without it the one `options` give. */
+export function getSquiggleState(
+  frame: number,
+  options: SquiggleOptions = {},
+  tl: ResolvedTimeline<SquiggleElementId> = scheduleOf(options),
+) {
   const width = Math.max(1, finite(options.width, 1280));
   const height = Math.max(1, finite(options.height, 720));
   const unit = height / 720;
   const shape = shapeOf(options.shape);
-  const timeline = getSquiggleTimeline(options);
+  const timeline = getSquiggleTimeline(options, tl);
   const time = getSquiggleTime(frame, options);
-  const head = getSquiggleHead(time);
+  const head = getSquiggleHead(time, timeline);
   const tail = getSquiggleTail(time, timeline);
   const phase = getSquigglePhase(time, timeline);
   const settle = clamp(finite(options.settle, squiggleDefaults.settle), 0, 1);
   const lively = finite(options.amplitude, squiggleDefaults.amplitude);
-  const calm = 1 - settle * getSquiggleCalm(time);
+  const calm = 1 - settle * getSquiggleCalm(time, timeline);
   const amplitude = Math.max(0, lively) * unit * calm;
   const length = Math.max(0, finite(options.length, squiggleDefaults.length));
   const course = length * unit;
@@ -356,43 +404,55 @@ export function getSquiggleState(frame: number, options: SquiggleOptions = {}) {
 
 export type SquiggleState = ReturnType<typeof getSquiggleState>;
 
-export function Squiggle({
-  shape = squiggleDefaults.shape,
-  x = squiggleDefaults.x,
-  y = squiggleDefaults.y,
-  length = squiggleDefaults.length,
-  angle = squiggleDefaults.angle,
-  amplitude = squiggleDefaults.amplitude,
-  wavelength = squiggleDefaults.wavelength,
-  weight = squiggleDefaults.weight,
-  color = squiggleDefaults.color,
-  settle = squiggleDefaults.settle,
-  hold = squiggleDefaults.hold,
-  erase = squiggleDefaults.erase,
-  delay = squiggleDefaults.delay,
-  speed = squiggleDefaults.speed,
-  className,
-}: SquiggleProps) {
+export function Squiggle(props: SquiggleProps) {
+  const {
+    shape = squiggleDefaults.shape,
+    x = squiggleDefaults.x,
+    y = squiggleDefaults.y,
+    length = squiggleDefaults.length,
+    angle = squiggleDefaults.angle,
+    amplitude = squiggleDefaults.amplitude,
+    wavelength = squiggleDefaults.wavelength,
+    weight = squiggleDefaults.weight,
+    color = squiggleDefaults.color,
+    settle = squiggleDefaults.settle,
+    hold = squiggleDefaults.hold,
+    erase = squiggleDefaults.erase,
+    delay = squiggleDefaults.delay,
+    speed = squiggleDefaults.speed,
+    className,
+    timing,
+  } = props;
   const frame = useSceneFrame();
-  const { width, height, fps } = useSceneConfig();
-  const state = getSquiggleState(frame, {
-    shape,
-    x,
-    y,
-    length,
-    angle,
-    amplitude,
-    wavelength,
-    weight,
-    settle,
-    hold,
-    erase,
-    delay,
-    speed,
-    width,
-    height,
-    fps,
-  });
+  const { width, height, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    squiggleTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const state = getSquiggleState(
+    frame,
+    {
+      shape,
+      x,
+      y,
+      length,
+      angle,
+      amplitude,
+      wavelength,
+      weight,
+      settle,
+      hold,
+      erase,
+      delay,
+      speed,
+      width,
+      height,
+      fps,
+    },
+    tl,
+  );
 
   return (
     <div

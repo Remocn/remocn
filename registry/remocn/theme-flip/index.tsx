@@ -9,6 +9,12 @@ import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
+import {
+  type ResolvedElement,
+  type Timing,
+  useTimeline,
+} from "@/lib/remocn/timeline";
+import { type ThemeFlipElementId, themeFlipTimeline } from "./timeline";
 
 const { fontFamily: sans } = loadFont("normal", {
   weights: ["300", "400"],
@@ -62,15 +68,18 @@ export interface ThemeFlipProps {
   /** gradients.sh preset for the ground. Defaults to "charcoal-satin". */
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
+  /**
+   * Moves, trims or stretches the window's entry, the camera moves, the
+   * cursor, the click and the theme flood, by the ids in `./timeline`. Frames
+   * on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<ThemeFlipElementId>;
 }
 
 const SEG = 80;
 const TOGGLE_RIGHT = 1431 - 12 - 64 - 6;
 const DEFAULT_ORIGIN = { x: TOGGLE_RIGHT - 2 - SEG / 2, y: 33 };
 
-const CLICK = 36;
-const FLOOD = 26;
-const REV = 92;
 const ZOOM = 2.1;
 const MOVE = Easing.bezier(0.65, 0, 0.35, 1);
 const CAMERA = Easing.bezier(0.87, 0, 0.13, 1);
@@ -216,35 +225,60 @@ function ScaleLayer({
   );
 }
 
-export function ThemeFlip({
-  from,
-  to,
-  fromSrc,
-  toSrc,
-  startTheme = "light",
-  origin,
-  showToggle = true,
-  showCursor = true,
-  reverse = false,
-  screenshotWidth = MOCK_W,
-  screenshotHeight = MOCK_H,
-  clickAt = CLICK,
-  brand = "remocn",
-  logo,
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = sans,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  zoom = ZOOM,
-  ground,
-  groundParams,
-}: ThemeFlipProps) {
+export function ThemeFlip(props: ThemeFlipProps) {
+  const {
+    from,
+    to,
+    fromSrc,
+    toSrc,
+    startTheme = "light",
+    origin,
+    showToggle = true,
+    showCursor = true,
+    reverse = false,
+    screenshotWidth = MOCK_W,
+    screenshotHeight = MOCK_H,
+    brand = "remocn",
+    logo,
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = sans,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    zoom = ZOOM,
+    ground,
+    groundParams,
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H, fps } = useSceneConfig();
+  const { width: W, height: H, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    themeFlipTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const enterEl = tl.get("enter");
+  const pushEl = tl.get("push");
+  const approach = tl.get("approach");
+  const click = tl.get("click");
+  const flood = tl.get("flood");
+  const pull = tl.get("pull");
+  const parkEl = tl.get("park");
+  // The flip back exists only with `reverse`.
+  const back = reverse
+    ? {
+        push: tl.get("back:push"),
+        approach: tl.get("back:approach"),
+        click: tl.get("back:click"),
+        flood: tl.get("back:flood"),
+        pull: tl.get("back:pull"),
+        park: tl.get("back:park"),
+      }
+    : undefined;
   const tall = H > W * 1.2;
   const u = Math.min(W / 1280, H / 720);
   const sw = screenshotWidth;
@@ -253,11 +287,16 @@ export function ThemeFlip({
     startTheme === "dark" ? ["dark", "light"] : ["light", "dark"];
   const custom = Boolean(from || to || fromSrc || toSrc);
   const o = origin ?? DEFAULT_ORIGIN;
-  const back = startTheme === "dark" ? 1 : -1;
+  const backDir = startTheme === "dark" ? 1 : -1;
 
   const s = tall ? (W * 0.9) / sw : (W * 0.76) / sw;
   const left = (W - sw * s) / 2;
-  const enterAt = (f: number) => spring({ frame: f + 2, fps, config: HEAVY });
+  const enterAt = (f: number) =>
+    spring({
+      frame: f - enterEl.start + enterEl.beat("lead"),
+      fps,
+      config: HEAVY,
+    });
   const enter = enterAt(frame);
   const topRest = tall ? H * 0.47 : H * 0.13;
   const rise = (1 - enter) * 0.06 * H;
@@ -267,28 +306,41 @@ export function ThemeFlip({
     y: top + y * s,
   });
   const flipPt = toStage(o.x, o.y);
-  const backPt = toStage(o.x + back * SEG, o.y);
-  const focus = toStage(o.x + (back * SEG) / 2, o.y);
+  const backPt = toStage(o.x + backDir * SEG, o.y);
+  const focus = toStage(o.x + (backDir * SEG) / 2, o.y);
 
-  const REV_CLICK = REV + 24;
-  const fwd = spring({ frame: frame - clickAt - 1, fps, config: CARD });
-  const bwd = reverse
-    ? spring({ frame: frame - REV_CLICK - 1, fps, config: CARD })
+  const fwd = spring({
+    frame: frame - click.start - click.beat("knob"),
+    fps,
+    config: CARD,
+  });
+  const bwd = back
+    ? spring({
+        frame: frame - back.click.start - back.click.beat("knob"),
+        fps,
+        config: CARD,
+      })
     : 0;
   const knob = fwd - bwd;
   const k = startTheme === "dark" ? 1 - knob : knob;
   const knobRest = reverse ? 0 : 1;
   const kRest = startTheme === "dark" ? 1 - knobRest : knobRest;
-  const hover =
-    ramp(frame, clickAt - 6, 4, ENTER) * (1 - ramp(frame, clickAt + 2, 3)) +
-    (reverse
-      ? ramp(frame, REV_CLICK - 6, 4, ENTER) *
-        (1 - ramp(frame, REV_CLICK + 2, 3))
-      : 0);
-  const pressAt = (at: number) =>
-    spring({ frame: frame - (at - 2), fps, config: CHIP }) -
-    spring({ frame: frame - (at + 2), fps, config: CHIP });
-  const press = pressAt(clickAt) + (reverse ? pressAt(REV_CLICK) : 0);
+  const hoverAt = (c: ResolvedElement) =>
+    ramp(frame, c.start + c.beat("hoverIn"), c.beat("hoverInLen"), ENTER) *
+    (1 - ramp(frame, c.start + c.beat("hoverOut"), c.beat("hoverOutLen")));
+  const hover = hoverAt(click) + (back ? hoverAt(back.click) : 0);
+  const pressAt = (c: ResolvedElement) =>
+    spring({
+      frame: frame - (c.start + c.beat("pressIn")),
+      fps,
+      config: CHIP,
+    }) -
+    spring({
+      frame: frame - (c.start + c.beat("pressOut")),
+      fps,
+      config: CHIP,
+    });
+  const press = pressAt(click) + (back ? pressAt(back.click) : 0);
 
   const winR = { x0: left, y0: top, x1: left + sw * s, y1: top + sh * s };
   const maxR =
@@ -300,14 +352,17 @@ export function ThemeFlip({
         [winR.x1, winR.y1],
       ].map(([x, y]) => Math.hypot(x - flipPt.x, y - flipPt.y)),
     ) * 1.02;
-  const p1 = WIPE(clamp((frame - clickAt - 2) / FLOOD, 0, 1));
-  const p2 = reverse ? WIPE(clamp((frame - REV_CLICK - 2) / FLOOD, 0, 1)) : 0;
+  const p1 = WIPE(clamp((frame - flood.start) / flood.length, 0, 1));
+  const p2 = back
+    ? WIPE(clamp((frame - back.flood.start) / back.flood.length, 0, 1))
+    : 0;
 
   const zAt = (f: number) =>
-    ramp(f, 2, 28, CAMERA) -
-    ramp(f, clickAt + 6, 32, CAMERA) +
-    (reverse
-      ? ramp(f, REV, 22, CAMERA) - ramp(f, REV_CLICK + 6, 32, CAMERA)
+    ramp(f, pushEl.start, pushEl.length, CAMERA) -
+    ramp(f, pull.start, pull.length, CAMERA) +
+    (back
+      ? ramp(f, back.push.start, back.push.length, CAMERA) -
+        ramp(f, back.pull.start, back.pull.length, CAMERA)
       : 0);
   const z = zAt(frame);
   const shifts = (at: (f: number) => number, eps: number) =>
@@ -325,25 +380,25 @@ export function ThemeFlip({
 
   const startPt = { x: W * 0.74, y: tall ? H * 0.82 : H * 0.92 };
   const park = { x: flipPt.x + 70 * u, y: flipPt.y + 90 * u };
-  const m1 = ramp(frame, 6, clickAt - 10, ENTER);
+  const m1 = ramp(frame, approach.start, approach.length, ENTER);
   const arc = Math.sin(Math.PI * m1) * 46 * u;
   let cur = {
     x: startPt.x + (flipPt.x - startPt.x) * m1 + arc,
     y: startPt.y + (flipPt.y - startPt.y) * m1 + arc * 0.3,
   };
-  const away = ramp(frame, clickAt + 8, 22);
+  const away = ramp(frame, parkEl.start, parkEl.length);
   cur = {
     x: cur.x + (park.x - flipPt.x) * away,
     y: cur.y + (park.y - flipPt.y) * away,
   };
-  if (reverse) {
-    const m2 = ramp(frame, REV + 2, 18, ENTER);
+  if (back) {
+    const m2 = ramp(frame, back.approach.start, back.approach.length, ENTER);
     const arc2 = Math.sin(Math.PI * m2) * 20 * u;
     cur = {
       x: park.x + (backPt.x - park.x) * m2,
       y: park.y + (backPt.y - park.y) * m2 + arc2,
     };
-    const away2 = ramp(frame, REV_CLICK + 8, 22);
+    const away2 = ramp(frame, back.park.start, back.park.length);
     cur = { x: cur.x - away2 * 30 * u, y: cur.y + away2 * 70 * u };
   }
 
@@ -511,10 +566,15 @@ export function ThemeFlip({
                   px(cur.x - curRest.x) || px(cur.y - curRest.y)
                     ? `translate(${cur.x - curRest.x}px, ${cur.y - curRest.y}px)`
                     : undefined,
-                opacity: interpolate(frame, [6, 12], [0, 1], {
-                  extrapolateLeft: "clamp",
-                  extrapolateRight: "clamp",
-                }),
+                opacity: interpolate(
+                  frame,
+                  [approach.start, approach.start + approach.beat("fade")],
+                  [0, 1],
+                  {
+                    extrapolateLeft: "clamp",
+                    extrapolateRight: "clamp",
+                  },
+                ),
               }}
             >
               <Cursor size={17 * u} press={press} />

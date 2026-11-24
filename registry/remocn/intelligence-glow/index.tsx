@@ -8,6 +8,16 @@ import { useId } from "react";
 import { AbsoluteFill, Easing, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  answerWords,
+  DEFAULT_ANSWER,
+  DEFAULT_ANSWER_LEAD,
+  DEFAULT_QUESTION,
+  type IntelligenceGlowElementId,
+  intelligenceGlowTimeline,
+  questionWords,
+} from "./timeline";
 
 const { fontFamily: sans } = loadSans("normal", {
   weights: ["500"],
@@ -51,6 +61,12 @@ export interface IntelligenceGlowProps {
   grain?: boolean;
   theme?: "dark" | "light";
   speed?: number;
+  /**
+   * Moves, trims or stretches the light, the question's words, the collapse,
+   * the answer's words and the logo, by the ids in `./timeline`. Frames on
+   * the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<IntelligenceGlowElementId>;
 }
 
 const REMOCN_R_PATH =
@@ -111,17 +127,7 @@ const CLAMP = {
   extrapolateRight: "clamp",
 } as const;
 
-// Beats (frames at speed 1).
-const Q_IN = 2;
-const THINK = 32;
-const RIPPLES = [36, 54];
 const BLOBS = 16;
-const Q_OUT = 76;
-const SQUEEZE = [80, 100] as const;
-const NARROW = [88, 110] as const;
-const A_IN = 100;
-const A_STAGGER = 4;
-const LOGO_IN = 132;
 
 function Grain({ opacity }: { opacity: number }) {
   const id = `g${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
@@ -171,27 +177,40 @@ function ScaleLayer({
   );
 }
 
-export function IntelligenceGlow({
-  question = "Make a launch film for Friday?",
-  answerLead = "Done.",
-  answer = "14 shots, cut to the beat.",
-  showLogo = true,
-  logo,
-  stagger = A_STAGGER,
-  intensity = 1,
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = sans,
-  scale = 1,
-  delay = 0,
-  grain = true,
-  theme = "dark",
-  speed = 1,
-}: IntelligenceGlowProps) {
+export function IntelligenceGlow(props: IntelligenceGlowProps) {
+  const {
+    question = DEFAULT_QUESTION,
+    answerLead = DEFAULT_ANSWER_LEAD,
+    answer = DEFAULT_ANSWER,
+    showLogo = true,
+    logo,
+    intensity = 1,
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = sans,
+    scale = 1,
+    delay = 0,
+    grain = true,
+    theme = "dark",
+    speed = 1,
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H } = useSceneConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    intelligenceGlowTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const introEl = tl.get("intro");
+  const think = tl.get("think");
+  const qOutEl = tl.get("questionOut");
+  const squeeze = tl.get("squeeze");
+  const narrow = tl.get("narrow");
+  const answerAt = tl.get("answer:0").start;
   const u = H / 720;
   const c = THEMES[theme];
   const fg = ink ?? c.fg;
@@ -207,7 +226,12 @@ export function IntelligenceGlow({
   // Breath: slow swell, deeper and quicker while "thinking".
   const thinking = interpolate(
     t,
-    [THINK - 6, THINK + 6, Q_OUT, Q_OUT + 8],
+    [
+      think.start + think.beat("rampIn"),
+      think.start + think.beat("rampDone"),
+      think.end,
+      think.end + think.beat("fade"),
+    ],
     [0, 1, 1, 0],
     CLAMP,
   );
@@ -215,13 +239,13 @@ export function IntelligenceGlow({
     0.5 +
     0.5 * Math.sin((t / (44 - thinking * 14)) * Math.PI * 2 - Math.PI / 2);
   const swell = 1 + breath * (0.18 + thinking * 0.22);
-  const intro = interpolate(t, [0, 14], [0.55, 1], {
+  const intro = interpolate(t, [introEl.start, introEl.end], [0.55, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
 
   // Answer metrics. Lead word in serif italic at 1.14x so the x-heights meet.
-  const aWords = answer.split(" ").filter(Boolean);
+  const aWords = answerWords(answer);
   const estEm = answerLead.length * 0.42 * 1.14 + answer.length * 0.43 + 0.3;
   const aSize = Math.min(78 * u, (W * 0.86) / estEm);
   const aY = H * 0.46;
@@ -231,11 +255,11 @@ export function IntelligenceGlow({
 
   // Collapse: top and bottom bands squeeze to the answer rule, then the
   // strip narrows to the answer's width.
-  const sq = interpolate(t, [SQUEEZE[0], SQUEEZE[1]], [0, 1], {
+  const sq = interpolate(t, [squeeze.start, squeeze.end], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
-  const nw = interpolate(t, [NARROW[0], NARROW[1]], [0, 1], {
+  const nw = interpolate(t, [narrow.start, narrow.end], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
@@ -247,8 +271,8 @@ export function IntelligenceGlow({
   };
 
   // "Thinking" pulses: the light swells inward, three times.
-  const ripple = RIPPLES.reduce((acc, start) => {
-    const k = interpolate(t, [start, start + 24], [0, 1], CLAMP);
+  const ripple = tl.lane("Ripples").reduce((acc, e) => {
+    const k = interpolate(t, [e.start, e.end], [0, 1], CLAMP);
     return acc + Math.sin(k * Math.PI) ** 1.6;
   }, 0);
   // Pools of light riding the ring's perimeter: long and shallow along an
@@ -309,31 +333,46 @@ export function IntelligenceGlow({
         (1 + ripple * 0.25),
     };
   });
-  const rule = interpolate(t, [SQUEEZE[1] - 9, SQUEEZE[1] + 3], [0, 1], {
-    ...CLAMP,
-    easing: EASE_IO,
-  });
+  const rule = interpolate(
+    t,
+    [
+      squeeze.start + squeeze.beat("ruleIn"),
+      squeeze.start + squeeze.beat("ruleDone"),
+    ],
+    [0, 1],
+    {
+      ...CLAMP,
+      easing: EASE_IO,
+    },
+  );
 
   // Question: words rise in, shimmer while thinking, dissolve as the light
   // collapses.
-  const qWords = question.split(" ").filter(Boolean);
+  const qWords = questionWords(question);
   const qSize = Math.min(
     90 * u,
     (W * 0.74) / Math.max(6, question.length * 0.3),
   );
   const qOutAt = (tt: number) =>
-    interpolate(tt, [Q_OUT, Q_OUT + 16], [0, 1], {
+    interpolate(tt, [qOutEl.start, qOutEl.end], [0, 1], {
       ...CLAMP,
       easing: Easing.bezier(0.5, 0, 0.75, 0),
     });
   const qOut = qOutAt(t);
-  const shimmerPos = interpolate(t, [THINK, Q_OUT], [-2, qWords.length + 4]);
+  const shimmerPos = interpolate(
+    t,
+    [think.start, think.end],
+    [-2, qWords.length + 4],
+  );
 
+  const logoEl = showLogo ? tl.get("logo") : undefined;
   const logoAt = (tt: number) =>
-    interpolate(tt, [LOGO_IN, LOGO_IN + 16], [0, 1], {
-      ...CLAMP,
-      easing: EASE_OUT,
-    });
+    logoEl
+      ? interpolate(tt, [logoEl.start, logoEl.end], [0, 1], {
+          ...CLAMP,
+          easing: EASE_OUT,
+        })
+      : 0;
   const logoIn = logoAt(t);
   // The eases have long tails that still cross pixels once a progress is all
   // but settled, so a mover counts as moving while its travel in px changes
@@ -434,8 +473,9 @@ export function IntelligenceGlow({
               }}
             >
               {qWords.map((w, i) => {
+                const word = tl.get(`question:${i}`);
                 const kAt = (tt: number) =>
-                  interpolate(tt, [Q_IN + i * 3, Q_IN + i * 3 + 14], [0, 1], {
+                  interpolate(tt, [word.start, word.end], [0, 1], {
                     ...CLAMP,
                     easing: EASE_OUT,
                   });
@@ -464,7 +504,7 @@ export function IntelligenceGlow({
         ) : null}
 
         {/* Answer */}
-        {t >= A_IN - 1 ? (
+        {t >= answerAt - 1 ? (
           <div
             style={{
               position: "absolute",
@@ -481,9 +521,9 @@ export function IntelligenceGlow({
           >
             {[answerLead, ...aWords].map((w, i) => {
               const lead = i === 0;
-              const s = A_IN + i * stagger;
+              const word = tl.get(`answer:${i}`);
               const kAt = (tt: number) =>
-                interpolate(tt, [s, s + 16], [0, 1], {
+                interpolate(tt, [word.start, word.end], [0, 1], {
                   ...CLAMP,
                   easing: EASE_OUT,
                 });

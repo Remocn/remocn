@@ -23,6 +23,14 @@ import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround, gshParams } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_CAPTIONS,
+  DEFAULT_IMAGES,
+  imagesOf,
+  type WordGapMediaElementId,
+  wordGapMediaTimeline,
+} from "./timeline";
 
 const sans = loadFont("normal", {
   weights: ["400"],
@@ -51,6 +59,12 @@ export interface WordGapMediaProps {
   theme?: "dark" | "light";
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
+  /**
+   * Moves, trims or stretches the words, the card opening, each image swap
+   * and the settle, by the ids in `./timeline`.
+   * Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<WordGapMediaElementId>;
 }
 
 const LIGHT_GROUND: Partial<GradientParams> = {
@@ -93,23 +107,7 @@ const THEMES = {
   },
 };
 
-const DEFAULT_IMAGES = [
-  "templates/product-showcase/sculpture.jpg",
-  "templates/product-showcase/gallery.jpg",
-  "templates/product-showcase/workbench.jpg",
-  "templates/product-showcase/courtyard.jpg",
-];
 const DEFAULT_ASPECTS = [0.8, 1.36, 1.0, 0.86];
-const DEFAULT_CAPTIONS = ["Hero", "Gallery", "Detail", "Setting"];
-
-const BEAT = {
-  wordStep: 3,
-  enter: 12,
-  open: 24,
-  dwell: [36, 30, 24],
-  swapLen: 12,
-  settleAfter: 18,
-};
 
 const TRACK = -0.035;
 const FONT_PX = 200;
@@ -176,23 +174,22 @@ function resolveSrc(src: string) {
 
 function Words({
   text,
-  startAt,
+  spans,
   t,
   style,
-  stagger,
 }: {
   text: string;
-  startAt: number;
+  /** Each word's rise, from the schedule. */
+  spans: { start: number; end: number }[];
   t: number;
   style: CSSProperties;
-  stagger: number;
 }) {
   const parts = text.split(" ").filter(Boolean);
   return (
     <div style={{ display: "flex", whiteSpace: "pre", ...style }}>
       {parts.map((w, i) => {
-        const at = startAt + i * stagger - 4;
-        const e = interpolate(t, [at, at + BEAT.enter], [0, 1], {
+        const span = spans[i];
+        const e = interpolate(t, [span.start, span.end], [0, 1], {
           ...CLAMP,
           easing: ENTER,
         });
@@ -239,27 +236,34 @@ function ScaleLayer({
   );
 }
 
-export function WordGapMedia({
-  before = "Launch all",
-  after = "of this",
-  images = DEFAULT_IMAGES,
-  aspects = DEFAULT_ASPECTS,
-  captions = DEFAULT_CAPTIONS,
-  accent,
-  ink,
-  background,
-  fontFamily = sans.fontFamily,
-  stagger = BEAT.wordStep,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-  ground,
-  groundParams,
-}: WordGapMediaProps) {
+export function WordGapMedia(props: WordGapMediaProps) {
+  const {
+    before = "Launch all",
+    after = "of this",
+    images = DEFAULT_IMAGES,
+    aspects = DEFAULT_ASPECTS,
+    captions = DEFAULT_CAPTIONS,
+    accent,
+    ink,
+    background,
+    fontFamily = sans.fontFamily,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    ground,
+    groundParams,
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay) * speed;
   const { width: W, height: H, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    wordGapMediaTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const c = THEMES[theme];
   const inkC = ink ?? c.ink;
   const hi = accent ?? c.accent;
@@ -270,22 +274,20 @@ export function WordGapMedia({
   const t = frame;
   const portrait = H > W * 1.1;
 
-  const list = (images.length > 0 ? images : DEFAULT_IMAGES).slice(0, 4);
+  const list = imagesOf(images);
   const n = list.length;
   const aspectOf = (i: number) => aspects[i % Math.max(1, aspects.length)] ?? 1;
-  const swapAt: number[] = [BEAT.open];
-  for (let i = 1; i < n; i++) {
-    swapAt.push(
-      swapAt[i - 1] + BEAT.dwell[Math.min(i - 1, BEAT.dwell.length - 1)],
-    );
-  }
-  const settleAt =
-    n > 1 ? swapAt[n - 1] + BEAT.settleAfter : BEAT.open + BEAT.settleAfter;
+  const openEl = tl.get("open");
+  const settleEl = tl.get("settle");
+  // Image 0 arrives with the card; every next one has its own swap.
+  const swapEls = list.map((_, i) => (i === 0 ? openEl : tl.get(`image:${i}`)));
+  const swapAt = swapEls.map((e) => e.start);
+  const settleAt = settleEl.start;
 
   const open = Math.max(
     0,
     spring({
-      frame: t - BEAT.open,
+      frame: t - openEl.start,
       fps,
       config: { mass: 0.8, damping: 18, stiffness: 160 },
     }),
@@ -293,7 +295,7 @@ export function WordGapMedia({
   const swapP = (i: number, tt: number) =>
     i === 0
       ? 1
-      : interpolate(tt, [swapAt[i], swapAt[i] + BEAT.swapLen], [0, 1], {
+      : interpolate(tt, [swapEls[i].start, swapEls[i].end], [0, 1], {
           ...CLAMP,
           easing: WIPE,
         });
@@ -304,7 +306,7 @@ export function WordGapMedia({
           frame: tt - swapAt[i],
           fps,
           config: { damping: 200 },
-          durationInFrames: 16,
+          durationInFrames: swapEls[i].beat("morph"),
         });
   const aspectAt = (tt: number) => {
     let a = aspectOf(0);
@@ -365,7 +367,13 @@ export function WordGapMedia({
     const wordBlur = Math.min(4, moveSpeed * 0.12);
     const gap = F * Math.max(0.12, gapEm * Math.min(1.1, open));
 
-    const tilt = interpolate(t, [BEAT.open, durationInFrames], [-6, 3], CLAMP);
+    // The tilt runs to the clip's end, counted without `speed` as before.
+    const tilt = interpolate(
+      t,
+      [openEl.start, durationInFrames],
+      [-6, 3],
+      CLAMP,
+    );
     const tiltX = interpolate(Math.min(1, open), [0, 1], [14, 2]);
     const R = cardBase * 0.055;
     const pad = cardBase * 0.045;
@@ -374,7 +382,8 @@ export function WordGapMedia({
       const r = swapP(i, t);
       const out = i < n - 1 ? swapP(i + 1, t) : 0;
       if (r <= 0 || out >= 1) return null;
-      const life = interpolate(t, [swapAt[i], swapAt[i] + 60], [1.12, 1.02], {
+      const lifeEnd = swapAt[i] + swapEls[i].beat("life");
+      const life = interpolate(t, [swapAt[i], lifeEnd], [1.12, 1.02], {
         ...CLAMP,
         easing: LABEL_IN,
       });
@@ -406,10 +415,13 @@ export function WordGapMedia({
       );
     });
 
-    const barsIn = interpolate(t, [BEAT.open + 6, BEAT.open + 18], [0, 1], {
-      ...CLAMP,
-      easing: LABEL_IN,
-    });
+    const barsAt = openEl.start + openEl.beat("bars");
+    const barsIn = interpolate(
+      t,
+      [barsAt, barsAt + openEl.beat("barsIn")],
+      [0, 1],
+      { ...CLAMP, easing: LABEL_IN },
+    );
     const barH = Math.max(3, cardBase * 0.008);
     const barGap = barH * 1.6;
     // Each bar sits where the resting card puts it and slides by its share
@@ -465,17 +477,21 @@ export function WordGapMedia({
     const capFont = Math.max(H * 0.026, cardBase * 0.06);
     const capNodes = list.map((_, i) => {
       const label = captions[i % Math.max(1, captions.length)] ?? "";
-      const inAt = i === 0 ? BEAT.open + 9 : swapAt[i] + 4;
-      const e = interpolate(t, [inAt, inAt + 12], [0, 1], {
-        ...CLAMP,
-        easing: LABEL_IN,
-      });
+      const inAt = swapAt[i] + swapEls[i].beat("caption");
+      const e = interpolate(
+        t,
+        [inAt, inAt + swapEls[i].beat("captionIn")],
+        [0, 1],
+        { ...CLAMP, easing: LABEL_IN },
+      );
       const x =
         i < n - 1
-          ? interpolate(t, [swapAt[i + 1], swapAt[i + 1] + 8], [0, 1], {
-              ...CLAMP,
-              easing: Easing.bezier(0.55, 0, 1, 0.45),
-            })
+          ? interpolate(
+              t,
+              [swapAt[i + 1], swapAt[i + 1] + swapEls[i + 1].beat("outgoing")],
+              [0, 1],
+              { ...CLAMP, easing: Easing.bezier(0.55, 0, 1, 0.45) },
+            )
           : 0;
       if (e <= 0 || x >= 1) return null;
       return (
@@ -505,16 +521,26 @@ export function WordGapMedia({
 
     const btnD = Math.max(H * 0.062, cardBase * 0.14);
     const btnIn = spring({
-      frame: t - (BEAT.open + 12),
+      frame: t - (openEl.start + openEl.beat("button")),
       fps,
       config: { mass: 0.5, damping: 12, stiffness: 200 },
     });
-    const armed = interpolate(t - settleAt, [0, 6], [0, 1], {
-      ...CLAMP,
-      easing: LABEL_IN,
-    });
+    const armed = interpolate(
+      t - settleAt,
+      [0, settleEl.beat("armed")],
+      [0, 1],
+      {
+        ...CLAMP,
+        easing: LABEL_IN,
+      },
+    );
     const btnScale = btnIn * (t < settleAt ? 1 : 0.88 + 0.12 * settle);
-    const borderHit = interpolate(t - settleAt, [0, 4, 20], [0, 1, 0.4], CLAMP);
+    const borderHit = interpolate(
+      t - settleAt,
+      [0, settleEl.beat("hit"), settleEl.length],
+      [0, 1, 0.4],
+      CLAMP,
+    );
 
     // The slot keeps the words reflowing as before, but its centre never
     // moves (the row is centred on both axes), while its top-left edge does,
@@ -616,7 +642,8 @@ export function WordGapMedia({
       color: inkC,
       filter: wordBlur > 0.1 ? `blur(${wordBlur.toFixed(2)}px)` : undefined,
     };
-    const afterStart = before.split(" ").filter(Boolean).length * stagger;
+    const words = tl.lane("Words");
+    const beforeCount = before.split(" ").filter(Boolean).length;
     const pushAt = (f: number) =>
       interpolate(f, [0, durationInFrames], [1, 1.035], CLAMP);
     const push = pushAt(frame);
@@ -636,18 +663,16 @@ export function WordGapMedia({
       >
         <Words
           text={before}
-          startAt={0}
+          spans={words.slice(0, beforeCount)}
           t={t}
           style={textStyle}
-          stagger={stagger}
         />
         {card}
         <Words
           text={after}
-          startAt={afterStart}
+          spans={words.slice(beforeCount)}
           t={t}
           style={textStyle}
-          stagger={stagger}
         />
       </AbsoluteFill>
     );

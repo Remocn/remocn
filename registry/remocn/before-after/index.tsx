@@ -15,6 +15,8 @@ import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import { type BeforeAfterElementId, beforeAfterTimeline } from "./timeline";
 
 const hanken = loadHanken("normal", {
   weights: ["300", "400"],
@@ -48,6 +50,12 @@ export interface BeforeAfterProps {
   delay?: number;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches the frame, title, grip and the two sweeps of
+   * the divider, by the ids in `./timeline`. Frames on the scene timeline,
+   * after `delay` and `speed`.
+   */
+  timing?: Timing<BeforeAfterElementId>;
 }
 
 const THEMES = {
@@ -84,15 +92,6 @@ const HEAVY = { mass: 1, damping: 26, stiffness: 120 };
 const CARD = { mass: 0.8, damping: 18, stiffness: 160 };
 const CHIP = { mass: 0.5, damping: 12, stiffness: 200 };
 const MORPH = { damping: 200 };
-
-const BEAT = {
-  frame: 0,
-  title: 4,
-  grip: 18,
-  leg1: 24,
-  leg2: 78,
-  gripOut: 104,
-};
 
 const DEFAULT_SRC = "bg.jpg";
 const FLAT = "grayscale(0.85) contrast(0.78) brightness(0.9)";
@@ -133,35 +132,48 @@ function ScaleLayer({
   );
 }
 
-export function BeforeAfter({
-  before,
-  after,
-  beforeLabel = "Before",
-  afterLabel = "After",
-  title,
-  aspect,
-  fit = "cover",
-  pauseAt = 0.5,
-  hold = BEAT.leg2 - BEAT.leg1,
-  radius: radiusPx = 16,
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = hanken.fontFamily,
-  ground,
-  groundParams,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: BeforeAfterProps) {
+export function BeforeAfter(props: BeforeAfterProps) {
+  const {
+    before,
+    after,
+    beforeLabel = "Before",
+    afterLabel = "After",
+    title,
+    aspect,
+    fit = "cover",
+    pauseAt = 0.5,
+    radius: radiusPx = 16,
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = hanken.fontFamily,
+    ground,
+    groundParams,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width, height, fps } = useSceneConfig();
+  const { width, height, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    beforeAfterTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const enterEl = tl.get("enter");
+  const pushEl = tl.get("push");
+  const titleEl = tl.get("title");
+  const gripEl = tl.get("grip");
+  const sweep = tl.get("sweep");
+  const reveal = tl.get("reveal");
+  const release = tl.get("release");
   const p = THEMES[theme];
   const fg = ink ?? p.fg;
-  const leg2At = BEAT.leg1 + hold;
-  const gripOutAt = leg2At + (BEAT.gripOut - BEAT.leg2);
+  const leg2At = reveal.start;
 
   const portrait = height > width * 1.1;
   const s = portrait
@@ -188,27 +200,35 @@ export function BeforeAfter({
   const at = (start: number, config: Record<string, number>) =>
     spring({ frame: frame - start, fps, config });
 
-  const enter = at(BEAT.frame, HEAVY);
-  const fadeIn = interpolate(frame, [0, 10], [0, 1], {
+  const enter = at(enterEl.start, HEAVY);
+  const fadeIn = interpolate(
+    frame,
+    [enterEl.start, enterEl.start + enterEl.beat("fade")],
+    [0, 1],
+    {
+      ...CLAMP,
+      easing: ENTER,
+    },
+  );
+  const titleT = interpolate(frame, [titleEl.start, titleEl.end], [0, 1], {
     ...CLAMP,
     easing: ENTER,
   });
-  const titleT = interpolate(frame, [BEAT.title, BEAT.title + 16], [0, 1], {
-    ...CLAMP,
-    easing: ENTER,
-  });
-  const leg1 = at(BEAT.leg1, CARD);
+  const leg1 = at(sweep.start, CARD);
   const leg2 = at(leg2At, MORPH);
   const pos = frame >= leg2At ? pauseAt * (1 - leg2) : 1 - (1 - pauseAt) * leg1;
-  const push = interpolate(frame, [0, 150], [1, 1.02], CLAMP);
+  const push = interpolate(frame, [pushEl.start, pushEl.end], [1, 1.02], CLAMP);
 
-  const gripIn = at(BEAT.grip, CHIP);
-  const gripOut = interpolate(frame, [gripOutAt, gripOutAt + 8], [0, 1], {
+  const gripIn = at(gripEl.start, CHIP);
+  const gripOut = interpolate(frame, [release.start, release.end], [0, 1], {
     ...CLAMP,
     easing: EXIT,
   });
   const pressed =
-    1 - 0.04 * (at(BEAT.leg1 - 5, CHIP) - at(BEAT.leg1 + 1, CHIP));
+    1 -
+    0.04 *
+      (at(sweep.start + sweep.beat("press"), CHIP) -
+        at(sweep.start + sweep.beat("lift"), CHIP));
   const grip = Math.min(1, gripIn) * (1 - gripOut);
 
   const divX = Math.max(0, Math.min(1, pos)) * frameW;
@@ -219,10 +239,15 @@ export function BeforeAfter({
     Math.max(0, Math.min(1, frame >= leg2At ? 0 : pauseAt)) * frameW;
   const dx = divX - restX;
   const slide = Math.abs(dx) < 1e-3 ? undefined : `translateX(${dx}px)`;
-  const capsIn = interpolate(frame, [BEAT.leg1, BEAT.leg1 + 12], [0, 1], {
-    ...CLAMP,
-    easing: ENTER,
-  });
+  const capsIn = interpolate(
+    frame,
+    [sweep.start, sweep.start + sweep.beat("caps")],
+    [0, 1],
+    {
+      ...CLAMP,
+      easing: ENTER,
+    },
+  );
 
   const beforeSrc = before ?? staticFile(DEFAULT_SRC);
   const afterSrc = after ?? staticFile(DEFAULT_SRC);

@@ -1,36 +1,40 @@
 "use client";
 
 import { type CSSProperties, useMemo } from "react";
-import { Easing, random } from "remotion";
+import { Easing } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import {
+  type ResolvedTimeline,
+  type Timing,
+  useTimeline,
+} from "@/lib/remocn/timeline";
+import {
+  type AgentRunChunk,
+  type AgentRunElementId,
+  type AgentRunIcon,
+  type AgentRunScript,
+  type AgentRunSegment,
+  type AgentRunStep,
+  type AgentRunToolSpan,
+  agentRunChunks,
+  agentRunPlan,
+  agentRunTimeline,
+  agentRunTokens,
+  DEFAULT_RUN,
+  RUN_START,
+} from "./timeline";
+
+export type {
+  AgentRunChunk,
+  AgentRunIcon,
+  AgentRunScript,
+  AgentRunSegment,
+  AgentRunStep,
+  AgentRunToolSpan,
+};
 
 export type AgentRunTheme = "light" | "dark";
-
-export type AgentRunIcon =
-  | "chart"
-  | "database"
-  | "search"
-  | "book"
-  | "globe"
-  | "terminal"
-  | "file";
-
-export interface AgentRunStep {
-  name: string;
-  detail?: string;
-  duration: number;
-  icon?: AgentRunIcon;
-  sources?: readonly string[];
-}
-
-export interface AgentRunScript {
-  title?: string;
-  prompt: string;
-  plan?: readonly string[];
-  steps?: readonly AgentRunStep[];
-  answer: string;
-}
 
 export interface AgentRunProps {
   run?: AgentRunScript;
@@ -40,6 +44,12 @@ export interface AgentRunProps {
   seed?: number;
   speed?: number;
   className?: string;
+  /**
+   * Moves, trims or stretches the panel, the prompt, the thinking, the plan,
+   * each tool call and the answer, by the ids in `./timeline`. Frames on the
+   * scene timeline, after `speed`.
+   */
+  timing?: Timing<AgentRunElementId>;
 }
 
 export interface AgentRunOptions {
@@ -54,74 +64,11 @@ export interface AgentRunPlayback {
   speed?: number;
 }
 
-export const defaultAgentRun: AgentRunScript = {
-  title: "Checkout conversion drop",
-  prompt: "Why did checkout conversion drop last week?",
-  plan: [
-    "Compare the checkout funnel with the week before",
-    "Break the drop down by browser and step",
-    "Check what shipped and what the error logs say",
-  ],
-  steps: [
-    {
-      icon: "chart",
-      name: "Query analytics",
-      detail: "checkout funnel, last 7 days vs prior 7",
-      duration: 1.4,
-    },
-    {
-      icon: "database",
-      name: "Run SQL",
-      detail: "conversion by browser and step",
-      duration: 2.3,
-    },
-    {
-      icon: "search",
-      name: "Search logs",
-      detail: "Apple Pay errors on Safari",
-      duration: 1.1,
-    },
-    {
-      icon: "book",
-      name: "Read 12 sources",
-      duration: 3.2,
-      sources: [
-        "Checkout funnel",
-        "Browser report",
-        "Release 4.12",
-        "PR #2186",
-        "webkit.org",
-        "developer.mozilla.org",
-        "Payments runbook",
-        "Error log",
-        "Incident notes",
-        "Apple Pay guide",
-        "Support tickets",
-        "Status page",
-      ],
-    },
-  ],
-  answer: [
-    "## Apple Pay broke on Safari in release 4.12",
-    "",
-    "Checkout conversion fell from 3.4% to 2.7% last week, a 21% drop [1]. All of it comes from the payment step on Safari, 41% of checkouts [2].",
-    "",
-    "- Safari conversion halved, from 3.5% to 1.8%",
-    "- Chrome and Firefox held steady at 3.3%",
-    '- 4.12 moved the card form into an iframe without `allow="payment"` [3]',
-    "",
-    "```tsx",
-    "<iframe",
-    "  src={cardFormUrl}",
-    '  allow="payment"',
-    "/>",
-    "```",
-    "",
-    "**Fix:** add the attribute and ship 4.12.1 today.",
-  ].join("\n"),
-};
+export const defaultAgentRun = DEFAULT_RUN;
 
-export const agentRunDefaults: Required<Omit<AgentRunProps, "className">> = {
+export const agentRunDefaults: Required<
+  Omit<AgentRunProps, "className" | "timing">
+> = {
   run: defaultAgentRun,
   theme: "light",
   accentColor: "#2563eb",
@@ -130,21 +77,10 @@ export const agentRunDefaults: Required<Omit<AgentRunProps, "className">> = {
   speed: 1,
 };
 
-const PANEL_IN = 14;
 const PANEL_RISE = 14;
-const BUBBLE_AT = 4;
-const BUBBLE_IN = 10;
 const BUBBLE_RISE = 8;
-const RUN_START = 16;
 const STATUS_IN = 6;
-const THINK_LEAD = 14;
-const THINK_TAIL = 8;
-const SWAP = 8;
 const SWAP_RISE = 4;
-const TOOL_GAP = 5;
-const TOOL_MIN = 12;
-const TOOL_MAX = 120;
-const ANSWER_GAP = 8;
 const ROW_IN = 8;
 const ROW_FADE = 6;
 const LABEL_DELAY = 2;
@@ -163,7 +99,6 @@ const CODE_OPEN = 8;
 const LINE_GROW = 5;
 const SCROLL = 24;
 const SCROLL_LEAD = 16;
-const SETTLE = 16;
 const HOLD = 45;
 const SHIMMER_PERIOD = 30;
 const SHIMMER_BAND = 3;
@@ -171,16 +106,6 @@ const SHIMMER_BASE = 0.45;
 const DOT_BACK = 1.7;
 const CITE_BACK = 2;
 const CHIP_BACK = 1.7;
-const MIN_COMPRESSION = 0.25;
-const MAX_COMPRESSION = 20;
-
-const SIZE_WEIGHTS = [8, 16, 22, 22, 17, 15];
-const GAP_WEIGHTS = [42, 33, 16, 9];
-const PAUSE_CHANCE = 0.06;
-const PAUSE_MIN = 4;
-const PAUSE_SPREAD = 4;
-const BLOCK_MIN = 2;
-const BLOCK_SPREAD = 3;
 
 const REF_HEIGHT = 720;
 const PANEL_W = 800;
@@ -260,14 +185,6 @@ const backOut = (value: number, overshoot: number) => {
 };
 const rateOf = (speed: number | undefined) =>
   Math.max(0, finite(speed, agentRunDefaults.speed));
-const seedOf = (seed: number | undefined) =>
-  finite(seed, agentRunDefaults.seed);
-const compressionOf = (compression: number | undefined) =>
-  clamp(
-    finite(compression, agentRunDefaults.compression),
-    MIN_COMPRESSION,
-    MAX_COMPRESSION,
-  );
 
 export function formatAgentRunSeconds(seconds: number) {
   const value = Math.max(0, finite(seconds, 0));
@@ -275,124 +192,6 @@ export function formatAgentRunSeconds(seconds: number) {
   const minutes = Math.floor(value / 60);
   const rest = Math.floor(value - minutes * 60);
   return `${minutes}m ${String(rest).padStart(2, "0")}s`;
-}
-
-const isLetter = (code: number) =>
-  (code >= 65 && code <= 90) || (code >= 97 && code <= 122) || code >= 192;
-const isDigit = (code: number) => code >= 48 && code <= 57;
-
-export function tokenizeAgentRun(text: string): number[] {
-  const ends: number[] = [];
-  let index = 0;
-  while (index < text.length) {
-    if (text[index] === "\n") {
-      index += 1;
-      ends.push(index);
-      continue;
-    }
-    while (
-      index < text.length &&
-      (text[index] === " " || text[index] === "\t")
-    ) {
-      index += 1;
-    }
-    if (index < text.length && text[index] !== "\n") {
-      const code = text.charCodeAt(index);
-      if (isLetter(code)) {
-        while (index < text.length && isLetter(text.charCodeAt(index))) {
-          index += 1;
-        }
-      } else if (isDigit(code)) {
-        const stop = Math.min(text.length, index + 3);
-        while (index < stop && isDigit(text.charCodeAt(index))) {
-          index += 1;
-        }
-      } else {
-        index += 1;
-      }
-    }
-    ends.push(index);
-  }
-  return ends;
-}
-
-export interface AgentRunChunk {
-  index: number;
-  at: number;
-  start: number;
-  end: number;
-  tokens: number;
-  block: boolean;
-}
-
-function pick(weights: readonly number[], value: number) {
-  const total = weights.reduce((sum, weight) => sum + weight, 0);
-  let cursor = value * total;
-  for (const [index, weight] of weights.entries()) {
-    if (cursor < weight) return index;
-    cursor -= weight;
-  }
-  return weights.length - 1;
-}
-
-export function getAgentRunChunks(
-  text: string,
-  seed = agentRunDefaults.seed,
-  stream = "answer",
-): AgentRunChunk[] {
-  const ends = tokenizeAgentRun(text);
-  const startOf = (token: number) => (token > 0 ? ends[token - 1] : 0);
-  const isNewline = (token: number) =>
-    token < ends.length && text[startOf(token)] === "\n";
-  const key = `agent-run-${seedOf(seed)}-${stream}`;
-  const chunks: AgentRunChunk[] = [];
-  let token = 0;
-  let at = 0;
-  let block = false;
-  while (token < ends.length) {
-    const index = chunks.length;
-    const size = pick(SIZE_WEIGHTS, random(`${key}-size-${index}`)) + 1;
-    let stop = Math.min(ends.length, token + size);
-    let cut = false;
-    for (let cursor = token; cursor < stop; cursor++) {
-      if (isNewline(cursor) && isNewline(cursor + 1)) {
-        stop = cursor + 2;
-        cut = true;
-        break;
-      }
-    }
-    if (!cut && isNewline(stop - 1) && isNewline(stop)) {
-      stop += 1;
-      cut = true;
-    }
-    while (cut && isNewline(stop)) stop += 1;
-    if (index > 0) {
-      at += pick(GAP_WEIGHTS, random(`${key}-gap-${index}`)) + 1;
-      if (random(`${key}-pause-${index}`) < PAUSE_CHANCE) {
-        const hold = random(`${key}-hold-${index}`) * PAUSE_SPREAD;
-        at += PAUSE_MIN + Math.floor(hold);
-      }
-      if (block) {
-        const extra = random(`${key}-block-${index}`) * BLOCK_SPREAD;
-        at += BLOCK_MIN + Math.floor(extra);
-      }
-    }
-    chunks.push({
-      index,
-      at,
-      start: startOf(token),
-      end: ends[stop - 1],
-      tokens: stop - token,
-      block,
-    });
-    block = cut;
-    token = stop;
-  }
-  return chunks;
-}
-
-function lastArrival(chunks: readonly AgentRunChunk[]) {
-  return chunks.length > 0 ? chunks[chunks.length - 1].at : 0;
 }
 
 function chunkIndexAt(chunks: readonly AgentRunChunk[], offset: number) {
@@ -899,95 +698,11 @@ export function getAgentRunFrame(width?: number, height?: number) {
 
 export type AgentRunFrame = ReturnType<typeof getAgentRunFrame>;
 
-export interface AgentRunSegment {
-  kind: "think" | "gap" | "tool" | "answer";
-  from: number;
-  to: number;
-  realFrom: number;
-  real: number;
-}
+export const tokenizeAgentRun = agentRunTokens;
 
-export interface AgentRunToolSpan {
-  index: number;
-  start: number;
-  end: number;
-  span: number;
-  duration: number;
-  realStart: number;
-}
+export const getAgentRunChunks = agentRunChunks;
 
-function planTextOf(run: AgentRunScript) {
-  return (run.plan ?? []).join("\n");
-}
-
-export function getAgentRunTimeline(
-  run: AgentRunScript = defaultAgentRun,
-  options: AgentRunOptions = {},
-) {
-  const seed = seedOf(options.seed);
-  const compression = compressionOf(options.compression);
-  const perFrame = compression / 30;
-  const planText = planTextOf(run);
-  const planChunks =
-    planText.length > 0 ? getAgentRunChunks(planText, seed, "plan") : [];
-  const planStart = RUN_START + THINK_LEAD;
-  const planEnd = planStart + lastArrival(planChunks);
-  const thinkEnd = planEnd + THINK_TAIL;
-  const segments: AgentRunSegment[] = [];
-  let real = 0;
-  const push = (
-    kind: AgentRunSegment["kind"],
-    from: number,
-    to: number,
-    seconds: number,
-  ) => {
-    segments.push({ kind, from, to, realFrom: real, real: seconds });
-    real += seconds;
-  };
-  push("think", RUN_START, thinkEnd, (thinkEnd - RUN_START) * perFrame);
-  const thinkSeconds = real;
-  const tools: AgentRunToolSpan[] = [];
-  let cursor = thinkEnd;
-  for (const [index, step] of (run.steps ?? []).entries()) {
-    push("gap", cursor, cursor + TOOL_GAP, TOOL_GAP * perFrame);
-    cursor += TOOL_GAP;
-    const duration = Math.max(0, finite(step.duration, 0));
-    const span = clamp(Math.round(duration / perFrame), TOOL_MIN, TOOL_MAX);
-    const realStart = real;
-    push("tool", cursor, cursor + span, duration);
-    tools.push({
-      index,
-      start: cursor,
-      end: cursor + span,
-      span,
-      duration,
-      realStart,
-    });
-    cursor += span;
-  }
-  push("gap", cursor, cursor + ANSWER_GAP, ANSWER_GAP * perFrame);
-  const answerStart = cursor + ANSWER_GAP;
-  const answerChunks = getAgentRunChunks(run.answer, seed, "answer");
-  const answerEnd = answerStart + lastArrival(answerChunks);
-  push("answer", answerStart, answerEnd, (answerEnd - answerStart) * perFrame);
-  return {
-    compression,
-    runStart: RUN_START,
-    planStart,
-    planEnd,
-    thinkEnd,
-    thinkSeconds,
-    tools,
-    answerStart,
-    answerEnd,
-    runEnd: answerEnd,
-    settled: answerEnd + SETTLE,
-    realTotal: real,
-    segments,
-    planChunks,
-    answerChunks,
-  };
-}
+export const getAgentRunTimeline = agentRunPlan;
 
 export type AgentRunTimeline = ReturnType<typeof getAgentRunTimeline>;
 
@@ -1269,8 +984,8 @@ export function getAgentRunGrowth(
   timeline: AgentRunTimeline,
 ) {
   const events: { at: number; bottom: number }[] = [
-    { at: BUBBLE_AT, bottom: layout.bubble.y + layout.bubble.height },
-    { at: RUN_START, bottom: layout.status.y + layout.status.height },
+    { at: timeline.bubbleAt, bottom: layout.bubble.y + layout.bubble.height },
+    { at: timeline.runStart, bottom: layout.status.y + layout.status.height },
   ];
   const { plan, tools } = layout;
   if (plan) {
@@ -1352,9 +1067,10 @@ export function getAgentRunScroll(
 export function getAgentRunModel(
   run: AgentRunScript = defaultAgentRun,
   options: AgentRunOptions = {},
+  placed?: ResolvedTimeline<AgentRunElementId>,
 ) {
   const stage = getAgentRunFrame(options.width, options.height);
-  const timeline = getAgentRunTimeline(run, options);
+  const timeline = getAgentRunTimeline(run, options, placed);
   const layout = getAgentRunLayout(run);
   const scroll = getAgentRunScrollSteps(layout, timeline, stage.viewport);
   return { run, stage, timeline, layout, scroll };
@@ -1388,8 +1104,12 @@ export function getAgentRunSpinner(
   };
 }
 
-export function getAgentRunShimmer(time: number, length: number) {
-  const cycle = (time - RUN_START) / SHIMMER_PERIOD;
+export function getAgentRunShimmer(
+  time: number,
+  length: number,
+  start = RUN_START,
+) {
+  const cycle = (time - start) / SHIMMER_PERIOD;
   const phase = cycle - Math.floor(cycle);
   const center = -SHIMMER_BAND + phase * (length + 2 * SHIMMER_BAND);
   return Array.from({ length }, (_, index) => {
@@ -1685,9 +1405,11 @@ export function getAgentRunState(
   const planLocal = time - timeline.planStart;
   const answerLocal = time - timeline.answerStart;
   const answerRevealed = getAgentRunReveal(timeline.answerChunks, answerLocal);
-  const running = time - RUN_START;
+  const running = time - timeline.runStart;
   const swap =
-    time >= timeline.thinkEnd ? expo((time - timeline.thinkEnd) / SWAP) : 0;
+    time >= timeline.thinkEnd
+      ? expo((time - timeline.thinkEnd) / timeline.swapLength)
+      : 0;
   const thinking = "Thinking";
   const blocks: AgentRunBlockState[] = [];
   for (const block of layout.blocks) {
@@ -1709,29 +1431,36 @@ export function getAgentRunState(
       height: stage.panelHeight,
       viewport: stage.viewport,
       unit: stage.unit,
-      opacity: round(easeOut((time + 1) / PANEL_IN)),
-      lift: round(PANEL_RISE * (1 - expo(time / PANEL_IN))),
+      opacity: round(easeOut((time - timeline.panelAt + 1) / timeline.panelIn)),
+      lift: round(
+        PANEL_RISE * (1 - expo((time - timeline.panelAt) / timeline.panelIn)),
+      ),
     },
     header: {
       title: run.title ?? "",
       label: formatAgentRunSeconds(elapsed),
       opacity: round(easeOut((running + 1) / STATUS_IN)),
-      spinner: getAgentRunSpinner(time, RUN_START, timeline.runEnd),
+      spinner: getAgentRunSpinner(time, timeline.runStart, timeline.runEnd),
       done: time >= timeline.runEnd,
     },
     bubble: {
       y: layout.bubble.y,
       height: layout.bubble.height,
       lines: layout.bubble.lines,
-      opacity: round(easeOut((time - BUBBLE_AT + 1) / BUBBLE_IN)),
-      lift: round(BUBBLE_RISE * (1 - expo((time - BUBBLE_AT) / BUBBLE_IN))),
+      opacity: round(
+        easeOut((time - timeline.bubbleAt + 1) / timeline.bubbleIn),
+      ),
+      lift: round(
+        BUBBLE_RISE *
+          (1 - expo((time - timeline.bubbleAt) / timeline.bubbleIn)),
+      ),
     },
     status: {
       y: layout.status.y,
       visible: running >= 0,
       opacity: round(easeOut((running + 1) / STATUS_IN)),
       thinking,
-      shimmer: getAgentRunShimmer(time, thinking.length),
+      shimmer: getAgentRunShimmer(time, thinking.length, timeline.runStart),
       thought: `Thought for ${Math.max(1, Math.round(timeline.thinkSeconds))}s`,
       swap: round(swap),
       lift: round(SWAP_RISE * (1 - swap)),
@@ -2572,21 +2301,29 @@ function Tools({
   );
 }
 
-export function AgentRun({
-  run = agentRunDefaults.run,
-  theme = agentRunDefaults.theme,
-  accentColor = agentRunDefaults.accentColor,
-  compression = agentRunDefaults.compression,
-  seed = agentRunDefaults.seed,
-  speed = agentRunDefaults.speed,
-  className,
-}: AgentRunProps) {
+export function AgentRun(props: AgentRunProps) {
+  const {
+    run = agentRunDefaults.run,
+    theme = agentRunDefaults.theme,
+    accentColor = agentRunDefaults.accentColor,
+    compression = agentRunDefaults.compression,
+    seed = agentRunDefaults.seed,
+    speed = agentRunDefaults.speed,
+    className,
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = useSceneFrame();
-  const { width, height, fps } = useSceneConfig();
+  const { width, height, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    agentRunTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const model = useMemo(
-    () => getAgentRunModel(run, { seed, compression, width, height }),
-    [run, seed, compression, width, height],
+    () => getAgentRunModel(run, { seed, compression, width, height }, tl),
+    [run, seed, compression, width, height, tl],
   );
   const state = getAgentRunState(frame, model, { fps, speed });
   const palette = getAgentRunPalette(theme, accentColor);

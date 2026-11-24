@@ -13,6 +13,14 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  type AcronymExpandElementId,
+  acronymExpandTimeline,
+  DEFAULT_FULL,
+  DEFAULT_SHORT,
+  matchInitials,
+} from "./timeline";
 
 const sora = loadSora("normal", {
   weights: ["400", "500"],
@@ -41,6 +49,12 @@ export interface AcronymExpandProps {
   delay?: number;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches the acronym's letters, their travel and the
+   * copy around them, by the ids in `./timeline`. Frames on the scene
+   * timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<AcronymExpandElementId>;
 }
 
 const LIMB = ["#e9ecff", "#8a8bff", "#4b2bd6", "#160c3a"] as const;
@@ -138,33 +152,6 @@ function useMeasure(fontFamily: string): Measure {
   return Object.assign(fn, { base: (LINE - asc - desc) / 2 + asc });
 }
 
-function matchInitials(short: string, full: string) {
-  const lower = full.toLowerCase();
-  const starts = new Set<number>();
-  for (let i = 0; i < full.length; i++) {
-    if (full[i] !== " " && (i === 0 || full[i - 1] === " ")) starts.add(i);
-  }
-  const out: number[] = [];
-  let from = 0;
-  for (const ch of short.toLowerCase()) {
-    if (ch === " ") {
-      out.push(-1);
-      continue;
-    }
-    let hit = -1;
-    for (let i = from; i < lower.length; i++) {
-      if (lower[i] === ch && starts.has(i)) {
-        hit = i;
-        break;
-      }
-    }
-    if (hit < 0) hit = lower.indexOf(ch, from);
-    out.push(hit);
-    if (hit >= 0) from = hit + 1;
-  }
-  return out;
-}
-
 function splitTwo(words: string[], measure: Measure) {
   let best = { a: words.join(" "), b: "", w: Number.POSITIVE_INFINITY };
   for (let k = 1; k < words.length; k++) {
@@ -219,25 +206,31 @@ function ScaleLayer({
   );
 }
 
-export function AcronymExpand({
-  short = "MCP",
-  full = "Model Context Protocol",
-  eyebrow = "Now in remocn",
-  subhead = "Your agent browses, installs and edits every component.",
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = sora.fontFamily,
-  expandAt = 38,
-  expandLength = 26,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: AcronymExpandProps) {
+export function AcronymExpand(props: AcronymExpandProps) {
+  const {
+    short = DEFAULT_SHORT,
+    full = DEFAULT_FULL,
+    eyebrow = "Now in remocn",
+    subhead = "Your agent browses, installs and edits every component.",
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = sora.fontFamily,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay) * speed;
   const { width, height, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    acronymExpandTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const t = THEMES[theme];
   const fg = ink ?? t.fg;
   const measure = useMeasure(fontFamily);
@@ -326,10 +319,13 @@ export function AcronymExpand({
     }
   }
 
-  const EXPAND = expandAt;
-  const EXPAND_LEN = expandLength;
-  const anchorT = (si: number) =>
-    EASE_IO(clamp01((frame - EXPAND - si * 2) / EXPAND_LEN));
+  // Raw progress of a letter's travel; 0 for a letter that has no place.
+  const travelRaw = (si: number) => {
+    if (anchors[si] < 0) return 0;
+    const e = tl.get(`travel:${si}`);
+    return (frame - e.start) / e.length;
+  };
+  const anchorT = (si: number) => EASE_IO(clamp01(travelRaw(si)));
   const drift = interpolate(
     frame,
     [0, durationInFrames * speed],
@@ -359,13 +355,15 @@ export function AcronymExpand({
   const mid = (short.length - 1) / 2;
   shortGlyphs.forEach((g, si) => {
     if (g.ch === " ") return;
-    const eRaw = (frame - si * 3) / 18;
+    const letter = tl.get(`letter:${si}`);
+    const eRaw = (frame - letter.start) / letter.length;
     const e = EASE_OUT(clamp01(eRaw));
     const spread = (1 - e) * (si - mid) * 0.14 * fsS;
     const fi = anchors[si];
     const u = anchorT(si);
     if (fi < 0) {
-      const out = clamp01((frame - EXPAND) / 12);
+      const fade = tl.get(`fade:${si}`);
+      const out = clamp01((frame - fade.start) / fade.length);
       draws.push({
         id: `s${si}`,
         ch: g.ch,
@@ -388,7 +386,7 @@ export function AcronymExpand({
     const y = g.y + (1 - e) * 0.4 * fsS + (f.y - g.y) * u;
     const same = g.ch === f.ch;
     const c = same ? 0 : interpolate(u, [0.35, 0.75], [0, 1], CLAMP);
-    const resizing = live((frame - EXPAND - si * 2) / EXPAND_LEN);
+    const resizing = live(travelRaw(si));
     const moving = live(eRaw) || resizing;
     const sizing = resizing ? f.fs : undefined;
     draws.push({
@@ -465,7 +463,8 @@ export function AcronymExpand({
   };
   for (const span of wordSpans) {
     if (span.anchor < 0) {
-      const vRaw = (frame - EXPAND - 18) / 16;
+      const rise = tl.get("words");
+      const vRaw = (frame - rise.start) / rise.length;
       const v = EASE_OUT(clamp01(vRaw));
       for (let i = span.a; i < span.b; i++) {
         const f = fullGlyphs[i];
@@ -496,9 +495,11 @@ export function AcronymExpand({
     const aw = af.w * (afs / af.fs);
     const fs = af.fs;
     const y = ay + (afs - fs) * measure.base;
-    const vRaw = (frame - EXPAND - si * 2 - 8) / 22;
+    const travel = tl.get(`travel:${si}`);
+    const vRaw =
+      (frame - (travel.start + travel.beat("tail"))) / travel.beat("open");
     const v = EASE_OUT(clamp01(vRaw));
-    const moving = live((frame - EXPAND - si * 2) / EXPAND_LEN) || live(vRaw);
+    const moving = live(travelRaw(si)) || live(vRaw);
     const pad = fs * 0.25;
     const after = joined.slice(span.anchor + 1, span.b);
     const before = joined.slice(span.a, span.anchor);
@@ -542,8 +543,10 @@ export function AcronymExpand({
     }
   }
 
-  const eyeRaw = (frame - (EXPAND + 22)) / 18;
-  const subRaw = (frame - (EXPAND + 28)) / 20;
+  const eye = tl.get("eyebrow");
+  const sub = tl.get("subhead");
+  const eyeRaw = (frame - eye.start) / eye.length;
+  const subRaw = (frame - sub.start) / sub.length;
   const eyeT = EASE_OUT(clamp01(eyeRaw));
   const subT = EASE_OUT(clamp01(subRaw));
   const transparent = background === "transparent";
@@ -638,28 +641,28 @@ export function AcronymExpand({
           </div>
         ) : null}
 
-        {tails.map((tl) => {
-          const pad = tl.fs * 0.25;
+        {tails.map((tail) => {
+          const pad = tail.fs * 0.25;
           const open = Math.max(
             0,
-            Math.min(tl.w * tl.v + pad * tl.v, tl.max + pad * 0.2),
+            Math.min(tail.w * tail.v + pad * tail.v, tail.max + pad * 0.2),
           );
-          const left = tl.dir === 1 ? tl.edge : tl.edge - open;
+          const left = tail.dir === 1 ? tail.edge : tail.edge - open;
           return (
             <div
-              key={tl.id}
+              key={tail.id}
               style={{
                 position: "absolute",
-                left: tl.restLeft,
-                top: tl.restTop,
+                left: tail.restLeft,
+                top: tail.restTop,
                 transform: shift(
-                  left - tl.restLeft,
-                  tl.y - pad - tl.restTop,
-                  tl.moving,
+                  left - tail.restLeft,
+                  tail.y - pad - tail.restTop,
+                  tail.moving,
                   glide,
                 ),
                 width: open,
-                height: LINE * tl.fs + pad * 2,
+                height: LINE * tail.fs + pad * 2,
                 overflow: "hidden",
                 zIndex: 1,
               }}
@@ -668,22 +671,22 @@ export function AcronymExpand({
                 style={{
                   position: "absolute",
                   top: pad,
-                  ...(tl.dir === 1 ? { left: 0 } : { right: 0 }),
+                  ...(tail.dir === 1 ? { left: 0 } : { right: 0 }),
                   fontFamily,
                   fontWeight: 500,
-                  fontSize: tl.fs,
+                  fontSize: tail.fs,
                   lineHeight: LINE,
                   letterSpacing: `${TRACK_FULL}em`,
                   whiteSpace: "pre",
                   color: fg,
-                  transform: `translateX(${(-(1 - tl.v) * tl.w * 0.45 * tl.dir).toFixed(2)}px)`,
+                  transform: `translateX(${(-(1 - tail.v) * tail.w * 0.45 * tail.dir).toFixed(2)}px)`,
                   filter:
-                    tl.v < 0.98
-                      ? `blur(${((1 - tl.v) * 0.04 * tl.fs).toFixed(2)}px)`
+                    tail.v < 0.98
+                      ? `blur(${((1 - tail.v) * 0.04 * tail.fs).toFixed(2)}px)`
                       : undefined,
                 }}
               >
-                {tl.text}
+                {tail.text}
               </span>
             </div>
           );

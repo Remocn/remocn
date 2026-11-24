@@ -8,6 +8,15 @@ import { useId } from "react";
 import { AbsoluteFill, Easing, interpolate, interpolateColors } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_RANK_ITEMS,
+  LAST_DUR,
+  type RankClimbElementId,
+  rankClimbTimeline,
+  rankPlan,
+  T_CLIMB,
+} from "./timeline";
 
 const { fontFamily: sans } = loadFont("normal", {
   weights: ["400", "500"],
@@ -87,18 +96,15 @@ export interface RankClimbProps {
   delay?: number;
   theme?: "dark" | "light";
   speed?: number;
+  /**
+   * Moves, trims or stretches the rank, the rows, each overtake, the win and
+   * the push, by the ids in `./timeline`. Frames on the scene timeline, after
+   * `delay` and `speed`.
+   */
+  timing?: Timing<RankClimbElementId>;
 }
 
-const DEFAULT_ITEMS: RankItem[] = [
-  { label: "remocn", value: 2318 },
-  { label: "Kitebase", value: 2140 },
-  { label: "Lumen", value: 1986 },
-  { label: "Fernway", value: 1712 },
-  { label: "Quarry", value: 1544 },
-  { label: "Orbitly", value: 1390 },
-  { label: "Halcyon", value: 1208 },
-  { label: "Tessel", value: 1062 },
-];
+const DEFAULT_ITEMS: RankItem[] = DEFAULT_RANK_ITEMS;
 
 const EASE_IO = Easing.bezier(0.65, 0, 0.35, 1);
 const EASE_SWAP = Easing.bezier(0.6, 0, 0.3, 1);
@@ -142,9 +148,6 @@ const THEMES = {
 type Theme = (typeof THEMES)[keyof typeof THEMES];
 
 const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
-
-const T_CLIMB = 28;
-const LAST_DUR = 22;
 
 function groupThousands(n: number) {
   return String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
@@ -420,64 +423,62 @@ function ScaleLayer({
   );
 }
 
-export function RankClimb({
-  items = DEFAULT_ITEMS,
-  brand = "remocn",
-  from = 8,
-  to = 1,
-  eyebrow = "Product of the day",
-  caption = "on Product Hunt",
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = sans,
-  climbAt = T_CLIMB,
-  finalSwap = LAST_DUR,
-  logo,
-  grain = true,
-  scale = 1,
-  delay = 0,
-  theme = "dark",
-  speed = 1,
-}: RankClimbProps) {
+export function RankClimb(props: RankClimbProps) {
+  const {
+    items = DEFAULT_ITEMS,
+    brand = "remocn",
+    from = 8,
+    to = 1,
+    eyebrow = "Product of the day",
+    caption = "on Product Hunt",
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = sans,
+    climbAt = T_CLIMB,
+    finalSwap = LAST_DUR,
+    logo,
+    grain = true,
+    scale = 1,
+    delay = 0,
+    theme = "dark",
+    speed = 1,
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width, height } = useSceneConfig();
+  const { width, height, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    rankClimbTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const rankEl = tl.get("rank");
+  const rowsEl = tl.get("rows");
+  const pushEl = tl.get("push");
+  const rulesEl = tl.get("rules");
+  const winEl = tl.get("win");
+  const swapEls = tl.lane("Climb");
   const u = Math.min(width / 1280, height / 720);
   const th: Theme = THEMES[theme];
   const fg = ink ?? th.fg;
   const fill =
     background === "transparent" ? "transparent" : (background ?? th.bg);
 
-  const found = items.find((i) => i.label === brand);
-  const others = items
-    .filter((i) => i.label !== brand)
-    .slice()
-    .sort((a, b) => b.value - a.value);
-  const brandItem: RankItem = found ?? {
-    label: brand,
-    value: Math.round((others[0]?.value ?? 1000) * 1.08),
-  };
-  const n = others.length + 1;
-  const start = Math.min(Math.max(1, Math.round(from)), n) - 1;
-  const end = Math.min(Math.max(1, Math.round(to)), start + 1) - 1;
-  const K = start - end;
-
-  const swaps: { s: number; d: number; passed: number }[] = [];
-  let clock = climbAt;
-  for (let k = 0; k < K; k++) {
-    const last = k === K - 1;
-    const gap = K > 1 ? 13 - (5 * k) / Math.max(1, K - 2) : 13;
-    const s = clock + (last && K > 1 ? 3 : 0);
-    const d = last ? finalSwap : gap * 1.35;
-    swaps.push({ s, d, passed: start - 1 - k });
-    clock += gap;
-  }
-  const climbEnd = swaps.length
-    ? swaps[swaps.length - 1].s + swaps[swaps.length - 1].d
-    : climbAt;
+  const plan = rankPlan({ items, brand, from, to, climbAt, finalSwap });
+  const { others, n, start, end, K } = plan;
+  const brandItem: RankItem = plan.brandItem;
+  // Each overtake's row comes from the plan, its frames from the schedule.
+  const swaps = plan.swaps.map((w, k) => ({
+    passed: w.passed,
+    s: swapEls[k].start,
+    end: swapEls[k].end,
+  }));
+  const climbStart = swaps.length ? swaps[0].s : climbAt;
+  const climbEnd = swaps.length ? swaps[swaps.length - 1].end : climbAt;
   const prog = swaps.map((w) =>
-    interpolate(t, [w.s, w.s + w.d], [0, 1], { ...CLAMP, easing: EASE_SWAP }),
+    interpolate(t, [w.s, w.end], [0, 1], { ...CLAMP, easing: EASE_SWAP }),
   );
 
   const initialSlot = (i: number) => (i < start ? i : i + 1);
@@ -507,24 +508,34 @@ export function RankClimb({
   const lift = swaps.length
     ? interpolate(
         t,
-        [climbAt - 4, climbAt + 6, climbEnd - 6, climbEnd + 6],
+        [climbStart - 4, climbStart + 6, climbEnd - 6, climbEnd + 6],
         [0, 1, 1, 0],
         { ...CLAMP, easing: EASE_IO },
       )
     : 0;
-  const T_WIN = climbEnd - 2;
-  const win = interpolate(t, [T_WIN, T_WIN + 14], [0, 1], {
+  const T_WIN = winEl.start;
+  const win = interpolate(t, [T_WIN, winEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
-  const dim = interpolate(t, [T_WIN + 2, T_WIN + 20], [0, 1], {
-    ...CLAMP,
-    easing: EASE_IO,
-  });
-  const capIn = interpolate(t, [T_WIN + 4, T_WIN + 26], [0, 1], {
-    ...CLAMP,
-    easing: EASE_OUT,
-  });
+  const dim = interpolate(
+    t,
+    [T_WIN + winEl.beat("dimAt"), T_WIN + winEl.beat("dim")],
+    [0, 1],
+    {
+      ...CLAMP,
+      easing: EASE_IO,
+    },
+  );
+  const capIn = interpolate(
+    t,
+    [T_WIN + winEl.beat("captionAt"), T_WIN + winEl.beat("caption")],
+    [0, 1],
+    {
+      ...CLAMP,
+      easing: EASE_OUT,
+    },
+  );
 
   const margin = width * 0.085;
   const listX = width * 0.5;
@@ -533,25 +544,27 @@ export function RankClimb({
   const listH = rowH * n;
   const listTop = (height - listH) / 2;
 
-  const leftIn = interpolate(t, [-6, 16], [0, 1], {
+  const leftIn = interpolate(t, [rankEl.start, rankEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
   const bigSize = Math.min(232 * u, width * 0.18);
   const bigColor = interpolateColors(win, [0, 1], [th.muted, fg]);
-  const push = interpolate(t, [0, climbEnd + 60], [1.03, 1], {
+  const push = interpolate(t, [pushEl.start, pushEl.end], [1.03, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
-  const enterAt = (slot: number) =>
-    interpolate(t, [slot * 2 - 6, slot * 2 + 14], [0, 1], {
+  const enterAt = (slot: number) => {
+    const at = rowsEl.start + slot * rowsEl.beat("stagger");
+    return interpolate(t, [at, at + rowsEl.beat("fade")], [0, 1], {
       ...CLAMP,
       easing: EASE_OUT,
     });
+  };
   // One tilt on the wrapper that carries the whole scene covers every row,
   // number and caption under it, for as long as any of them moves.
   const moving =
-    midway(interpolate(t, [0, climbEnd + 60], [0, 1], CLAMP)) ||
+    midway(interpolate(t, [pushEl.start, pushEl.end], [0, 1], CLAMP)) ||
     midway(leftIn) ||
     midway(capIn) ||
     midway(lift) ||
@@ -699,10 +712,16 @@ export function RankClimb({
             }}
           >
             {Array.from({ length: n - 1 }).map((_, i) => {
-              const a = interpolate(t, [i * 2 + 4, i * 2 + 22], [0, 1], {
-                ...CLAMP,
-                easing: EASE_IO,
-              });
+              const at = rulesEl.start + i * rulesEl.beat("stagger");
+              const a = interpolate(
+                t,
+                [at, at + rulesEl.beat("draw")],
+                [0, 1],
+                {
+                  ...CLAMP,
+                  easing: EASE_IO,
+                },
+              );
               return (
                 <div
                   key={`h${i}`}

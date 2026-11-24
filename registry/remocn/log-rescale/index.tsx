@@ -11,16 +11,20 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_DATA,
+  type LogRescaleDatum,
+  type LogRescaleElementId,
+  logRescaleTimeline,
+} from "./timeline";
 
 const { fontFamily: sans } = loadFont("normal", {
   weights: ["400", "500"],
   subsets: ["latin"],
 });
 
-export interface LogRescaleDatum {
-  label: string;
-  value: number;
-}
+export type { LogRescaleDatum };
 
 export interface LogRescaleProps {
   data?: LogRescaleDatum[];
@@ -45,16 +49,14 @@ export interface LogRescaleProps {
   delay?: number;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches the fade-in, the title, the year labels, the
+   * bars, the accent bar, the morph to log and the value labels, by the ids
+   * in `./timeline`. Frames on the scene timeline, after `delay` and
+   * `speed`.
+   */
+  timing?: Timing<LogRescaleElementId>;
 }
-
-const DEFAULT_DATA: LogRescaleDatum[] = [
-  { label: "2021", value: 340 },
-  { label: "2022", value: 1200 },
-  { label: "2023", value: 4800 },
-  { label: "2024", value: 18000 },
-  { label: "2025", value: 96000 },
-  { label: "2026", value: 2400000 },
-];
 
 const EASE_IO = Easing.bezier(0.65, 0, 0.35, 1);
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
@@ -90,10 +92,6 @@ const THEMES = {
     hero: ["#24339a", "#3d5bff", "#6f8fff", "#9db4ff"],
   },
 } as const;
-
-const MORPH = [64, 106] as const;
-const ACCENT_GROW = 24;
-const LABELS_AT = 100;
 
 function compact(v: number) {
   const fmt = (n: number, suffix: string) => {
@@ -157,32 +155,46 @@ function ScaleLayer({
   );
 }
 
-export function LogRescale({
-  data = DEFAULT_DATA,
-  accentIndex,
-  title = "remocn renders per year",
-  linearLabel = "Linear",
-  logLabel = "Log",
-  morphAt = MORPH[0],
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = sans,
-  grain = true,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: LogRescaleProps) {
+export function LogRescale(props: LogRescaleProps) {
+  const {
+    data = DEFAULT_DATA,
+    accentIndex,
+    title = "remocn renders per year",
+    linearLabel = "Linear",
+    logLabel = "Log",
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = sans,
+    grain = true,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width, height, fps } = useSceneConfig();
+  const { width, height, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    logRescaleTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const introEl = tl.get("intro");
+  const titleEl = tl.get("title");
+  const yearsEl = tl.get("years");
+  const barsEl = tl.get("bars");
+  const accentEl = tl.get("accent");
+  const morphEl = tl.get("morph");
+  const labelsEl = tl.get("labels");
   const u = height / 720;
   const p = THEMES[theme];
   const fg = ink ?? p.fg;
   const bg =
     background === "transparent" ? "transparent" : (background ?? p.bg);
-  const morph = [morphAt, morphAt + MORPH[1] - MORPH[0]];
+  const morph = [morphEl.start, morphEl.end];
   const heroId = `hero${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
 
   const rows = data.length > 0 ? data : DEFAULT_DATA;
@@ -222,7 +234,10 @@ export function LogRescale({
   const yOf = (v: number) => bottom - norm(v) * chartH;
   const yAt = (v: number, tt: number) => bottom - normAt(v, mAt(tt)) * chartH;
 
-  const intro = interpolate(t, [0, 14], [0, 1], { ...CLAMP, easing: EASE_OUT });
+  const intro = interpolate(t, [introEl.start, introEl.end], [0, 1], {
+    ...CLAMP,
+    easing: EASE_OUT,
+  });
 
   const tickMap = new Map<number, { lin: boolean; log: boolean }>();
   for (let v = 0; v <= linMax + step / 2; v += step) {
@@ -266,38 +281,49 @@ export function LogRescale({
   const growOf = (i: number, tt = t) => {
     if (i === ai) {
       return spring({
-        frame: tt - ACCENT_GROW,
+        frame: tt - accentEl.start,
         fps,
         config: { damping: 18, stiffness: 70, mass: 0.9 },
       });
     }
     const order = i < ai ? i : i - 1;
-    return interpolate(tt, [6 + order * 3, 26 + order * 3], [0, 1], {
+    const at = barsEl.start + order * barsEl.beat("stagger");
+    return interpolate(tt, [at, at + barsEl.beat("each")], [0, 1], {
       ...CLAMP,
       easing: EASE_OUT,
     });
   };
 
-  const scaleSwap = interpolate(t, [morph[0] + 4, morph[0] + 20], [0, 1], {
-    ...CLAMP,
-    easing: EASE_IO,
-  });
-  const titleA = interpolate(t, [2, 18], [0, 1], {
+  const scaleSwap = interpolate(
+    t,
+    [morph[0] + morphEl.beat("swapIn"), morph[0] + morphEl.beat("swapOut")],
+    [0, 1],
+    {
+      ...CLAMP,
+      easing: EASE_IO,
+    },
+  );
+  const titleA = interpolate(t, [titleEl.start, titleEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
 
-  const accentBig = interpolate(t, [LABELS_AT, LABELS_AT + 18], [0, 1], {
+  const accentBig = interpolate(t, [labelsEl.start, labelsEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
   const accentIn = interpolate(
     t,
-    [ACCENT_GROW + 14, ACCENT_GROW + 26],
+    [accentEl.start + accentEl.beat("valueAt"), accentEl.end],
     [0, 1],
     { ...CLAMP, easing: EASE_OUT },
   );
-  const dim = interpolate(t, [LABELS_AT, LABELS_AT + 16], [0, 1], CLAMP);
+  const dim = interpolate(
+    t,
+    [labelsEl.start, labelsEl.start + labelsEl.beat("dim")],
+    [0, 1],
+    CLAMP,
+  );
   const sw = Math.max(1, u);
   const tagH = 20 * u;
 
@@ -422,12 +448,17 @@ export function LogRescale({
             ? accentIn
             : interpolate(
                 t,
-                [LABELS_AT + order * 3, LABELS_AT + 12 + order * 3],
+                [
+                  labelsEl.start + order * labelsEl.beat("stagger"),
+                  labelsEl.start +
+                    labelsEl.beat("each") +
+                    order * labelsEl.beat("stagger"),
+                ],
                 [0, 1],
                 { ...CLAMP, easing: EASE_OUT },
               );
           const bigAt = (tt: number) =>
-            interpolate(tt, [LABELS_AT, LABELS_AT + 18], [0, 1], {
+            interpolate(tt, [labelsEl.start, labelsEl.end], [0, 1], {
               ...CLAMP,
               easing: EASE_OUT,
             });
@@ -493,7 +524,12 @@ export function LogRescale({
                   color: isA ? fg : p.muted,
                   opacity: interpolate(
                     t,
-                    [4 + i * 2, 16 + i * 2],
+                    [
+                      yearsEl.start + i * yearsEl.beat("stagger"),
+                      yearsEl.start +
+                        yearsEl.beat("each") +
+                        i * yearsEl.beat("stagger"),
+                    ],
                     [0, 1],
                     CLAMP,
                   ),

@@ -6,6 +6,14 @@ import { useId } from "react";
 import { AbsoluteFill, Easing, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_FROM,
+  DEFAULT_TO,
+  type LiquidWordElementId,
+  liquidWordTimeline,
+  MELT_AT,
+} from "./timeline";
 
 const { fontFamily: display } = loadFont("normal", {
   weights: ["500"],
@@ -36,6 +44,12 @@ export interface LiquidWordProps {
   grain?: boolean;
   theme?: "dark" | "light";
   speed?: number;
+  /**
+   * Moves, trims or stretches the melt, the pool, the new word rising and the
+   * liquid setting, by the ids in `./timeline`. Frames on the scene timeline,
+   * after `delay` and `speed`.
+   */
+  timing?: Timing<LiquidWordElementId>;
 }
 
 /**
@@ -49,13 +63,6 @@ export interface LiquidWordProps {
  *          to solid ink.
  * 112–     "shipped" holds, crisp and kerned.
  */
-const MELT_AT = 12;
-const POOL_AT = 50;
-const POOL_END = 72;
-const RISE_AT = 66;
-const SET_AT = 86;
-const CRISP_AT = 112;
-
 const CLAMP = {
   extrapolateLeft: "clamp",
   extrapolateRight: "clamp",
@@ -262,24 +269,36 @@ function ScaleLayer({
   );
 }
 
-export function LiquidWord({
-  from = "draft",
-  to = "shipped",
-  meltAt = MELT_AT,
-  stagger = 3,
-  ink,
-  background,
-  fontFamily = display,
-  scale = 1,
-  delay = 0,
-  grain = true,
-  theme = "dark",
-  speed = 1,
-}: LiquidWordProps) {
+export function LiquidWord(props: LiquidWordProps) {
+  const {
+    from = DEFAULT_FROM,
+    to = DEFAULT_TO,
+    ink,
+    background,
+    fontFamily = display,
+    scale = 1,
+    delay = 0,
+    grain = true,
+    theme = "dark",
+    speed = 1,
+    timing,
+  } = props;
   const glide = useGlide();
-  // The beat sheet is written for a melt at frame 12; another shifts all of it.
-  const t = Math.max(0, useSceneFrame() - delay) * speed - (meltAt - MELT_AT);
-  const { width: W, height: H } = useSceneConfig();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    liquidWordTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const meltEl = tl.get("melt");
+  const poolEl = tl.get("pool");
+  const riseEl = tl.get("rise");
+  const setEl = tl.get("set");
+  // The wobble's phase runs on the beat sheet's clock, which a later melt
+  // shifts as a whole.
+  const wobbleT = t - (meltEl.start - MELT_AT);
   const c = THEMES[theme];
   const fg = ink ?? c.ink;
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
@@ -297,28 +316,39 @@ export function LiquidWord({
   const leftB = (W - B.total * fsB) / 2;
 
   // Liquid state, 0 = crisp ink, 1 = fully molten.
-  const melt = interpolate(t, [MELT_AT, MELT_AT + 26], [0, 1], {
+  const melt = interpolate(t, [meltEl.start, meltEl.end], [0, 1], {
     ...CLAMP,
     easing: IN_OUT,
   });
-  const set = interpolate(t, [SET_AT, CRISP_AT], [0, 1], {
+  const set = interpolate(t, [setEl.start, setEl.end], [0, 1], {
     ...CLAMP,
     easing: SETTLE,
   });
   const molten = melt * (1 - set);
   const heat =
-    interpolate(t, [MELT_AT, MELT_AT + 16], [0, 1], CLAMP) *
-    (1 - interpolate(t, [SET_AT + 6, CRISP_AT], [0, 1], CLAMP));
-  const pool = interpolate(t, [POOL_AT, POOL_END], [0, 1], {
+    interpolate(
+      t,
+      [meltEl.start, meltEl.start + meltEl.beat("heat")],
+      [0, 1],
+      CLAMP,
+    ) *
+    (1 -
+      interpolate(
+        t,
+        [setEl.start + setEl.beat("heatOut"), setEl.end],
+        [0, 1],
+        CLAMP,
+      ));
+  const pool = interpolate(t, [poolEl.start, poolEl.end], [0, 1], {
     ...CLAMP,
     easing: IN_OUT,
   });
-  const liquid = t >= MELT_AT && t < CRISP_AT;
+  const liquid = t >= meltEl.start && t < setEl.end;
 
   const blur = molten * 0.055 * fs;
   const disp = molten * 0.13 * fs;
-  const freqX = (1.3 / fs) * (1 + 0.12 * Math.sin(t * 0.07));
-  const freqY = (2.4 / fs) * (1 + 0.12 * Math.cos(t * 0.055));
+  const freqX = (1.3 / fs) * (1 + 0.12 * Math.sin(wobbleT * 0.07));
+  const freqY = (2.4 / fs) * (1 + 0.12 * Math.cos(wobbleT * 0.055));
 
   // Old word: sags, leans and drips, then slumps into the pool.
   const shapesA = A.letters.map((l, i) => {
@@ -340,8 +370,19 @@ export function LiquidWord({
   const drips = A.letters.flatMap((l, i) =>
     (FEET[l.ch] ?? [l.adv / 2]).map((foot, j) => {
       const n = i * 4 + j;
-      const start = MELT_AT + 8 + i * 3 + hash(n, 3) * 8;
-      const grow = GRAVITY(interpolate(t, [start, POOL_AT + 6], [0, 1], CLAMP));
+      const start =
+        meltEl.start +
+        meltEl.beat("drip") +
+        i * meltEl.beat("dripStep") +
+        hash(n, 3) * meltEl.beat("dripJitter");
+      const grow = GRAVITY(
+        interpolate(
+          t,
+          [start, poolEl.start + poolEl.beat("dripEnd")],
+          [0, 1],
+          CLAMP,
+        ),
+      );
       const len = (0.22 + 0.5 * hash(n, 4)) * fsA * grow * (1 - pool);
       const w = (0.075 + 0.035 * hash(n, 5)) * fsA;
       const mid = leftA + (l.x + l.adv / 2) * fsA;
@@ -355,8 +396,8 @@ export function LiquidWord({
   const shapesB = B.letters.map((l, i) => {
     const mid = leftB + (l.x + l.adv / 2) * fsB;
     const order = Math.abs(i - (nB - 1) / 2);
-    const at = RISE_AT + order * stagger;
-    const k = interpolate(t, [at, at + 20], [0, 1], CLAMP);
+    const at = riseEl.start + order * riseEl.beat("stagger");
+    const k = interpolate(t, [at, at + riseEl.beat("letter")], [0, 1], CLAMP);
     const e = RISE(k);
     const fromCentre = (W / 2 - mid) * 0.38 * (1 - e);
     const sy = 0.1 + 0.9 * e;
@@ -372,14 +413,25 @@ export function LiquidWord({
 
   // The pool: a flat puddle along the baseline between the two words.
   const poolOpen =
-    pool * (1 - interpolate(t, [RISE_AT + 8, SET_AT + 6], [0, 1], CLAMP));
+    pool *
+    (1 -
+      interpolate(
+        t,
+        [
+          riseEl.start + riseEl.beat("poolClose"),
+          setEl.start + setEl.beat("heatOut"),
+        ],
+        [0, 1],
+        CLAMP,
+      ));
   const poolW = Math.max(A.total, B.total) * fs * 0.42 * poolOpen;
   const poolH = 0.1 * fs * poolOpen;
 
   const fieldTop = baseline - ASC * fs;
   const fieldBottom = baseline + 0.75 * fs;
   const hotX =
-    W * (0.32 + 0.36 * interpolate(t, [MELT_AT, CRISP_AT], [0, 1], CLAMP));
+    W *
+    (0.32 + 0.36 * interpolate(t, [meltEl.start, setEl.end], [0, 1], CLAMP));
 
   const textProps = {
     fontFamily,
@@ -410,7 +462,7 @@ export function LiquidWord({
             transform: glide(liquid),
           }}
           role="img"
-          aria-label={t < POOL_END ? from : to}
+          aria-label={t < poolEl.end ? from : to}
         >
           {liquid ? (
             <>
@@ -552,16 +604,16 @@ export function LiquidWord({
               </g>
             </>
           ) : (
-            (t < MELT_AT ? A : B).letters.map((l, i) => (
+            (t < meltEl.start ? A : B).letters.map((l, i) => (
               <text
                 key={`${i}-${l.ch}`}
                 x={
-                  (t < MELT_AT ? leftA : leftB) +
-                  l.x * (t < MELT_AT ? fsA : fsB)
+                  (t < meltEl.start ? leftA : leftB) +
+                  l.x * (t < meltEl.start ? fsA : fsB)
                 }
                 y={baseline}
                 fill={fg}
-                fontSize={t < MELT_AT ? fsA : fsB}
+                fontSize={t < meltEl.start ? fsA : fsB}
                 {...textProps}
               >
                 {l.ch}

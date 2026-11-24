@@ -8,6 +8,15 @@ import { useId } from "react";
 import { AbsoluteFill, Easing, interpolate, spring } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_LINES,
+  type TransitLinesElementId,
+  type TransitPt,
+  type TransitSide,
+  type TransitTone,
+  transitLinesTimeline,
+} from "./timeline";
 
 const { fontFamily: sans } = loadFont("normal", {
   weights: ["400", "500"],
@@ -48,9 +57,9 @@ function RemocnLogo({ fontSize, color }: { fontSize: number; color: string }) {
   );
 }
 
-type Pt = [number, number];
-type Side = "n" | "s" | "e" | "w";
-type Tone = "accent" | "a" | "b" | "c";
+type Pt = TransitPt;
+type Side = TransitSide;
+type Tone = TransitTone;
 
 export interface TransitLine {
   tone: Tone;
@@ -83,82 +92,13 @@ export interface TransitLinesProps {
   grain?: boolean;
   theme?: "dark" | "light";
   speed?: number;
+  /**
+   * Moves, trims or stretches single lines, the hub and the title, by the
+   * ids in `./timeline`. Frames on the scene timeline, after `delay` and
+   * `speed`.
+   */
+  timing?: Timing<TransitLinesElementId>;
 }
-
-const DEFAULT_LINES: TransitLine[] = [
-  {
-    tone: "accent",
-    points: [
-      [-12, 3],
-      [-8, 3],
-      [-5, 0],
-      [0, 0],
-    ],
-    stations: [
-      [-10, 3],
-      [-2.7, 0],
-    ],
-    labels: [{ at: [-12, 3], text: "Alder", side: "w" }],
-  },
-  {
-    tone: "a",
-    points: [
-      [7, -6.5],
-      [3.5, -6.5],
-      [0, -3],
-      [0, 0],
-      [0, 6.3],
-    ],
-    stations: [
-      [1.75, -4.75],
-      [0, 3.4],
-    ],
-    labels: [
-      { at: [7, -6.5], text: "Quay", side: "e" },
-      { at: [0, 6.3], text: "Kiln", side: "e" },
-    ],
-  },
-  {
-    tone: "b",
-    points: [
-      [-10, -6],
-      [-6, -6],
-      [0, 0],
-      [4, 4],
-      [13.5, 4],
-    ],
-    stations: [
-      [-8, -6],
-      [-3.2, -3.2],
-      [7.5, 4],
-      [10.5, 4],
-    ],
-    labels: [
-      { at: [-10, -6], text: "Fenwick", side: "w" },
-      { at: [13.5, 4], text: "Larch", side: "e" },
-    ],
-  },
-  {
-    tone: "c",
-    points: [
-      [-11, 5.5],
-      [-5.5, 5.5],
-      [0, 0],
-      [4, -4],
-      [13.5, -4],
-    ],
-    stations: [
-      [-8.2, 5.5],
-      [-2.6, 2.6],
-      [7.5, -4],
-      [10.5, -4],
-    ],
-    labels: [
-      { at: [-11, 5.5], text: "Holm", side: "w" },
-      { at: [13.5, -4], text: "Vale", side: "e" },
-    ],
-  },
-];
 
 const CLAMP = {
   extrapolateLeft: "clamp",
@@ -169,10 +109,6 @@ const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
 
 const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
 const DRAW_EASE = Easing.bezier(0.42, 0, 0.22, 1);
-
-const DRAW_LEN = 38;
-const ARRIVE = 48;
-const LINE_GAP = 4;
 
 const THEMES = {
   dark: {
@@ -305,26 +241,35 @@ function ScaleLayer({
   );
 }
 
-export function TransitLines({
-  title = "remocn",
-  kicker = "Next stop",
-  lines = DEFAULT_LINES,
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = sans,
-  logo,
-  stagger = LINE_GAP,
-  draw = DRAW_LEN,
-  scale = 1,
-  delay = 0,
-  grain = true,
-  theme = "dark",
-  speed = 1,
-}: TransitLinesProps) {
+export function TransitLines(props: TransitLinesProps) {
+  const {
+    title = "remocn",
+    kicker = "Next stop",
+    lines = DEFAULT_LINES,
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = sans,
+    logo,
+    scale = 1,
+    delay = 0,
+    grain = true,
+    theme = "dark",
+    speed = 1,
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H, fps } = useSceneConfig();
+  const { width: W, height: H, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    transitLinesTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const hubEl = tl.get("hub");
+  const growEl = tl.get("grow");
+  const titleEl = tl.get("title");
   const u = Math.min(W / 1280, H / 720);
   const p = THEMES[theme];
   const fg = ink ?? p.fg;
@@ -387,21 +332,22 @@ export function TransitLines({
         : [l.points.slice(0, hub + 1), l.points.slice(hub).reverse()].filter(
             (s) => s.length > 1,
           );
-    const arrive = ARRIVE + li * stagger;
+    const lineEl = tl.get(`line:${li}`);
     return segs.map((pts) => ({
       li,
       tone: l.tone,
       pts,
-      start: arrive - draw,
+      start: lineEl.start,
+      end: lineEl.end,
+      draw: lineEl.length,
       d: roundedPath(
         pts.map(([x, y]): Pt => [X(x), Y(y)]),
         g * 0.75,
       ),
     }));
   });
-  const lastArrive = ARRIVE + (lines.length - 1) * stagger;
-  const GROW = lastArrive + 4;
-  const TITLE = GROW + 8;
+  const GROW = growEl.start;
+  const TITLE = titleEl.start;
 
   const stationList = lines.flatMap((l, li) => {
     const ends = [l.points[0], l.points[l.points.length - 1]].filter(
@@ -412,16 +358,16 @@ export function TransitLines({
       for (const h of halves) {
         if (h.li !== li) continue;
         const f = alongPoly(h.pts, s);
-        if (f >= 0) at = Math.min(at, reachFrame(h.start, f, draw));
+        if (f >= 0) at = Math.min(at, reachFrame(h.start, f, h.draw));
       }
-      return { li, s, at: Number.isFinite(at) ? at : ARRIVE };
+      return { li, s, at: Number.isFinite(at) ? at : hubEl.start };
     });
   });
 
   const lineW = g * 0.25;
   const stR = g * 0.27;
 
-  const firstArrive = ARRIVE;
+  const firstArrive = hubEl.start;
   const hubPop = spring({
     frame: t - firstArrive,
     fps,
@@ -434,23 +380,29 @@ export function TransitLines({
   });
   const hubR = (0.42 + 0.9 * grow) * g * (0.7 + 0.3 * hubPop);
   const hubStroke = (0.13 + 0.07 * grow) * g;
-  const titleIn = interpolate(t, [TITLE, TITLE + 20], [0, 1], {
+  const titleIn = interpolate(t, [TITLE, titleEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
-  const kickerIn = interpolate(t, [TITLE + 6, TITLE + 24], [0, 1], {
-    ...CLAMP,
-    easing: EASE_OUT,
-  });
+  const kickerIn = interpolate(
+    t,
+    [TITLE + titleEl.beat("kickerAt"), TITLE + titleEl.beat("kickerEnd")],
+    [0, 1],
+    {
+      ...CLAMP,
+      easing: EASE_OUT,
+    },
+  );
 
   const labels: React.ReactNode[] = [];
-  for (const l of lines) {
+  for (const [li, l] of lines.entries()) {
+    const lineEl = tl.get(`line:${li}`);
     for (const lb of l.labels ?? []) {
       const st = stationList.find(
         (s) => s.s[0] === lb.at[0] && s.s[1] === lb.at[1],
       );
-      const at = (st?.at ?? ARRIVE) + 4;
-      const a = interpolate(t, [at, at + 14], [0, 1], {
+      const at = (st?.at ?? hubEl.start) + lineEl.beat("labelAt");
+      const a = interpolate(t, [at, at + lineEl.beat("labelIn")], [0, 1], {
         ...CLAMP,
         easing: EASE_OUT,
       });
@@ -504,7 +456,8 @@ export function TransitLines({
     }
   }
 
-  const driftK = interpolate(t, [0, 135], [0, 1], CLAMP);
+  const driftEl = tl.get("drift");
+  const driftK = interpolate(t, [driftEl.start, driftEl.end], [0, 1], CLAMP);
 
   return (
     <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
@@ -525,7 +478,7 @@ export function TransitLines({
         >
           {halves.map((h) => {
             const k = DRAW_EASE(
-              interpolate(t, [h.start, h.start + draw], [0, 1], CLAMP),
+              interpolate(t, [h.start, h.end], [0, 1], CLAMP),
             );
             if (k <= 0) return null;
             const evo = evolvePath(k, h.d);

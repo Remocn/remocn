@@ -10,6 +10,15 @@ import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import type { SpeedrunSplit } from "./timeline";
+import {
+  DEFAULT_SPLITS,
+  type SpeedrunTimerElementId,
+  speedrunTimerTimeline,
+} from "./timeline";
+
+export type { SpeedrunSplit };
 
 const { fontFamily: geist } = loadFont("normal", {
   weights: ["300", "400"],
@@ -53,14 +62,6 @@ function RemocnLogo({ fontSize, color }: { fontSize: number; color: string }) {
   );
 }
 
-export interface SpeedrunSplit {
-  name: string;
-  /** Cumulative run time at this split, in seconds. */
-  time: number;
-  /** Cumulative personal-best time at this split, in seconds. */
-  pb: number;
-}
-
 export interface SpeedrunTimerProps {
   /** Category line in the header, after the logo. */
   category?: string;
@@ -92,24 +93,13 @@ export interface SpeedrunTimerProps {
   /** Overrides for the ground shader. */
   groundParams?: Partial<GradientParams>;
   speed?: number;
+  /**
+   * Moves, trims or stretches the header, the panel and its rows, the run,
+   * each split, the banner and the ground rise, by the ids in `./timeline`.
+   * Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<SpeedrunTimerElementId>;
 }
-
-const DEFAULT_SPLITS: SpeedrunSplit[] = [
-  { name: "Script", time: 521, pb: 563 },
-  { name: "Edit", time: 1635, pb: 1703 },
-  { name: "Captions", time: 2162, pb: 2143 },
-  { name: "Render", time: 2910, pb: 3041 },
-  { name: "Ship", time: 3552, pb: 3737 },
-];
-
-const BEATS = {
-  rowIn: 0,
-  rowGap: 3,
-  run: 12,
-  splits: [30, 50, 66, 84, 102],
-  banner: 106,
-  rise: 102,
-} as const;
 
 const LIGHT = Easing.bezier(0.22, 1, 0.36, 1);
 const ENTER = Easing.bezier(0.32, 0.72, 0, 1);
@@ -254,27 +244,41 @@ function ScaleLayer({
   );
 }
 
-export function SpeedrunTimer({
-  category = "Launch video · Any%",
-  splits = DEFAULT_SPLITS,
-  banner = "World record",
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = geist,
-  pbLabel = "Personal best",
-  radius: panelRadius = 18,
-  logo,
-  scale = 1,
-  delay = 0,
-  theme = "dark",
-  ground,
-  groundParams,
-  speed = 1,
-}: SpeedrunTimerProps) {
+export function SpeedrunTimer(props: SpeedrunTimerProps) {
+  const {
+    category = "Launch video · Any%",
+    splits = DEFAULT_SPLITS,
+    banner = "World record",
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = geist,
+    pbLabel = "Personal best",
+    radius: panelRadius = 18,
+    logo,
+    scale = 1,
+    delay = 0,
+    theme = "dark",
+    ground,
+    groundParams,
+    speed = 1,
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H, fps } = useSceneConfig();
+  const { width: W, height: H, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    speedrunTimerTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const headerEl = tl.get("header");
+  const panelEl = tl.get("panel");
+  const runEl = tl.get("run");
+  const bannerEl = tl.get("banner");
+  const groundEl = tl.get("ground");
+  const splitEls = splits.map((_, i) => tl.get(`split:${i}`));
   const c = THEMES[theme];
   const fg = ink ?? c.ink;
   const stage =
@@ -287,14 +291,14 @@ export function SpeedrunTimer({
   const u = Math.min(W / 1280, H / 720);
 
   const n = splits.length;
-  const last = BEATS.splits[BEATS.splits.length - 1];
-  const frames = splits.map((_, i) => BEATS.splits[i] ?? last + 18 * (i - 4));
+  const frames = splitEls.map((e) => e.start);
+  const finEl = splitEls[n - 1];
   const finishAt = frames[n - 1];
   const done = t >= finishAt;
 
   const runTime = interpolate(
     t,
-    [BEATS.run, ...frames],
+    [runEl.start, ...frames],
     [0, ...splits.map((s) => s.time)],
     CLAMP,
   );
@@ -318,27 +322,33 @@ export function SpeedrunTimer({
   const springing = (at: number, px: number, config: typeof CARD) =>
     !camMoving &&
     stirs((tt) => spring({ frame: tt - at, fps, config }) * px, t);
-  const flash = done ? Math.max(0, 1 - (t - finishAt) / 4) ** 2 : 0;
+  const flash = done
+    ? Math.max(0, 1 - (t - finishAt) / finEl.beat("flash")) ** 2
+    : 0;
 
   let tint = 0;
   let tintColor: string = fg;
   frames.forEach((f, i) => {
     const d = t - f;
-    if (d >= 0 && d < 10 && i < n - 1) {
-      tint = (1 - d / 10) ** 2;
+    const fade = splitEls[i].beat("tint");
+    if (d >= 0 && d < fade && i < n - 1) {
+      tint = (1 - d / fade) ** 2;
       tintColor = splits[i].time <= splits[i].pb ? c.ahead : c.behind;
     }
   });
   const timerColor = done ? c.gold : fg;
 
-  const wr = spring({ frame: t - BEATS.banner, fps, config: CARD });
+  const bannerAt = bannerEl.start;
+  const wr = spring({ frame: t - bannerAt, fps, config: CARD });
   const blinkOff =
-    (t >= BEATS.banner + 6 && t < BEATS.banner + 8) ||
-    (t >= BEATS.banner + 11 && t < BEATS.banner + 13);
+    (t >= bannerAt + bannerEl.beat("blinkA") &&
+      t < bannerAt + bannerEl.beat("blinkAEnd")) ||
+    (t >= bannerAt + bannerEl.beat("blinkB") &&
+      t < bannerAt + bannerEl.beat("blinkBEnd"));
   const wrOpacity =
-    t < BEATS.banner ? 0 : blinkOff ? 0 : ramp(t, BEATS.banner, 2);
+    t < bannerAt ? 0 : blinkOff ? 0 : ramp(t, bannerAt, bannerEl.beat("fade"));
 
-  const rise = LIGHT(ramp(t, BEATS.rise, 28));
+  const rise = LIGHT(ramp(t, groundEl.start, groundEl.length));
   const veil = c.veilFrom + (c.veilTo - c.veilFrom) * rise;
   const groundShift = ((tall ? 0.1 : 0.08) + (1 - rise) * 0.12) * H;
 
@@ -386,7 +396,8 @@ export function SpeedrunTimer({
   });
   const bandTravel = settle((bandIndex - Math.round(bandIndex)) * L.rowH);
   const bandOpacity =
-    ramp(t, BEATS.run - 4, 6) * (1 - LIGHT(ramp(t, finishAt, 6)));
+    ramp(t, runEl.start + runEl.beat("bandAt"), runEl.beat("band")) *
+    (1 - LIGHT(ramp(t, finishAt, finEl ? finEl.beat("bandOut") : 6)));
 
   const monoLabel: React.CSSProperties = {
     fontFamily: mono,
@@ -398,10 +409,11 @@ export function SpeedrunTimer({
     lineHeight: 1,
   };
 
-  const panelIn = spring({ frame: t - BEATS.rowIn, fps, config: HEAVY });
-  const panelMoving = springing(BEATS.rowIn, 0.05 * H, HEAVY);
+  const panelIn = spring({ frame: t - panelEl.start, fps, config: HEAVY });
+  const panelMoving = springing(panelEl.start, 0.05 * H, HEAVY);
   const pbParts = clockParts(splits[n - 1]?.pb ?? 0);
-  const pbPop = spring({ frame: t - finishAt - 2, fps, config: CHIP });
+  const pbAt = finEl ? finEl.beat("pbAt") : 2;
+  const pbPop = spring({ frame: t - finishAt - pbAt, fps, config: CHIP });
   const timerText = clock(runTime);
 
   return (
@@ -444,7 +456,7 @@ export function SpeedrunTimer({
               display: "flex",
               alignItems: "center",
               justifyContent: "space-between",
-              opacity: ENTER(ramp(t, 0, 10)),
+              opacity: ENTER(ramp(t, headerEl.start, headerEl.length)),
             }}
           >
             <div style={{ display: "flex", alignItems: "center", gap: 16 * u }}>
@@ -463,7 +475,13 @@ export function SpeedrunTimer({
                 flexDirection: "column",
                 alignItems: "flex-end",
                 gap: 0.022 * H,
-                opacity: ENTER(ramp(t, 4, 12)),
+                opacity: ENTER(
+                  ramp(
+                    t,
+                    panelEl.start + panelEl.beat("pbAt"),
+                    panelEl.beat("pb"),
+                  ),
+                ),
                 transform: `translateY(${(1 - panelIn) * 0.04 * H}px)${glide(panelMoving)}`,
               }}
             >
@@ -492,8 +510,10 @@ export function SpeedrunTimer({
                   lineHeight: 1,
                   fontVariantNumeric: "tabular-nums",
                   color: c.gold,
-                  opacity: done ? ramp(t, finishAt + 2, 3) : 0,
-                  transform: `scale(${1.3 - 0.3 * pbPop})${glide(!panelMoving && springing(finishAt + 2, 0.3 * 0.036 * H, CHIP))}`,
+                  opacity: done
+                    ? ramp(t, finishAt + pbAt, finEl.beat("pb"))
+                    : 0,
+                  transform: `scale(${1.3 - 0.3 * pbPop})${glide(!panelMoving && springing(finishAt + pbAt, 0.3 * 0.036 * H, CHIP))}`,
                   transformOrigin: "100% 50%",
                 }}
               >
@@ -514,7 +534,7 @@ export function SpeedrunTimer({
               boxShadow: c.panelShadow,
               backdropFilter: "blur(18px)",
               WebkitBackdropFilter: "blur(18px)",
-              opacity: ramp(t, 0, 4),
+              opacity: ramp(t, panelEl.start, panelEl.length),
               transform: `translateY(${(1 - panelIn) * 0.05 * H}px)${glide(panelMoving)}`,
             }}
           >
@@ -551,10 +571,11 @@ export function SpeedrunTimer({
               </div>
               {splits.map((s, i) => {
                 const at = frames[i];
+                const row = tl.get(`row:${i}`);
                 const isLast = i === n - 1;
                 const completed = t >= at;
                 const inK = spring({
-                  frame: t - BEATS.rowIn - 2 - i * BEATS.rowGap,
+                  frame: t - row.start,
                   fps,
                   config: CARD,
                 });
@@ -562,7 +583,8 @@ export function SpeedrunTimer({
                 const ahead = s.time <= s.pb;
                 const deltaColor = isLast ? c.gold : ahead ? c.ahead : c.behind;
                 const rowFlash = completed
-                  ? Math.max(0, 1 - (t - at) / 12) ** 2
+                  ? Math.max(0, 1 - (t - at) / splitEls[i].beat("rowFlash")) **
+                    2
                   : 0;
                 const rowInk = isLast && completed ? c.gold : fg;
                 const parts = clockParts(completed ? s.time : s.pb);
@@ -579,14 +601,10 @@ export function SpeedrunTimer({
                       alignItems: "center",
                       padding: `0 ${22 * u}px 0 ${26 * u}px`,
                       borderTop: i === 0 ? undefined : `1px solid ${c.rule}`,
-                      opacity: ramp(t, BEATS.rowIn + 2 + i * BEATS.rowGap, 4),
+                      opacity: ramp(t, row.start, row.length),
                       transform: `translateY(${(1 - inK) * 0.4 * L.rowH}px)${glide(
                         !panelMoving &&
-                          springing(
-                            BEATS.rowIn + 2 + i * BEATS.rowGap,
-                            0.4 * L.rowH,
-                            CARD,
-                          ),
+                          springing(row.start, 0.4 * L.rowH, CARD),
                       )}`,
                     }}
                   >
@@ -666,7 +684,7 @@ export function SpeedrunTimer({
               whiteSpace: "nowrap",
               color: c.gold,
               opacity: wrOpacity,
-              transform: `scale(${1.35 - 0.35 * wr})${glide(springing(BEATS.banner, 0.35 * L.bannerFs, CARD))}`,
+              transform: `scale(${1.35 - 0.35 * wr})${glide(springing(bannerAt, 0.35 * L.bannerFs, CARD))}`,
               transformOrigin: "100% 100%",
               filter:
                 wr < 0.97
@@ -687,7 +705,7 @@ export function SpeedrunTimer({
               fontSize: L.timerFs,
               lineHeight: 0.8,
               letterSpacing: "-0.03em",
-              color: t < BEATS.run ? c.dim : timerColor,
+              color: t < runEl.start ? c.dim : timerColor,
               whiteSpace: "nowrap",
             }}
           >

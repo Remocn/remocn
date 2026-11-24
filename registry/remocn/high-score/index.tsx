@@ -7,6 +7,12 @@ import type React from "react";
 import { AbsoluteFill, Easing, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  HIGH_SCORE_ROWS,
+  type HighScoreElementId,
+  highScoreTimeline,
+} from "./timeline";
 
 const { fontFamily: pixel } = loadPixel("normal", {
   weights: ["400"],
@@ -88,6 +94,12 @@ export interface HighScoreProps {
   delay?: number;
   theme?: "dark" | "light";
   speed?: number;
+  /**
+   * Moves, trims or stretches the title, single rows, overtakes and
+   * initials, the landing, the flash and the logo, by the ids in
+   * `./timeline`. Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<HighScoreElementId>;
 }
 
 // Beat sheet (30fps, speed 1):
@@ -101,18 +113,6 @@ export interface HighScoreProps {
 //  89–97   the initials blink in one letter at a time behind a block cursor
 // 102–118  "NEW HIGH SCORE" slams in with the dither gradient and flashes twice;
 //          rows 2–5 dim; the logo rises in; poster hold
-const ROW_IN = 6;
-const ROW_STAGGER = 3;
-const BAND_IN = 22;
-const RACE_AT = 28;
-const PASS = [44, 53, 61, 68, 74];
-const MOVE = 6;
-const LAND = 86;
-const LETTERS_AT = 89;
-const LETTER_GAP = 4;
-const FLASH_AT = 102;
-const LOGO_AT = 118;
-
 const SLAM = Easing.bezier(0.12, 0.9, 0.25, 1);
 const OUT = Easing.bezier(0.22, 1, 0.36, 1);
 const INOUT = Easing.bezier(0.65, 0, 0.25, 1);
@@ -212,33 +212,34 @@ function ScaleLayer({
   );
 }
 
-export function HighScore({
-  rows = [
-    { name: "ACE", score: 870450 },
-    { name: "JFK", score: 812300 },
-    { name: "MAX", score: 640120 },
-    { name: "ZOE", score: 455900 },
-    { name: "BOB", score: 310050 },
-  ],
-  player = "RMC",
-  playerScore = 999990,
-  title = "HIGH SCORES",
-  flash = "NEW HIGH SCORE",
-  columns = ["RANK", "NAME", "SCORE"],
-  stagger = ROW_STAGGER,
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = pixel,
-  logo,
-  scale = 1,
-  delay = 0,
-  theme = "dark",
-  speed = 1,
-}: HighScoreProps) {
+export function HighScore(props: HighScoreProps) {
+  const {
+    rows = HIGH_SCORE_ROWS,
+    player = "RMC",
+    playerScore = 999990,
+    title = "HIGH SCORES",
+    flash = "NEW HIGH SCORE",
+    columns = ["RANK", "NAME", "SCORE"],
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = pixel,
+    logo,
+    scale = 1,
+    delay = 0,
+    theme = "dark",
+    speed = 1,
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H } = useSceneConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    highScoreTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const c = THEMES[theme];
   const fg = ink ?? c.ink;
   const u = Math.min(W / 1280, H / 720);
@@ -246,8 +247,21 @@ export function HighScore({
   const table = rows.slice(0, 5);
   const n = table.length;
   // Overtake times in order: the last row is passed first, #1 last.
-  const passes = PASS.slice(PASS.length - n);
+  const passEls = Array.from({ length: n }, (_, k) => tl.get(`pass:${k}`));
+  const passes = passEls.map((e) => e.start);
   const passAt = (i: number) => passes[n - 1 - i];
+  const passEl = (i: number) => passEls[n - 1 - i];
+  const titleEl = tl.get("title");
+  const bandEl = tl.get("band");
+  const race = tl.get("race");
+  const landEl = tl.get("land");
+  const LAND = landEl.start;
+  const flashEl = tl.get("flash");
+  const FLASH_AT = flashEl.start;
+  const logoEl = tl.get("logo");
+  const letterEls = Array.from({ length: player.length }, (_, k) =>
+    tl.get(`letter:${k}`),
+  );
 
   // ── Layout ────────────────────────────────────────────────────────────────
   const fs = 52 * u;
@@ -263,8 +277,8 @@ export function HighScore({
   // ── The race ──────────────────────────────────────────────────────────────
   // Score keyframes: 0 at the start, each row's score at its overtake frame,
   // then a decelerating finish to the player's score.
-  const lastPass = passes[n - 1] ?? RACE_AT;
-  const keysT = [RACE_AT, ...passes];
+  const lastPass = passes[n - 1] ?? race.start;
+  const keysT = [race.start, ...passes];
   const keysV = [0, ...[...table].reverse().map((r) => r.score)];
   let score: number;
   if (t <= lastPass) {
@@ -280,7 +294,7 @@ export function HighScore({
   score = Math.round(score / 10) * 10;
 
   // Player slot: starts below the table (n + 1), one slot up per overtake.
-  const climbs = passes.map((p) => OUT(ramp(t, p, MOVE)));
+  const climbs = passEls.map((e) => OUT(ramp(t, e.start, e.beat("move"))));
   const playerPos = n + 1 - climbs.reduce((a, b) => a + b, 0);
   // Layout rounds a box and a baseline to whole pixels, so the band and its
   // row eased by `top` click up slot by slot. Both are laid out at #1, where
@@ -288,26 +302,45 @@ export function HighScore({
   const climb = (playerPos - 1) * rowH;
   const climbing = climbs.some(midway);
   // Row i (0 = best) is shoved one slot down when the player passes it.
-  const rowPos = (i: number) => i + 1 + SLAM(ramp(t, passAt(i), MOVE));
+  const rowPos = (i: number) =>
+    i + 1 + SLAM(ramp(t, passAt(i), passEl(i).beat("move")));
 
   const land = t >= LAND;
-  const sh = shake(t, LAND, 8, 7 * u);
-  const impact = land ? Math.max(0, 1 - (t - LAND) / 7) : 0;
-  const bleed = INOUT(ramp(t, LAND + 1, 10));
-  const dimRest = OUT(ramp(t, FLASH_AT + 2, 12));
+  const sh = shake(t, LAND, landEl.beat("shake"), 7 * u);
+  const impact = land ? Math.max(0, 1 - (t - LAND) / landEl.beat("impact")) : 0;
+  const bleed = INOUT(
+    ramp(t, LAND + landEl.beat("bleedAt"), landEl.beat("bleed")),
+  );
+  const dimRest = OUT(
+    ramp(t, FLASH_AT + flashEl.beat("dimAt"), flashEl.beat("dim")),
+  );
 
   // ── Title swap ────────────────────────────────────────────────────────────
-  const titleIn = OUT(ramp(t, 0, 10));
-  const titleOut = ramp(t, FLASH_AT - 3, 3);
-  const flashIn = SLAM(ramp(t, FLASH_AT, 6));
+  const titleIn = OUT(ramp(t, titleEl.start, titleEl.length));
+  const titleOut = ramp(
+    t,
+    FLASH_AT + flashEl.beat("titleOutAt"),
+    flashEl.beat("titleOut"),
+  );
+  const flashIn = SLAM(ramp(t, FLASH_AT, flashEl.length));
   const fd = t - FLASH_AT;
+  const blinkAt = flashEl.beat("blinkAt");
+  const blink2At = flashEl.beat("blink2At");
+  const blink = flashEl.beat("blink");
   const flashOn =
-    t >= FLASH_AT && !(fd >= 9 && fd < 12) && !(fd >= 15 && fd < 18);
-  const logoP = OUT(ramp(t, LOGO_AT, 10));
-  const pushP = interpolate(t, [FLASH_AT, FLASH_AT + 60], [0, 1], {
-    ...CLAMP,
-    easing: Easing.bezier(0.22, 1, 0.36, 1),
-  });
+    t >= FLASH_AT &&
+    !(fd >= blinkAt && fd < blinkAt + blink) &&
+    !(fd >= blink2At && fd < blink2At + blink);
+  const logoP = OUT(ramp(t, logoEl.start, logoEl.length));
+  const pushP = interpolate(
+    t,
+    [FLASH_AT, FLASH_AT + flashEl.beat("push")],
+    [0, 1],
+    {
+      ...CLAMP,
+      easing: Easing.bezier(0.22, 1, 0.36, 1),
+    },
+  );
   const push = 1 + 0.05 * pushP;
 
   const pixelText = (
@@ -347,12 +380,12 @@ export function HighScore({
     });
 
   // Initials typed in after the landing, behind a blinking block cursor.
-  const typed = Math.max(
-    0,
-    Math.min(player.length, Math.floor((t - LETTERS_AT) / LETTER_GAP) + 1),
-  );
+  let typed = 0;
+  while (typed < letterEls.length && t >= letterEls[typed].start) typed++;
   const cursorOn =
-    t >= LETTERS_AT - 6 && typed < player.length && Math.floor(t / 3) % 2 === 0;
+    typed < player.length &&
+    t >= letterEls[0].start + letterEls[0].beat("cursorAt") &&
+    Math.floor(t / 3) % 2 === 0;
 
   return (
     <AbsoluteFill
@@ -400,7 +433,7 @@ export function HighScore({
                 display: "flex",
                 justifyContent: "center",
                 transform: `scale(${interpolate(flashIn, [0, 1], [1.45, 1])})`,
-                opacity: flashOn ? ramp(t, FLASH_AT, 2) : 0,
+                opacity: flashOn ? ramp(t, FLASH_AT, flashEl.beat("fade")) : 0,
               }}
             >
               <div
@@ -435,7 +468,15 @@ export function HighScore({
               fontSize: 14 * u,
               letterSpacing: "0.22em",
               color: c.dim,
-              opacity: OUT(ramp(t, 4, 8)) * (1 - 0.5 * dimRest),
+              opacity:
+                OUT(
+                  ramp(
+                    t,
+                    titleEl.start + titleEl.beat("columnsAt"),
+                    titleEl.beat("columns"),
+                  ),
+                ) *
+                (1 - 0.5 * dimRest),
             }}
           >
             <span style={{ position: "absolute", left: 0 }}>{columns[0]}</span>
@@ -446,7 +487,7 @@ export function HighScore({
           </div>
 
           {/* Player band: wipes in under the table and climbs. */}
-          {t >= BAND_IN ? (
+          {t >= bandEl.start ? (
             <div
               style={{
                 position: "absolute",
@@ -455,7 +496,7 @@ export function HighScore({
                 height: rowH - 8 * u,
                 left: interpolate(bleed, [0, 1], [x0 - 26 * u, 0]),
                 right: interpolate(bleed, [0, 1], [x0 - 26 * u, 0]),
-                clipPath: `inset(0 ${(1 - OUT(ramp(t, BAND_IN, 7))) * 100}% 0 0)`,
+                clipPath: `inset(0 ${(1 - OUT(ramp(t, bandEl.start, bandEl.length))) * 100}% 0 0)`,
                 backgroundImage: steppedGradient(
                   90,
                   ["#F25A2E", "#C2456E", DITHER[0]],
@@ -477,8 +518,10 @@ export function HighScore({
 
           {/* Rank labels, fixed per slot; white where the band covers them. */}
           {table.map((_, k) => {
-            const covered = t >= BAND_IN && Math.abs(playerPos - (k + 1)) < 0.5;
-            const p = OUT(ramp(t, ROW_IN + k * stagger, 8));
+            const covered =
+              t >= bandEl.start && Math.abs(playerPos - (k + 1)) < 0.5;
+            const row = tl.get(`row:${k}`);
+            const p = OUT(ramp(t, row.start, row.length));
             const dim = covered ? 0 : dimRest;
             return (
               <div
@@ -499,12 +542,19 @@ export function HighScore({
           {/* The other rows: initials + score, shoved down one by one. */}
           {table.map((r, i) => {
             const pos = rowPos(i);
-            const p = OUT(ramp(t, ROW_IN + i * stagger, 8));
-            const off = OUT(ramp(t, passAt(i) + MOVE, 8));
+            const row = tl.get(`row:${i}`);
+            const p = OUT(ramp(t, row.start, row.length));
+            const pass = passEl(i);
+            const off = OUT(
+              ramp(t, passAt(i) + pass.beat("dropAt"), pass.beat("drop")),
+            );
             const gone = i === n - 1;
             const kickD = t - passAt(i);
+            const kickLen = pass.beat("kick");
             const kick =
-              kickD >= 0 && kickD < 8 ? (1 - kickD / 8) ** 2 * 14 * u : 0;
+              kickD >= 0 && kickD < kickLen
+                ? (1 - kickD / kickLen) ** 2 * 14 * u
+                : 0;
             const y = slotY(pos) + (gone ? off * 30 * u : 0);
             return (
               <div
@@ -530,7 +580,7 @@ export function HighScore({
           })}
 
           {/* Player row content. */}
-          {t >= BAND_IN ? (
+          {t >= bandEl.start ? (
             <div
               style={{
                 position: "absolute",
@@ -538,7 +588,11 @@ export function HighScore({
                 width: W,
                 top: slotY(1),
                 height: 0,
-                opacity: ramp(t, BAND_IN + 3, 3),
+                opacity: ramp(
+                  t,
+                  bandEl.start + bandEl.beat("contentAt"),
+                  bandEl.beat("content"),
+                ),
                 transform:
                   climb === 0
                     ? undefined
@@ -589,11 +643,15 @@ export function HighScore({
                           color: "#FFFFFF",
                           opacity: shown ? 1 : isCursor ? 0 : 0.55,
                           transform: shown
-                            ? `scale(${interpolate(ramp(t, LETTERS_AT + k * LETTER_GAP, 3), [0, 1], [1.35, 1])})${glide(
+                            ? `scale(${interpolate(ramp(t, letterEls[k].start, letterEls[k].length), [0, 1], [1.35, 1])})${glide(
                                 // A letter appears at 1.35 and shrinks from
                                 // the next frame on, so its first frame
                                 // already counts as moving.
-                                ramp(t, LETTERS_AT + k * LETTER_GAP, 3) <
+                                ramp(
+                                  t,
+                                  letterEls[k].start,
+                                  letterEls[k].length,
+                                ) <
                                   1 - 5e-4,
                               )}`
                             : undefined,

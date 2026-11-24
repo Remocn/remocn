@@ -2,6 +2,14 @@
 
 import { interpolate, spring } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  type FogRiseElementId,
+  fogRiseTimeline,
+  RESOLVE_FRAMES,
+  rings,
+  STAGGER,
+} from "./timeline";
 
 export interface FogRiseProps {
   text: string;
@@ -25,60 +33,66 @@ export interface FogRiseProps {
   fadeFrames?: number;
   speed?: number;
   className?: string;
+  /**
+   * Moves, trims or stretches the rise, single letters and the fall, by the
+   * ids in `./timeline`. Frames on the scene timeline, after `speed`.
+   */
+  timing?: Timing<FogRiseElementId>;
 }
 
 export function fogRiseLength(
   text: string,
-  stagger = 5,
-  resolveFrames = 22,
+  stagger = STAGGER,
+  resolveFrames = RESOLVE_FRAMES,
 ): number {
-  const chars = Array.from(text);
+  const { chars, maxRing } = rings(text);
   if (chars.length === 0) return 0;
-  const center = (chars.length - 1) / 2;
-  const maxRing = Math.floor(center);
   return maxRing * stagger + resolveFrames;
 }
 
-export function FogRise({
-  text,
-  fontSize = 304,
-  color = "#004CFF",
-  fontWeight = 400,
-  stagger = 5,
-  blur = 0.17,
-  tilt = 55,
-  depth = 5,
-  lift = 0.85,
-  drift = 0.005,
-  exitAt = 60,
-  exitAccel = 0.04,
-  mass = 1.3,
-  stiffness = 60,
-  damping = 13,
-  spreadGap = 0.07,
-  tracking = -0.07,
-  resolveFrames = 22,
-  fadeFrames = 18,
-  speed = 1,
-  className,
-}: FogRiseProps) {
+export function FogRise(props: FogRiseProps) {
+  const {
+    text,
+    fontSize = 304,
+    color = "#004CFF",
+    fontWeight = 400,
+    blur = 0.17,
+    tilt = 55,
+    depth = 5,
+    lift = 0.85,
+    drift = 0.005,
+    exitAccel = 0.04,
+    mass = 1.3,
+    stiffness = 60,
+    damping = 13,
+    spreadGap = 0.07,
+    tracking = -0.07,
+    speed = 1,
+    className,
+    timing,
+  } = props;
   const frame = useSceneFrame() * speed;
-  const { fps } = useSceneConfig();
+  const { fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    fogRiseTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
 
-  const chars = Array.from(text);
-  const center = (chars.length - 1) / 2;
-  const minRing = chars.length % 2 === 0 ? 0.5 : 0;
-  const maxRing = Math.floor(center);
+  const { chars } = rings(text);
+  const rise = tl.get("rise");
+  const fall = tl.elements.find((e) => e.id === "exit");
 
   const converge = spring({
-    frame,
+    frame: frame - rise.start,
     fps,
     config: { mass, stiffness, damping },
   });
   const angle = tilt * (1 - converge);
   const liftY = lift * fontSize * (1 - converge);
   const driftY = drift * fontSize * frame;
-  const exitT = exitAt > 0 ? Math.max(frame - exitAt, 0) : 0;
+  const exitT = fall ? Math.max(frame - fall.start, 0) : 0;
   const exitY = 0.5 * exitAccel * exitT * exitT * fontSize;
   const gap = spreadGap * fontSize * (1 - converge);
 
@@ -111,12 +125,11 @@ export function FogRise({
         }}
       >
         {chars.map((char, j) => {
-          const ring = Math.abs(j - center) - minRing;
-          const startAt = ring * stagger;
+          const letter = tl.get(`char:${j}`);
 
           const opacity = interpolate(
             frame,
-            [startAt, startAt + fadeFrames],
+            [letter.start, letter.end],
             [0, 1],
             { extrapolateLeft: "clamp", extrapolateRight: "clamp" },
           );
@@ -124,7 +137,7 @@ export function FogRise({
           const charBlur =
             blur *
             fontSize *
-            interpolate(frame, [0, maxRing * stagger + resolveFrames], [1, 0], {
+            interpolate(frame, [rise.start, rise.end], [1, 0], {
               extrapolateLeft: "clamp",
               extrapolateRight: "clamp",
             });

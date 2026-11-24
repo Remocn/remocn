@@ -5,6 +5,8 @@ import type React from "react";
 import { useId } from "react";
 import { AbsoluteFill, Easing, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import { type StripeMaskElementId, stripeMaskTimeline } from "./timeline";
 
 const { fontFamily: display } = loadFont("normal", {
   weights: ["500"],
@@ -33,6 +35,12 @@ export interface StripeMaskProps {
   delay?: number;
   theme?: "dark" | "light";
   speed?: number;
+  /**
+   * Moves, trims or stretches the sweep, the merge, the break into the mark,
+   * the headline's drift and the beam, by the ids in `./timeline`. Frames on
+   * the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<StripeMaskElementId>;
 }
 
 // Oswald 500, per 1000 em, chars 32–126 (harfbuzz): advance, left and right side bearing.
@@ -126,16 +134,6 @@ const PITCH = 1.0;
 //  70–96   the slab breaks back into three thin bars that slide left and park
 //          as a mark beside the headline, wiping it to ink on the stage
 //  96–     poster hold
-const SWEEP_AT = -6;
-const SWEEP_LEN = 46;
-const SWEEP_STAGGER = 5;
-const DRIFT_LEN = 52;
-const WIDEN_AT = 44;
-const WIDEN_LEN = 13;
-const WIDEN_STAGGER = 2;
-const RETRACT_AT = 70;
-const RETRACT_LEN = 24;
-const RETRACT_STAGGER = 3;
 
 const SWEEP = Easing.bezier(0.2, 0.8, 0.3, 1);
 const DRIFT = Easing.bezier(0.3, 0.55, 0.35, 1);
@@ -203,27 +201,37 @@ function ScaleLayer({
   );
 }
 
-export function StripeMask({
-  title = "Faster. Every frame.",
-  slant = 18,
-  stagger = SWEEP_STAGGER,
-  hold = 10,
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = display,
-  scale = 1,
-  delay = 0,
-  theme = "dark",
-  speed = 1,
-}: StripeMaskProps) {
+export function StripeMask(props: StripeMaskProps) {
+  const {
+    title = "Faster. Every frame.",
+    slant = 18,
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = display,
+    scale = 1,
+    delay = 0,
+    theme = "dark",
+    speed = 1,
+    timing,
+  } = props;
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H } = useSceneConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    stripeMaskTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const sweepEl = tl.get("sweep");
+  const widenEl = tl.get("widen");
+  const retractEl = tl.get("retract");
+  const driftEl = tl.get("drift");
+  const beamEl = tl.get("beam");
   const c = THEMES[theme];
   const fg = ink ?? c.ink;
   const stage =
     background === "transparent" ? "transparent" : (background ?? c.stage);
-  const retractAt = RETRACT_AT - 10 + hold;
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
   const clipId = `sm${uid}`;
   const beamId = `smb${uid}`;
@@ -276,18 +284,28 @@ export function StripeMask({
     // The rightmost bar leads the sweep; the leftmost leads the retreat, so
     // the bars spread apart on the way back and never overlap.
     const lead = 2 - i;
-    const sweepFrom = SWEEP_AT + lead * stagger;
+    const sweepFrom = sweepEl.start + lead * sweepEl.beat("stagger");
     const sweep = SWEEP(
-      interpolate(t, [sweepFrom, sweepFrom + SWEEP_LEN], [0, 1], CLAMP),
+      interpolate(
+        t,
+        [sweepFrom, sweepFrom + sweepEl.beat("bar")],
+        [0, 1],
+        CLAMP,
+      ),
     );
-    const widenFrom = WIDEN_AT + Math.abs(i - 1) * WIDEN_STAGGER;
+    const widenFrom = widenEl.start + Math.abs(i - 1) * widenEl.beat("stagger");
     const widen = WIDEN(
-      interpolate(t, [widenFrom, widenFrom + WIDEN_LEN], [0, 1], CLAMP),
+      interpolate(
+        t,
+        [widenFrom, widenFrom + widenEl.beat("bar")],
+        [0, 1],
+        CLAMP,
+      ),
     );
-    const retractFrom = retractAt + i * RETRACT_STAGGER;
+    const retractFrom = retractEl.start + i * retractEl.beat("stagger");
     const local = interpolate(
       t,
-      [retractFrom, retractFrom + RETRACT_LEN],
+      [retractFrom, retractFrom + retractEl.beat("bar")],
       [0, 1],
       CLAMP,
     );
@@ -315,14 +333,18 @@ export function StripeMask({
       .join(" ");
 
   const drift =
-    (1 -
-      DRIFT(interpolate(t, [SWEEP_AT, SWEEP_AT + DRIFT_LEN], [0, 1], CLAMP))) *
+    (1 - DRIFT(interpolate(t, [driftEl.start, driftEl.end], [0, 1], CLAMP))) *
     0.5 *
     W;
   // The beam rises a few percent of the frame over the shot.
-  const beamDrift = interpolate(t, [0, 120], [0, 0.06 * H], CLAMP);
+  const beamDrift = interpolate(
+    t,
+    [beamEl.start, beamEl.end],
+    [0, 0.06 * H],
+    CLAMP,
+  );
   // The ink copy may only appear once the slab hides it completely.
-  const merged = t >= WIDEN_AT + WIDEN_STAGGER + WIDEN_LEN;
+  const merged = t >= widenEl.end;
 
   const headline = (fill: string, dx: number) =>
     lines.map((line, i) => (

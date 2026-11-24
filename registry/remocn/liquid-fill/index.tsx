@@ -10,6 +10,8 @@ import {
   random,
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import { type LiquidFillElementId, liquidFillTimeline } from "./timeline";
 
 export type LiquidFillProps = {
   /** Wordmark revealed beside the mark once it is full. */
@@ -22,6 +24,11 @@ export type LiquidFillProps = {
   /** Bubble outline color. */
   bubbleColor?: string;
   speed?: number;
+  /**
+   * Moves, trims or stretches the drop, the fill and the slide, by the ids
+   * in `./timeline`. Frames on the scene timeline, after `speed`.
+   */
+  timing?: Timing<LiquidFillElementId>;
 };
 
 const ROUNDED_SQUARE =
@@ -36,9 +43,6 @@ export const liquidFillDefaults = {
   speed: 1,
 };
 
-const LAND = 9;
-const FULL = 34;
-const SLIDE = 36;
 const BUBBLES = 6;
 const clamp = {
   extrapolateLeft: "clamp" as const,
@@ -54,22 +58,33 @@ export function LiquidFill(props: LiquidFillProps) {
     outlineColor,
     bubbleColor,
     speed,
+    timing,
   } = { ...liquidFillDefaults, ...props };
   const uid = `liquid-fill-${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
   const frame = useSceneFrame();
-  const { width, height } = useSceneConfig();
+  const { width, height, durationInFrames } = useSceneConfig();
   const t = frame * Math.max(0, speed);
+  const tl = useTimeline(
+    liquidFillTimeline,
+    props,
+    durationInFrames * Math.max(0, speed),
+    timing,
+  );
+  const drop = tl.get("drop");
+  const fill = tl.get("fill");
+  const slideEl = tl.get("slide");
+  const LAND = fill.start;
   const size = Math.round(Math.min(width, height) * 0.24);
 
   // Drop falls from above the mark and lands on the floor of the shape.
-  const fall = interpolate(t, [0, LAND], [0, 1], {
+  const fall = interpolate(t, [drop.start, drop.end], [0, 1], {
     ...clamp,
     easing: Easing.in(Easing.quad),
   });
   const dropY = -70 + fall * 142;
   const dropStretch = 1 + 0.5 * fall;
 
-  const level = interpolate(t, [LAND, FULL], [100, -12], {
+  const level = interpolate(t, [fill.start, fill.end], [100, -12], {
     ...clamp,
     easing: Easing.bezier(0.35, 0, 0.35, 1),
   });
@@ -77,7 +92,7 @@ export function LiquidFill(props: LiquidFillProps) {
   const amp =
     t < LAND
       ? 0
-      : 7 * Math.exp(-since / 10) * (1 - (t - LAND) / (FULL - LAND + 6));
+      : 7 * Math.exp(-since / 10) * (1 - (t - LAND) / fill.beat("wobble"));
   const splash = t < LAND ? 0 : 14 * Math.exp(-since / 3.5);
   const surface = (x: number) =>
     level +
@@ -91,18 +106,36 @@ export function LiquidFill(props: LiquidFillProps) {
   const liquidPath = `M ${wave.join(" L ")} L 110 110 L -10 110 Z`;
   const meniscusPath = `M ${wave.join(" L ")}`;
 
-  const solid = interpolate(t, [FULL - 2, FULL + 3], [0, 1], clamp);
+  const solid = interpolate(
+    t,
+    [fill.start + fill.beat("solidAt"), fill.start + fill.beat("solidEnd")],
+    [0, 1],
+    clamp,
+  );
   const stroke = interpolateColors(solid, [0, 1], [outlineColor, liquidColor]);
 
-  const slide = interpolate(t, [SLIDE, SLIDE + 11], [0, 1], {
+  const slide = interpolate(t, [slideEl.start, slideEl.end], [0, 1], {
     ...clamp,
     easing: Easing.inOut(Easing.cubic),
   });
-  const reveal = interpolate(t, [SLIDE + 2, SLIDE + 13], [0, 1], {
-    ...clamp,
-    easing: Easing.out(Easing.cubic),
-  });
-  const outlineIn = interpolate(t, [0, 5], [0, 1], clamp);
+  const reveal = interpolate(
+    t,
+    [
+      slideEl.start + slideEl.beat("revealAt"),
+      slideEl.start + slideEl.beat("revealEnd"),
+    ],
+    [0, 1],
+    {
+      ...clamp,
+      easing: Easing.out(Easing.cubic),
+    },
+  );
+  const outlineIn = interpolate(
+    t,
+    [drop.start, drop.start + drop.beat("outline")],
+    [0, 1],
+    clamp,
+  );
 
   return (
     <AbsoluteFill
@@ -131,14 +164,19 @@ export function LiquidFill(props: LiquidFillProps) {
               <path d={shape} />
             </clipPath>
           </defs>
-          {t < LAND + 1 && (
+          {t < drop.start + drop.beat("gone") && (
             <path
               d="M 0 -7 C 3 -2 5 1 5 4 A 5 5 0 0 1 -5 4 C -5 1 -3 -2 0 -7 Z"
               fill={liquidColor}
               transform={`translate(50 ${dropY}) scale(${1.6 / Math.sqrt(dropStretch)} ${1.6 * dropStretch})`}
               opacity={interpolate(
                 t,
-                [0, 2, LAND, LAND + 1],
+                [
+                  drop.start,
+                  drop.start + drop.beat("fadeIn"),
+                  drop.end,
+                  drop.start + drop.beat("gone"),
+                ],
                 [0, 1, 1, 0],
                 clamp,
               )}
@@ -156,7 +194,10 @@ export function LiquidFill(props: LiquidFillProps) {
               />
             )}
             {Array.from({ length: BUBBLES }, (_, i) => {
-              const start = LAND + 2 + random(`liquid-fill-b-${i}`) * 16;
+              const start =
+                LAND +
+                fill.beat("bubblesAt") +
+                random(`liquid-fill-b-${i}`) * fill.beat("spread");
               const age = t - start;
               if (age < 0) return null;
               const bx = 20 + random(`liquid-fill-x-${i}`) * 60;

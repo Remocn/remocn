@@ -2,8 +2,10 @@
 
 import { useMemo } from "react";
 import { Easing, interpolate } from "remotion";
-import { useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import { type ExtrudePopElementId, extrudePopTimeline } from "./timeline";
 
 export interface ExtrudePopProps {
   className?: string;
@@ -22,28 +24,36 @@ export interface ExtrudePopProps {
   extrudeEndFrame?: number;
   bodyColor?: string;
   faceColor?: string;
+  /**
+   * Moves, trims or stretches the extrusion, by the ids in `./timeline`.
+   * Frames on the scene timeline.
+   */
+  timing?: Timing<ExtrudePopElementId>;
 }
 
-export function ExtrudePop({
-  className,
-  width = 1920,
-  height = 1080,
-  letter = "WIN",
-  fontFamily = "'Helvetica Neue', Helvetica, Arial, sans-serif",
-  fontWeight = 700,
-  fontSize = 603,
-  basePosition = [959.2, 752.5],
-  maxTextWidth = 1660,
-  minimaxRadius = 80,
-  extrudeAngleDeg = -58.6,
-  extrudeSteps = 200,
-  extrudeStartFrame = 0,
-  extrudeEndFrame = 48,
-  bodyColor = "#e8192b",
-  faceColor = "#ffffff",
-}: ExtrudePopProps) {
+export function ExtrudePop(props: ExtrudePopProps) {
+  const {
+    className,
+    width = 1920,
+    height = 1080,
+    letter = "WIN",
+    fontFamily = "'Helvetica Neue', Helvetica, Arial, sans-serif",
+    fontWeight = 700,
+    fontSize = 603,
+    basePosition = [959.2, 752.5],
+    maxTextWidth = 1660,
+    minimaxRadius = 80,
+    extrudeAngleDeg = -58.6,
+    extrudeSteps = 200,
+    bodyColor = "#e8192b",
+    faceColor = "#ffffff",
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = useSceneFrame();
+  const { durationInFrames } = useSceneConfig();
+  const tl = useTimeline(extrudePopTimeline, props, durationInFrames, timing);
+  const extrude = tl.get("extrude");
 
   const fit = useMemo(() => {
     if (typeof document === "undefined") return 1;
@@ -59,7 +69,7 @@ export function ExtrudePop({
   const fitRadius = minimaxRadius * fit;
 
   const radiusAt = (f: number) =>
-    interpolate(f, [extrudeStartFrame, extrudeEndFrame], [0, fitRadius], {
+    interpolate(f, [extrude.start, extrude.end], [0, fitRadius], {
       extrapolateLeft: "clamp",
       extrapolateRight: "clamp",
       easing: Easing.bezier(0.16, 1, 0.3, 1),

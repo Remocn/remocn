@@ -5,6 +5,18 @@ import { type CSSProperties, type ReactNode, useId, useMemo } from "react";
 import { AbsoluteFill, Easing, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_STATES,
+  FIRST,
+  INSERT_DELAY,
+  INSERT_LEN,
+  matchTokens,
+  STEP,
+  tokenizeStates,
+  type WordInsertElementId,
+  wordInsertTimeline,
+} from "./timeline";
 
 const { fontFamily: sans } = loadFont("normal", {
   weights: ["500"],
@@ -30,6 +42,12 @@ export interface WordInsertProps {
   grain?: boolean;
   theme?: "dark" | "light";
   speed?: number;
+  /**
+   * Moves, trims or stretches the first words, each state and the words it
+   * adds, by the ids in `./timeline`. Frames on the scene timeline, after
+   * `delay` and `speed`.
+   */
+  timing?: Timing<WordInsertElementId>;
 }
 
 // Manrope 500 advance widths (1/1000 em) for ASCII 32–126, punctuation, kerning.
@@ -104,13 +122,6 @@ const LEAD = 1.06;
 const MAX_SIZE = 0.2;
 const FILL = 0.84;
 
-const ENTER_STAGGER = 3;
-const ENTER_LEN = 18;
-const FIRST = 36;
-const STEP = 50;
-const MOVE = 22;
-const INSERT_DELAY = 12;
-const INSERT_LEN = 18;
 const ACCENT_HOLD = 12;
 const SETTLE = 16;
 const HOLD = 30;
@@ -152,42 +163,6 @@ function textEm(s: string) {
     w += advance(s[i]) + TRACK;
   }
   return w;
-}
-
-function wordKey(token: string) {
-  return token.toLowerCase().replace(/[^\p{L}\p{N}]/gu, "");
-}
-
-function tokenize(state: string) {
-  return state.split(/\s+/).filter(Boolean);
-}
-
-function matchTokens(a: string[], b: string[]) {
-  const ka = a.map(wordKey);
-  const kb = b.map(wordKey);
-  const dp = Array.from({ length: a.length + 1 }, () =>
-    new Array<number>(b.length + 1).fill(0),
-  );
-  for (let i = a.length - 1; i >= 0; i--) {
-    for (let j = b.length - 1; j >= 0; j--) {
-      dp[i][j] =
-        ka[i] === kb[j]
-          ? dp[i + 1][j + 1] + 1
-          : Math.max(dp[i + 1][j], dp[i][j + 1]);
-    }
-  }
-  const pairs: [number, number][] = [];
-  let i = 0;
-  let j = 0;
-  while (i < a.length && j < b.length) {
-    if (ka[i] === kb[j]) {
-      pairs.push([i, j]);
-      i++;
-      j++;
-    } else if (dp[i + 1][j] >= dp[i][j + 1]) i++;
-    else j++;
-  }
-  return pairs;
 }
 
 interface Point {
@@ -410,12 +385,6 @@ function Grain({ opacity }: { opacity: number }) {
   );
 }
 
-const DEFAULT_STATES = [
-  "Launch videos.",
-  "Launch videos, as code.",
-  "Beautiful launch videos, as code.",
-];
-
 export function wordInsertDuration(states: number = DEFAULT_STATES.length) {
   const last = FIRST + Math.max(0, states - 2) * STEP;
   return last + INSERT_DELAY + INSERT_LEN + ACCENT_HOLD + SETTLE + HOLD;
@@ -437,31 +406,34 @@ function ScaleLayer({
   );
 }
 
-export function WordInsert({
-  states = DEFAULT_STATES,
-  beat = STEP,
-  stagger = ENTER_STAGGER,
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = sans,
-  scale = 1,
-  delay = 0,
-  grain = true,
-  theme = "dark",
-  speed = 1,
-}: WordInsertProps) {
+export function WordInsert(props: WordInsertProps) {
+  const {
+    states = DEFAULT_STATES,
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = sans,
+    scale = 1,
+    delay = 0,
+    grain = true,
+    theme = "dark",
+    speed = 1,
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H } = useSceneConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    wordInsertTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const c = THEMES[theme];
   const stage =
     background === "transparent" ? "transparent" : (background ?? c.bg);
 
-  const tokenized = useMemo(
-    () => (states.length ? states : [""]).map(tokenize),
-    [states],
-  );
+  const tokenized = useMemo(() => tokenizeStates(states), [states]);
   const fillW = W * FILL;
   const { F, tracks, layouts } = useMemo(() => {
     const plan = planTracks(tokenized);
@@ -482,15 +454,13 @@ export function WordInsert({
     return { F: best.size, tracks: resolveVirtual(plan, laid), layouts: laid };
   }, [tokenized, fillW, H]);
 
-  const startOf = (s: number) => FIRST + (s - 1) * beat;
   let cur = 0;
-  for (let s = 1; s < layouts.length; s++) if (t >= startOf(s)) cur = s;
-  const p =
-    cur === 0
-      ? 1
-      : EASE_IO(
-          interpolate(t, [startOf(cur), startOf(cur) + MOVE], [0, 1], CLAMP),
-        );
+  for (let s = 1; s < layouts.length; s++)
+    if (t >= tl.get(`state:${s}`).start) cur = s;
+  const step = cur > 0 ? tl.get(`state:${cur}`) : null;
+  const p = step
+    ? EASE_IO(interpolate(t, [step.start, step.end], [0, 1], CLAMP))
+    : 1;
   const prev = Math.max(0, cur - 1);
   const la = layouts[prev];
   const lb = layouts[cur];
@@ -548,9 +518,9 @@ export function WordInsert({
     if (cur === 0 && ib !== null) {
       x = lb.x[ib];
       y = lb.y[ib];
-      const start = ib * stagger;
+      const enter = tl.get(`enter:${ib}`);
       const e = EASE_OUT(
-        interpolate(t, [start, start + ENTER_LEN], [0, 1], CLAMP),
+        interpolate(t, [enter.start, enter.end], [0, 1], CLAMP),
       );
       opacity = e;
       rise = (1 - e) * 0.24;
@@ -606,21 +576,21 @@ export function WordInsert({
       x = la.x[ia] + (to.x - la.x[ia]) * p;
       y = la.y[ia] + (to.y - la.y[ia]) * p;
       climbs = la.y[ia] !== to.y;
-      const out = interpolate(
-        t,
-        [startOf(cur), startOf(cur) + MOVE * 0.45],
-        [0, 1],
-        { ...CLAMP, easing: EASE_IO },
-      );
+      const out = step
+        ? interpolate(t, [step.start, step.start + step.beat("fade")], [0, 1], {
+            ...CLAMP,
+            easing: EASE_IO,
+          })
+        : 0;
       opacity = 1 - out;
       rise = -out * 0.14;
       content = la.tokens[ia];
     }
 
     if (tr.bornAt > 0) {
-      const start = startOf(tr.bornAt) + INSERT_DELAY + tr.bornOrder * stagger;
+      const insert = tl.get(`insert:${tr.bornAt}:${tr.bornOrder}`);
       const e = EASE_OUT(
-        interpolate(t, [start, start + INSERT_LEN], [0, 1], CLAMP),
+        interpolate(t, [insert.start, insert.end], [0, 1], CLAMP),
       );
       if (tr.bornAt === cur) {
         opacity *= e;

@@ -12,6 +12,8 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import { type RepStackElementId, repStackTimeline } from "./timeline";
 
 const { fontFamily: display } = loadFont("normal", {
   weights: ["500"],
@@ -38,6 +40,12 @@ export interface RepStackProps {
   delay?: number;
   theme?: "dark" | "light";
   speed?: number;
+  /**
+   * Moves, trims or stretches the run, the settle, the dimming echoes and
+   * the glow drift, by the ids in `./timeline`. Frames on the scene
+   * timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<RepStackElementId>;
 }
 
 // Archivo Narrow 500, per 1000 em, chars 32–126 (harfbuzz): advance, left and right side bearing.
@@ -92,11 +100,7 @@ const TRACK = -0.006;
 //          the word stands cut out of the dusk, its punctuation in the accent
 //  48–60   the outlined echoes above and below dim back
 //  60–     poster hold
-const RUN_LEN = 42;
-const SETTLE_LEN = 8;
 const OVERSHOOT = 0.03;
-const DIM_AT = 48;
-const DIM_LEN = 12;
 
 const RUN = Easing.bezier(0.2, 0.52, 0.3, 1);
 const SETTLE = Easing.bezier(0.45, 0, 0.55, 1);
@@ -202,29 +206,39 @@ function ScaleLayer({
   );
 }
 
-export function RepStack({
-  word = "AGAIN.",
-  reps = 6,
-  runLength = RUN_LEN,
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = display,
-  scale = 1,
-  delay = 0,
-  theme = "dark",
-  speed = 1,
-}: RepStackProps) {
+export function RepStack(props: RepStackProps) {
+  const {
+    word = "AGAIN.",
+    reps = 6,
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = display,
+    scale = 1,
+    delay = 0,
+    theme = "dark",
+    speed = 1,
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H } = useSceneConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    repStackTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const runEl = tl.get("run");
+  const settleEl = tl.get("settle");
+  const dimEl = tl.get("dim");
+  const glowEl = tl.get("glow");
   const c = THEMES[theme];
   const fg = ink ?? c.ink;
   const stage =
     background === "transparent" ? "transparent" : (background ?? c.stage);
   const metrics = useMeasure(fontFamily);
   const CAP_H = metrics.cap;
-  const dimAt = DIM_AT + (runLength - RUN_LEN);
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
   const gateId = `rs${uid}`;
   const duskId = `rsd${uid}`;
@@ -243,20 +257,20 @@ export function RepStack({
   // Rows still to travel, in pitches. It starts between two rows, so the
   // first frame is mid-pass, ends a hair past the gate, then settles.
   const leftAt = (f: number) => {
-    const run = RUN(interpolate(f, [0, runLength], [0, 1], CLAMP));
+    const run = RUN(interpolate(f, [runEl.start, runEl.end], [0, 1], CLAMP));
     const settle = SETTLE(
-      interpolate(f, [runLength, runLength + SETTLE_LEN], [0, 1], CLAMP),
+      interpolate(f, [settleEl.start, settleEl.end], [0, 1], CLAMP),
     );
     return (n + 0.45) * (1 - run) - OVERSHOOT * run + OVERSHOOT * settle;
   };
   const left = leftAt(t);
-  const dim = DIM(interpolate(t, [dimAt, dimAt + DIM_LEN], [0, 1], CLAMP));
+  const dim = DIM(interpolate(t, [dimEl.start, dimEl.end], [0, 1], CLAMP));
   const echoOpacity = 1 - (1 - c.echo) * dim;
 
   const pad = 0.03 * fs;
   const gateTop = baseline - cap - pad;
   const gateH = cap + 2 * pad;
-  const glowX = interpolate(t, [0, 90], [0.38, 0.46], CLAMP);
+  const glowX = interpolate(t, [glowEl.start, glowEl.end], [0.38, 0.46], CLAMP);
   const stroke = Math.max(1.5, fs * 0.0055);
   const rows: number[] = [];
   for (let r = -n - 2; r <= 2; r++) {

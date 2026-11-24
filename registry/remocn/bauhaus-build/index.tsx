@@ -1,26 +1,41 @@
 "use client";
 
-import { Easing, random } from "remotion";
+import { Easing } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import {
+  type ResolvedTimeline,
+  resolve,
+  type Timing,
+  useTimeline,
+} from "@/lib/remocn/timeline";
+import type {
+  BauhausBuildElementId,
+  BauhausPiece,
+  BauhausPose,
+  BauhausRole,
+  BauhausShape,
+  TumbleDirection,
+  TumbleMove,
+} from "./timeline";
+import {
+  BAUHAUS_BEAT,
+  BAUHAUS_LEAD,
+  BAUHAUS_PIECES,
+  BAUHAUS_REBUILD,
+  bauhausOrderOf,
+  bauhausTumbleTimeline,
+  tumbleDurationOf,
+} from "./timeline";
 
-export type BauhausShape =
-  | "circle"
-  | "square"
-  | "semicircle"
-  | "quarter"
-  | "bar";
-
-export type BauhausRole = "ink" | "accent" | "secondary" | "tertiary";
-
-export type TumbleDirection = "U" | "D" | "L" | "R";
-
-export type TumbleMove = `${TumbleDirection}${"+" | "-"}`;
-
-export interface BauhausPose {
-  turn: number;
-  x: number;
-  y: number;
-}
+export type {
+  BauhausBuildElementId,
+  BauhausPiece,
+  BauhausPose,
+  BauhausRole,
+  BauhausShape,
+  TumbleDirection,
+  TumbleMove,
+};
 
 export interface BauhausPoint {
   x: number;
@@ -32,19 +47,6 @@ export interface BauhausFootprint {
   y0: number;
   x1: number;
   y1: number;
-}
-
-export interface BauhausPiece {
-  id: string;
-  shape: BauhausShape;
-  width: number;
-  height: number;
-  role: BauhausRole;
-  slot: BauhausPose;
-  enter: readonly TumbleMove[];
-  rebuild: readonly TumbleMove[];
-  cue: number;
-  after: readonly string[];
 }
 
 export interface BauhausStep {
@@ -82,6 +84,11 @@ export interface BauhausBuildProps {
   speed?: number;
   loop?: boolean;
   className?: string;
+  /**
+   * Moves, trims or stretches each shape's tumble in and its rebuild step,
+   * by the ids in `./timeline`. Frames on the scene timeline, after `speed`.
+   */
+  timing?: Timing<BauhausBuildElementId>;
 }
 
 interface TumbleRule {
@@ -105,125 +112,17 @@ export const bauhausBuildGrid = 12;
 export const bauhausBuildBand = { top: 4, bottom: 8 };
 export const bauhausBuildLength = 125;
 export const bauhausBuildTimeline = {
-  lead: 22,
-  beat: 6,
-  rebuild: 90,
+  lead: BAUHAUS_LEAD,
+  beat: BAUHAUS_BEAT,
+  rebuild: BAUHAUS_REBUILD,
   clear: 116,
   duration: 150,
 };
 
-export const bauhausBuildPieces: readonly BauhausPiece[] = [
-  {
-    id: "hill",
-    shape: "quarter",
-    width: 4,
-    height: 4,
-    role: "ink",
-    slot: { turn: 3, x: 0, y: 4 },
-    enter: ["D-", "R+"],
-    rebuild: ["D-"],
-    cue: 0,
-    after: ["tile"],
-  },
-  {
-    id: "tile",
-    shape: "square",
-    width: 1,
-    height: 1,
-    role: "accent",
-    slot: { turn: 0, x: 4, y: 7 },
-    enter: ["U+", "U+", "U+", "U+"],
-    rebuild: ["D+"],
-    cue: 3,
-    after: ["pillar"],
-  },
-  {
-    id: "pillar",
-    shape: "bar",
-    width: 4,
-    height: 1,
-    role: "ink",
-    slot: { turn: 1, x: 5, y: 4 },
-    enter: ["R+", "R+"],
-    rebuild: ["U+"],
-    cue: 6,
-    after: ["sun"],
-  },
-  {
-    id: "sun",
-    shape: "circle",
-    width: 4,
-    height: 4,
-    role: "accent",
-    slot: { turn: 0, x: 6, y: 4 },
-    enter: ["U+", "U+"],
-    rebuild: ["U-"],
-    cue: 9,
-    after: [],
-  },
-  {
-    id: "dome",
-    shape: "semicircle",
-    width: 2,
-    height: 2,
-    role: "secondary",
-    slot: { turn: 3, x: 1, y: 1 },
-    enter: ["R+", "D-"],
-    rebuild: ["R+"],
-    cue: 12,
-    after: ["pillar"],
-  },
-  {
-    id: "post",
-    shape: "bar",
-    width: 4,
-    height: 1,
-    role: "tertiary",
-    slot: { turn: 1, x: 11, y: 4 },
-    enter: ["D+", "D+"],
-    rebuild: ["D-"],
-    cue: 15,
-    after: [],
-  },
-  {
-    id: "dot",
-    shape: "circle",
-    width: 1,
-    height: 1,
-    role: "ink",
-    slot: { turn: 0, x: 11, y: 3 },
-    enter: ["D-", "D-", "D-", "D-"],
-    rebuild: ["L-"],
-    cue: 18,
-    after: ["post"],
-  },
-  {
-    id: "block",
-    shape: "square",
-    width: 2,
-    height: 2,
-    role: "tertiary",
-    slot: { turn: 0, x: 6, y: 10 },
-    enter: ["U+", "U+", "U+"],
-    rebuild: ["L+"],
-    cue: 21,
-    after: ["sun"],
-  },
-  {
-    id: "fan",
-    shape: "quarter",
-    width: 2,
-    height: 2,
-    role: "secondary",
-    slot: { turn: 2, x: 8, y: 10 },
-    enter: ["L-", "L+", "L+"],
-    rebuild: ["R+"],
-    cue: 24,
-    after: ["block"],
-  },
-];
+export const bauhausBuildPieces = BAUHAUS_PIECES;
+export const getBauhausBuildOrder = bauhausOrderOf;
+export const getTumbleDuration = tumbleDurationOf;
 
-const TURN = 5;
 const FILL = 0.8;
 const OVERSHOOT = 0.05;
 const SETTLE = 0.5;
@@ -388,12 +287,6 @@ export function getBauhausStepFrame(
   };
 }
 
-export function getTumbleDuration(
-  piece: Pick<BauhausPiece, "width" | "height">,
-) {
-  return TURN * Math.sqrt(Math.max(piece.width, piece.height));
-}
-
 export function getTumbleProgress(
   elapsed: number,
   duration: number,
@@ -415,8 +308,8 @@ function getPathFrame(
   steps: readonly BauhausStep[],
   elapsed: number,
   unfold: boolean,
+  duration = getTumbleDuration(piece),
 ): BauhausFrame {
-  const duration = getTumbleDuration(piece);
   const last = steps.length - 1;
   const index = Math.min(last, Math.max(0, Math.floor(elapsed / duration)));
   const local = elapsed - index * duration;
@@ -432,24 +325,34 @@ function getPathFrame(
 
 function getPieceMotion(
   piece: BauhausPiece,
-  arrival: number,
+  tl: ResolvedTimeline<BauhausBuildElementId>,
   time: number,
 ): BauhausFrame {
-  const { lead, beat, rebuild } = bauhausBuildTimeline;
   const paths = getBauhausPaths(piece);
-  const cue = rebuild + piece.cue;
-  if (time >= cue && paths.rebuild.length > 0) {
-    return getPathFrame(piece, paths.rebuild, time - cue, false);
+  const out = tl.get(`rebuild:${piece.id}`);
+  if (time >= out.start && paths.rebuild.length > 0) {
+    return getPathFrame(
+      piece,
+      paths.rebuild,
+      time - out.start,
+      false,
+      out.beat("step"),
+    );
   }
   if (paths.enter.length === 0) {
     return getBauhausPoseFrame(piece, piece.slot);
   }
-  const travel = paths.enter.length * getTumbleDuration(piece);
-  const start = lead + arrival * beat - travel;
-  if (time < start) {
+  const enter = tl.get(`enter:${piece.id}`);
+  if (time < enter.start) {
     return { ...getBauhausPoseFrame(piece, paths.start), scale: 0 };
   }
-  return getPathFrame(piece, paths.enter, time - start, true);
+  return getPathFrame(
+    piece,
+    paths.enter,
+    time - enter.start,
+    true,
+    enter.beat("step"),
+  );
 }
 
 export function getBauhausBuildDuration({
@@ -459,25 +362,6 @@ export function getBauhausBuildDuration({
   const rate = finite(speed, 1);
   const frames = bauhausBuildTimeline.duration * (loop ? 2 : 1);
   return rate <= 0 ? 1 : Math.max(1, Math.ceil(frames / rate));
-}
-
-export function getBauhausBuildOrder(seed = bauhausBuildDefaults.seed) {
-  const key = seedKey(seed);
-  const rank = (piece: BauhausPiece) =>
-    random(`bauhaus-build-${key}-order-${piece.id}`);
-  const placed: BauhausPiece[] = [];
-  const waiting = [...bauhausBuildPieces];
-  while (waiting.length > 0) {
-    const ready = waiting.filter((piece) =>
-      piece.after.every((id) => placed.some((done) => done.id === id)),
-    );
-    const next = ready.reduce((best, piece) =>
-      rank(piece) < rank(best) ? piece : best,
-    );
-    placed.push(next);
-    waiting.splice(waiting.indexOf(next), 1);
-  }
-  return placed;
 }
 
 export function getBauhausBuildVariant(seed = bauhausBuildDefaults.seed) {
@@ -523,14 +407,17 @@ export function getBauhausBuildState(
     width?: number;
     height?: number;
   } = {},
+  tl: ResolvedTimeline<BauhausBuildElementId> = resolve(
+    bauhausTumbleTimeline({ seed }, { length: bauhausBuildTimeline.duration }),
+  ),
 ) {
   const { size, originX, originY } = getPoster(scale, width, height);
   const { duration } = bauhausBuildTimeline;
   const elapsed = Math.max(0, finite(time, 0));
   const folded = elapsed % (duration * 2);
   const local = loop ? Math.min(folded, duration * 2 - folded) : elapsed;
-  const pieces = getBauhausBuildOrder(seed).map((piece, arrival) => {
-    const motion = getPieceMotion(piece, arrival, local);
+  const pieces = getBauhausBuildOrder(seed).map((piece) => {
+    const motion = getPieceMotion(piece, tl, local);
     const frame: BauhausPieceFrame = {
       id: piece.id,
       shape: piece.shape,
@@ -571,27 +458,40 @@ export function getBauhausShapePath(
   }
 }
 
-export function BauhausBuild({
-  scale = bauhausBuildDefaults.scale,
-  seed = bauhausBuildDefaults.seed,
-  inkColor = bauhausBuildDefaults.inkColor,
-  accentColor = bauhausBuildDefaults.accentColor,
-  secondaryColor = bauhausBuildDefaults.secondaryColor,
-  tertiaryColor = bauhausBuildDefaults.tertiaryColor,
-  speed = bauhausBuildDefaults.speed,
-  loop = bauhausBuildDefaults.loop,
-  className,
-}: BauhausBuildProps) {
+export function BauhausBuild(props: BauhausBuildProps) {
+  const {
+    scale = bauhausBuildDefaults.scale,
+    seed = bauhausBuildDefaults.seed,
+    inkColor = bauhausBuildDefaults.inkColor,
+    accentColor = bauhausBuildDefaults.accentColor,
+    secondaryColor = bauhausBuildDefaults.secondaryColor,
+    tertiaryColor = bauhausBuildDefaults.tertiaryColor,
+    speed = bauhausBuildDefaults.speed,
+    loop = bauhausBuildDefaults.loop,
+    className,
+    timing,
+  } = props;
   const frame = useSceneFrame();
-  const { width, height, fps } = useSceneConfig();
-  const time = frame * (30 / fps) * Math.max(0, finite(speed, 1));
-  const state = getBauhausBuildState(time, {
-    seed,
-    scale,
-    loop,
-    width,
-    height,
-  });
+  const { width, height, fps, durationInFrames } = useSceneConfig();
+  const rate = Math.max(0, finite(speed, 1));
+  const time = frame * (30 / fps) * rate;
+  const tl = useTimeline(
+    bauhausTumbleTimeline,
+    props,
+    durationInFrames * rate,
+    timing,
+  );
+  const state = getBauhausBuildState(
+    time,
+    {
+      seed,
+      scale,
+      loop,
+      width,
+      height,
+    },
+    tl,
+  );
   const fills: Record<BauhausRole, string> = {
     ink: inkColor,
     accent: accentColor,

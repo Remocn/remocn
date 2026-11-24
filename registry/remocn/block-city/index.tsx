@@ -5,6 +5,12 @@ import type React from "react";
 import { type ReactNode, useId } from "react";
 import { AbsoluteFill, Easing, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import {
+  type ResolvedElement,
+  type Timing,
+  useTimeline,
+} from "@/lib/remocn/timeline";
+import { type BlockCityElementId, blockCityTimeline } from "./timeline";
 
 const { fontFamily: sora } = loadFont("normal", {
   weights: ["300", "400"],
@@ -40,6 +46,12 @@ export interface BlockCityProps {
   /** Playback multiplier. */
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches the camera moves, the rising blocks, the hero
+   * tower and its glow, the label and the count, by the ids in
+   * `./timeline`. Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<BlockCityElementId>;
 }
 
 const EASE_IO = Easing.bezier(0.65, 0, 0.35, 1);
@@ -56,6 +68,7 @@ const CELL = 52;
 const FOOT = 37;
 
 // camera keyframes: [frame, pitch°, yaw°, camX, camY, dolly, lens] (lengths in u).
+// The frames are the schedule's: `fly`, `crane` and `orbit` in `./timeline`.
 // Fly low along the columns on a wide lens, then crane up and orbit to a long-lens
 // front view where the skyline reads as a bar chart.
 const CAM: [number, number, number, number, number, number, number][] = [
@@ -64,9 +77,6 @@ const CAM: [number, number, number, number, number, number, number][] = [
   [140, 69, -72, 220, 50, -170, 940],
   [210, 52, -20, 20, -110, -300, 1300],
 ];
-
-const T_HERO = 112;
-const T_LABEL = 178;
 
 // gradients.sh "fluted" palette: bg #050507, [#1d2a8f, #2f7bff, #ff7a3d, #ffe2c4].
 // It runs up the hero tower (deep blue at the street, warm at the roof) and tints the sky.
@@ -143,12 +153,12 @@ function heightAt(c: number, r: number, data?: number[]) {
   return 12 + 190 * trend * ripple * noise;
 }
 
-function camAt(t: number) {
+function camAt(t: number, moves: ResolvedElement<BlockCityElementId>[]) {
   let i = 0;
-  while (i < CAM.length - 2 && t > CAM[i + 1][0]) i++;
+  while (i < CAM.length - 2 && t > moves[i].end) i++;
   const a = CAM[i];
   const b = CAM[i + 1];
-  const k = interpolate(t, [a[0], b[0]], [0, 1], {
+  const k = interpolate(t, [moves[i].start, moves[i].end], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
@@ -210,32 +220,44 @@ const face: React.CSSProperties = {
   transformOrigin: "0 0",
 };
 
-export function BlockCity({
-  value = 340,
-  prefix = "+",
-  suffix = "%",
-  caption = "renders",
-  data,
-  fontWeight = 400,
-  countUp = 40,
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = sora,
-  scale = 1,
-  delay = 0,
-  grain = true,
-  speed = 1,
-  theme = "dark",
-}: BlockCityProps) {
+export function BlockCity(props: BlockCityProps) {
+  const {
+    value = 340,
+    prefix = "+",
+    suffix = "%",
+    caption = "renders",
+    data,
+    fontWeight = 400,
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = sora,
+    scale = 1,
+    delay = 0,
+    grain = true,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width, height } = useSceneConfig();
+  const { width, height, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    blockCityTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const riseEl = tl.get("rise");
+  const glowEl = tl.get("glow");
+  const heroEl = tl.get("hero");
+  const labelEl = tl.get("label");
+  const countEl = tl.get("count");
   const u = height / 720;
   const pal: Palette = PALETTES[theme];
   const fg = ink ?? pal.fg;
   const stage = background ?? css(pal.bg);
 
-  const cam = camAt(t);
+  const cam = camAt(t, tl.lane("Camera"));
   const persp = cam.lens * u;
   const rad = Math.PI / 180;
   const cp = Math.cos(cam.pitch * rad);
@@ -265,12 +287,12 @@ export function BlockCity({
   const heroH = tallest * 1.95 * u;
 
   // the rise wave travels from the near rows to the far rows with the camera
-  const wave = interpolate(t, [0, 112], [5, COLS + 3], CLAMP);
-  const heroP = interpolate(t, [T_HERO, T_HERO + 26], [0, 1], {
+  const wave = interpolate(t, [riseEl.start, riseEl.end], [5, COLS + 3], CLAMP);
+  const heroP = interpolate(t, [heroEl.start, heroEl.end], [0, 1], {
     ...CLAMP,
     easing: RISE,
   });
-  const heroTint = interpolate(t, [T_HERO - 4, T_HERO + 12], [0, 1], CLAMP);
+  const heroTint = interpolate(t, [glowEl.start, glowEl.end], [0, 1], CLAMP);
 
   const blocks: React.ReactNode[] = [];
   const s = FOOT * u;
@@ -377,11 +399,11 @@ export function BlockCity({
   const heroY = (heroR - (ROWS - 1) / 2) * CELL * u;
   const heroBase = heightAt(heroC, heroR, data) * u;
   const roof = project(heroX, heroY, heroBase + (heroH - heroBase) * heroP);
-  const labelP = interpolate(t, [T_LABEL, T_LABEL + 22], [0, 1], {
+  const labelP = interpolate(t, [labelEl.start, labelEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
-  const count = interpolate(t, [T_LABEL, T_LABEL + countUp], [0, 1], {
+  const count = interpolate(t, [countEl.start, countEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });

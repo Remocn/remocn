@@ -2,6 +2,8 @@
 
 import { AbsoluteFill, Easing, Img, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import { type ReelElementId, reelTimeline } from "./timeline";
 
 const clamp = {
   extrapolateLeft: "clamp" as const,
@@ -18,27 +20,38 @@ export type ReelProps = {
   reveal?: number;
   objectPosition?: string;
   background?: string;
+  /**
+   * Moves, trims or stretches single image reveals, by the ids in
+   * `./timeline`. Frames on the scene timeline.
+   */
+  timing?: Timing<ReelElementId>;
 };
 
-export function Reel({
-  images,
-  width = 1180,
-  height = 676,
-  radius = 16,
-  step = 20,
-  reveal = 13,
-  objectPosition = "top",
-  background = "#050506",
-}: ReelProps) {
+export function Reel(props: ReelProps) {
+  const {
+    images,
+    width = 1180,
+    height = 676,
+    radius = 16,
+    objectPosition = "top",
+    background = "#050506",
+    timing,
+  } = props;
   const frame = useSceneFrame();
-  const { width: compWidth, height: compHeight } = useSceneConfig();
+  const {
+    width: compWidth,
+    height: compHeight,
+    durationInFrames,
+  } = useSceneConfig();
+  const tl = useTimeline(reelTimeline, props, durationInFrames, timing);
   const left = (compWidth - width) / 2;
   const top = (compHeight - height) / 2;
 
   return (
     <AbsoluteFill>
       {images.map((src, i) => {
-        const p = interpolate(frame, [i * step, i * step + reveal], [0, 1], {
+        const { start, end } = tl.get(`image:${i}`);
+        const p = interpolate(frame, [start, end], [0, 1], {
           ...clamp,
           easing: EASE_OUT,
         });

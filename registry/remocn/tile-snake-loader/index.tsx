@@ -17,6 +17,13 @@ import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_NAME,
+  SCENE_END,
+  type TileSnakeLoaderElementId,
+  tileSnakeLoaderTimeline,
+} from "./timeline";
 
 const sans = loadInstrumentSans("normal", {
   weights: ["400"],
@@ -35,24 +42,8 @@ const POP = { mass: 0.6, damping: 13, stiffness: 210 };
 const CARD = { mass: 0.8, damping: 18, stiffness: 160 };
 const MORPH = { damping: 200 };
 
-const B = {
-  name: -10,
-  breakAt: 6,
-  letterStep: 1.4,
-  snake: 6,
-  label: 26,
-  pctKeys: [24, 48, 70, 92, 108],
-  pctVals: [0, 24, 47, 83, 100],
-  full: 108,
-  retract: 16,
-  skeleton: 110,
-  grow: 118,
-  window: 130,
-  content: 131,
-  end: 178,
-};
-
-export const TILE_SNAKE_LOADER_DURATION = B.end;
+export const TILE_SNAKE_LOADER_DURATION = SCENE_END;
+const PCT_VALS = [0, 24, 47, 83, 100];
 
 const ramp = (f: number, start: number, dur: number, easing = ENTER) =>
   interpolate(f, [start, start + dur], [0, 1], {
@@ -147,6 +138,13 @@ export interface TileSnakeLoaderProps {
   speed?: number;
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
+  /**
+   * Moves, trims or stretches the name, the tile snake and its retract, the
+   * loading label, the skeleton growing into the window and the content, by
+   * the ids in `./timeline`. Frames on the scene timeline, after `delay` and
+   * `speed`.
+   */
+  timing?: Timing<TileSnakeLoaderElementId>;
 }
 
 type Kind =
@@ -500,6 +498,10 @@ function WindowContent({
   secondaryLabel,
   publishLabel,
   shortBy,
+  contentAt,
+  stepGap,
+  riseLen,
+  cardAt,
 }: {
   frame: number;
   fps: number;
@@ -516,6 +518,13 @@ function WindowContent({
   publishLabel: string;
   /** How much narrower the window still is than where it settles. */
   shortBy: number;
+  /** Frame the content starts rising in. */
+  contentAt: number;
+  /** Frames between one part rising and the next, and each part's rise. */
+  stepGap: number;
+  riseLen: number;
+  /** Frames into the content when the card pops. */
+  cardAt: number;
 }) {
   const k = portrait ? 1.55 : 1;
   // The bar is laid out at the settled width and its centred and right-hand
@@ -523,13 +532,17 @@ function WindowContent({
   // to whole pixels, so they would step unevenly as the window widens.
   const follow = (dx: number) =>
     Math.abs(dx) < 1e-3 ? undefined : `translateX(${dx}px)`;
-  const step = (i: number) => ramp(frame, B.content + i * 3, 13);
+  const step = (i: number) => ramp(frame, contentAt + i * stepGap, riseLen);
   const rise = (i: number) => ({
     opacity: step(i),
     transform: `translateY(${mix(14 * k, 0, step(i))}px)`,
     filter: `blur(${(1 - step(i)) * 5}px)`,
   });
-  const cardPop = spring({ frame: frame - B.content - 4, fps, config: CARD });
+  const cardPop = spring({
+    frame: frame - contentAt - cardAt,
+    fps,
+    config: CARD,
+  });
   const lines = headline.split("\n");
   const barH = 46 * k;
   const railW = portrait ? 0 : 60;
@@ -858,31 +871,51 @@ function ScaleLayer({
   );
 }
 
-export function TileSnakeLoader({
-  theme = "dark",
-  accent = "#3B5BFD",
-  name = "Lumen Studio",
-  label = "Initializing",
-  images = DEFAULT_IMAGES,
-  product = "Lumen Studio",
-  url = "lumen.studio",
-  headline = "Launch films,\ncut in minutes.",
-  sub = "Drop your screens in. Ship the film by Friday.",
-  ctaLabel = "Start a film",
-  secondaryLabel = "See examples",
-  publishLabel = "Publish",
-  ink,
-  background,
-  fontFamily = sans.fontFamily,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  ground,
-  groundParams,
-}: TileSnakeLoaderProps) {
+export function TileSnakeLoader(props: TileSnakeLoaderProps) {
+  const {
+    theme = "dark",
+    accent = "#3B5BFD",
+    name = DEFAULT_NAME,
+    label = "Initializing",
+    images = DEFAULT_IMAGES,
+    product = "Lumen Studio",
+    url = "lumen.studio",
+    headline = "Launch films,\ncut in minutes.",
+    sub = "Drop your screens in. Ship the film by Friday.",
+    ctaLabel = "Start a film",
+    secondaryLabel = "See examples",
+    publishLabel = "Publish",
+    ink,
+    background,
+    fontFamily = sans.fontFamily,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    ground,
+    groundParams,
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width, height, fps } = useSceneConfig();
+  const { width, height, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    tileSnakeLoaderTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const nameEl = tl.get("name");
+  const breakEl = tl.get("break");
+  const snake = tl.get("snake");
+  const labelEl = tl.get("label");
+  const retract = tl.get("retract");
+  const skeleton = tl.get("skeleton");
+  const growEl = tl.get("grow");
+  const app = tl.get("app");
+  const content = tl.get("content");
+  const pctKeys = [0, 1, 2, 3, 4].map(
+    (i) => snake.start + snake.beat(`key${i}`),
+  );
   const c = THEMES[theme];
   const fg = ink ?? c.ink;
   const portrait = height > width * 1.2;
@@ -938,27 +971,28 @@ export function TileSnakeLoader({
   };
 
   const pctAt = (f: number) =>
-    interpolate(f, B.pctKeys, B.pctVals, {
+    interpolate(f, pctKeys, PCT_VALS, {
       extrapolateLeft: "clamp",
       extrapolateRight: "clamp",
       easing: MOVE,
     });
   const headAt = (f: number) =>
-    P * 0.1 * ramp(f, B.snake, 18, SWAY) + P * 1.22 * (pctAt(f) / 100);
+    P * 0.1 * ramp(f, snake.start, snake.beat("intro"), SWAY) +
+    P * 1.22 * (pctAt(f) / 100);
   const lenAt = (f: number) => {
     const h = headAt(f);
     const base = Math.min(h, P * (0.5 + 0.2 * (pctAt(f) / 100)));
-    return base * (1 - ramp(f, B.full, B.retract, EXIT));
+    return base * (1 - ramp(f, retract.start, retract.length, EXIT));
   };
   const tailAt = (f: number) =>
-    headAt(f) - lenAt(f) + (f >= B.full + B.retract ? gap : 0);
+    headAt(f) - lenAt(f) + (f >= retract.end ? gap : 0);
 
   const firstFrame = (test: (f: number) => boolean) => {
-    for (let f = B.snake; f <= B.end + 1; f++) if (test(f)) return f;
+    for (let f = snake.start; f <= SCENE_END + 1; f++) if (test(f)) return f;
     return 9999;
   };
 
-  const maxHead = headAt(B.end);
+  const maxHead = headAt(SCENE_END);
   const nTiles = Math.floor(maxHead / gap) + 1;
   const tiles: ReactNode[] = [];
   for (let n = 0; n < nTiles; n++) {
@@ -1010,16 +1044,31 @@ export function TileSnakeLoader({
   }
 
   const nameSize = portrait ? 132 : 96;
-  const nameIn = ramp(frame, B.name, 14);
+  const nameIn = ramp(frame, nameEl.start, nameEl.length);
   const chars = Array.from(name);
+  const letterOut = (f: number, i: number) =>
+    ramp(
+      f,
+      breakEl.start + i * breakEl.beat("letterStep"),
+      breakEl.beat("letter"),
+      EXIT,
+    );
 
   const labelSize = 30 * k;
-  const labelIn = ramp(frame, B.label - 4, 10);
+  const labelIn = ramp(frame, labelEl.start, labelEl.length);
   const settleN = Math.floor(
-    interpolate(frame, [B.label, B.label + 14], [0, label.length], {
-      extrapolateLeft: "clamp",
-      extrapolateRight: "clamp",
-    }),
+    interpolate(
+      frame,
+      [
+        labelEl.start + labelEl.beat("settleAt"),
+        labelEl.start + labelEl.beat("settleEnd"),
+      ],
+      [0, label.length],
+      {
+        extrapolateLeft: "clamp",
+        extrapolateRight: "clamp",
+      },
+    ),
   );
   const labelText = Array.from(label)
     .map((ch, i) =>
@@ -1033,44 +1082,50 @@ export function TileSnakeLoader({
     )
     .join("");
   const pct = Math.round(pctAt(frame));
-  const labelOut = ramp(frame, B.skeleton, 8, EXIT);
-  const skelIn = ramp(frame, B.skeleton + 2, 6);
+  const labelOut = ramp(frame, skeleton.start, skeleton.length, EXIT);
+  const skelIn = ramp(
+    frame,
+    skeleton.start + skeleton.beat("inAt"),
+    skeleton.beat("in"),
+  );
 
   const skelW0 = portrait ? 520 : 340;
   const skelH0 = 46 * k;
   const winW = portrait ? 940 : 1000;
   const winH = portrait ? 1380 : 580;
   const grow = spring({
-    frame: frame - B.grow,
+    frame: frame - growEl.start,
     fps,
     config: MORPH,
-    durationInFrames: 16,
+    durationInFrames: growEl.length,
   });
-  const winOn = ramp(frame, B.window, 8);
-  const settle = spring({ frame: frame - B.window, fps, config: CARD });
-  const winScale = frame >= B.window ? mix(0.965, 1, settle) : 1;
+  const winOn = ramp(frame, app.start, app.length);
+  const settle = spring({ frame: frame - app.start, fps, config: CARD });
+  const winScale = frame >= app.start ? mix(0.965, 1, settle) : 1;
   const boxW = mix(skelW0, winW, grow);
   const boxH = mix(skelH0, winH, grow);
   const growDx = (winW - boxW) / 2;
   const growDy = (winH - boxH) / 2;
   const boxR = mix(skelH0 / 2, 20 * k * (portrait ? 0.85 : 1), grow);
-  const push = 1 + 0.03 * ramp(frame, B.content, B.end - B.content, SWAY);
+  const push =
+    1 + 0.03 * ramp(frame, content.start, content.beat("push"), SWAY);
   // One tilt on the stage covers everything that rides a transform: the name
   // rising in and breaking up, the loading label, and from the window on the
   // window's settle, its content and the push, which runs to the last frame.
   const stageMoving =
-    moves((f) => mix(nameSize, 0, ramp(f, B.name, 14)), frame) ||
     moves(
-      (f) =>
-        chars.reduce(
-          (sum, _, i) =>
-            sum + ramp(f, B.breakAt + i * B.letterStep, 7, EXIT) * nameSize,
-          0,
-        ),
+      (f) => mix(nameSize, 0, ramp(f, nameEl.start, nameEl.length)),
       frame,
     ) ||
-    moves((f) => mix(10 * k, 0, ramp(f, B.label - 4, 10)), frame) ||
-    frame >= B.window;
+    moves(
+      (f) => chars.reduce((sum, _, i) => sum + letterOut(f, i) * nameSize, 0),
+      frame,
+    ) ||
+    moves(
+      (f) => mix(10 * k, 0, ramp(f, labelEl.start, labelEl.length)),
+      frame,
+    ) ||
+    frame >= app.start;
 
   const preset = ground ?? (groundParams ? undefined : c.ground);
   const gParams = groundParams ?? (ground ? undefined : c.groundParams);
@@ -1137,7 +1192,7 @@ export function TileSnakeLoader({
                 }}
               >
                 {chars.map((ch, i) => {
-                  const g = ramp(frame, B.breakAt + i * B.letterStep, 7, EXIT);
+                  const g = letterOut(frame, i);
                   return (
                     <span
                       key={`n${i}-${ch}`}
@@ -1155,7 +1210,7 @@ export function TileSnakeLoader({
                 })}
               </div>
             </div>
-            {frame >= B.label - 4 && labelOut < 1 ? (
+            {frame >= labelEl.start && labelOut < 1 ? (
               <div
                 style={{
                   position: "absolute",
@@ -1263,6 +1318,10 @@ export function TileSnakeLoader({
                       secondaryLabel={secondaryLabel}
                       publishLabel={publishLabel}
                       shortBy={winW - boxW}
+                      contentAt={content.start}
+                      stepGap={content.beat("step")}
+                      riseLen={content.beat("rise")}
+                      cardAt={content.beat("cardAt")}
                     />
                   </div>
                 ) : null}

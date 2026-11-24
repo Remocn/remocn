@@ -6,6 +6,8 @@ import { useId } from "react";
 import { AbsoluteFill, Easing, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import { type EmbossedMarkElementId, embossedMarkTimeline } from "./timeline";
 
 // Brand face: the remocn.dev logo is the R mark + "emocn" in Manrope 600.
 const manrope = loadManrope("normal", {
@@ -47,6 +49,12 @@ export interface EmbossedMarkProps {
   grain?: boolean;
   theme?: "dark" | "light";
   speed?: number;
+  /**
+   * Moves, trims or stretches the light sweep, the camera, the foil and
+   * single letters of the name, by the ids in `./timeline`.
+   * Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<EmbossedMarkElementId>;
 }
 
 const EASE_IO = Easing.bezier(0.65, 0, 0.35, 1);
@@ -190,24 +198,34 @@ function ScaleLayer({
   );
 }
 
-export function EmbossedMark({
-  logo,
-  name = "emocn",
-  accent = "#3B5BFD",
-  stagger = 3,
-  relief = 1,
-  ink,
-  background,
-  fontFamily = manrope.fontFamily,
-  scale = 1,
-  delay = 0,
-  grain = true,
-  theme = "dark",
-  speed = 1,
-}: EmbossedMarkProps) {
+export function EmbossedMark(props: EmbossedMarkProps) {
+  const {
+    logo,
+    name = "emocn",
+    accent = "#3B5BFD",
+    relief = 1,
+    ink,
+    background,
+    fontFamily = manrope.fontFamily,
+    scale = 1,
+    delay = 0,
+    grain = true,
+    theme = "dark",
+    speed = 1,
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width, height } = useSceneConfig();
+  const { width, height, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    embossedMarkTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const light = tl.get("light");
+  const camera = tl.get("camera");
+  const foilEl = tl.get("foil");
   const p = THEMES[theme];
   const fg = ink ?? p.ink;
   const paper =
@@ -225,7 +243,9 @@ export function EmbossedMark({
   const markH = fontSize * 0.76;
   const markW = logo ? markH : (markH * R_W) / R_H;
 
-  const sweep = EASE_IO(interpolate(t, [0, 112], [0, 1], CLAMP));
+  const sweep = EASE_IO(
+    interpolate(t, [light.start, light.end], [0, 1], CLAMP),
+  );
   const az = (196 + 104 * sweep) * (Math.PI / 180);
   const lx = Math.cos(az);
   const ly = Math.sin(az);
@@ -237,7 +257,7 @@ export function EmbossedMark({
   // translateX(%) resolves against the lockup's own width, so no text
   // measuring is needed.
   const camAt = (f: number) =>
-    EASE_IO(interpolate(f, [56, 100], [0, 1], CLAMP));
+    EASE_IO(interpolate(f, [camera.start, camera.end], [0, 1], CLAMP));
   const cam = camAt(t);
   // The camera carries the letters, so it is marked as moving on every frame
   // where it changes at all.
@@ -247,14 +267,19 @@ export function EmbossedMark({
   const zoom = 1 + 0.1 * (1 - cam);
   const camX = `calc(${(1 - cam) * 50}% - ${((1 - cam) * markW) / 2}px)`;
 
-  const foil = interpolate(t, [66, 84], [0, 1], { ...CLAMP, easing: EASE_OUT });
+  const foil = interpolate(t, [foilEl.start, foilEl.end], [0, 1], {
+    ...CLAMP,
+    easing: EASE_OUT,
+  });
   const sheen = 0.18 + 0.5 * sweep;
   const letters = [...name];
-  const letterIn = (i: number) =>
-    interpolate(t, [80 + i * stagger, 90 + i * stagger], [0, 1], {
+  const letterIn = (i: number) => {
+    const e = tl.get(`letter:${i}`);
+    return interpolate(t, [e.start, e.end], [0, 1], {
       ...CLAMP,
       easing: EASE_OUT,
     });
+  };
 
   const poolX = 50 + lx * 46;
   const poolY = 50 + ly * 70;

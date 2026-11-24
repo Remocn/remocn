@@ -7,6 +7,8 @@ import { useId } from "react";
 import { AbsoluteFill, Easing, interpolate, spring } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import { type CountdownElementId, countdownTimeline } from "./timeline";
 
 const { fontFamily: sans } = loadFont("normal", {
   weights: ["400", "500"],
@@ -80,6 +82,12 @@ export interface CountdownProps {
   /** Playback multiplier. */
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches the halo, each numeral, the final hit and the
+   * caption, by the ids in `./timeline`. Frames on the scene timeline, after
+   * `delay` and `speed`.
+   */
+  timing?: Timing<CountdownElementId>;
 }
 
 const EASE_IO = Easing.bezier(0.65, 0, 0.35, 1);
@@ -218,25 +226,26 @@ function ScaleLayer({
   );
 }
 
-export function Countdown({
-  from = 3,
-  finalLabel = "Live",
-  indicator = true,
-  caption = "remocn 2.0",
-  logo,
-  beat = 20,
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = sans,
-  fontWeight = 400,
-  halo: showHalo = true,
-  scale: zoom = 1,
-  delay = 0,
-  grain = true,
-  speed = 1,
-  theme = "dark",
-}: CountdownProps) {
+export function Countdown(props: CountdownProps) {
+  const {
+    from = 3,
+    finalLabel = "Live",
+    indicator = true,
+    caption = "remocn 2.0",
+    logo,
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = sans,
+    fontWeight = 400,
+    halo: showHalo = true,
+    scale: zoom = 1,
+    delay = 0,
+    grain = true,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = useSceneFrame();
   const tAt = (df: number) => Math.max(0, frame + df - delay) * speed;
@@ -244,7 +253,16 @@ export function Countdown({
   // Every numeral on screen breathes, enters or exits, so it moves whenever
   // time does; only the held frames before `delay` stand still.
   const ticking = tAt(1) !== t || tAt(-1) !== t;
-  const { width, height, fps } = useSceneConfig();
+  const { width, height, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    countdownTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const haloEl = tl.get("halo");
+  const finalEl = tl.get("final");
+  const capEl = tl.get("caption");
   const u = height / 720;
   const p: Palette = THEMES[theme];
   const fg = ink ?? p.fg;
@@ -254,12 +272,18 @@ export function Countdown({
   const ringR = height * 0.36;
   const cxp = width / 2;
   const cyp = height / 2;
-  const final = count * beat;
+  const final = finalEl.start;
 
   // the whole stage leans in a touch at the cut, then settles
   const kickAt = (tt: number) =>
     1 +
-    0.02 * interpolate(tt, [final, final + 3, final + 24], [0, 1, 0], CLAMP);
+    0.02 *
+      interpolate(
+        tt,
+        [final, final + finalEl.beat("kickPeak"), final + finalEl.beat("kick")],
+        [0, 1, 0],
+        CLAMP,
+      );
   const stageKick = kickAt(t);
   const kickMoving =
     kickAt(tAt(1)) !== stageKick || kickAt(tAt(-1)) !== stageKick;
@@ -275,9 +299,9 @@ export function Countdown({
 
   for (let k = 0; k < count; k++) {
     const n = count - k;
-    const start = k * beat;
-    const end = start + beat;
-    if (t < start - beat || t > end + beat) continue;
+    const e = tl.get(`number:${k}`);
+    const { start, end } = e;
+    if (t < start - e.length || t > end + e.length) continue;
 
     // ---- entrance (driven by the previous numeral's exit) ----
     const prevExit: Exit | null = k === 0 ? null : exitOf(k - 1);
@@ -288,7 +312,10 @@ export function Countdown({
     let mask: string | undefined;
 
     if (prevExit === null) {
-      const a = interpolate(t, [0, 9], [0, 1], { ...CLAMP, easing: EASE_OUT });
+      const a = interpolate(t, [start, start + e.beat("enter")], [0, 1], {
+        ...CLAMP,
+        easing: EASE_OUT,
+      });
       opacity = 0.3 + 0.7 * a;
       scale = 1.05 - 0.05 * a;
       blur = (1 - a) * 8 * u;
@@ -306,7 +333,7 @@ export function Countdown({
       });
       scale = s;
     } else if (prevExit === "slice") {
-      const a = interpolate(t, [start, start + 9], [0, 1], {
+      const a = interpolate(t, [start, start + e.beat("enter")], [0, 1], {
         ...CLAMP,
         easing: EASE_OUT,
       });
@@ -518,21 +545,40 @@ export function Countdown({
       config: { damping: 16, stiffness: 160, mass: 0.8 },
     });
   const f = hitAt(t);
-  const fO = interpolate(t, [final, final + 6], [0, 1], CLAMP);
-  const fBlur = interpolate(t, [final, final + 8], [10 * u, 0], {
-    ...CLAMP,
-    easing: EASE_OUT,
-  });
+  const fO = interpolate(
+    t,
+    [final, final + finalEl.beat("fade")],
+    [0, 1],
+    CLAMP,
+  );
+  const fBlur = interpolate(
+    t,
+    [final, final + finalEl.beat("blur")],
+    [10 * u, 0],
+    {
+      ...CLAMP,
+      easing: EASE_OUT,
+    },
+  );
   const dot = spring({
-    frame: t - final - 4,
+    frame: t - final - finalEl.beat("dotAt"),
     fps,
     config: { damping: 12, stiffness: 200, mass: 0.5 },
   });
-  const push = interpolate(t, [final - 2, final + 2, final + 26], [0, 1, 0], {
-    ...CLAMP,
-    easing: EASE_OUT,
-  });
-  const cap = interpolate(t, [final + 12, final + 32], [0, 1], {
+  const push = interpolate(
+    t,
+    [
+      final + finalEl.beat("pushAt"),
+      final + finalEl.beat("pushPeak"),
+      final + finalEl.beat("push"),
+    ],
+    [0, 1, 0],
+    {
+      ...CLAMP,
+      easing: EASE_OUT,
+    },
+  );
+  const cap = interpolate(t, [capEl.start, capEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
@@ -566,14 +612,19 @@ export function Countdown({
 
   // the halo sits on the countdown ring's radius, breathes in as the count
   // runs, and opens up at the hit to frame the final label
-  const haloOpen = interpolate(t, [final - 4, final + 30], [0, 1], {
-    ...CLAMP,
-    easing: EASE_OUT,
-  });
+  const haloOpen = interpolate(
+    t,
+    [final + finalEl.beat("haloAt"), final + finalEl.beat("halo")],
+    [0, 1],
+    {
+      ...CLAMP,
+      easing: EASE_OUT,
+    },
+  );
   const haloScale =
-    interpolate(t, [0, final], [0.94, 1], CLAMP) *
+    interpolate(t, [haloEl.start, final], [0.94, 1], CLAMP) *
     (1 + (finalW / (2 * ringR * 0.9) - 1) * haloOpen);
-  const haloIn = interpolate(t, [0, 14], [0, 1], {
+  const haloIn = interpolate(t, [haloEl.start, haloEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });

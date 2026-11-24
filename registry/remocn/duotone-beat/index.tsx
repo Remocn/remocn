@@ -3,6 +3,13 @@
 import { useId } from "react";
 import { AbsoluteFill, Easing, Img, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  BEAT_FRAMES,
+  beatPeriodOf,
+  type DuotoneBeatElementId,
+  duotoneBeatTimeline,
+} from "./timeline";
 
 /** [shadow ink, highlight ink], hex colors. */
 export type DuotonePalette = [string, string];
@@ -23,6 +30,11 @@ export type DuotoneBeatProps = {
   /** Halftone dot pitch in px at 720p for a printed look. 0 keeps smooth tones. */
   halftone?: number;
   speed?: number;
+  /**
+   * Moves, trims or stretches the intro and each beat, by the ids in
+   * `./timeline`. Frames on the scene timeline, after `speed`.
+   */
+  timing?: Timing<DuotoneBeatElementId>;
 };
 
 export const duotoneBeatDefaults = {
@@ -32,7 +44,7 @@ export const duotoneBeatDefaults = {
     ["#E5322D", "#FFFFFF"],
     ["#E5322D", "#111111"],
   ] as DuotonePalette[],
-  beatFrames: 15,
+  beatFrames: BEAT_FRAMES,
   beatsPerBar: 4,
   punch: 0.07,
   showIndicator: true,
@@ -174,25 +186,43 @@ function Portrait({
   );
 }
 
-export function DuotoneBeat({
-  src,
-  palettes = duotoneBeatDefaults.palettes,
-  beatFrames = duotoneBeatDefaults.beatFrames,
-  bpm,
-  beatsPerBar = duotoneBeatDefaults.beatsPerBar,
-  punch = duotoneBeatDefaults.punch,
-  showIndicator = duotoneBeatDefaults.showIndicator,
-  halftone = duotoneBeatDefaults.halftone,
-  speed = duotoneBeatDefaults.speed,
-}: DuotoneBeatProps) {
+export function DuotoneBeat(props: DuotoneBeatProps) {
+  const {
+    src,
+    palettes = duotoneBeatDefaults.palettes,
+    beatFrames = duotoneBeatDefaults.beatFrames,
+    bpm,
+    beatsPerBar = duotoneBeatDefaults.beatsPerBar,
+    punch = duotoneBeatDefaults.punch,
+    showIndicator = duotoneBeatDefaults.showIndicator,
+    halftone = duotoneBeatDefaults.halftone,
+    speed = duotoneBeatDefaults.speed,
+    timing,
+  } = props;
   const frame = useSceneFrame();
-  const { width, height, fps } = useSceneConfig();
+  const { width, height, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    duotoneBeatTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const introEl = tl.get("intro");
   const id = useId().replace(/[^a-zA-Z0-9_-]/g, "");
   const u = Math.min(width, height) / 720;
   const t = (frame / fps) * 30 * speed;
-  const period = Math.max(1, bpm ? (30 * 60) / bpm : beatFrames);
-  const beat = Math.floor(t / period);
-  const local = t - beat * period;
+  const period = beatPeriodOf(bpm, beatFrames);
+  // The beat on screen is the one that started last; before the first one
+  // nothing punches.
+  const beats = tl.lane("Beats");
+  let beat = 0;
+  let local = Number.POSITIVE_INFINITY;
+  beats.forEach((e, k) => {
+    if (t >= e.start) {
+      beat = k;
+      local = t - e.start;
+    }
+  });
   const bar = Math.max(1, Math.round(beatsPerBar));
   const inBar = beat % bar;
   const list = palettes.length > 0 ? palettes : duotoneBeatDefaults.palettes;
@@ -200,11 +230,11 @@ export function DuotoneBeat({
 
   const strength = inBar === 0 ? punch : punch / 3;
   const scale = 1 + strength * Math.exp(-local / 3.2);
-  const rise = interpolate(t, [0, 12], [0.22, 0], {
+  const rise = interpolate(t, [introEl.start, introEl.end], [0.22, 0], {
     extrapolateRight: "clamp",
     easing: Easing.out(Easing.cubic),
   });
-  const intro = interpolate(t, [0, 12], [0, 1], {
+  const intro = interpolate(t, [introEl.start, introEl.end], [0, 1], {
     extrapolateRight: "clamp",
     easing: Easing.out(Easing.cubic),
   });

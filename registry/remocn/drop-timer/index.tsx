@@ -8,6 +8,12 @@ import { useId } from "react";
 import { AbsoluteFill, Easing, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  type DropTimerElementId,
+  dropTimerTimeline,
+  secondsOf,
+} from "./timeline";
 
 const { fontFamily: display } = loadFont("normal", {
   weights: ["500"],
@@ -85,6 +91,12 @@ export interface DropTimerProps {
   delay?: number;
   theme?: "dark" | "light";
   speed?: number;
+  /**
+   * Moves, trims or stretches the punch-in, single ticks, the smash, LIVE
+   * NOW, the brand and the url, by the ids in `./timeline`. Frames on the
+   * scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<DropTimerElementId>;
 }
 
 // Big Shoulders 500 (fontTools, wght 500): cap 0.8; advances in em.
@@ -127,9 +139,6 @@ function inkWidth(s: string, track: number) {
 //  76–84   00:00:00 holds on black, the digits lit in the gradient
 //  84–90   smash: the clock rushes past the lens, LIVE NOW slams in full-bleed
 //  92–     logo and url rise; poster hold, the gradient drifts
-const START = 6;
-const ZERO_HOLD = 8;
-
 const SLAM = Easing.bezier(0.22, 1, 0.36, 1);
 const RUSH = Easing.bezier(0.6, 0, 0.9, 0.4);
 const CLAMP = {
@@ -255,45 +264,61 @@ function ScaleLayer({
   );
 }
 
-export function DropTimer({
-  label = "DROPS IN",
-  from = 5,
-  tick = 14,
-  units = ["HRS", "MIN", "SEC"],
-  live = "LIVE NOW",
-  name = "remocn",
-  logo,
-  url = "remocn.dev",
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = display,
-  hold = ZERO_HOLD,
-  scale = 1,
-  delay = 0,
-  theme = "dark",
-  speed = 1,
-}: DropTimerProps) {
+export function DropTimer(props: DropTimerProps) {
+  const {
+    label = "DROPS IN",
+    from = 5,
+    units = ["HRS", "MIN", "SEC"],
+    live = "LIVE NOW",
+    name = "remocn",
+    logo,
+    url = "remocn.dev",
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = display,
+    scale = 1,
+    delay = 0,
+    theme = "dark",
+    speed = 1,
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H } = useSceneConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    dropTimerTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const u = Math.min(W / 1280, H / 720);
   const c = THEMES[theme];
   const fg = ink ?? c.ink;
   const fill = background === "transparent" ? "transparent" : background;
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
 
-  const total = Math.max(1, Math.round(from));
-  const zeroAt = START + total * tick;
-  const smashAt = zeroAt + hold;
+  const total = secondsOf(from);
+  const enterEl = tl.get("enter");
+  const ticks = Array.from({ length: total }, (_, k) =>
+    tl.get(`tick:${k + 1}`),
+  );
+  const smash = tl.get("smash");
+  const liveEl = tl.get("live");
+  const smashAt = smash.start;
 
   // ── Clock state ──
-  const elapsed = Math.max(0, Math.floor((t - START) / tick));
-  const left = Math.max(0, total - elapsed);
-  const tickIdx = Math.min(total, elapsed);
-  const lastTick = START + tickIdx * tick;
+  // The second on the clock is the last tick to have started.
+  let tickIdx = 0;
+  for (let k = 1; k <= total; k++) if (t >= ticks[k - 1].start) tickIdx = k;
+  const left = total - tickIdx;
+  const current = tickIdx > 0 ? ticks[tickIdx - 1] : undefined;
+  const lastTick = current ? current.start : enterEl.end;
   const sinceTick = t - lastTick;
-  const isFlash = t >= START + tick && sinceTick >= 0 && sinceTick < 1;
+  const isFlash =
+    current !== undefined &&
+    sinceTick >= 0 &&
+    sinceTick < current.beat("flash");
   const atZero = left === 0;
   const ground = c.grounds[tickIdx % c.grounds.length];
 
@@ -319,14 +344,14 @@ export function DropTimer({
   const pairMid = [0, 3, 6].map((i) => (glyphs[i].mid + glyphs[i + 1].mid) / 2);
 
   // ── Camera ──
-  const enter = SLAM(ramp(t, 0, START));
+  const enter = SLAM(ramp(t, enterEl.start, enterEl.length));
   const enterBlur = (1 - enter) * 16;
   const cameraAt = (tt: number) => {
     let bump = 0;
     let sx = 0;
     let sy = 0;
     for (let k = 1; k <= total; k++) {
-      const d = tt - (START + k * tick);
+      const d = tt - ticks[k - 1].start;
       if (d < -1 || d > 12) continue;
       // hits grow as the clock runs out
       const g = 0.7 + (0.6 * k) / total;
@@ -336,8 +361,8 @@ export function DropTimer({
       sy += s.y;
     }
     const smashD = tt - smashAt;
-    bump = Math.max(bump, 1.4 * kick(smashD - 4));
-    const s3 = shake(smashD - 4, 12 * u, 4.4);
+    bump = Math.max(bump, 1.4 * kick(smashD - smash.beat("hit")));
+    const s3 = shake(smashD - smash.beat("hit"), 12 * u, 4.4);
     sx += s3.x;
     sy += s3.y;
     return { sx, sy, k: 1 + 0.04 * bump };
@@ -355,32 +380,41 @@ export function DropTimer({
     camMoves(cameraAt(t + speed)) || camMoves(cameraAt(Math.max(0, t - speed)));
 
   // ── Smash ──
-  const rush = RUSH(ramp(t, smashAt, 5));
+  const rush = RUSH(ramp(t, smashAt, smash.length));
   const clockScaleAt = (tt: number) =>
-    (1.3 - 0.3 * SLAM(ramp(tt, 0, START))) *
-    (1 + 1.8 * RUSH(ramp(tt, smashAt, 5)));
+    (1.3 - 0.3 * SLAM(ramp(tt, enterEl.start, enterEl.length))) *
+    (1 + 1.8 * RUSH(ramp(tt, smashAt, smash.length)));
   const clockScale = clockScaleAt(t);
   const clockMoving =
     clockScaleAt(t + speed) !== clockScale ||
     clockScaleAt(Math.max(0, t - speed)) !== clockScale;
   const clockBlur = enterBlur + 26 * rush;
-  const clockOpacity = Math.min(ramp(t, 0, 2), 1 - ramp(t, smashAt + 2, 3));
-  const liveP = SLAM(ramp(t, smashAt + 1, 7));
+  const clockOpacity = Math.min(
+    ramp(t, enterEl.start, enterEl.beat("fade")),
+    1 - ramp(t, smashAt + smash.beat("clockOutAt"), smash.beat("clockOut")),
+  );
+  const liveP = SLAM(ramp(t, liveEl.start, liveEl.length));
   const liveScale = 1.7 - 0.7 * liveP;
   const liveBlur = (1 - liveP) * 18;
-  const liveOpacity = ramp(t, smashAt + 1, 2);
+  const liveOpacity = ramp(t, liveEl.start, liveEl.beat("fade"));
   const flashSmash = interpolate(
     t,
-    [smashAt, smashAt + 1, smashAt + 5],
+    [
+      smashAt,
+      smashAt + smash.beat("flashPeak"),
+      smashAt + smash.beat("flashOut"),
+    ],
     [0, 1, 0],
     CLAMP,
   );
-  const after = t >= smashAt + 1;
-  const rise = (a: number) => SLAM(ramp(t, a, 16));
-  const lift = (a: number) =>
-    `translateY(${(1 - rise(a)) * 14 * u}px)${glide(midway(ramp(t, a, 16)) && !camMoving)}`;
-  const drift = ramp(t, smashAt, 70);
-  const haze = SLAM(ramp(t, smashAt + 1, 24));
+  const after = t >= liveEl.start;
+  const brandEl = tl.get("brand");
+  const urlEl = tl.get("url");
+  const rise = (e: typeof brandEl) => SLAM(ramp(t, e.start, e.length));
+  const lift = (e: typeof brandEl) =>
+    `translateY(${(1 - rise(e)) * 14 * u}px)${glide(midway(ramp(t, e.start, e.length)) && !camMoving)}`;
+  const drift = ramp(t, smashAt, smash.beat("drift"));
+  const haze = SLAM(ramp(t, liveEl.start, liveEl.beat("haze")));
 
   // ── Payoff layout ──
   const liveEm = inkWidth(live.toUpperCase(), TRACK_LIVE);
@@ -465,7 +499,7 @@ export function DropTimer({
             </defs>
 
             {/* The clock. */}
-            {t < smashAt + 6 ? (
+            {t < smashAt + smash.beat("gone") ? (
               <g
                 style={{
                   transform: `scale(${clockScale})${glide(clockMoving && !camMoving)}`,
@@ -556,8 +590,8 @@ export function DropTimer({
                 top: liveBase - liveCap - 0.135 * H,
                 display: "flex",
                 justifyContent: "center",
-                opacity: rise(smashAt + 7),
-                transform: lift(smashAt + 7),
+                opacity: rise(brandEl),
+                transform: lift(brandEl),
               }}
             >
               {logo ??
@@ -597,8 +631,8 @@ export function DropTimer({
                 letterSpacing: "0.04em",
                 color: fg,
                 lineHeight: 1,
-                opacity: rise(smashAt + 11),
-                transform: lift(smashAt + 11),
+                opacity: rise(urlEl),
+                transform: lift(urlEl),
               }}
             >
               <div

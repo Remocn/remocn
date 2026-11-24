@@ -1,10 +1,16 @@
 "use client";
 
 import { loadFont } from "@remotion/google-fonts/Inter";
-import { useId } from "react";
+import { useId, useMemo } from "react";
 import { Easing, interpolate, interpolateColors } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  TYPE_REPEATER_TIMING,
+  type TypeRepeaterElementId,
+  typeRepeaterTimeline,
+} from "./timeline";
 
 const { fontFamily: INTER } = loadFont("normal", {
   weights: ["100", "900"],
@@ -25,6 +31,12 @@ export interface TypeRepeaterProps {
   outline?: boolean;
   speed?: number;
   className?: string;
+  /**
+   * Moves, trims or stretches the intro, the unfold, the breathing and the
+   * collapse, by the ids in `./timeline`. Frames on the scene timeline, after
+   * `speed`.
+   */
+  timing?: Timing<TypeRepeaterElementId>;
 }
 
 export const typeRepeaterDefaults = {
@@ -38,15 +50,16 @@ export const typeRepeaterDefaults = {
   accent: "#D97757",
   outline: true,
   speed: 1,
-} satisfies Required<Omit<TypeRepeaterProps, "className">>;
+} satisfies Required<Omit<TypeRepeaterProps, "className" | "timing">>;
 
 /** Beats on the 30 fps clock. */
-export const typeRepeaterTiming = {
-  intro: [0, 10],
-  unfold: [10, 34],
-  breathe: [34, 70],
-  collapse: [70, 90],
-} as const;
+export const typeRepeaterTiming = TYPE_REPEATER_TIMING;
+
+/** `[start, end]` of each phase, as the timeline places it. */
+export type TypeRepeaterPhases = Record<
+  TypeRepeaterElementId,
+  readonly [number, number]
+>;
 
 /** Frame where the copies have folded back into the word. */
 export const typeRepeaterLength = typeRepeaterTiming.collapse[1];
@@ -91,8 +104,11 @@ export function getTypeRepeaterTime(
 }
 
 /** How far the copies have spread, 0 (one word) to about 1. */
-export function getTypeRepeaterSpread(t: number) {
-  const { unfold, breathe, collapse } = typeRepeaterTiming;
+export function getTypeRepeaterSpread(
+  t: number,
+  phases: TypeRepeaterPhases = typeRepeaterTiming,
+) {
+  const { unfold, breathe, collapse } = phases;
   if (t < breathe[0]) {
     return interpolate(t, [...unfold], [0, 1], {
       ...CLAMP,
@@ -110,8 +126,11 @@ export function getTypeRepeaterSpread(t: number) {
 }
 
 /** Entrance of the front word, 0..1. */
-export function getTypeRepeaterIntro(t: number) {
-  return interpolate(t, [...typeRepeaterTiming.intro], [0, 1], {
+export function getTypeRepeaterIntro(
+  t: number,
+  phases: TypeRepeaterPhases = typeRepeaterTiming,
+) {
+  return interpolate(t, [...phases.intro], [0, 1], {
     ...CLAMP,
     easing: easeOutCubic,
   });
@@ -148,33 +167,53 @@ export function getTypeRepeaterCopy(
   };
 }
 
-export function TypeRepeater({
-  text = typeRepeaterDefaults.text,
-  copies = typeRepeaterDefaults.copies,
-  mode = typeRepeaterDefaults.mode,
-  fontSize = typeRepeaterDefaults.fontSize,
-  fontWeight = typeRepeaterDefaults.fontWeight,
-  fontFamily = typeRepeaterDefaults.fontFamily,
-  color = typeRepeaterDefaults.color,
-  accent = typeRepeaterDefaults.accent,
-  outline = typeRepeaterDefaults.outline,
-  speed = typeRepeaterDefaults.speed,
-  className,
-}: TypeRepeaterProps) {
+export function TypeRepeater(props: TypeRepeaterProps) {
+  const {
+    text = typeRepeaterDefaults.text,
+    copies = typeRepeaterDefaults.copies,
+    mode = typeRepeaterDefaults.mode,
+    fontSize = typeRepeaterDefaults.fontSize,
+    fontWeight = typeRepeaterDefaults.fontWeight,
+    fontFamily = typeRepeaterDefaults.fontFamily,
+    color = typeRepeaterDefaults.color,
+    accent = typeRepeaterDefaults.accent,
+    outline = typeRepeaterDefaults.outline,
+    speed = typeRepeaterDefaults.speed,
+    className,
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = useSceneFrame();
-  const { fps, height } = useSceneConfig();
+  const { fps, height, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    typeRepeaterTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const phases = useMemo(() => {
+    const span = (id: TypeRepeaterElementId) => {
+      const e = tl.get(id);
+      return [e.start, e.end] as const;
+    };
+    return {
+      intro: span("intro"),
+      unfold: span("unfold"),
+      breathe: span("breathe"),
+      collapse: span("collapse"),
+    };
+  }, [tl]);
   const outlineId = `type-repeater-${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
   const unit = height / 720;
   const size = fontSize * unit;
   const t = getTypeRepeaterTime(frame, { fps, speed });
-  const spread = getTypeRepeaterSpread(t);
-  const intro = getTypeRepeaterIntro(t);
+  const spread = getTypeRepeaterSpread(t, phases);
+  const intro = getTypeRepeaterIntro(t, phases);
   const count = Math.max(1, Math.round(finite(copies, 12)));
   const pivot = (typeRepeaterModes[mode] ?? typeRepeaterModes.spiral).pivot;
   // The intro hands straight over to the unfold, the breathing and the
   // collapse, so the copies move from the first frame to the last beat.
-  const moving = t > 0 && t < typeRepeaterLength;
+  const moving = t > phases.intro[0] && t < phases.collapse[1];
 
   return (
     <div

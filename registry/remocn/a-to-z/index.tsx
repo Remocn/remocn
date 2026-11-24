@@ -12,6 +12,16 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  ALPHABET,
+  type AToZElementId,
+  aToZTimeline,
+  DEFAULT_ENTRIES,
+  DEFAULT_FINALE,
+  initialOf,
+  lettersBetween,
+} from "./timeline";
 
 const unbounded = loadFont("normal", {
   weights: ["400", "500"],
@@ -38,16 +48,13 @@ export interface AToZProps {
   delay?: number;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches single elements of the animation, by the ids
+   * in `./timeline`. Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<AToZElementId>;
 }
 
-const DEFAULT_ENTRIES = [
-  "any aspect ratio.",
-  "brand fonts.",
-  "captions.",
-  "dark mode.",
-];
-
-const ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 const ELLIPSIS = "…";
 const FONT_PX = 200;
 const TRACK = -0.03;
@@ -59,12 +66,6 @@ const CLAMP = {
   extrapolateLeft: "clamp",
   extrapolateRight: "clamp",
 } as const;
-
-const DWELLS = [28, 19, 17, 17];
-const ROLL = 7;
-const STAGGER = 2;
-const FINAL_ROLL = 13;
-const HOLD_MIN = 36;
 
 interface Metrics {
   letters: Record<string, number>;
@@ -197,35 +198,22 @@ function wrap(text: string, m: Metrics, max: number) {
   };
 }
 
-function initialOf(text: string) {
-  const ch = text.trim().charAt(0).toUpperCase();
-  return ALPHABET.includes(ch) ? ch : "A";
-}
-
 interface Step<T> {
   at: number;
   value: T;
   roll: number;
+  /** Frames between wrapped lines as they roll; text only. */
+  stagger?: number;
   ease: (x: number) => number;
 }
+
+/** In time order; a stable sort keeps steps at the same frame in order. */
+const byTime = <T,>(steps: Step<T>[]) => steps.sort((a, b) => a.at - b.at);
 
 function stepAt<T>(steps: Step<T>[], t: number) {
   let k = 0;
   for (let i = 0; i < steps.length; i++) if (t >= steps[i].at) k = i;
   return { cur: steps[k], prev: k > 0 ? steps[k - 1] : null };
-}
-
-function flickDurations(count: number) {
-  return Array.from({ length: count }, (_, i) => {
-    const fromStart = i;
-    const fromEnd = count - 1 - i;
-    if (fromStart === 0) return 3;
-    if (fromStart === 1) return 2;
-    if (fromEnd === 0) return 4;
-    if (fromEnd === 1) return 3;
-    if (fromEnd === 2) return 2;
-    return 1;
-  });
 }
 
 // Layout rounds a baseline to whole pixels, so a line rolled by `top` clicks
@@ -254,21 +242,21 @@ function ScaleLayer({
   );
 }
 
-export function AToZ({
-  entries = DEFAULT_ENTRIES,
-  finale = "zero lock-in.",
-  connector = "is for",
-  accent,
-  ink: inkProp,
-  background,
-  fontFamily = unbounded.fontFamily,
-  stagger = STAGGER,
-  roll = ROLL,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: AToZProps) {
+export function AToZ(props: AToZProps) {
+  const {
+    entries = DEFAULT_ENTRIES,
+    finale = DEFAULT_FINALE,
+    connector = "is for",
+    accent,
+    ink: inkProp,
+    background,
+    fontFamily = unbounded.fontFamily,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
   const { width: W, height: H, durationInFrames } = useSceneConfig();
@@ -281,6 +269,7 @@ export function AToZ({
 
   const list = entries.length > 0 ? entries : DEFAULT_ENTRIES;
   const m = useMetrics([...list, finale, ELLIPSIS], connector, fontFamily);
+  const tl = useTimeline(aToZTimeline, props, durationInFrames * speed, timing);
 
   if (!m) {
     return (
@@ -288,49 +277,35 @@ export function AToZ({
     );
   }
 
-  const total = durationInFrames * speed;
-  const lastLetter = initialOf(list[list.length - 1]);
-  const finalLetter = initialOf(finale);
-  const between =
-    ALPHABET.indexOf(finalLetter) > ALPHABET.indexOf(lastLetter) + 1
-      ? ALPHABET.slice(
-          ALPHABET.indexOf(lastLetter) + 1,
-          ALPHABET.indexOf(finalLetter),
-        ).split("")
-      : [];
-  const flick = flickDurations(between.length);
-  const flickSum = flick.reduce((s, d) => s + d, 0);
-  const natural = list.map((_, k) => DWELLS[Math.min(k, DWELLS.length - 1)]);
-  const natSum = natural.reduce((s, d) => s + d, 0);
-  const budget = total - HOLD_MIN - FINAL_ROLL - flickSum - 4;
-  const fit = natSum > 0 ? Math.min(1, budget / natSum) : 1;
-  const starts: number[] = [];
-  let at = 0;
-  for (let k = 0; k < list.length; k++) {
-    starts.push(at);
-    at += Math.max(8, Math.round(natural[k] * fit));
-  }
-  const ellipsisAt = at;
-  const flickAt = between.length > 0 ? ellipsisAt + 2 : ellipsisAt;
-  const finaleAt = flickAt + flickSum;
+  const between = lettersBetween(list[list.length - 1], finale);
+  const opening = tl.get("entry:0");
+  const items = list.map((_, k) => tl.get(`entry:${k}`));
+  const ellipsis = between.length > 0 ? tl.get("ellipsis") : null;
+  const last = tl.get("finale");
 
   const letterSteps: Step<string>[] = list.map((e, k) => ({
-    at: starts[k],
+    at: items[k].start,
     value: initialOf(e),
-    roll,
+    roll: items[k].beat("roll"),
     ease: EASE_ROLL,
   }));
-  let fa = flickAt;
-  between.forEach((ch, i) => {
-    letterSteps.push({ at: fa, value: ch, roll: 0, ease: EASE_ROLL });
-    fa += flick[i];
-  });
+  if (ellipsis) {
+    between.forEach((ch, i) => {
+      letterSteps.push({
+        at: ellipsis.start + ellipsis.beat(`flick:${i}`),
+        value: ch,
+        roll: 0,
+        ease: EASE_ROLL,
+      });
+    });
+  }
   letterSteps.push({
-    at: finaleAt,
-    value: finalLetter,
-    roll: FINAL_ROLL,
+    at: last.start,
+    value: initialOf(finale),
+    roll: last.beat("roll"),
     ease: EASE_OUT,
   });
+  byTime(letterSteps);
 
   const portrait = H > W * 1.1;
   const marginX = W * (portrait ? 0.09 : 0.075);
@@ -393,28 +368,33 @@ export function AToZ({
   const itemTop0 = connectorBase + F * (m.deep + 0.25 + m.tall);
 
   const textSteps: Step<string[]>[] = list.map((_, k) => ({
-    at: starts[k],
+    at: items[k].start,
     value: lineSets[k],
-    roll,
+    roll: items[k].beat("roll"),
+    stagger: items[k].beat("stagger"),
     ease: EASE_ROLL,
   }));
-  if (between.length > 0) {
+  if (ellipsis) {
     textSteps.push({
-      at: ellipsisAt,
+      at: ellipsis.start,
       value: lineSets[list.length],
-      roll,
+      roll: ellipsis.beat("roll"),
+      stagger: ellipsis.beat("stagger"),
       ease: EASE_ROLL,
     });
   }
   textSteps.push({
-    at: finaleAt + 2,
+    at: last.start + last.beat("textAt"),
     value: lineSets[list.length + 1],
-    roll: FINAL_ROLL,
+    roll: last.beat("roll"),
+    stagger: last.beat("stagger"),
     ease: EASE_OUT,
   });
+  byTime(textSteps);
 
-  const rise = (delay: number) =>
-    interpolate(t, [delay - 3, delay + 11], [0, 1], {
+  // The opening entry rises in over `frames` from `from`, rather than rolls.
+  const rise = (from: number, frames: number) =>
+    interpolate(t, [from, from + frames], [0, 1], {
       ...CLAMP,
       easing: EASE_OUT,
     });
@@ -456,7 +436,7 @@ export function AToZ({
   {
     const { cur, prev } = stepAt(letterSteps, t);
     const p = !prev
-      ? rise(0)
+      ? rise(opening.start + opening.beat("letterAt"), opening.beat("rise"))
       : cur.roll === 0
         ? 1
         : interpolate(t, [cur.at, cur.at + cur.roll], [0, 1], {
@@ -539,7 +519,8 @@ export function AToZ({
     };
 
   {
-    const cp = rise(3);
+    const link = tl.get("connector");
+    const cp = rise(link.start, link.beat("rise"));
     const winTop = connectorBase - Fc * (m.tall + 0.05);
     nodes.push(
       rollPair(
@@ -568,9 +549,12 @@ export function AToZ({
     for (let s = 0; s < slots; s++) {
       const base = portrait ? itemTop0 + s * lineH : yB - s * lineH;
       const order = portrait ? s : slots - 1 - s;
-      const lag = order * stagger;
+      const lag = order * (cur.stagger ?? 0);
       const p = !prev
-        ? rise(5 + lag)
+        ? rise(
+            opening.start + opening.beat("textAt") + lag,
+            opening.beat("rise"),
+          )
         : interpolate(t, [cur.at + lag, cur.at + lag + cur.roll], [0, 1], {
             ...CLAMP,
             easing: cur.ease,

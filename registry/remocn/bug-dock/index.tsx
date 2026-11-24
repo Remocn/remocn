@@ -13,6 +13,16 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  type BugDockElementId,
+  bugDockTimeline,
+  DEFAULT_HEADLINE,
+  DEFAULT_NAME,
+  nameOf,
+  tailOf,
+  wordsOf,
+} from "./timeline";
 
 const urbanist = loadVariableFont("normal", { subsets: ["latin"] });
 const manrope = loadManrope("normal", {
@@ -47,19 +57,18 @@ export interface BugDockProps {
   delay?: number;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches single letters rising, single letters tucking,
+   * the dock and single headline words, by the ids in `./timeline`. Frames
+   * on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<BugDockElementId>;
 }
 
 const THEMES = {
   dark: { bg: "#0B0B0B", ink: "#FFFFFF", blue: "#2F6BFF" },
   light: { bg: "#FFFFFF", ink: "#0A0A0A", blue: "#1F4FE0" },
 } as const;
-
-const ENTER_AT = 0;
-const TUCK_AT = 34;
-const TUCK_STEP = 6;
-const TUCK_DUR = 11;
-const DOCK_DUR = 30;
-const HEAD_DELAY = 14;
 
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
 const EASE_TUCK = Easing.bezier(0.55, 0, 0.2, 1);
@@ -167,34 +176,36 @@ function ScaleLayer({
   );
 }
 
-export function BugDock({
-  name = "remocn",
-  headline = "Playing on every screen you ship.",
-  highlight = "every screen",
-  accent,
-  ink,
-  background,
-  fontFamily = urbanist.fontFamily,
-  tuckAt = TUCK_AT,
-  stagger = 2.5,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: BugDockProps) {
+export function BugDock(props: BugDockProps) {
+  const {
+    name = DEFAULT_NAME,
+    headline = DEFAULT_HEADLINE,
+    highlight = "every screen",
+    accent,
+    ink,
+    background,
+    fontFamily = urbanist.fontFamily,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H } = useSceneConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    bugDockTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const c = THEMES[theme];
   const fg = ink ?? c.ink;
   const blue = normalizeHex(accent, c.blue);
 
-  const clean = name.trim() || "remocn";
-  const logo = clean.toLowerCase() === "remocn";
-  const tail = useMemo(
-    () => Array.from(logo ? "emocn" : clean.slice(1)),
-    [logo, clean],
-  );
+  const { clean, logo } = nameOf(name);
+  const tail = useMemo(() => tailOf(clean, logo), [logo, clean]);
   const head = logo ? "" : Array.from(clean)[0];
   const letters = useMemo(
     () => (logo ? tail : [head, ...tail]),
@@ -205,10 +216,7 @@ export function BugDock({
   const transparent = background === "transparent";
   const stage = transparent ? "transparent" : (background ?? c.bg);
 
-  const words = useMemo(
-    () => headline.split(/\s+/).filter(Boolean),
-    [headline],
-  );
+  const words = useMemo(() => wordsOf(headline), [headline]);
   const hiWords = useMemo(
     () =>
       new Set(
@@ -241,16 +249,13 @@ export function BugDock({
 
   const n = tailAdv.length;
   const tuckP = tailAdv.map((_, k) => {
-    const order = n - 1 - k;
-    const at = tuckAt + order * TUCK_STEP;
-    return interpolate(t, [at, at + TUCK_DUR], [0, 1], {
+    const tuckEl = tl.get(`tuck:${k}`);
+    return interpolate(t, [tuckEl.start, tuckEl.end], [0, 1], {
       ...CLAMP,
       easing: EASE_TUCK,
     });
   });
-  const tuckEnd = tuckAt + (n - 1) * TUCK_STEP + TUCK_DUR;
-  const dockAt = tuckEnd + 2;
-  const headAt = dockAt + HEAD_DELAY;
+  const dockEl = tl.get("dock");
 
   const leftAt = (tucks: number[]) =>
     (W -
@@ -277,7 +282,7 @@ export function BugDock({
     xs.push(groupLeft + (orig - shift) * LF);
   }
 
-  const dock = interpolate(t, [dockAt, dockAt + DOCK_DUR], [0, 1], {
+  const dock = interpolate(t, [dockEl.start, dockEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_DOCK,
   });
@@ -304,11 +309,13 @@ export function BugDock({
   const docking = dock < 1;
   const bugOpacity = 1 - 0.18 * dock;
 
-  const enter = (i: number) =>
-    interpolate(t, [ENTER_AT + i * 2, ENTER_AT + i * 2 + 18], [0, 1], {
+  const enter = (i: number) => {
+    const enterEl = tl.get(`enter:${i}`);
+    return interpolate(t, [enterEl.start, enterEl.end], [0, 1], {
       ...CLAMP,
       easing: EASE_OUT,
     });
+  };
 
   const tailFont = logo ? manrope.fontFamily : fontFamily;
   const tailWeight = logo ? 600 : 500;
@@ -451,8 +458,8 @@ export function BugDock({
           }}
         >
           {words.map((w, i) => {
-            const at = headAt + i * stagger;
-            const p = interpolate(t, [at, at + 16], [0, 1], {
+            const wordEl = tl.get(`word:${i}`);
+            const p = interpolate(t, [wordEl.start, wordEl.end], [0, 1], {
               ...CLAMP,
               easing: EASE_OUT,
             });

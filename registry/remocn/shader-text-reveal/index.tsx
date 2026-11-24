@@ -3,6 +3,15 @@
 import { useLayoutEffect, useRef } from "react";
 import { useDelayRender } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_TEXT,
+  type ShaderTextRevealElementId,
+  shaderTextRevealTimeline,
+  WORD_DURATION,
+  wordFrames,
+  wordsOf,
+} from "./timeline";
 
 export type ShaderTextRevealProps = {
   /** Words appear one at a time. Separate phrases with newlines to keep them together. */
@@ -14,20 +23,50 @@ export type ShaderTextRevealProps = {
   wordDuration?: number;
   /** Strength of the original hero shader inside the letters, from 0 to 1. */
   intensity?: number;
+  /**
+   * Moves, trims or stretches single words, by the ids in `./timeline`.
+   * Frames on the scene timeline.
+   */
+  timing?: Timing<ShaderTextRevealElementId>;
 };
+
+/** Where a word sits on the timeline: its first frame and its length. */
+interface WordSpan {
+  start: number;
+  length: number;
+}
 
 const clamp = (n: number, min = 0, max = 1) => Math.min(max, Math.max(min, n));
 
+/**
+ * The word on screen at `frame` and how far it has entered and cleared.
+ * `spans` are the words' places from the schedule; without them every word
+ * runs `wordDuration` frames, one after another.
+ */
 export function getShaderTextState(
   frame: number,
   wordCount: number,
   wordDuration: number,
+  spans?: WordSpan[],
 ) {
-  const duration = Math.max(12, Math.round(wordDuration));
-  const count = Math.max(1, wordCount);
   const f = Math.max(0, frame);
-  const index = Math.min(count - 1, Math.floor(f / duration));
-  const local = f - index * duration;
+  let count: number;
+  let index: number;
+  let local: number;
+  let duration: number;
+  if (spans && spans.length > 0) {
+    // The word on screen is the last one to have started.
+    count = spans.length;
+    index = 0;
+    for (let i = 1; i < count; i++) if (spans[i].start <= f) index = i;
+    local = f - spans[index].start;
+    duration = spans[index].length;
+  } else {
+    duration = wordFrames(wordDuration);
+    count = Math.max(1, wordCount);
+    index = Math.min(count - 1, Math.floor(f / duration));
+    local = f - index * duration;
+  }
   const enter = clamp((local / duration + 0.16) / 0.76);
   const exit =
     index === count - 1 ? 0 : clamp((local / duration - 0.65) / 0.35);
@@ -482,32 +521,40 @@ function textTexture(
   };
 }
 
-export function ShaderTextReveal({
-  text = "Your product",
-  fontSize = 400,
-  fontFamily = "Arial, sans-serif",
-  fontWeight = 500,
-  wordDuration = 30,
-  intensity = 1,
-}: ShaderTextRevealProps) {
+export function ShaderTextReveal(props: ShaderTextRevealProps) {
+  const {
+    text = DEFAULT_TEXT,
+    fontSize = 400,
+    fontFamily = "Arial, sans-serif",
+    fontWeight = 500,
+    wordDuration = WORD_DURATION,
+    intensity = 1,
+    timing,
+  } = props;
   const frame = useSceneFrame();
-  const { width, height, fps } = useSceneConfig();
+  const { width, height, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    shaderTextRevealTimeline,
+    props,
+    durationInFrames,
+    timing,
+  );
+  const spans = tl.elements;
   const { delayRender, continueRender, cancelRender } = useDelayRender();
   const canvas = useRef<HTMLCanvasElement>(null);
   const resources = useRef<{
     renderer: ReturnType<typeof createRenderer>;
     words: TextTexture[];
   } | null>(null);
-  const current = useRef({ frame, fps, wordDuration, intensity });
-  current.current = { frame, fps, wordDuration, intensity };
+  const current = useRef({ frame, fps, wordDuration, intensity, spans });
+  current.current = { frame, fps, wordDuration, intensity, spans };
 
   useLayoutEffect(() => {
     const element = canvas.current;
     if (!element) return;
     let cancelled = false;
     const handle = delayRender("Load Shader Text Reveal font");
-    const phrases = text.includes("\n") ? text.split("\n") : text.split(/\s+/);
-    const words = phrases.map((word) => word.trim()).filter(Boolean);
+    const words = wordsOf(text);
     const draw = () => {
       const resource = resources.current;
       if (!resource || resource.words.length === 0) return;
@@ -516,6 +563,7 @@ export function ShaderTextReveal({
         clock.frame,
         resource.words.length,
         clock.wordDuration,
+        clock.spans,
       );
       resource.renderer.draw(
         resource.words[state.index],
@@ -568,6 +616,7 @@ export function ShaderTextReveal({
         frame,
         resource.words.length,
         wordDuration,
+        spans,
       );
       resource.renderer.draw(
         resource.words[state.index],
@@ -578,7 +627,7 @@ export function ShaderTextReveal({
     } catch (error) {
       cancelRender(error instanceof Error ? error : new Error(String(error)));
     }
-  }, [frame, fps, wordDuration, intensity, cancelRender]);
+  }, [frame, fps, wordDuration, intensity, spans, cancelRender]);
 
   return (
     <canvas

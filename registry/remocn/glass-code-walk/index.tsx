@@ -2,8 +2,10 @@
 
 import { AbsoluteFill, Easing, interpolate } from "remotion";
 import { GlassCodeBlock } from "@/components/remocn/glass-code-block";
-import { useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import { type GlassCodeWalkElementId, glassCodeWalkTimeline } from "./timeline";
 
 export interface GlassCodeWalkProps {
   code?: string;
@@ -15,6 +17,13 @@ export interface GlassCodeWalkProps {
   zoom?: number;
   speed?: number;
   className?: string;
+  /**
+   * Moves, trims or stretches the camera's walk down the lines and its
+   * pull-back, by the ids in `./timeline`. The code block reveals its lines
+   * on `staggerFrames` either way. Frames on the scene timeline, after
+   * `speed`.
+   */
+  timing?: Timing<GlassCodeWalkElementId>;
 }
 
 const STAGE_WIDTH = 1280;
@@ -26,7 +35,6 @@ const BODY_PADDING_LEFT = 24;
 const LINE_GAP = 4;
 const ANCHOR_SCREEN_X = 110;
 const TARGET_Y = 360;
-const PULL_BACK_FRAMES = 24;
 
 const DEFAULT_CODE = `import { AbsoluteFill } from "remotion";
 import { Typewriter } from "@/components/remocn";
@@ -39,19 +47,30 @@ export function Intro() {
   );
 }`;
 
-export function GlassCodeWalk({
-  code = DEFAULT_CODE,
-  title = "scene.tsx",
-  width = 880,
-  height = 420,
-  fontSize = 18,
-  staggerFrames = 10,
-  zoom = 2.6,
-  speed = 1,
-  className,
-}: GlassCodeWalkProps) {
+export function GlassCodeWalk(props: GlassCodeWalkProps) {
+  const {
+    code = DEFAULT_CODE,
+    title = "scene.tsx",
+    width = 880,
+    height = 420,
+    fontSize = 18,
+    staggerFrames = 10,
+    zoom = 2.6,
+    speed = 1,
+    className,
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = useSceneFrame();
+  const { durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    glassCodeWalkTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const scan = tl.get("scan");
+  const pull = tl.get("pull-back");
 
   const lines = code.split("\n");
   const lineCount = lines.length;
@@ -72,14 +91,21 @@ export function GlassCodeWalk({
   }
 
   const anchorWorldX = blockLeft + RING + BODY_PADDING_LEFT;
-  const scanStagger = staggerFrames / speed;
-  const scanEnd = (lineCount - 1) * scanStagger;
+  // The camera counts the composition's frames; the schedule counts them
+  // after `speed`.
+  const scanStart = scan.start / speed;
+  const scanEnd = scan.end / speed;
 
   const camera = (f: number) => {
-    const linePosition = interpolate(f, [0, scanEnd], [0, lineCount - 1], {
-      extrapolateLeft: "clamp",
-      extrapolateRight: "clamp",
-    });
+    const linePosition = interpolate(
+      f,
+      [scanStart, scanEnd],
+      [0, lineCount - 1],
+      {
+        extrapolateLeft: "clamp",
+        extrapolateRight: "clamp",
+      },
+    );
     const lower = Math.floor(linePosition);
     const upper = Math.min(lower + 1, lineCount - 1);
     const trackedY =
@@ -91,7 +117,7 @@ export function GlassCodeWalk({
 
     const pullBack = interpolate(
       f,
-      [scanEnd, scanEnd + PULL_BACK_FRAMES / speed],
+      [pull.start / speed, pull.end / speed],
       [0, 1],
       {
         extrapolateLeft: "clamp",

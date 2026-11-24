@@ -5,7 +5,16 @@ import { AbsoluteFill, interpolate, spring } from "remotion";
 import { Caret } from "@/components/remocn/caret";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
 import { useTypewriter } from "@/lib/remocn-ui";
+import {
+  CLAUDE_CHAT_PROMPT,
+  type ClaudeChatElementId,
+  claudeChatTimeline,
+  claudeTypingLength,
+  TYPING_RATE,
+  TYPING_START_AT,
+} from "./timeline";
 
 const { fontFamily: SANS_FAMILY } = loadBodyFont();
 
@@ -17,6 +26,12 @@ export interface ClaudeChatProps {
   modelTier?: string;
   accentColor?: string;
   speed?: number;
+  /**
+   * Moves, trims or stretches the card's entrance, the typing and the send
+   * button's morph, by the ids in `./timeline`. Frames on the scene
+   * timeline, after `speed`.
+   */
+  timing?: Timing<ClaudeChatElementId>;
 }
 
 interface Theme {
@@ -50,9 +65,9 @@ export const THEMES: Record<"light" | "dark", Theme> = {
   },
 };
 
-export const TYPING_START_FRAME = 42;
+export const TYPING_START_FRAME = TYPING_START_AT;
 
-export const TYPING_CPS = 22;
+export const TYPING_CPS = TYPING_RATE;
 
 export function morphProgressAt(
   frame: number,
@@ -215,17 +230,32 @@ function IconButton({
   );
 }
 
-export function ClaudeChat({
-  placeholder = "Try: draft an email · summarize a doc · plan your week",
-  prompt = "Draft a launch tweet for our new release",
-  modelName = "Opus 4.8",
-  modelTier = "Max",
-  accentColor = "#D97757",
-  speed = 1,
-}: ClaudeChatProps) {
+export function ClaudeChat(props: ClaudeChatProps) {
+  const {
+    placeholder = "Try: draft an email · summarize a doc · plan your week",
+    prompt = CLAUDE_CHAT_PROMPT,
+    modelName = "Opus 4.8",
+    modelTier = "Max",
+    accentColor = "#D97757",
+    speed = 1,
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = useSceneFrame();
-  const { width, height, fps } = useSceneConfig();
+  const { width, height, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    claudeChatTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const card = tl.get("card");
+  const typing = tl.get("typing");
+  const send = tl.get("send");
+  const cardFadeSpan: [number, number] = [
+    card.start + card.beat("fade"),
+    card.end,
+  ];
   const t = THEMES.light;
 
   const refW = 1280;
@@ -233,22 +263,33 @@ export function ClaudeChat({
   const stageScale = Math.min(width / refW, height / refH);
 
   const tw = useTypewriter(prompt, {
-    cps: TYPING_CPS,
+    // A stretched or trimmed typing element types at the pace its length asks.
+    cps:
+      typing.length > 0
+        ? TYPING_CPS * (claudeTypingLength(prompt) / typing.length)
+        : TYPING_CPS,
     speed,
-    startFrame: TYPING_START_FRAME,
+    startFrame: typing.start,
   });
   const visibleText = tw.text;
   const showText = tw.count > 0;
-  const morph = morphProgressAt(frame, { fps, speed });
+  const morph = morphProgressAt(frame, {
+    fps,
+    speed,
+    startFrame: send.start,
+  });
 
-  const intro = introBounceIn(frame * speed, fps);
-  const cardFade = fadeUpAt(frame * speed, [6, 22]);
+  const intro = introBounceIn(frame * speed - card.start, fps);
+  const cardFade = fadeUpAt(frame * speed, cardFadeSpan);
   // The bounce is a spring that never quite lands, so the card's own px (its
   // rise, and its scale at the far edge) are held against the neighbouring
   // frames.
   const cardAt = (f: number) => {
-    const a = introBounceIn(f * speed, fps);
-    return [a.translateY + fadeUpAt(f * speed, [6, 22]).translateY, a.scale];
+    const a = introBounceIn(f * speed - card.start, fps);
+    return [
+      a.translateY + fadeUpAt(f * speed, cardFadeSpan).translateY,
+      a.scale,
+    ];
   };
   const stirs = (a: number[], b: number[]) =>
     Math.abs(a[0] - b[0]) > 1e-3 || Math.abs(a[1] - b[1]) * 430 > 1e-3;

@@ -3,7 +3,13 @@
 import { AbsoluteFill, interpolate } from "remotion";
 
 import { TerminalSimulator } from "@/components/remocn/terminal-simulator";
-import { useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_COMMAND,
+  type TerminalCursorZoomElementId,
+  terminalCursorZoomTimeline,
+} from "./timeline";
 
 export interface TerminalCursorZoomProps {
   command?: string;
@@ -15,6 +21,12 @@ export interface TerminalCursorZoomProps {
   chunkSize?: number;
   speed?: number;
   className?: string;
+  /**
+   * Moves, trims or stretches the typed command (`line:0`), by the ids in
+   * `./timeline`. The terminal and the camera both follow it. Frames on the
+   * scene timeline, after `speed`.
+   */
+  timing?: Timing<TerminalCursorZoomElementId>;
 }
 
 const STAGE_WIDTH = 1280;
@@ -24,20 +36,29 @@ const WINDOW_HEIGHT = 480;
 const CONTENT_PADDING = 20;
 const CHROME_HEIGHT = 40;
 const PROMPT_GAP = 8;
-const FIRST_LINE_FRAME = 10;
 
-export function TerminalCursorZoom({
-  command = "npx shadcn add @remocn/terminal-cursor-zoom",
-  zoom = 2.8,
-  fontSize = 20,
-  prompt = "$",
-  title = "~/code/remocn-demo",
-  charsPerFrame = 1,
-  chunkSize = 1,
-  speed = 1,
-  className,
-}: TerminalCursorZoomProps) {
+export function TerminalCursorZoom(props: TerminalCursorZoomProps) {
+  const {
+    command = DEFAULT_COMMAND,
+    zoom = 2.8,
+    fontSize = 20,
+    prompt = "$",
+    title = "~/code/remocn-demo",
+    charsPerFrame = 1,
+    chunkSize = 1,
+    speed = 1,
+    className,
+    timing,
+  } = props;
   const frame = useSceneFrame();
+  const { durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    terminalCursorZoomTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const line = tl.get("line:0");
 
   const charWidth = fontSize * 0.6;
   const windowLeft = (STAGE_WIDTH - WINDOW_WIDTH) / 2;
@@ -47,18 +68,13 @@ export function TerminalCursorZoom({
   const lineHeight = Math.round(fontSize * 1.6);
   const cursorY = windowTop + CHROME_HEIGHT + CONTENT_PADDING + lineHeight / 2;
 
-  const lineStart = Math.round(FIRST_LINE_FRAME / speed);
+  const lineStart = Math.round(line.start / speed);
   const localFrame = (frame - lineStart) * speed;
   const linearRevealed = Math.floor(
-    interpolate(
-      localFrame,
-      [0, command.length / charsPerFrame],
-      [0, command.length],
-      {
-        extrapolateLeft: "clamp",
-        extrapolateRight: "clamp",
-      },
-    ),
+    interpolate(localFrame, [0, line.beat("type")], [0, command.length], {
+      extrapolateLeft: "clamp",
+      extrapolateRight: "clamp",
+    }),
   );
   const revealed = Math.min(
     command.length,
@@ -91,6 +107,7 @@ export function TerminalCursorZoom({
           charsPerFrame={charsPerFrame}
           chunkSize={chunkSize}
           speed={speed}
+          timing={timing}
         />
       </div>
     </AbsoluteFill>

@@ -10,6 +10,16 @@ import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_PRODUCT,
+  DEFAULT_RIVALS,
+  rivalVotesOf,
+  type UpvoteBurstElementId,
+  type UpvoteBurstProduct,
+  type UpvoteBurstRival,
+  upvoteBurstTimeline,
+} from "./timeline";
 
 const { fontFamily: geist } = loadFont("normal", {
   weights: ["300", "400"],
@@ -20,21 +30,8 @@ const { fontFamily: mono } = loadMono("normal", {
   subsets: ["latin"],
 });
 
-type ThumbGlyph = "play" | "wave" | "bolt" | "ring" | "grid" | "spark";
-
-export interface UpvoteProduct {
-  name: string;
-  tagline: string;
-  topic: string;
-  comments?: number;
-  color?: string;
-  glyph?: ThumbGlyph;
-  src?: string;
-}
-
-export interface UpvoteRival extends UpvoteProduct {
-  votes: number;
-}
+export type UpvoteProduct = UpvoteBurstProduct;
+export type UpvoteRival = UpvoteBurstRival;
 
 export interface UpvoteBurstProps {
   product?: UpvoteProduct;
@@ -64,32 +61,13 @@ export interface UpvoteBurstProps {
   speed?: number;
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
+  /**
+   * Moves, trims or stretches the sheet, rows, cursor, press, count, each
+   * pass, the clear and the badge, by the ids in `./timeline`.
+   * Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<UpvoteBurstElementId>;
 }
-
-const DEFAULT_PRODUCT: UpvoteProduct = {
-  name: "remocn",
-  tagline: "Launch videos from copy-paste Remotion components",
-  topic: "Video",
-  comments: 96,
-};
-
-const r = (
-  name: string,
-  tagline: string,
-  topic: string,
-  votes: number,
-  comments: number,
-  color: string,
-): UpvoteRival => ({ name, tagline, topic, votes, comments, color });
-
-// biome-ignore format: compact data table
-const DEFAULT_RIVALS: UpvoteRival[] = [
-  r("Halcyon", "Meeting notes that draft your follow-ups", "Productivity", 1184, 142, "#C9A27A"),
-  r("Quarry", "Query any database in plain English", "Developer tools", 962, 88, "#8EA6A0"),
-  r("Orbitly", "The calendar for teams across time zones", "Productivity", 731, 64, "#9AA3C2"),
-  r("Tessel", "Design tokens that sync straight to code", "Design tools", 548, 41, "#C2A0A8"),
-  r("Fernway", "Expense reports that file themselves", "Fintech", 297, 23, "#A3B08A"),
-];
 
 const REMOCN_R_PATH =
   "M 0.01 0.81 C 0.01 1.73, 0.36 2.79, 1.09 4.13 C 4.91 11.04, 13.45 17.16, 21.7 18.9 C 22.94 19.16, 23.18 19.16, 51.39 19.27 C 76.07 19.36, 80.02 19.4, 81.32 19.57 C 89.89 20.69, 96.2 24.68, 99.38 31.01 C 103.19 38.56, 102.53 50.1, 97.91 57.07 C 94.66 61.96, 89.68 64.99, 83.26 66 C 82.81 66.07, 70.18 66.83, 55.2 67.69 C 24.82 69.43, 27.03 69.23, 24.18 70.4 C 19.9 72.15, 14.84 75.7, 10.65 79.89 C 4.86 85.68, 1.3 91.91, 0.25 98.13 C 0.12 98.85, 0.08 103.13, 0.04 116.66 L 0 134.26 9.5 134.26 L 19 134.26 19.05 119.41 C 19.1 103.27, 19.08 103.82, 19.82 101.04 C 21.79 93.65, 27.86 88.75, 36.45 87.63 C 37.23 87.53, 39.41 87.5, 43.57 87.53 C 50.12 87.59, 50.75 87.65, 53.22 88.45 C 56.61 89.56, 59.67 91.86, 62.02 95.07 C 62.52 95.76, 69.35 103.85, 77.2 113.07 C 85.04 122.28, 91.63 130.04, 91.85 130.32 C 92.07 130.59, 92.5 131.34, 92.82 131.97 C 93.52 133.35, 94.11 133.93, 95.06 134.13 C 95.5 134.23, 98.97 134.26, 106.36 134.23 L 117.01 134.19 100.82 113.07 C 91.91 101.45, 84.52 91.78, 84.39 91.57 C 83.36 89.89, 83.66 87.53, 85.09 86 C 85.79 85.25, 86.36 84.94, 88.07 84.38 C 96.18 81.72, 104.15 76.62, 109.97 70.36 C 120.59 58.93, 124.06 44.32, 119.44 30.43 C 114.59 15.81, 101.93 4.02, 87.64 0.83 C 83.93 0.01, 88.09 0.08, 41.85 0.04 L 0.01 0 0.01 0.81 Z";
@@ -105,16 +83,6 @@ const CAM = Easing.bezier(0.87, 0, 0.13, 1);
 const HEAVY = { mass: 1, damping: 26, stiffness: 120 };
 const CARD = { mass: 0.8, damping: 18, stiffness: 160 };
 const CHIP = { mass: 0.5, damping: 12, stiffness: 200 };
-
-const BEAT = {
-  sheet: 0,
-  rows: 4,
-  cursor: 6,
-  press: 18,
-  countFrom: 24,
-  countTo: 60,
-  clearPad: 12,
-};
 
 function hexToRgba(hex: string, a: number) {
   const h = hex.replace("#", "");
@@ -416,32 +384,47 @@ function ScaleLayer({
   );
 }
 
-export function UpvoteBurst({
-  product = DEFAULT_PRODUCT,
-  rivals = DEFAULT_RIVALS,
-  startRank = 5,
-  startVotes = 412,
-  endVotes = 1342,
-  title = "Top products launching today",
-  dateLabel = "Thu, Oct 23",
-  badgeLabel = "Product of the day",
-  liveLabel = "Live",
-  votesLabel = "upvotes in 24 hours",
-  theme = "light",
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = geist,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  ground,
-  groundParams,
-}: UpvoteBurstProps) {
+export function UpvoteBurst(props: UpvoteBurstProps) {
+  const {
+    product = DEFAULT_PRODUCT,
+    rivals = DEFAULT_RIVALS,
+    startRank = 5,
+    startVotes = 412,
+    endVotes = 1342,
+    title = "Top products launching today",
+    dateLabel = "Thu, Oct 23",
+    badgeLabel = "Product of the day",
+    liveLabel = "Live",
+    votesLabel = "upvotes in 24 hours",
+    theme = "light",
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = geist,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    ground,
+    groundParams,
+    timing,
+  } = props;
   const glide = useGlide();
   const rawFrame = Math.max(0, useSceneFrame() - delay);
-  const { fps, width, height } = useSceneConfig();
+  const { fps, width, height, durationInFrames } = useSceneConfig();
   const frame = rawFrame * speed;
+  const tl = useTimeline(
+    upvoteBurstTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const sheetEl = tl.get("sheet");
+  const cursorEl = tl.get("cursor");
+  const pressEl = tl.get("press");
+  const countEl = tl.get("count");
+  const clearEl = tl.get("clear");
+  const badgeEl = tl.get("badge");
+  const pressAt = pressEl.start;
   const tall = height > width;
   const stageW = tall ? 820 : 1280;
   const k = width / stageW;
@@ -494,64 +477,85 @@ export function UpvoteBurst({
   const rowW = sheetW - pad * 2;
 
   const votesAt = (f: number) =>
-    interpolate(f, [BEAT.countFrom, BEAT.countTo], [startVotes, endVotes], {
+    interpolate(f, [countEl.start, countEl.end], [startVotes, endVotes], {
       ...CLAMP,
       easing: MOVE,
     });
-  const rivalVotesAt = (i: number, f: number) =>
-    rivals[i].votes +
-    Math.floor(Math.max(0, f) * (0.03 + ((i * 37) % 5) * 0.012));
+  const rivalVotesAt = (i: number, f: number) => rivalVotesOf(rivals[i], i, f);
   const productVotes = votesAt(frame);
-  const crossAt: (number | null)[] = rivals.map((_, i) => {
-    if (i >= sRank - 1) return null;
-    for (let f = BEAT.countFrom; f <= BEAT.countTo + 1; f++) {
-      if (votesAt(f) > rivalVotesAt(i, f)) return f;
-    }
-    return null;
-  });
+  // The frame the count passes each rival, or null for rivals it never does.
+  const passes = rivals.map(
+    (_, i) => tl.elements.find((e) => e.id === `pass:${i}`) ?? null,
+  );
+  const crossAt: (number | null)[] = passes.map((e) => e?.start ?? null);
   const swap = (c: number) => sp(c, CARD);
-  const passed = crossAt.filter((c) => c !== null && frame >= c + 3).length;
-  const lastCross = Math.max(BEAT.countFrom, ...crossAt.map((c) => c ?? 0));
+  const passed = passes.filter(
+    (e) => e !== null && frame >= e.start + e.beat("rank"),
+  ).length;
+  const lastCross = Math.max(countEl.start, ...crossAt.map((c) => c ?? 0));
   const reachedTop = crossAt.slice(0, sRank - 1).every((c) => c !== null);
 
-  const pressS = sp(BEAT.press, CHIP);
+  const pressS = sp(pressAt, CHIP);
   const press =
-    frame < BEAT.press
+    frame < pressAt
       ? 1
       : 0.96 +
         0.04 *
-          interpolate(frame - BEAT.press, [0, 3], [0, 1], CLAMP) *
+          interpolate(
+            frame - pressAt,
+            [0, pressEl.beat("dip")],
+            [0, 1],
+            CLAMP,
+          ) *
           Math.min(1, pressS);
-  const fill = sp(BEAT.press, CARD);
+  const fill = sp(pressAt, CARD);
   const dim = reachedTop
     ? interpolate(frame, [lastCross + 4, lastCross + 14], [0, 1], {
         ...CLAMP,
         easing: ENTER,
       })
     : 0;
-  const clearAt = Math.max(BEAT.countTo, lastCross) + BEAT.clearPad;
-  const stampAt = clearAt + 4;
+  const clearAt = clearEl.start;
+  const stampAt = badgeEl.start;
   const stamp = sp(stampAt, CARD);
-  const tl = frame - (stampAt + 5);
-  const shake = tl >= 0 ? 3 * Math.exp(-tl / 3) : 0;
+  const since = frame - (stampAt + badgeEl.beat("shake"));
+  const shake = since >= 0 ? 3 * Math.exp(-since / 3) : 0;
   const captionIn = (d: number) =>
-    interpolate(frame, [stampAt + 8 + d, stampAt + 22 + d], [0, 1], {
-      ...CLAMP,
-      easing: ENTER,
-    });
-  const sheetIn = sp(BEAT.sheet, HEAVY);
-  const sheetOut = interpolate(frame, [clearAt, clearAt + 10], [0, 1], {
+    interpolate(
+      frame,
+      [
+        stampAt + badgeEl.beat("captionAt") + d,
+        stampAt + badgeEl.beat("caption") + d,
+      ],
+      [0, 1],
+      {
+        ...CLAMP,
+        easing: ENTER,
+      },
+    );
+  const sheetIn = sp(sheetEl.start, HEAVY);
+  const sheetOut = interpolate(frame, [clearAt, clearEl.end], [0, 1], {
     ...CLAMP,
     easing: EXIT,
   });
-  const ripple = interpolate(frame - BEAT.press, [0, 14], [0, 1], {
-    ...CLAMP,
-    easing: ENTER,
-  });
-  const ring = interpolate(frame, [stampAt + 3, stampAt + 24], [0, 1], {
-    ...CLAMP,
-    easing: ENTER,
-  });
+  const ripple = interpolate(
+    frame - pressAt,
+    [0, pressEl.beat("ripple")],
+    [0, 1],
+    {
+      ...CLAMP,
+      easing: ENTER,
+    },
+  );
+  const ring = interpolate(
+    frame,
+    [stampAt + badgeEl.beat("ringAt"), stampAt + badgeEl.beat("ring")],
+    [0, 1],
+    {
+      ...CLAMP,
+      easing: ENTER,
+    },
+  );
   const push = interpolate(frame, [0, 135], [1, 1.03], CLAMP);
   const camIn = interpolate(frame, [0, 30], [1.04, 1], {
     ...CLAMP,
@@ -569,20 +573,30 @@ export function UpvoteBurst({
 
   const voteX = rowX + rowW - 12 - 30;
   const voteY0 = listTop + (sRank - 1) * rowH + rowH / 2;
-  const cur = interpolate(frame, [BEAT.cursor, BEAT.press - 1], [0, 1], {
+  const cur = interpolate(frame, [cursorEl.start, cursorEl.end], [0, 1], {
     ...CLAMP,
     easing: MOVE,
   });
   const curFrom = { x: sheetX + sheetW + 150, y: sheetY + sheetH + 40 };
   const curShow =
-    interpolate(frame, [BEAT.cursor, BEAT.cursor + 6], [0, 1], CLAMP) *
-    interpolate(frame, [BEAT.press + 12, BEAT.press + 20], [1, 0], {
-      ...CLAMP,
-      easing: EXIT,
-    });
+    interpolate(
+      frame,
+      [cursorEl.start, cursorEl.start + cursorEl.beat("show")],
+      [0, 1],
+      CLAMP,
+    ) *
+    interpolate(
+      frame,
+      [pressAt + pressEl.beat("hideAt"), pressAt + pressEl.beat("hidden")],
+      [1, 0],
+      {
+        ...CLAMP,
+        easing: EXIT,
+      },
+    );
   const curLeave = interpolate(
     frame,
-    [BEAT.press + 10, BEAT.press + 20],
+    [pressAt + pressEl.beat("leaveAt"), pressAt + pressEl.beat("hidden")],
     [0, 1],
     {
       ...CLAMP,
@@ -645,7 +659,7 @@ export function UpvoteBurst({
             height: stageH,
             // The push runs the whole clip, so its tilt carries everything
             // that moves on the stage.
-            transform: `scale(${k * push * camIn}) translate(${shake * Math.sin(tl * 2.9)}px, ${shake * 0.7 * Math.cos(tl * 3.7)}px)${glide(push > 1 && push < 1.03)}`,
+            transform: `scale(${k * push * camIn}) translate(${shake * Math.sin(since * 2.9)}px, ${shake * 0.7 * Math.cos(since * 3.7)}px)${glide(push > 1 && push < 1.03)}`,
             transformOrigin: `${stageW / 2}px ${stageH / 2}px`,
             left: (width - stageW) / 2,
             top: (height - stageH) / 2,
@@ -737,32 +751,43 @@ export function UpvoteBurst({
             let lift = 0;
             let bump = 0;
             if (isProduct) {
-              for (const c of crossAt) {
-                if (c === null) continue;
+              for (const e of passes) {
+                if (e === null) continue;
+                const c = e.start;
                 const s = swap(c);
                 y -= rowH;
                 ride += (1 - s) * rowH;
                 lift = Math.max(lift, Math.sin(Math.PI * Math.min(1, s)));
                 bump = Math.max(
                   bump,
-                  interpolate(frame - c, [0, 4, 12], [0, 1, 0], CLAMP),
+                  interpolate(
+                    frame - c,
+                    [0, e.beat("peak"), e.length],
+                    [0, 1, 0],
+                    CLAMP,
+                  ),
                 );
               }
               rank = sRank - passed;
             } else {
-              const c = crossAt[ri];
-              if (c !== null) {
+              const e = passes[ri];
+              if (e !== null) {
                 y += rowH;
-                ride -= (1 - swap(c)) * rowH;
-                if (frame >= c + 3) rank += 1;
+                ride -= (1 - swap(e.start)) * rowH;
+                if (frame >= e.start + e.beat("rank")) rank += 1;
               }
             }
-            const rowIn = sp(BEAT.rows + slot * 2, CARD);
+            const rowIn = sp(tl.get(`row:${slot}`).start, CARD);
             const t0 = clearAt + (isProduct ? 2 : (rivals.length - slot) * 1);
-            const out = interpolate(frame, [t0, t0 + 8], [0, 1], {
-              ...CLAMP,
-              easing: EXIT,
-            });
+            const out = interpolate(
+              frame,
+              [t0, t0 + clearEl.beat("rows")],
+              [0, 1],
+              {
+                ...CLAMP,
+                easing: EXIT,
+              },
+            );
             const isLast = slot === rivals.length;
             const voteBorder = isProduct
               ? hexToRgba(accent, Math.min(1, fill))
@@ -913,7 +938,7 @@ export function UpvoteBurst({
                     ) : null}
                   </div>
                 </div>
-                {isProduct && frame >= BEAT.press ? (
+                {isProduct && frame >= pressAt ? (
                   <div
                     style={{
                       position: "absolute",
@@ -940,7 +965,7 @@ export function UpvoteBurst({
                 top: curRest.y,
                 opacity: curShow,
                 zIndex: 30,
-                transform: `translate(${curDx}px, ${curDy}px) scale(${frame >= BEAT.press - 1 && frame < BEAT.press + 5 ? 0.9 : 1})`,
+                transform: `translate(${curDx}px, ${curDy}px) scale(${frame >= pressAt + pressEl.beat("squeezeAt") && frame < pressAt + pressEl.beat("squeeze") ? 0.9 : 1})`,
                 transformOrigin: "4px 4px",
               }}
             >
@@ -980,7 +1005,7 @@ export function UpvoteBurst({
                     transform: `scale(${interpolate(stamp, [0, 1], [1.35, 1])}) rotate(${interpolate(stamp, [0, 1], [-14, -5])}deg)`,
                     opacity: interpolate(
                       frame - stampAt,
-                      [0, 3],
+                      [0, badgeEl.beat("fade")],
                       [0, 1],
                       CLAMP,
                     ),

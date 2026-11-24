@@ -15,6 +15,8 @@ import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import { type PhoneTrioElementId, phoneTrioTimeline } from "./timeline";
 
 const manrope = loadManrope("normal", {
   weights: ["300", "400"],
@@ -28,17 +30,6 @@ const HEAVY = { mass: 1, damping: 26, stiffness: 120 };
 const CARD = { mass: 0.8, damping: 18, stiffness: 160 };
 const CHIP = { mass: 0.5, damping: 12, stiffness: 200 };
 const FLICK = { mass: 0.9, damping: 22, stiffness: 110 };
-
-const B = {
-  rise: [-12, -8, -4],
-  scrollL: 10,
-  flick1: 14,
-  scrollR: 20,
-  flick2: 44,
-  forward: 70,
-  banner: 84,
-  end: 132,
-};
 
 const PW = 286;
 const PH = 620;
@@ -253,6 +244,12 @@ export interface PhoneTrioProps {
   speed?: number;
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
+  /**
+   * Moves, trims or stretches each phone's rise, the screens' scrolls and
+   * flicks, the step forward and the banner, by the ids in `./timeline`.
+   * Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<PhoneTrioElementId>;
 }
 
 /** The foreground at `scale`, around the frame's center; nothing extra at 1. */
@@ -271,41 +268,57 @@ function ScaleLayer({
   );
 }
 
-export function PhoneTrio({
-  theme = "dark",
-  accent = "#ff5a36",
-  name = "Ines Marlow",
-  handle = "ines.marlow",
-  role = "Motion designer",
-  headline = "Driven by motion, obsessed with the",
-  accentWord = "seamless.",
-  images = [
-    staticFile("reel/reel-1.jpg"),
-    staticFile("templates/launch-anything/horizon.jpg"),
-    staticFile("reel/reel-3.jpg"),
-    staticFile("templates/product-showcase/sculpture.jpg"),
-    staticFile("templates/launch-anything/earth.jpg"),
-    staticFile("reel/reel-6.jpg"),
-    staticFile("templates/brand-guidelines/ceramics.jpg"),
-    staticFile("templates/product-showcase/gallery.jpg"),
-    staticFile("reel/reel-4.jpg"),
-  ],
-  skills = ["Motion", "Sound", "Web"],
-  liveLabel = "Portfolio is live",
-  workTitle = "Selected work",
-  ctaLabel = "Open for projects",
-  followLabel = "Follow",
-  ink,
-  background,
-  fontFamily = manrope.fontFamily,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  ground,
-  groundParams,
-}: PhoneTrioProps) {
+export function PhoneTrio(props: PhoneTrioProps) {
+  const {
+    theme = "dark",
+    accent = "#ff5a36",
+    name = "Ines Marlow",
+    handle = "ines.marlow",
+    role = "Motion designer",
+    headline = "Driven by motion, obsessed with the",
+    accentWord = "seamless.",
+    images = [
+      staticFile("reel/reel-1.jpg"),
+      staticFile("templates/launch-anything/horizon.jpg"),
+      staticFile("reel/reel-3.jpg"),
+      staticFile("templates/product-showcase/sculpture.jpg"),
+      staticFile("templates/launch-anything/earth.jpg"),
+      staticFile("reel/reel-6.jpg"),
+      staticFile("templates/brand-guidelines/ceramics.jpg"),
+      staticFile("templates/product-showcase/gallery.jpg"),
+      staticFile("reel/reel-4.jpg"),
+    ],
+    skills = ["Motion", "Sound", "Web"],
+    liveLabel = "Portfolio is live",
+    workTitle = "Selected work",
+    ctaLabel = "Open for projects",
+    followLabel = "Follow",
+    ink,
+    background,
+    fontFamily = manrope.fontFamily,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    ground,
+    groundParams,
+    timing,
+  } = props;
   const frame = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width, height, fps } = useSceneConfig();
+  const { width, height, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    phoneTrioTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const phones = tl.lane("Phones");
+  const forward = tl.get("forward");
+  const bannerEl = tl.get("banner");
+  const flick1 = tl.get("flick:0");
+  const flick2 = tl.get("flick:1");
+  const scrollLEl = tl.get("scroll-left");
+  const scrollREl = tl.get("scroll-right");
+  const pushEl = tl.get("push");
   const dark = theme === "dark";
   const portrait = height > width * 1.2;
   const stageW = portrait ? 720 : 1280;
@@ -336,23 +349,23 @@ export function PhoneTrio({
 
   const img = (i: number) => images[i % images.length];
 
-  const rise = B.rise.map((at) =>
-    spring({ frame: frame - at, fps, config: CARD }),
+  const rise = phones.map((e) =>
+    spring({ frame: frame - e.start, fps, config: CARD }),
   );
-  const risePrev = B.rise.map((at) =>
-    spring({ frame: frame - 1 - at, fps, config: CARD }),
+  const risePrev = phones.map((e) =>
+    spring({ frame: frame - 1 - e.start, fps, config: CARD }),
   );
-  const fwd = spring({ frame: frame - B.forward, fps, config: HEAVY });
-  const banner = spring({ frame: frame - B.banner, fps, config: CHIP });
+  const fwd = spring({ frame: frame - forward.start, fps, config: HEAVY });
+  const banner = spring({ frame: frame - bannerEl.start, fps, config: CHIP });
 
-  const scrollL = ramp(frame, B.scrollL, 96, MOVE) * 110;
-  const f1 = spring({ frame: frame - B.flick1, fps, config: FLICK });
-  const f2 = spring({ frame: frame - B.flick2, fps, config: FLICK });
-  const f1p = spring({ frame: frame - 1 - B.flick1, fps, config: FLICK });
-  const f2p = spring({ frame: frame - 1 - B.flick2, fps, config: FLICK });
+  const scrollL = ramp(frame, scrollLEl.start, scrollLEl.length, MOVE) * 110;
+  const f1 = spring({ frame: frame - flick1.start, fps, config: FLICK });
+  const f2 = spring({ frame: frame - flick2.start, fps, config: FLICK });
+  const f1p = spring({ frame: frame - 1 - flick1.start, fps, config: FLICK });
+  const f2p = spring({ frame: frame - 1 - flick2.start, fps, config: FLICK });
   const scrollM = f1 * 250 + f2 * 236;
   const scrollMV = Math.abs(scrollM - (f1p * 250 + f2p * 236));
-  const scrollR = ramp(frame, B.scrollR, 70, MOVE) * 60;
+  const scrollR = ramp(frame, scrollREl.start, scrollREl.length, MOVE) * 60;
 
   const layout = portrait
     ? [
@@ -375,7 +388,8 @@ export function PhoneTrio({
           z: 1,
         },
       ];
-  const camPush = 1 + 0.02 * ramp(frame, 0, B.end, Easing.linear);
+  const camPush =
+    1 + 0.02 * ramp(frame, pushEl.start, pushEl.length, Easing.linear);
 
   const resolvedPreset: GshPresetId | undefined =
     ground ?? (dark ? "velvet-hour" : undefined);
@@ -741,7 +755,7 @@ export function PhoneTrio({
           gap: 12,
           padding: "0 14px",
           zIndex: 7,
-          opacity: frame >= B.banner ? Math.min(1, banner * 2) : 0,
+          opacity: frame >= bannerEl.start ? Math.min(1, banner * 2) : 0,
           transform: `translateY(${mix(-90, 0, banner)}px) scale(${mix(0.9, 1, banner)})`,
         }}
       >
@@ -950,7 +964,7 @@ export function PhoneTrio({
       <svg width={0} height={0} style={{ position: "absolute" }} aria-hidden>
         {rise.map((r, i) => (
           <filter
-            key={B.rise[i]}
+            key={phones[i].id}
             id={`pt-rise-${i}`}
             x="-10%"
             y="-10%"
@@ -1011,7 +1025,7 @@ export function PhoneTrio({
                       ]
                         .join(" ")
                         .trim() || undefined,
-                    opacity: frame >= B.rise[i] ? 1 : 0,
+                    opacity: frame >= phones[i].start ? 1 : 0,
                   }}
                 >
                   <Phone t={t} shellDark={dark}>

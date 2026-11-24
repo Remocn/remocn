@@ -13,6 +13,12 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  type ChangedMindElementId,
+  changedMindTimeline,
+  DEFAULT_STEPS,
+} from "./timeline";
 
 const serif = loadFont("normal", { weights: ["400"], subsets: ["latin"] });
 
@@ -38,13 +44,13 @@ export interface ChangedMindProps {
   delay?: number;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches the first quote, single rewrites and the
+   * name, by the ids in `./timeline`. Frames on the scene timeline, after
+   * `delay` and `speed`.
+   */
+  timing?: Timing<ChangedMindElementId>;
 }
-
-const DEFAULT_STEPS: ChangedMindStep[] = [
-  { quote: "Another tool I won’t use.", when: "on day one" },
-  { quote: "Another tool I might use.", when: "in week two" },
-  { quote: "The only tool I use now.", when: "two months in" },
-];
 
 const THEMES = {
   dark: { bg: "#101828", ink: "#BFE3FF", accent: "#F6C453" },
@@ -273,22 +279,25 @@ function ScaleLayer({
   );
 }
 
-export function ChangedMind({
-  steps = DEFAULT_STEPS,
-  name = "Ines Vargas, solo founder",
-  accent,
-  ink,
-  background,
-  fontFamily = serif.fontFamily,
-  transition = 18,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: ChangedMindProps) {
+export function ChangedMind(props: ChangedMindProps) {
+  const {
+    steps = DEFAULT_STEPS,
+    name = "Ines Vargas, solo founder",
+    accent,
+    ink,
+    background,
+    fontFamily = serif.fontFamily,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const tilt = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H, durationInFrames: T } = useSceneConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  // The rewrites are spread over the clip's own length, without `speed`.
+  const tl = useTimeline(changedMindTimeline, props, durationInFrames, timing);
   const c = THEMES[theme];
   const hi = accent ?? c.accent;
   const fg = ink ?? c.ink;
@@ -358,17 +367,11 @@ export function ChangedMind({
   }
 
   const n = rows.length;
-  const intro = 18;
-  const tail = Math.max(30, T * 0.22);
-  const span = Math.max(1, T - tail - intro);
-  const gap = n > 1 ? span / (n - 1) : span;
-  const TR = Math.min(transition, gap * 0.45);
-  const startOf = (k: number) => intro + gap * k - TR;
-
   let cur = 0;
-  for (let k = 1; k < n; k++) if (t >= startOf(k)) cur = k;
-  const lt = cur > 0 ? t - startOf(cur) : 0;
-  const inTransition = cur > 0 && lt < TR + 14;
+  for (let k = 1; k < n; k++) if (t >= tl.get(`quote:${k}`).start) cur = k;
+  const rw = cur > 0 ? tl.get(`quote:${cur}`) : null;
+  const lt = rw ? t - rw.start : 0;
+  const inTransition = rw !== null && lt < rw.length;
   const from = inTransition ? cur - 1 : cur;
   const to = cur;
 
@@ -428,11 +431,14 @@ export function ChangedMind({
     return { x: marginX + p.x * F, y: top + p.line * lineH };
   };
 
-  const enterOf = (i: number) =>
-    interpolate(t, [2 + i * 2, 18 + i * 2], [0, 1], {
+  const first = tl.get("quote:0");
+  const enterOf = (i: number) => {
+    const at = first.start + i * first.beat("stagger");
+    return interpolate(t, [at, at + first.beat("rise")], [0, 1], {
       ...CLAMP,
       easing: EASE_OUT,
     });
+  };
   const lift = F * 0.3;
 
   const openIn = enterOf(0);
@@ -466,13 +472,18 @@ export function ChangedMind({
         ),
       );
     });
-  } else {
+  } else if (rw) {
     const idxA = new Map(ids[from].map((id, i) => [id, i]));
     const idxB = new Map(ids[to].map((id, i) => [id, i]));
-    const glide = interpolate(lt, [TR * 0.18, TR * 0.82], [0, 1], {
-      ...CLAMP,
-      easing: EASE_IO,
-    });
+    const glide = interpolate(
+      lt,
+      [rw.beat("glideFrom"), rw.beat("glideTo")],
+      [0, 1],
+      {
+        ...CLAMP,
+        easing: EASE_IO,
+      },
+    );
     let outOrder = 0;
     ids[from].forEach((id, i) => {
       const a = xy(from, i);
@@ -494,13 +505,19 @@ export function ChangedMind({
         if (ta === tb) {
           nodes.push(glyph(id, tb, at.x, at.y, 1, col, gx, gy));
         } else {
-          const swap = interpolate(lt, [TR * 0.1, TR * 0.4], [0, 1], CLAMP);
+          const swap = interpolate(
+            lt,
+            [rw.beat("swapFrom"), rw.beat("swapTo")],
+            [0, 1],
+            CLAMP,
+          );
           if (swap < 1)
             nodes.push(glyph(`${id}-a`, ta, at.x, at.y, 1 - swap, col, gx, gy));
           nodes.push(glyph(id, tb, at.x, at.y, swap, col, gx, gy));
         }
       } else {
-        const u = interpolate(lt, [outOrder, outOrder + TR * 0.34], [0, 1], {
+        const outAt = outOrder * rw.beat("outStep");
+        const u = interpolate(lt, [outAt, outAt + rw.beat("out")], [0, 1], {
           ...CLAMP,
           easing: EASE_IN,
         });
@@ -525,8 +542,8 @@ export function ChangedMind({
     ids[to].forEach((id, j) => {
       if (idxA.has(id)) return;
       const b = xy(to, j);
-      const s = TR * 0.5 + inOrder * 1.5;
-      const v = interpolate(lt, [s, s + TR * 0.5], [0, 1], {
+      const s = rw.beat("inAt") + inOrder * rw.beat("inStep");
+      const v = interpolate(lt, [s, s + rw.beat("in")], [0, 1], {
         ...CLAMP,
         easing: EASE_OUT,
       });
@@ -549,17 +566,17 @@ export function ChangedMind({
   }
 
   const L = Math.max(16, unit * 0.054);
-  const attrIn = interpolate(t, [12, 30], [0, 1], {
+  const nameEl = tl.get("name");
+  const attrIn = interpolate(t, [nameEl.start, nameEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
-  const whenMix =
-    cur > 0
-      ? interpolate(lt, [TR * 0.3, TR * 0.85], [0, 1], {
-          ...CLAMP,
-          easing: EASE_IO,
-        })
-      : 1;
+  const whenMix = rw
+    ? interpolate(lt, [rw.beat("whenFrom"), rw.beat("whenTo")], [0, 1], {
+        ...CLAMP,
+        easing: EASE_IO,
+      })
+    : 1;
   const whenPrev = cur > 0 ? list[cur - 1].when : list[0].when;
   const whenNext = list[cur].when;
   const dashW = adv("— ") * L;

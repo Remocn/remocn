@@ -15,6 +15,16 @@ import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround, gshParams } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_FORGE_NAME,
+  DEFAULT_FORGE_TAGLINE,
+  FORGE_LENGTH,
+  type ForgeGlyph,
+  forgeGlyphPlan,
+  type NoiseForgeStingElementId,
+  noiseForgeStingTimeline,
+} from "./timeline";
 
 const manrope = loadManrope("normal", {
   weights: ["600"],
@@ -33,24 +43,7 @@ const LIGHT = Easing.bezier(0.22, 1, 0.36, 1);
 const COOL = Easing.bezier(0.65, 0, 0.35, 1);
 const CAMERA = Easing.bezier(0.45, 0, 0.55, 1);
 
-const B = {
-  spark: 0,
-  seam: 4,
-  seamLen: 18,
-  forge: 12,
-  ring: 6,
-  glyphLen: 15,
-  markLen: 18,
-  seamOut: 30,
-  seamOutLen: 18,
-  lock: 48,
-  cool: 54,
-  coolLen: 18,
-  tagline: 66,
-  end: 126,
-};
-
-export const NOISE_FORGE_STING_DURATION = B.end;
+export const NOISE_FORGE_STING_DURATION = FORGE_LENGTH;
 
 const SLICES = 11;
 const BARS = 6;
@@ -87,6 +80,13 @@ export interface NoiseForgeStingProps {
   speed?: number;
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
+  /**
+   * Moves, trims or stretches the seam, single letters and the mark, the
+   * punch, the cooling, single tagline words and the camera push, by the
+   * ids in `./timeline`. Frames on the scene timeline, after `delay` and
+   * `speed`.
+   */
+  timing?: Timing<NoiseForgeStingElementId>;
 }
 
 const THEMES = {
@@ -133,22 +133,6 @@ const THEMES = {
     lift: 1,
   },
 };
-
-type Glyph = { key: string; order: number; mark: boolean; char: string };
-
-function glyphPlan(word: string): Glyph[] {
-  const chars = Array.from(word);
-  const n = chars.length;
-  const centre = (n - 1) / 2;
-  const letters = chars.map((c, i) => ({
-    key: `${c}-${i.toString()}`,
-    order: Math.floor(Math.abs(i - centre)),
-    mark: false,
-    char: c,
-  }));
-  const last = letters.reduce((m, g) => Math.max(m, g.order), 0);
-  return [{ key: "mark", order: last + 1, mark: true, char: "" }, ...letters];
-}
 
 function Slice({
   index,
@@ -255,18 +239,19 @@ function ForgedGlyph({
   frame,
   color,
   hot,
-  ring,
+  start,
+  len,
   logo,
 }: {
-  glyph: Glyph;
+  glyph: ForgeGlyph;
   frame: number;
   color: string;
   hot: string;
-  ring: number;
+  /** Frame the glyph starts forging, and frames it takes to lock. */
+  start: number;
+  len: number;
   logo: ReactNode;
 }) {
-  const start = B.forge + glyph.order * ring;
-  const len = glyph.mark ? B.markLen : B.glyphLen;
   const seed = `nf-${glyph.key}`;
   const content = glyph.mark ? (logo ?? <MarkSvg color={color} />) : glyph.char;
   const locked = frame >= start + len;
@@ -323,26 +308,39 @@ function ScaleLayer({
   );
 }
 
-export function NoiseForgeSting({
-  theme = "dark",
-  accent,
-  ink,
-  hot,
-  name = "emocn",
-  tagline = "Launch videos, built from parts.",
-  logo,
-  background,
-  fontFamily = geist.fontFamily,
-  stagger = B.ring,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  ground,
-  groundParams,
-}: NoiseForgeStingProps) {
+export function NoiseForgeSting(props: NoiseForgeStingProps) {
+  const {
+    theme = "dark",
+    accent,
+    ink,
+    hot,
+    name = DEFAULT_FORGE_NAME,
+    tagline = DEFAULT_FORGE_TAGLINE,
+    logo,
+    background,
+    fontFamily = geist.fontFamily,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    ground,
+    groundParams,
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H } = useSceneConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    noiseForgeStingTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const pushEl = tl.get("push");
+  const groundEl = tl.get("ground");
+  const seam = tl.get("seam");
+  const seamOutEl = tl.get("seamOut");
+  const lock = tl.get("lock");
+  const coolEl = tl.get("cool");
   const c = THEMES[theme];
   const inkC = ink ?? c.ink;
   const markC = accent ?? c.accent;
@@ -360,22 +358,27 @@ export function NoiseForgeSting({
   const lift = custom || (portrait && c.tallParams) ? 1 : c.lift;
 
   const fontSize = portrait ? W * 0.205 : W * 0.172;
-  const glyphs = glyphPlan(name);
+  const glyphs = forgeGlyphPlan(name);
 
-  const cool = ramp(frame, B.cool, B.coolLen, COOL);
+  const cool = ramp(frame, coolEl.start, coolEl.length, COOL);
   const heat = 1 - cool;
   const letterC = interpolateColors(cool, [0, 1], [hotC, inkC]);
   const markColor = interpolateColors(cool, [0, 1], [hotC, markC]);
 
-  const sparkIn = ramp(frame, B.spark - 3, 6, LIGHT);
-  const seamGrow = ramp(frame, B.seam, B.seamLen, ENTER);
-  const seamOut = ramp(frame, B.seamOut, B.seamOutLen, COOL);
+  const sparkIn = ramp(
+    frame,
+    seam.start + seam.beat("spark"),
+    seam.beat("sparkIn"),
+    LIGHT,
+  );
+  const seamGrow = ramp(frame, seam.start, seam.length, ENTER);
+  const seamOut = ramp(frame, seamOutEl.start, seamOutEl.length, COOL);
   const seamW = interpolate(seamGrow, [0, 1], [0.05, 4.4]);
   const seamH = interpolate(seamOut, [0, 1], [1, 0.3]);
 
   const punch = interpolate(
     frame,
-    [B.lock, B.lock + 2, B.lock + 8],
+    [lock.start, lock.start + lock.beat("peak"), lock.end],
     [1, 1.028, 1],
     {
       extrapolateLeft: "clamp",
@@ -383,7 +386,7 @@ export function NoiseForgeSting({
       easing: CAMERA,
     },
   );
-  const push = interpolate(frame, [0, B.end], [1.04, 1], {
+  const push = interpolate(frame, [pushEl.start, pushEl.end], [1.04, 1], {
     easing: CAMERA,
     extrapolateRight: "clamp",
   });
@@ -397,9 +400,14 @@ export function NoiseForgeSting({
 
   const tagSize = fontSize * (portrait ? 0.36 : 0.25);
   const words = tagline.split(" ");
-  const groundFade = interpolate(frame, [0, 18], [0.35, 1], {
-    extrapolateRight: "clamp",
-  });
+  const groundFade = interpolate(
+    frame,
+    [groundEl.start, groundEl.end],
+    [0.35, 1],
+    {
+      extrapolateRight: "clamp",
+    },
+  );
 
   return (
     <AbsoluteFill
@@ -439,7 +447,7 @@ export function NoiseForgeSting({
             alignItems: "center",
             justifyContent: "center",
             // The camera push runs the whole sting, so the tilt does too.
-            transform: `scale(${push * punch})${glide(frame < B.end)}`,
+            transform: `scale(${push * punch})${glide(frame < pushEl.end)}`,
           }}
         >
           <div
@@ -477,17 +485,21 @@ export function NoiseForgeSting({
                   opacity: sparkIn * (1 - seamOut),
                 }}
               />
-              {glyphs.map((g) => (
-                <ForgedGlyph
-                  key={g.key}
-                  glyph={g}
-                  frame={frame}
-                  color={g.mark ? markColor : letterC}
-                  hot={hotC}
-                  ring={stagger}
-                  logo={logo}
-                />
-              ))}
+              {glyphs.map((g) => {
+                const e = tl.get(g.mark ? "mark" : `letter:${g.index}`);
+                return (
+                  <ForgedGlyph
+                    key={g.key}
+                    glyph={g}
+                    frame={frame}
+                    color={g.mark ? markColor : letterC}
+                    hot={hotC}
+                    start={e.start}
+                    len={e.length}
+                    logo={logo}
+                  />
+                );
+              })}
             </div>
             <div
               style={{
@@ -505,7 +517,8 @@ export function NoiseForgeSting({
               }}
             >
               {words.map((w, i) => {
-                const p = ramp(frame, B.tagline + i * 2, 14);
+                const word = tl.get(`word:${i}`);
+                const p = ramp(frame, word.start, word.length);
                 return (
                   <span
                     key={`${w}-${i.toString()}`}

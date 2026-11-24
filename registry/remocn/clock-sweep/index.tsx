@@ -8,6 +8,18 @@ import { useId } from "react";
 import { AbsoluteFill, Easing, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import {
+  type ResolvedElement,
+  type ResolvedTimeline,
+  type Timing,
+  useTimeline,
+} from "@/lib/remocn/timeline";
+import {
+  type ClockSweepElementId,
+  clockSweepTimeline,
+  headlineLines,
+  headlineOf,
+} from "./timeline";
 
 const { fontFamily: display } = loadSans("normal", {
   weights: ["400", "500"],
@@ -44,6 +56,12 @@ export interface ClockSweepProps {
   grain?: boolean;
   theme?: "dark" | "light";
   speed?: number;
+  /**
+   * Moves, trims or stretches the dial building, the camera moves, the
+   * sweep and its stop, single headline words and the drifts, by the ids in
+   * `./timeline`. Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<ClockSweepElementId>;
 }
 
 const EASE_IO = Easing.bezier(0.65, 0, 0.35, 1);
@@ -129,6 +147,7 @@ function Grain({ opacity }: { opacity: number }) {
 
 function Dial({
   t,
+  tl,
   r,
   value,
   minutes,
@@ -137,6 +156,7 @@ function Dial({
   u,
 }: {
   t: number;
+  tl: ResolvedTimeline<ClockSweepElementId>;
   r: number;
   value: number;
   minutes: number;
@@ -145,14 +165,29 @@ function Dial({
   u: number;
 }) {
   const deg = value * 6;
-  const stop = interpolate(t, [66, 69, 84], [0, 1, 0], CLAMP);
-  const settled = interpolate(t, [66, 76], [0, 1], CLAMP);
+  const stopEl = tl.get("stop");
+  const ticksEl = tl.get("ticks");
+  const ringEl = tl.get("ring");
+  const handEl = tl.get("hand");
+  const arcEl = tl.get("arc");
+  const stop = interpolate(
+    t,
+    [stopEl.start, stopEl.start + stopEl.beat("peak"), stopEl.end],
+    [0, 1, 0],
+    CLAMP,
+  );
+  const settled = interpolate(
+    t,
+    [stopEl.start, stopEl.start + stopEl.beat("dot")],
+    [0, 1],
+    CLAMP,
+  );
 
   const ticks: React.ReactNode[] = [];
   for (let i = 0; i < 60; i++) {
     const major = i % 5 === 0;
-    const at = 2 + i * 0.32;
-    const k = interpolate(t, [at, at + 10], [0, 1], {
+    const at = ticksEl.start + i * ticksEl.beat("step");
+    const k = interpolate(t, [at, at + ticksEl.beat("each")], [0, 1], {
       ...CLAMP,
       easing: EASE_OUT,
     });
@@ -164,7 +199,8 @@ function Dial({
     const lit = passed
       ? interpolate(deg, [i * 6 - 0.01, i * 6 + 2], [0, 1], CLAMP)
       : 0;
-    const zero = i === 0 ? interpolate(t, [28, 34], [0, 1], CLAMP) : 0;
+    const zero =
+      i === 0 ? interpolate(t, [arcEl.start, arcEl.end], [0, 1], CLAMP) : 0;
     const base = major ? p.major : p.minor;
     ticks.push(
       <line
@@ -181,7 +217,7 @@ function Dial({
     );
   }
 
-  const handIn = interpolate(t, [12, 30], [0, 1], {
+  const handIn = interpolate(t, [handEl.start, handEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
@@ -190,7 +226,7 @@ function Dial({
   const tail = polar(deg + 180, r * 0.1 * handIn);
   const arcR = r * 1.075;
   const arcW = 3 * u;
-  const arcOn = interpolate(t, [28, 34], [0, 1], CLAMP);
+  const arcOn = interpolate(t, [arcEl.start, arcEl.end], [0, 1], CLAMP);
   const [c0, c1, c2, c3] = p.limb;
   const d = Math.max(0.001, deg);
   const wedge = `conic-gradient(from 0deg, ${c0} 0deg, ${c1} ${d * 0.45}deg, ${c2} ${d * 0.82}deg, ${c3} ${d}deg, transparent ${d}deg)`;
@@ -234,7 +270,9 @@ function Dial({
           fill="none"
           stroke={p.minor}
           strokeWidth={Math.max(1, u)}
-          opacity={0.5 * interpolate(t, [6, 26], [0, 1], CLAMP)}
+          opacity={
+            0.5 * interpolate(t, [ringEl.start, ringEl.end], [0, 1], CLAMP)
+          }
         />
         {ticks}
         {deg > 0.05 ? (
@@ -289,7 +327,7 @@ function Headline({
   fg,
   fontFamily,
   fontWeight,
-  stagger,
+  words,
 }: {
   t: number;
   title: string;
@@ -299,10 +337,10 @@ function Headline({
   fg: string;
   fontFamily: string;
   fontWeight: number;
-  stagger: number;
+  words: ResolvedElement<ClockSweepElementId>[];
 }) {
   const glide = useGlide();
-  const lines = title.split("\n").map((l) => l.split(/\s+/).filter(Boolean));
+  const lines = headlineLines(title);
   const flat = lines.flat();
   const hit = flat.indexOf(String(minutes));
   let n = 0;
@@ -322,8 +360,8 @@ function Headline({
         <div key={`l${li}-${line.join(" ")}`}>
           {line.map((w, wi) => {
             const i = n++;
-            const at = 82 + i * stagger;
-            const k = interpolate(t, [at, at + 20], [0, 1], {
+            const word = words[i];
+            const k = interpolate(t, [word.start, word.end], [0, 1], {
               ...CLAMP,
               easing: EASE_OUT,
             });
@@ -389,25 +427,40 @@ function ScaleLayer({
   );
 }
 
-export function ClockSweep({
-  minutes = 4,
-  title,
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = display,
-  fontWeight = 500,
-  stagger = 2.5,
-  scale = 1,
-  delay = 0,
-  grain = true,
-  theme = "dark",
-  speed = 1,
-}: ClockSweepProps) {
+export function ClockSweep(props: ClockSweepProps) {
+  const {
+    minutes = 4,
+    title,
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = display,
+    fontWeight = 500,
+    scale = 1,
+    delay = 0,
+    grain = true,
+    theme = "dark",
+    speed = 1,
+    timing,
+  } = props;
   // `glide` is the camera's move to the left here.
   const tilt = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width, height } = useSceneConfig();
+  const { width, height, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    clockSweepTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const introEl = tl.get("intro");
+  const readoutEl = tl.get("readout");
+  const pushEl = tl.get("push");
+  const sweepEl = tl.get("sweep");
+  const stopEl = tl.get("stop");
+  const glideEl = tl.get("glide");
+  const driftEl = tl.get("drift");
+  const breatheEl = tl.get("breathe");
   const u = height / 720;
   const p: Palette = THEMES[theme];
   const fg = ink ?? p.fg;
@@ -415,25 +468,30 @@ export function ClockSweep({
     background === "transparent" ? "transparent" : (background ?? p.bg);
   const total = Math.min(59, Math.max(0.25, minutes));
 
-  const sweep = interpolate(t, [32, 66], [0, 1], {
+  const sweep = interpolate(t, [sweepEl.start, sweepEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_SWEEP,
   });
-  const after = Math.max(0, t - 66);
+  const after = Math.max(0, t - stopEl.start);
   const kick =
-    t > 66 ? 0.07 * Math.sin(after * 1.1) * Math.exp(-after * 0.45) : 0;
+    t > stopEl.start
+      ? 0.07 * Math.sin(after * 1.1) * Math.exp(-after * 0.45)
+      : 0;
   const value = total * sweep + kick;
 
   const r = Math.min(height * 0.29, width * 0.19);
   const leftX = width * 0.255;
   const focus = polar(total * 3, r * 0.62);
   const camera = (tt: number) => {
-    const glide = interpolate(tt, [70, 104], [0, 1], {
+    const glide = interpolate(tt, [glideEl.start, glideEl.end], [0, 1], {
       ...CLAMP,
       easing: EASE_IO,
     });
     const push =
-      interpolate(tt, [20, 66], [0, 1], { ...CLAMP, easing: EASE_IO }) *
+      interpolate(tt, [pushEl.start, pushEl.end], [0, 1], {
+        ...CLAMP,
+        easing: EASE_IO,
+      }) *
       (1 - glide);
     const pushS = 1 + push * 0.32;
     return {
@@ -442,9 +500,12 @@ export function ClockSweep({
         interpolate(glide, [0, 1], [width / 2, leftX]) - focus.x * (pushS - 1),
       cy: height / 2 - focus.y * (pushS - 1),
       dialScale:
-        interpolate(tt, [0, 30], [1.04, 1], { ...CLAMP, easing: EASE_OUT }) *
+        interpolate(tt, [introEl.start, introEl.end], [1.04, 1], {
+          ...CLAMP,
+          easing: EASE_OUT,
+        }) *
         pushS *
-        interpolate(tt, [104, 170], [1, 1.015], CLAMP),
+        interpolate(tt, [breatheEl.start, breatheEl.end], [1, 1.015], CLAMP),
     };
   };
   const { glide, cx, cy, dialScale } = camera(t);
@@ -466,16 +527,21 @@ export function ClockSweep({
   const mm = Math.floor(secs / 60);
   const ss = Math.floor(secs % 60);
   const readout = `${String(mm).padStart(2, "0")}:${String(ss).padStart(2, "0")}`;
-  const readIn = interpolate(t, [18, 34], [0, 1], {
+  const readIn = interpolate(t, [readoutEl.start, readoutEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
-  const readLit = interpolate(t, [66, 72], [0, 1], CLAMP);
+  const readLit = interpolate(
+    t,
+    [stopEl.start, stopEl.start + stopEl.beat("lit")],
+    [0, 1],
+    CLAMP,
+  );
 
   const headSize = Math.min(height * 0.098, width * 0.055);
   const headW = width - (leftX + r * 1.36) - width * 0.03;
   const driftAt = (tt: number) =>
-    interpolate(tt, [76, 170], [0, -6 * u], CLAMP);
+    interpolate(tt, [driftEl.start, driftEl.end], [0, -6 * u], CLAMP);
   const headDrift = driftAt(t);
   const headMoving =
     moves((tt) => camera(tt).cx, t, speed) ||
@@ -505,6 +571,7 @@ export function ClockSweep({
         >
           <Dial
             t={t}
+            tl={tl}
             r={r}
             value={value}
             minutes={total}
@@ -542,17 +609,14 @@ export function ClockSweep({
         >
           <Headline
             t={t}
-            title={
-              title ??
-              `From idea to video\nin ${minutes} ${minutes === 1 ? "minute" : "minutes"}`
-            }
+            title={headlineOf(title, minutes)}
             minutes={minutes}
             size={headSize}
             p={p}
             fg={fg}
             fontFamily={fontFamily}
             fontWeight={fontWeight}
-            stagger={stagger}
+            words={tl.lane("Words")}
           />
         </div>
       </ScaleLayer>

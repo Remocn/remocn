@@ -16,6 +16,8 @@ import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import { type MacroClickElementId, macroClickTimeline } from "./timeline";
 
 const geist = loadGeist("normal", {
   weights: ["300", "400"],
@@ -32,20 +34,6 @@ const CAM = Easing.bezier(0.87, 0, 0.13, 1);
 const HEAVY = { mass: 1, damping: 26, stiffness: 120 };
 const CARD = { mass: 0.8, damping: 18, stiffness: 160 };
 const CHIP = { mass: 0.5, damping: 12, stiffness: 200 };
-
-const B = {
-  pan: 0,
-  cursor: 6,
-  hover: 30,
-  press: 36,
-  busy: 40,
-  live: 60,
-  url: 64,
-  pull: 72,
-  title: 84,
-  toast: 102,
-  end: 150,
-};
 
 const ramp = (f: number, start: number, dur: number, easing = ENTER) =>
   interpolate(f, [start, start + dur], [0, 1], {
@@ -191,6 +179,12 @@ export interface MacroClickProps {
   speed?: number;
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
+  /**
+   * Moves, trims or stretches the pan, the cursor, the click and the button's
+   * states, the pull back, the title and the toast, by the ids in
+   * `./timeline`. Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<MacroClickElementId>;
 }
 
 /** The foreground at `scale`, around the frame's center; nothing extra at 1. */
@@ -209,35 +203,53 @@ function ScaleLayer({
   );
 }
 
-export function MacroClick({
-  theme = "dark",
-  accent = "#3B5BFD",
-  title = "One click. It's live.",
-  docTitle = "Launch site",
-  publishLabel = "Publish",
-  busyLabel = "Publishing",
-  liveLabel = "Live",
-  url = "remocn.dev/launch",
-  toast = "Your site is live",
-  pages = ["Home", "Pricing", "Changelog", "Docs"],
-  heroLine = "Ship the launch today.",
-  heroSub = "Write the brief, pick the beats and render the film before lunch.",
-  ctaLabel = "Start free",
-  inviteLabel = "Invite",
-  src = staticFile("templates/launch-anything/horizon.jpg"),
-  ink,
-  background,
-  fontFamily = geist.fontFamily,
-  logo,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  ground,
-  groundParams,
-}: MacroClickProps) {
+export function MacroClick(props: MacroClickProps) {
+  const {
+    theme = "dark",
+    accent = "#3B5BFD",
+    title = "One click. It's live.",
+    docTitle = "Launch site",
+    publishLabel = "Publish",
+    busyLabel = "Publishing",
+    liveLabel = "Live",
+    url = "remocn.dev/launch",
+    toast = "Your site is live",
+    pages = ["Home", "Pricing", "Changelog", "Docs"],
+    heroLine = "Ship the launch today.",
+    heroSub = "Write the brief, pick the beats and render the film before lunch.",
+    ctaLabel = "Start free",
+    inviteLabel = "Invite",
+    src = staticFile("templates/launch-anything/horizon.jpg"),
+    ink,
+    background,
+    fontFamily = geist.fontFamily,
+    logo,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    ground,
+    groundParams,
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width, height, fps } = useSceneConfig();
+  const { width, height, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    macroClickTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const pan = tl.get("pan");
+  const cursor = tl.get("cursor");
+  const hover = tl.get("hover");
+  const press = tl.get("press");
+  const busy = tl.get("busy");
+  const live = tl.get("live");
+  const urlEl = tl.get("url");
+  const pullEl = tl.get("pull");
+  const titleEl = tl.get("title");
+  const toastEl = tl.get("toast");
   const dark = theme === "dark";
   const portrait = height > width * 1.2;
   const stageW = portrait ? 1080 : 1280;
@@ -264,31 +276,48 @@ export function MacroClick({
   const btnY = (barH - btnH) / 2;
   const target = { x: btnX + btnW / 2, y: btnY + btnH / 2 };
 
-  const pressDip = spring({ frame: frame - B.press, fps, config: CHIP });
-  const pressUp = spring({ frame: frame - B.press - 4, fps, config: CHIP });
+  const pressDip = spring({ frame: frame - press.start, fps, config: CHIP });
+  const pressUp = spring({
+    frame: frame - press.start - press.beat("release"),
+    fps,
+    config: CHIP,
+  });
   const st: WindowState = {
-    hover: ramp(frame, B.hover - 3, 6),
+    hover: ramp(frame, hover.start, hover.length),
     pressScale: 1 - 0.07 * pressDip + 0.07 * pressUp,
-    busy: ramp(frame, B.busy, 6) * (1 - ramp(frame, B.live, 6)),
-    live: spring({ frame: frame - B.live, fps, config: CHIP }),
-    url: spring({ frame: frame - B.url, fps, config: CARD }),
+    busy:
+      ramp(frame, busy.start, busy.beat("fade")) *
+      (1 - ramp(frame, live.start, live.beat("fade"))),
+    live: spring({ frame: frame - live.start, fps, config: CHIP }),
+    url: spring({ frame: frame - urlEl.start, fps, config: CARD }),
     spin: frame * 22,
   };
 
-  const pull = ramp(frame, B.pull, 36, CAM);
-  const pullPrev = ramp(frame - 1, B.pull, 36, CAM);
-  const settle = spring({ frame: frame - B.pull - 10, fps, config: HEAVY });
+  const pull = ramp(frame, pullEl.start, pullEl.length, CAM);
+  const pullPrev = ramp(frame - 1, pullEl.start, pullEl.length, CAM);
+  const settle = spring({
+    frame: frame - pullEl.start - pullEl.beat("settle"),
+    fps,
+    config: HEAVY,
+  });
   const zEnd = portrait ? 0.88 : 1;
   const zStart = portrait ? 3.6 : 3.3;
   const breath =
-    0.02 * ramp(frame, B.pull + 36, B.end - B.pull - 36, Easing.linear);
+    0.02 * ramp(frame, pullEl.end, pullEl.beat("breath"), Easing.linear);
   const Z =
     mix(zStart, zEnd, pull) *
     (1 + breath) *
-    (1 + 0.03 * ramp(frame, 0, B.pull, Easing.linear) * (1 - pull));
+    (1 +
+      0.03 *
+        ramp(frame, pan.start, pullEl.start - pan.start, Easing.linear) *
+        (1 - pull));
 
   const panFocus = {
-    x: mix(target.x - 210, target.x - 20, ramp(frame, B.pan, 34, MOVE)),
+    x: mix(
+      target.x - 210,
+      target.x - 20,
+      ramp(frame, pan.start, pan.length, MOVE),
+    ),
     y: target.y + 6,
   };
   const screenFocus = { x: stageW / 2, y: portrait ? 900 : 380 };
@@ -318,20 +347,24 @@ export function MacroClick({
 
   const cursorStart = { x: target.x + 160, y: target.y + 150 };
   const cursorEnd = { x: target.x + 8, y: target.y + 6 };
-  const cP = ramp(frame, B.cursor, 24, MOVE);
-  const cPrev = ramp(frame - 1, B.cursor, 24, MOVE);
-  const cX =
-    mix(cursorStart.x, cursorEnd.x, cP) +
-    30 * ramp(frame, B.live + 6, 18, MOVE);
+  const cP = ramp(frame, cursor.start, cursor.length, MOVE);
+  const cPrev = ramp(frame - 1, cursor.start, cursor.length, MOVE);
+  const drift = ramp(
+    frame,
+    live.start + live.beat("drift"),
+    live.beat("driftLen"),
+    MOVE,
+  );
+  const cX = mix(cursorStart.x, cursorEnd.x, cP) + 30 * drift;
   const cY =
     mix(cursorStart.y, cursorEnd.y, cP) -
     Math.sin(Math.PI * cP) * 30 +
-    24 * ramp(frame, B.live + 6, 18, MOVE);
+    24 * drift;
   const cBlur = Math.min(3, Math.abs(cP - cPrev) * 220 * 0.04);
   const cScale = 1 - 0.14 * pressDip + 0.14 * pressUp;
 
-  const toastIn = spring({ frame: frame - B.toast, fps, config: CHIP });
-  const titleIn = ramp(frame, B.title, 15);
+  const toastIn = spring({ frame: frame - toastEl.start, fps, config: CHIP });
+  const titleIn = ramp(frame, titleEl.start, titleEl.length);
 
   const renderWindow = (sharp: boolean) => {
     const pubBg = dark ? "#f4f5f8" : "#0f1015";
@@ -1016,8 +1049,13 @@ export function MacroClick({
                   left: cursorEnd.x,
                   top: cursorEnd.y,
                   opacity:
-                    ramp(frame, B.cursor, 4) *
-                    (1 - ramp(frame, B.pull + 18, 9)),
+                    ramp(frame, cursor.start, cursor.beat("fade")) *
+                    (1 -
+                      ramp(
+                        frame,
+                        pullEl.start + pullEl.beat("cursorOut"),
+                        pullEl.beat("cursorOutLen"),
+                      )),
                   transform: `translate(${cX - cursorEnd.x}px, ${cY - cursorEnd.y}px) scale(${cScale})`,
                   transformOrigin: "20% 15%",
                   filter: cBlur > 0.3 ? `blur(${cBlur}px)` : undefined,
@@ -1032,7 +1070,7 @@ export function MacroClick({
                   bottom: 26,
                   transform: `translateX(-50%) translateY(${mix(30, 0, toastIn)}px) scale(${mix(0.86, 1, toastIn)})`,
                   opacity: Math.min(1, toastIn * 1.4),
-                  display: frame >= B.toast ? "flex" : "none",
+                  display: frame >= toastEl.start ? "flex" : "none",
                   alignItems: "center",
                   gap: 12,
                   height: 46,

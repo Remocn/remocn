@@ -4,6 +4,11 @@ import { useMemo } from "react";
 import { Easing, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  type OutlineFillTrackTextElementId,
+  outlineFillTrackTextTimeline,
+} from "./timeline";
 
 export interface OutlineFillTrackTextProps {
   leadText?: string;
@@ -23,15 +28,15 @@ export interface OutlineFillTrackTextProps {
   fillDuration?: number;
   speed?: number;
   className?: string;
+  /**
+   * Moves, trims or stretches the lead word, the track and the value fill,
+   * by the ids in `./timeline`. Frames on the scene timeline, after `speed`.
+   */
+  timing?: Timing<OutlineFillTrackTextElementId>;
 }
 
 export const outlineFillTrackTextLength = 80;
 
-const ENTER_END = 16;
-const TRACK_START = 16;
-const TRACK_END = 72;
-const FILL_START = 34;
-const FILL_PREFILL = 10;
 const FONT_FAMILY = "Arial, Helvetica, sans-serif";
 const clamp = {
   extrapolateLeft: "clamp" as const,
@@ -55,34 +60,43 @@ function estimateTextWidth(
   return context.measureText(text).width;
 }
 
-export function OutlineFillTrackText({
-  leadText = "Keep",
-  valueText = "1000000000%",
-  fontSize = 368,
-  fontWeight = 700,
-  color = "#f4f3f6",
-  outlineColor = "#e6e2ed",
-  outlineWidth = 3,
-  backgroundColor = "#030012",
-  glowColor = "#64109a",
-  enterOffset = 240,
-  anchorOffsetX = -84,
-  trackDistance = 0,
-  wordGap = 220,
-  endPadding = 96,
-  fillDuration = 38,
-  speed = 1,
-  className,
-}: OutlineFillTrackTextProps) {
+export function OutlineFillTrackText(props: OutlineFillTrackTextProps) {
+  const {
+    leadText = "Keep",
+    valueText = "1000000000%",
+    fontSize = 368,
+    fontWeight = 700,
+    color = "#f4f3f6",
+    outlineColor = "#e6e2ed",
+    outlineWidth = 3,
+    backgroundColor = "#030012",
+    glowColor = "#64109a",
+    enterOffset = 240,
+    anchorOffsetX = -84,
+    trackDistance = 0,
+    wordGap = 220,
+    endPadding = 96,
+    speed = 1,
+    className,
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = useSceneFrame() * Math.max(speed, 0);
-  const { width: compositionWidth } = useSceneConfig();
+  const { width: compositionWidth, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    outlineFillTrackTextTimeline,
+    props,
+    durationInFrames * Math.max(speed, 0),
+    timing,
+  );
+  const enter = tl.get("enter");
+  const track = tl.get("track");
+  const fill = tl.get("fill");
   const safeFontSize = Math.max(fontSize, 1);
   const safeFontWeight = Math.max(fontWeight, 1);
   const safeOutlineWidth = Math.max(outlineWidth, 0);
   const safeGap = Math.max(wordGap, 0);
   const safeEndPadding = Math.max(endPadding, 0);
-  const safeFillDuration = Math.max(fillDuration, 1);
 
   const measurements = useMemo(() => {
     const leadWidth = estimateTextWidth(leadText, safeFontSize, safeFontWeight);
@@ -104,17 +118,17 @@ export function OutlineFillTrackText({
     anchorX + measurements.valueWidth / 2 - (compositionWidth - safeEndPadding),
   );
   const travelDistance = valueOffset + trailingOverflow;
-  const enterProgress = interpolate(frame, [0, ENTER_END], [0, 1], {
+  const enterProgress = interpolate(frame, [enter.start, enter.end], [0, 1], {
     ...clamp,
     easing: Easing.bezier(0.16, 0.84, 0.24, 1),
   });
-  const trackProgress = interpolate(frame, [TRACK_START, TRACK_END], [0, 1], {
+  const trackProgress = interpolate(frame, [track.start, track.end], [0, 1], {
     ...clamp,
     easing: Easing.bezier(0.42, 0, 0.58, 1),
   });
   const fillProgress = interpolate(
     frame,
-    [FILL_START - FILL_PREFILL, FILL_START + safeFillDuration],
+    [fill.start, fill.end],
     [0, 1],
     clamp,
   );
@@ -194,7 +208,8 @@ export function OutlineFillTrackText({
             top: 0,
             left: valueOffset,
             transform: "translate3d(-50%, -50%, 0)",
-            visibility: frame < FILL_START ? "hidden" : "visible",
+            visibility:
+              frame < fill.start + fill.beat("show") ? "hidden" : "visible",
           }}
         >
           <span

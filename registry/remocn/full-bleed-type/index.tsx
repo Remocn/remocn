@@ -6,6 +6,13 @@ import { useId } from "react";
 import { AbsoluteFill, Easing, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_WORDS,
+  type FullBleedTypeElementId,
+  fullBleedTypeTimeline,
+  wordList,
+} from "./timeline";
 
 const { fontFamily: display } = loadFont("normal", {
   weights: ["500"],
@@ -32,6 +39,12 @@ export interface FullBleedTypeProps {
   delay?: number;
   theme?: "dark" | "light";
   speed?: number;
+  /**
+   * Moves, trims or stretches each word's slam, the sunrise climb and the
+   * lock, by the ids in `./timeline`. Frames on the scene timeline, after
+   * `delay` and `speed`.
+   */
+  timing?: Timing<FullBleedTypeElementId>;
 }
 
 // Barlow Condensed 500, per 1000 em, chars 32–126 (harfbuzz): advance, left and right side bearing.
@@ -119,11 +132,6 @@ const TRACK = -0.01;
 //          justified edge to edge, so each word lands in a fixed grid slot
 //  46–58   the stack locks: the open leading between rows closes up
 //  58–     poster hold
-const FIRST_AT = -2;
-const SLAM_LEN = 8;
-const SETTLE_LEN = 6;
-const LOCK_LEN = 12;
-
 const SLAM = Easing.bezier(0.2, 0.9, 0.35, 1);
 const SETTLE = Easing.bezier(0.45, 0, 0.55, 1);
 const LOCK = Easing.bezier(0.65, 0, 0.2, 1);
@@ -240,28 +248,36 @@ function ScaleLayer({
   );
 }
 
-export function FullBleedType({
-  words = ["NO", "DAYS", "OFF", "SHIP"],
-  beat = 11,
-  slam: slamLen = SLAM_LEN,
-  ink,
-  background,
-  fontFamily = display,
-  scale = 1,
-  delay = 0,
-  theme = "dark",
-  speed = 1,
-}: FullBleedTypeProps) {
+export function FullBleedType(props: FullBleedTypeProps) {
+  const {
+    words = DEFAULT_WORDS,
+    ink,
+    background,
+    fontFamily = display,
+    scale = 1,
+    delay = 0,
+    theme = "dark",
+    speed = 1,
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H } = useSceneConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    fullBleedTypeTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const lockEl = tl.get("lock");
+  const climbEl = tl.get("climb");
   const c = THEMES[theme];
   const fg = ink ?? c.ink;
   const stage =
     background === "transparent" ? "transparent" : (background ?? c.stage);
   const gradId = `fb${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
 
-  const list = words.map((w) => w.trim().toUpperCase()).filter(Boolean);
+  const list = wordList(words);
   const margin = 0.036 * W;
   const lockGap = 0.026 * H;
   const openGap = 0.075 * H;
@@ -277,10 +293,8 @@ export function FullBleedType({
   const measure = (W - 2 * margin) * fit;
   const left = (W - measure) / 2;
 
-  const lastAt = FIRST_AT + (list.length - 1) * beat;
-  const lockAt = lastAt + slamLen + SETTLE_LEN;
   const lockOf = (tt: number) =>
-    LOCK(interpolate(tt, [lockAt, lockAt + LOCK_LEN], [0, 1], CLAMP));
+    LOCK(interpolate(tt, [lockEl.start, lockEl.end], [0, 1], CLAMP));
   const lock = lockOf(t);
   const gap = openGap + (lockGap * fit - openGap) * lock;
   // Rows stepped by `y` as the stack locks count as moving from the frame
@@ -302,15 +316,16 @@ export function FullBleedType({
       const x = penX + row.offsets[j] * fs;
       const w = advance(word) * fs;
       const fromLeft = id % 2 === 0;
-      const at = FIRST_AT + id * beat;
+      const slamEl = tl.get(`word:${id}`);
+      const at = slamEl.start;
       const enter = fromLeft ? -(x + w) - 0.04 * W : W - x + 0.04 * W;
       const over = (fromLeft ? 1 : -1) * 0.011 * W;
       const dxAt = (tt: number) => {
-        const slam = SLAM(interpolate(tt, [at, at + slamLen], [0, 1], CLAMP));
+        const slam = SLAM(interpolate(tt, [at, slamEl.end], [0, 1], CLAMP));
         const settle = SETTLE(
           interpolate(
             tt,
-            [at + slamLen, at + slamLen + SETTLE_LEN],
+            [slamEl.end, slamEl.end + slamEl.beat("settle")],
             [0, 1],
             CLAMP,
           ),
@@ -339,7 +354,7 @@ export function FullBleedType({
   // shot, so the word warms up while it holds.
   const hero = glyphs[glyphs.length - 1];
   const heroCap = hero ? CAP * hero.fs : 0;
-  const climb = interpolate(t, [lastAt, lockAt + LOCK_LEN + 30], [0, 1], {
+  const climb = interpolate(t, [climbEl.start, climbEl.end], [0, 1], {
     ...CLAMP,
     easing: Easing.bezier(0.33, 0, 0.3, 1),
   });

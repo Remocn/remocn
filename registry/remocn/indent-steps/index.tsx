@@ -7,6 +7,13 @@ import { Fragment, useId } from "react";
 import { AbsoluteFill, Easing, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_LINES,
+  type IndentStepsElementId,
+  indentStepsTimeline,
+  shownLines,
+} from "./timeline";
 
 const hanken = loadHanken("normal", {
   weights: ["500"],
@@ -41,6 +48,11 @@ export interface IndentStepsProps {
   grain?: boolean;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches single lines and the light, by the ids in
+   * `./timeline`. Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<IndentStepsElementId>;
 }
 
 const FLUTED = ["#1d2a8f", "#2f7bff", "#ff7a3d", "#ffe2c4"] as const;
@@ -185,32 +197,38 @@ function ScaleLayer({
   );
 }
 
-export function IndentSteps({
-  lines = ["Write it in React.", "Render it in Remotion.", "Ship it tonight."],
-  highlight = "tonight",
-  lineNumbers = true,
-  exit = false,
-  stagger = 20,
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = hanken.fontFamily,
-  scale = 1,
-  delay = 0,
-  grain = true,
-  speed = 1,
-  theme = "dark",
-}: IndentStepsProps) {
+export function IndentSteps(props: IndentStepsProps) {
+  const {
+    lines = DEFAULT_LINES,
+    highlight = "tonight",
+    lineNumbers = true,
+    exit = false,
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = hanken.fontFamily,
+    scale = 1,
+    delay = 0,
+    grain = true,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   // The exit stays pinned to the end of the clip, so it reads the undelayed frame.
   const now = useSceneFrame();
   const raw = Math.max(0, now - delay);
   const frame = raw * speed;
   const { width, height, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    indentStepsTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const p = PALETTES[theme];
   const fg = ink ?? p.fg;
-  const logical = lines.slice(0, 5);
-  const n = Math.max(1, logical.length);
+  const logical = shownLines(lines);
 
   const portrait = height > width * 1.1;
   const s = portrait
@@ -258,10 +276,9 @@ export function IndentSteps({
     return { first, count: rows.filter((r) => r.line === i).length };
   });
 
-  const beat = n > 1 ? Math.min(stagger, 60 / (n - 1)) : stagger;
-  const enter = (i: number) => 4 + i * beat;
-  const tabAt = (i: number) => enter(i) + Math.min(10, beat * 0.5);
-  const done = n > 1 ? tabAt(n - 1) + 8 : enter(0) + 16;
+  const lineAt = (i: number) => tl.get(`line:${i}`);
+  const enter = (i: number) => lineAt(i).start;
+  const tabAt = (i: number) => lineAt(i).start + lineAt(i).beat("tab");
   const EXIT = 18;
   const exitStart = durationInFrames - EXIT;
   const outdent = exit
@@ -282,7 +299,8 @@ export function IndentSteps({
           },
         )
       : 0;
-  const lightT = interpolate(frame, [done - 4, done + 18], [0, 1], {
+  const light = tl.get("light");
+  const lightT = interpolate(frame, [light.start, light.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
@@ -290,16 +308,26 @@ export function IndentSteps({
 
   const indent = (i: number) => {
     if (i === 0) return 0;
-    const snap = interpolate(frame, [tabAt(i), tabAt(i) + 8], [0, 1], {
-      ...CLAMP,
-      easing: EASE_SNAP,
-    });
+    const snap = interpolate(
+      frame,
+      [tabAt(i), tabAt(i) + lineAt(i).beat("snap")],
+      [0, 1],
+      {
+        ...CLAMP,
+        easing: EASE_SNAP,
+      },
+    );
     return (i - 1 + snap) * (1 - outdent);
   };
   const rise = (row: Row) =>
     interpolate(
       frame,
-      [enter(row.line) + row.sub * 2, enter(row.line) + row.sub * 2 + 16],
+      [
+        enter(row.line) + row.sub * lineAt(row.line).beat("wrap"),
+        enter(row.line) +
+          row.sub * lineAt(row.line).beat("wrap") +
+          lineAt(row.line).beat("rise"),
+      ],
       [0, 1],
       {
         ...CLAMP,

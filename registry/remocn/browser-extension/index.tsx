@@ -9,6 +9,16 @@ import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
+import {
+  type ResolvedElement,
+  type Timing,
+  useTimeline,
+} from "@/lib/remocn/timeline";
+import {
+  type BrowserExtensionElementId,
+  browserExtensionTimeline,
+  DEFAULT_HIGHLIGHTS,
+} from "./timeline";
 
 const { fontFamily: instrument } = loadFont("normal", {
   weights: ["400"],
@@ -55,6 +65,12 @@ export interface BrowserExtensionProps {
   speed?: number;
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
+  /**
+   * Moves, trims or stretches the cursor's clicks, the reading, single
+   * highlights, the summary, the saved state and the toast, by the ids in
+   * `./timeline`. Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<BrowserExtensionElementId>;
 }
 
 const DEFAULT_PARAGRAPHS = [
@@ -62,11 +78,6 @@ const DEFAULT_PARAGRAPHS = [
   "Small teams win because context never has to travel. When the person who talks to customers is the person who writes the code, a bug report becomes a fix before lunch. Nobody writes a ticket about a ticket.",
   "That speed compounds. A team that ships twenty small releases learns twenty times; a team that ships one big release learns once, usually too late to change course.",
   "The lesson is not to stay small forever. It is to protect the short loop as you grow: fewer handoffs, smaller batches, and owners who can ship without asking.",
-];
-const DEFAULT_HIGHLIGHTS = [
-  "they were the ones with the shortest distance between a decision and a deploy.",
-  "Small teams win because context never has to travel.",
-  "A team that ships twenty small releases learns twenty times",
 ];
 const DEFAULT_SUMMARY = [
   "Weekly shippers keep the loop from decision to deploy short.",
@@ -116,18 +127,6 @@ const popOf = (w: number) => {
   const ext = extOf(w);
   const right = w - (ext.x + ext.s) - 8;
   return { x: w - right - POP_W, top: CHROME + 6 };
-};
-
-const T = {
-  click: 30,
-  read: 36,
-  hl: [54, 66, 78],
-  sum: 84,
-  toSave: 108,
-  save: 126,
-  saved: 138,
-  close: 160,
-  toast: 162,
 };
 
 const clampX = { extrapolateLeft: "clamp", extrapolateRight: "clamp" } as const;
@@ -415,7 +414,8 @@ function Paragraph({
   color,
 }: {
   text: string;
-  marks: { text: string; at: number }[];
+  /** Each highlight's text, first frame and frames its sweep takes. */
+  marks: { text: string; at: number; sweep: number }[];
   frame: number;
   color: string;
 }) {
@@ -426,7 +426,7 @@ function Paragraph({
     const i = rest.indexOf(m.text);
     if (i < 0) continue;
     parts.push(rest.slice(0, i));
-    const p = tween(frame, m.at, m.at + 12, moveE);
+    const p = tween(frame, m.at, m.at + m.sweep, moveE);
     parts.push(
       <span
         key={k++}
@@ -463,38 +463,67 @@ function ScaleLayer({
   );
 }
 
-export function BrowserExtension({
-  url = "quarry.blog/notes/why-small-teams-ship-faster",
-  siteName = "Quarry Journal",
-  kicker = "Notes · 6 min read",
-  title = "Why small teams ship faster",
-  dek = "On the short loop between a decision and a deploy.",
-  author = "Priya Raman",
-  date = "Oct 14, 2026",
-  paragraphs = DEFAULT_PARAGRAPHS,
-  highlights = DEFAULT_HIGHLIGHTS,
-  summary = DEFAULT_SUMMARY,
-  extensionName = "remocn",
-  collection = "Reading list",
-  saveLabel = "Save to remocn",
-  summaryLabel = "Summary",
-  readingLabel = "Reading page",
-  openLabel = "Open",
-  highlightColor,
-  theme = "light",
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = instrument,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  ground,
-  groundParams,
-}: BrowserExtensionProps) {
+export function BrowserExtension(props: BrowserExtensionProps) {
+  const {
+    url = "quarry.blog/notes/why-small-teams-ship-faster",
+    siteName = "Quarry Journal",
+    kicker = "Notes · 6 min read",
+    title = "Why small teams ship faster",
+    dek = "On the short loop between a decision and a deploy.",
+    author = "Priya Raman",
+    date = "Oct 14, 2026",
+    paragraphs = DEFAULT_PARAGRAPHS,
+    highlights = DEFAULT_HIGHLIGHTS,
+    summary = DEFAULT_SUMMARY,
+    extensionName = "remocn",
+    collection = "Reading list",
+    saveLabel = "Save to remocn",
+    summaryLabel = "Summary",
+    readingLabel = "Reading page",
+    openLabel = "Open",
+    highlightColor,
+    theme = "light",
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = instrument,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    ground,
+    groundParams,
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H, fps } = useSceneConfig();
+  const { width: W, height: H, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    browserExtensionTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const pageEl = tl.get("page");
+  const cameraEl = tl.get("camera");
+  const cursorEl = tl.get("cursor");
+  const clickEl = tl.get("click");
+  const readEl = tl.get("read");
+  const hl = [0, 1, 2].map((i) => tl.get(`hl:${i}`));
+  const summaryEl = tl.get("summary");
+  const moveEl = tl.get("move");
+  const saveEl = tl.get("save");
+  const savedEl = tl.get("saved");
+  const closeEl = tl.get("close");
+  const toastEl = tl.get("toast");
+  const T = {
+    click: clickEl.start,
+    read: readEl.start,
+    sum: summaryEl.start,
+    save: saveEl.start,
+    saved: savedEl.start,
+    close: closeEl.start,
+    toast: toastEl.start,
+  };
   const L = H > W ? LAYOUT_TALL : LAYOUT_WIDE;
   const WIN = L.win;
   const EXT = extOf(WIN.w);
@@ -513,16 +542,18 @@ export function BrowserExtension({
   ) => spring({ frame: f - at, fps, config, durationInFrames });
   const sp = (at: number, config: SpringCfg, durationInFrames?: number) =>
     spAt(frame, at, config, durationInFrames);
-  const tapAt = (f: number, at: number) =>
-    spAt(f, at - 2, MORPH, 3) - spAt(f, at + 2, CHIP);
-  const tap = (at: number) => tapAt(frame, at);
+  const tapAt = (f: number, e: ResolvedElement<BrowserExtensionElementId>) =>
+    spAt(f, e.start + e.beat("pressIn"), MORPH, 3) -
+    spAt(f, e.start + e.beat("pressOut"), CHIP);
+  const tap = (e: ResolvedElement<BrowserExtensionElementId>) =>
+    tapAt(frame, e);
   // The springs here overshoot, so "still moving" is read off the
   // neighbouring frames rather than off a progress value.
   const moved = (at: (f: number) => number) =>
     Math.abs(at(frame + 1) - at(frame)) > 1e-5 ||
     Math.abs(at(frame) - at(frame - 1)) > 1e-5;
 
-  const enter = sp(0, HEAVY);
+  const enter = sp(pageEl.start, HEAVY);
   const extPt = {
     x: WIN.x + EXT.x + EXT.s / 2 + 2,
     y: WIN.y + EXT.y + EXT.s / 2 + 3,
@@ -532,41 +563,77 @@ export function BrowserExtension({
     y: WIN.y + POP.top + 404,
   };
   const keys: Key[] = [
-    { t: 6, ...L.cursorFrom },
-    { t: T.click - 3, ...extPt },
-    { t: T.toSave - 12, ...extPt },
-    { t: T.save - 3, ...savePt },
-    { t: T.saved + 8, ...savePt },
-    { t: T.saved + 34, x: savePt.x + 60, y: savePt.y + 150 },
+    { t: cursorEl.start + cursorEl.beat("moveAt"), ...L.cursorFrom },
+    { t: T.click + clickEl.beat("arriveAt"), ...extPt },
+    { t: moveEl.start, ...extPt },
+    { t: T.save + saveEl.beat("arriveAt"), ...savePt },
+    { t: T.saved + savedEl.beat("leaveAt"), ...savePt },
+    {
+      t: T.saved + savedEl.beat("exitAt"),
+      x: savePt.x + 60,
+      y: savePt.y + 150,
+    },
   ];
   const cur = pathAt(keys, frame);
-  const press = Math.max(tap(T.click), tap(T.save));
+  const press = Math.max(tap(clickEl), tap(saveEl));
   const cursorOp =
-    tween(frame, 4, 10) * (1 - tween(frame, T.saved + 28, T.saved + 36, exitE));
+    tween(frame, cursorEl.start, cursorEl.start + cursorEl.beat("fadeIn")) *
+    (1 -
+      tween(
+        frame,
+        T.saved + savedEl.beat("fadeAt"),
+        T.saved + savedEl.beat("fadeEnd"),
+        exitE,
+      ));
   const hoverExt =
-    tween(frame, T.click - 7, T.click - 3) *
-    (1 - tween(frame, T.toSave - 10, T.toSave - 6));
+    tween(
+      frame,
+      T.click + clickEl.beat("hoverAt"),
+      T.click + clickEl.beat("arriveAt"),
+    ) *
+    (1 -
+      tween(
+        frame,
+        moveEl.start + moveEl.beat("unhoverAt"),
+        moveEl.start + moveEl.beat("unhoverEnd"),
+      ));
 
-  const open = sp(T.click + 1, CARD);
-  const closeP = tween(frame, T.close, T.close + 7, exitE);
-  const popOp = tween(frame, T.click + 1, T.click + 5) * (1 - closeP);
-  const reading = tween(frame, T.read, T.hl[0] - 2, moveE);
-  const hlCount = T.hl.filter((t) => frame >= t + 6).length;
-  const sumIn = (i: number) => tween(frame, T.sum + i * 3, T.sum + i * 3 + 10);
-  const saveHover = tween(frame, T.save - 6, T.save - 2);
-  const saving = frame >= T.save + 1 && frame < T.saved;
+  const openAt = T.click + clickEl.beat("openAt");
+  const open = sp(openAt, CARD);
+  const closeP = tween(frame, closeEl.start, closeEl.end, exitE);
+  const popOp =
+    tween(frame, openAt, openAt + clickEl.beat("popIn")) * (1 - closeP);
+  const reading = tween(frame, readEl.start, readEl.end, moveE);
+  const hlCount = hl.filter((e) => frame >= e.start + e.beat("count")).length;
+  const sumIn = (i: number) =>
+    tween(
+      frame,
+      T.sum + i * summaryEl.beat("item"),
+      T.sum + i * summaryEl.beat("item") + summaryEl.beat("itemIn"),
+    );
+  const saveHover = tween(
+    frame,
+    T.save + saveEl.beat("hoverAt"),
+    T.save + saveEl.beat("hoverEnd"),
+  );
+  const saving = frame >= T.save + saveEl.beat("spinAt") && frame < T.saved;
   const saved = frame >= T.saved;
   const savedIn = sp(T.saved, CHIP);
   const toast = sp(T.toast, CARD);
-  const toastOp = tween(frame, T.toast, T.toast + 6);
+  const toastOp = tween(frame, toastEl.start, toastEl.end);
 
-  const marks = highlights.map((h, i) => ({
-    text: h,
-    at: T.hl[i] ?? T.hl[T.hl.length - 1] + i * 10,
-  }));
-  const scrollP = tween(frame, T.hl[1] - 4, T.hl[2] + 6, moveE);
+  const marks = highlights.map((h, i) => {
+    const e = tl.get(`hl:${i}`);
+    return { text: h, at: e.start, sweep: e.length };
+  });
+  const scrollP = tween(
+    frame,
+    hl[1].start + hl[1].beat("scrollAt"),
+    hl[2].start + hl[2].beat("scrollEnd"),
+    moveE,
+  );
   const scroll = 52 * scrollP;
-  const camP = tween(frame, 0, 200, camE);
+  const camP = tween(frame, cameraEl.start, cameraEl.end, camE);
   const cam = 1 + 0.03 * camP;
   const favicon = (size: number) => (
     <div
@@ -777,7 +844,7 @@ export function BrowserExtension({
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    transform: `scale(${1 - 0.04 * tap(T.click)})`,
+                    transform: `scale(${1 - 0.04 * tap(clickEl)})`,
                   }}
                 >
                   <ExtMark accent={accent} size={18} />
@@ -963,7 +1030,7 @@ export function BrowserExtension({
                     background: pal.pop,
                     boxShadow: pal.popShadow,
                     opacity: popOp,
-                    transform: `translateY(${(1 - open) * -8 - closeP * 6}px) scale(${0.94 + 0.06 * open - 0.03 * closeP})${glide(moved((f) => spAt(f, T.click + 1, CARD)) || midway(closeP))}`,
+                    transform: `translateY(${(1 - open) * -8 - closeP * 6}px) scale(${0.94 + 0.06 * open - 0.03 * closeP})${glide(moved((f) => spAt(f, openAt, CARD)) || midway(closeP))}`,
                     transformOrigin: `${EXT.x + EXT.s / 2 - POP.x}px -8px`,
                     overflow: "hidden",
                   }}
@@ -1067,7 +1134,14 @@ export function BrowserExtension({
                         borderRadius: 99,
                         background: pal.well,
                         overflow: "hidden",
-                        opacity: 1 - tween(frame, T.hl[0], T.hl[0] + 6, exitE),
+                        opacity:
+                          1 -
+                          tween(
+                            frame,
+                            hl[0].start,
+                            hl[0].start + hl[0].beat("barOut"),
+                            exitE,
+                          ),
                       }}
                     >
                       <div
@@ -1123,7 +1197,7 @@ export function BrowserExtension({
                           </div>
                         );
                       })}
-                      {frame < T.sum + 6 ? (
+                      {frame < T.sum + summaryEl.beat("statusGone") ? (
                         <div
                           style={{
                             position: "absolute",
@@ -1132,8 +1206,20 @@ export function BrowserExtension({
                             flexDirection: "column",
                             gap: 12,
                             opacity:
-                              tween(frame, T.read + 4, T.read + 10) *
-                              (1 - tween(frame, T.sum - 2, T.sum + 4, exitE)),
+                              tween(
+                                frame,
+                                T.read + readEl.beat("statusAt"),
+                                T.read +
+                                  readEl.beat("statusAt") +
+                                  readEl.beat("status"),
+                              ) *
+                              (1 -
+                                tween(
+                                  frame,
+                                  T.sum + summaryEl.beat("statusOutAt"),
+                                  T.sum + summaryEl.beat("statusOutEnd"),
+                                  exitE,
+                                )),
                           }}
                         >
                           {[92, 74, 86, 58].map((w) => (
@@ -1187,7 +1273,7 @@ export function BrowserExtension({
                         justifyContent: "center",
                         gap: 8,
                         fontSize: 15,
-                        transform: `scale(${1 - 0.04 * tap(T.save)})${glide(moved((f) => tapAt(f, T.save)))}`,
+                        transform: `scale(${1 - 0.04 * tap(saveEl)})${glide(moved((f) => tapAt(f, saveEl)))}`,
                         filter: `brightness(${saved ? 1 : 1 - 0.08 * saveHover})`,
                       }}
                     >

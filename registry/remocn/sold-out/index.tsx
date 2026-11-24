@@ -7,6 +7,17 @@ import { useId } from "react";
 import { AbsoluteFill, Easing, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import {
+  type ResolvedElement,
+  type Timing,
+  useTimeline,
+} from "@/lib/remocn/timeline";
+import {
+  LOW,
+  type SoldOutElementId,
+  soldOutTimeline,
+  totalOf,
+} from "./timeline";
 
 const { fontFamily: sans } = loadFont("normal", {
   weights: ["400", "500"],
@@ -49,6 +60,12 @@ export interface SoldOutProps {
   delay?: number;
   theme?: "dark" | "light";
   speed?: number;
+  /**
+   * Moves, trims or stretches the punch-in, the race, single ticks, the
+   * hold at zero, the band, the tag and the subline, by the ids in
+   * `./timeline`. Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<SoldOutElementId>;
 }
 
 // Archivo 500 (fontTools, wght 500, wdth 100): cap 0.686; figures 0.57em,
@@ -87,13 +104,6 @@ const textEm = (s: string, track = 0) => {
 //  86–92   "0 LEFT" holds, trembling
 //  92–98   the SOLD OUT band slams across on the diagonal, big hit
 // 104–     subline rises; poster hold, the band's gradient drifts
-const ENTER_LEN = 9;
-const RACE_AT = 10;
-const RACE_END = 56;
-const TICK = 3;
-const LOW = 10;
-const ZERO_HOLD = 6;
-const BAND_LEN = 6;
 
 const SLAM = Easing.bezier(0.22, 1, 0.36, 1);
 const RACE = Easing.bezier(0.55, 0, 0.35, 1);
@@ -149,18 +159,27 @@ function shake(d: number, amp: number, seed: number) {
   };
 }
 
-/** Continuous stock level at time t (reels read this). */
-function level(t: number, stock: number) {
+/**
+ * Continuous stock level at time t (reels read this), from the race and the
+ * ticks of the schedule.
+ */
+function level(
+  t: number,
+  stock: number,
+  race: ResolvedElement<SoldOutElementId>,
+  ticks: ResolvedElement<SoldOutElementId>[],
+) {
   const low = Math.min(LOW, stock);
-  if (t < RACE_AT) return stock;
-  if (t < RACE_END) {
-    const p = RACE((t - RACE_AT) / (RACE_END - RACE_AT));
+  if (t < race.start) return stock;
+  if (t < race.end) {
+    const p = RACE((t - race.start) / race.length);
     return stock - (stock - low) * p;
   }
   // ten hard ticks: each one rolls its reel in 2 frames
-  const d = t - RACE_END;
-  const k = Math.floor(d / TICK);
-  const f = Math.min(1, (d - k * TICK) / 2);
+  let k = -1;
+  for (let i = 0; i < ticks.length; i++) if (t >= ticks[i].start) k = i;
+  if (k < 0) return low;
+  const f = Math.min(1, (t - ticks[k].start) / ticks[k].beat("roll"));
   const roll = SLAM(f);
   return Math.max(0, low - k - (k < low ? roll : 0));
 }
@@ -191,38 +210,52 @@ function ScaleLayer({
   );
 }
 
-export function SoldOut({
-  stock = 128,
-  unit = "LEFT",
-  warning = "LOW STOCK",
-  stamp = "SOLD OUT",
-  lead = "Restocking:",
-  tail = "every launch.",
-  hold = ZERO_HOLD,
-  angle = -11,
-  ink,
-  background,
-  fontFamily = sans,
-  scale = 1,
-  delay = 0,
-  theme = "dark",
-  speed = 1,
-}: SoldOutProps) {
+export function SoldOut(props: SoldOutProps) {
+  const {
+    stock = 128,
+    unit = "LEFT",
+    warning = "LOW STOCK",
+    stamp = "SOLD OUT",
+    lead = "Restocking:",
+    tail = "every launch.",
+    angle = -11,
+    ink,
+    background,
+    fontFamily = sans,
+    scale = 1,
+    delay = 0,
+    theme = "dark",
+    speed = 1,
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H } = useSceneConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    soldOutTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const u = Math.min(W / 1280, H / 720);
   const c = THEMES[theme];
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
 
-  const total = Math.max(1, Math.round(stock));
+  const total = totalOf(stock);
   const low = Math.min(LOW, total);
-  const zeroAt = RACE_END + low * TICK;
-  const bandAt = zeroAt + hold;
+  const eEnter = tl.get("enter");
+  const eRace = tl.get("race");
+  const eWarning = tl.get("warning");
+  const ticks = Array.from({ length: low }, (_, k) => tl.get(`tick:${k}`));
+  const eBand = tl.get("band");
+  const eSubline = tl.get("subline");
+  const bandAt = eBand.start;
   const places = String(total).length;
 
-  const v = level(t, total);
-  const vel = Math.abs(level(t + 0.5, total) - level(t - 0.5, total));
+  const v = level(t, total, eRace, ticks);
+  const vel = Math.abs(
+    level(t + 0.5, total, eRace, ticks) - level(t - 0.5, total, eRace, ticks),
+  );
   const shown = Math.round(v);
 
   // ── Layout: figures (huge) + unit (smaller, on the same baseline) ──
@@ -251,17 +284,18 @@ export function SoldOut({
   const unitX = groupX + visible * CELL * N + gapEm * N;
 
   // ── Motion ──
-  const enter = SLAM(ramp(t, 0, ENTER_LEN));
+  const enter = SLAM(ramp(t, eEnter.start, eEnter.length));
   const enterScale = 1.25 - 0.25 * enter;
   const enterBlur = (1 - enter) * 14;
-  const isLow = v <= low + 0.01 && t >= RACE_END;
-  const lowAt = RACE_END;
+  const isLow = v <= low + 0.01 && t >= eRace.end;
+  const lowAt = eWarning.start;
   const drain = 1 - v / total;
-  const band = SLAM(ramp(t, bandAt, BAND_LEN));
+  const band = SLAM(ramp(t, bandAt, eBand.length));
   const camAt = (tt: number) => {
     // the tremble grows as the stock drains, then drops away under the band
-    const dr = 1 - level(tt, total) / total;
-    const tremble = 9 * u * dr ** 2.2 * (1 - ramp(tt, bandAt, 4));
+    const dr = 1 - level(tt, total, eRace, ticks) / total;
+    const tremble =
+      9 * u * dr ** 2.2 * (1 - ramp(tt, bandAt, eBand.beat("calm")));
     let x =
       tremble *
       (0.6 * Math.sin(tt * 2.31 + 0.4) + 0.4 * Math.sin(tt * 5.17 + 1.3));
@@ -270,7 +304,7 @@ export function SoldOut({
       (0.6 * Math.cos(tt * 2.83 + 2.1) + 0.4 * Math.sin(tt * 4.41 + 0.2));
     let bump = 0;
     for (let k = 0; k < low; k++) {
-      const d = tt - (RACE_END + k * TICK);
+      const d = tt - ticks[k].start;
       if (d < 0 || d > 12) continue;
       const g = 0.5 + (0.7 * k) / Math.max(1, low - 1);
       bump = Math.max(bump, 0.6 * g * kick(d));
@@ -278,7 +312,7 @@ export function SoldOut({
       x += s.x;
       y += s.y;
     }
-    const hitD = tt - bandAt - BAND_LEN + 2;
+    const hitD = tt - bandAt - eBand.length + 2;
     bump = Math.max(bump, 1.5 * kick(hitD));
     const s3 = shake(hitD, 16 * u, 3.3);
     x += s3.x;
@@ -300,7 +334,11 @@ export function SoldOut({
     camShift(t + speed, t) > 1e-3 || camShift(t, t - speed) > 1e-3;
   const flash = interpolate(
     t,
-    [bandAt + BAND_LEN - 2, bandAt + BAND_LEN - 1, bandAt + BAND_LEN + 3],
+    [
+      bandAt + eBand.length - 2,
+      bandAt + eBand.length - 1,
+      bandAt + eBand.length + 3,
+    ],
     [0, 0.32, 0],
     CLAMP,
   );
@@ -310,10 +348,11 @@ export function SoldOut({
   const sinceLow = t - lowAt;
   const tagOn =
     t >= lowAt &&
-    t < bandAt + 4 &&
-    (sinceLow >= 24 || Math.floor(sinceLow / 4) % 2 === 0);
-  const tagPop = SLAM(ramp(t, lowAt, 4));
-  const behind = ramp(t, bandAt + 1, 8);
+    t < bandAt + eBand.beat("tagOff") &&
+    (sinceLow >= eWarning.length ||
+      Math.floor(sinceLow / eWarning.beat("flicker")) % 2 === 0);
+  const tagPop = SLAM(ramp(t, lowAt, eWarning.beat("pop")));
+  const behind = ramp(t, bandAt + eBand.beat("behindAt"), eBand.beat("behind"));
 
   // ── Band ──
   const bandH = 0.34 * H;
@@ -321,9 +360,9 @@ export function SoldOut({
   const bandX = -1.25 * bandLen * (1 - band);
   const stampEm = textEm(stamp, -0.02);
   const stampFs = Math.min((0.9 * W) / stampEm, (bandH * 0.78) / CAP);
-  const drift = ramp(t, bandAt, 70);
+  const drift = ramp(t, bandAt, eBand.beat("drift"));
   const bandGrad = `linear-gradient(90deg, ${CHROME[0]} ${34 - 8 * drift}%, ${CHROME[1]} ${44 - 6 * drift}%, ${CHROME[2]} ${58 - 4 * drift}%, ${CHROME[3]} ${74 - 4 * drift}%)`;
-  const rise = SLAM(ramp(t, bandAt + 12, 18));
+  const rise = SLAM(ramp(t, eSubline.start, eSubline.length));
 
   const digit = (n: number) => ((n % 10) + 10) % 10;
 
@@ -363,9 +402,14 @@ export function SoldOut({
               position: "absolute",
               inset: 0,
               overflow: "visible",
-              opacity: Math.min(ramp(t, 0, 2), 1 - 0.6 * behind),
+              opacity: Math.min(
+                ramp(t, eEnter.start, eEnter.beat("show")),
+                1 - 0.6 * behind,
+              ),
               transform: `scale(${enterScale * (1 - 0.04 * behind)})${glide(
-                (midway(ramp(t, 0, ENTER_LEN)) || midway(behind)) && !camMoving,
+                (midway(ramp(t, eEnter.start, eEnter.length)) ||
+                  midway(behind)) &&
+                  !camMoving,
               )}`,
               transformOrigin: "50% 52%",
               filter: enterBlur > 0.2 ? `blur(${enterBlur * u}px)` : undefined,
@@ -485,7 +529,11 @@ export function SoldOut({
               fontWeight={500}
               fontSize={N * unitRatio}
               fill={figInk}
-              opacity={ramp(t, 2, 6)}
+              opacity={ramp(
+                t,
+                eEnter.start + eEnter.beat("unitAt"),
+                eEnter.beat("unit"),
+              )}
               style={{ letterSpacing: `${unitTrack}em` }}
             >
               {unit}

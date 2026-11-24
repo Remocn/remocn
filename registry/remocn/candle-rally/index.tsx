@@ -6,6 +6,8 @@ import { type ReactNode, useId } from "react";
 import { AbsoluteFill, Easing, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import { type CandleRallyElementId, candleRallyTimeline } from "./timeline";
 
 const { fontFamily: display } = loadFont("normal", {
   weights: ["500"],
@@ -45,6 +47,12 @@ export interface CandleRallyProps {
   /** Playback multiplier. */
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches the camera, the level, each candle, the
+   * breakout and the slam, by the ids in `./timeline`.
+   * Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<CandleRallyElementId>;
 }
 
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
@@ -55,18 +63,7 @@ const CLAMP = {
   extrapolateRight: "clamp",
 } as const;
 
-// Beat sheet (30fps, speed 1):
-//   0–48   ten small candles chop sideways, one every 4 frames
-//  50–82   the rally: five green candles, 6 frames apart, each bigger
-//  82–108  the last candle pushes up huge and fills with the aurora gradient;
-//          the price tag rides its wick and breaks the dashed previous high
-// 110–122  ALL-TIME / HIGH slams in, the candles fall back behind it
-// 122–     poster holds
-const RALLY_AT = 50;
-const FINAL_AT = 82;
-const FINAL_LEN = 26;
-const SLAM = 110;
-
+// The beat sheet lives in `./timeline`.
 // Candles as [open, close, high, low]; the last close is replaced by `price`.
 const CHOP: Array<[number, number, number, number]> = [
   [63.5, 66.5, 68, 62],
@@ -131,26 +128,41 @@ function ScaleLayer({
   );
 }
 
-export function CandleRally({
-  symbol = "RMCN",
-  price = 128.4,
-  prevHigh = 112,
-  headline = "All-time",
-  headline2 = "high",
-  accent = "#3B5BFD",
-  levelLabel = "PREV HIGH",
-  fontWeight = 500,
-  ink,
-  background,
-  fontFamily = display,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: CandleRallyProps) {
+export function CandleRally(props: CandleRallyProps) {
+  const {
+    symbol = "RMCN",
+    price = 128.4,
+    prevHigh = 112,
+    headline = "All-time",
+    headline2 = "high",
+    accent = "#3B5BFD",
+    levelLabel = "PREV HIGH",
+    fontWeight = 500,
+    ink,
+    background,
+    fontFamily = display,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H } = useSceneConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    candleRallyTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const cameraEl = tl.get("camera");
+  const levelEl = tl.get("level");
+  const finalEl = tl.get("breakout");
+  const slamEl = tl.get("slam");
+  const FINAL_AT = finalEl.start;
+  const FINAL_LEN = finalEl.length;
+  const SLAM = slamEl.start;
   const u = H / 720;
   const p = THEMES[theme];
   const fg = ink ?? p.fg;
@@ -189,18 +201,11 @@ export function CandleRally({
   // fit the run so the last candle sits at ~84% of the width
   const fit = (0.84 - 0.065) / (xs[xs.length - 1] - 0.065);
 
-  const startOf = (i: number) =>
-    i < CHOP.length
-      ? 4 + i * 5
-      : i < all.length - 1
-        ? RALLY_AT + (i - CHOP.length) * 6
-        : FINAL_AT;
-  const lenOf = (i: number) =>
-    i < CHOP.length
-      ? 8
-      : i < all.length - 1
-        ? 9 + (i - CHOP.length)
-        : FINAL_LEN;
+  const candleEls = all.map((_, i) =>
+    i < all.length - 1 ? tl.get(`candle:${i}`) : finalEl,
+  );
+  const startOf = (i: number) => candleEls[i].start;
+  const lenOf = (i: number) => candleEls[i].length;
 
   const fi = all.length - 1;
   const cx = (i: number) => W * (0.065 + (xs[i] - 0.065) * fit * zx);
@@ -235,30 +240,39 @@ export function CandleRally({
   const yOf = yOfAt(t);
   // the camera pulls back as the rally needs the room
   const zxAt = (tt: number) =>
-    interpolate(tt, [0, RALLY_AT - 4, FINAL_AT + 16], [1.5, 1.42, 1], {
-      ...CLAMP,
-      easing: EASE_IO,
-    });
+    interpolate(
+      tt,
+      [cameraEl.start, cameraEl.start + cameraEl.beat("pullAt"), cameraEl.end],
+      [1.5, 1.42, 1],
+      { ...CLAMP, easing: EASE_IO },
+    );
   const zx = zxAt(t);
 
-  const slam1 = interpolate(t, [SLAM, SLAM + 7], [0, 1], {
+  const slam1 = interpolate(t, [SLAM, SLAM + slamEl.beat("line")], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
-  const slam2 = interpolate(t, [SLAM + 4, SLAM + 11], [0, 1], {
-    ...CLAMP,
-    easing: EASE_OUT,
-  });
-  const dim = interpolate(t, [SLAM, SLAM + 12], [0, 1], {
+  const slam2 = interpolate(
+    t,
+    [
+      SLAM + slamEl.beat("gap"),
+      SLAM + slamEl.beat("gap") + slamEl.beat("line"),
+    ],
+    [0, 1],
+    { ...CLAMP, easing: EASE_OUT },
+  );
+  const dim = interpolate(t, [SLAM, SLAM + slamEl.beat("dim")], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
   // one impact: the chart dips on the slam and settles
   const hitAt = (tt: number) =>
-    interpolate(tt, [SLAM + 1, SLAM + 3, SLAM + 16], [0, 1, 0], {
-      ...CLAMP,
-      easing: EASE_OUT,
-    }) *
+    interpolate(
+      tt,
+      [SLAM + slamEl.beat("hitAt"), SLAM + slamEl.beat("hitPeak"), slamEl.end],
+      [0, 1, 0],
+      { ...CLAMP, easing: EASE_OUT },
+    ) *
     10 *
     u;
   const hit = hitAt(t);
@@ -288,7 +302,7 @@ export function CandleRally({
     }
     return FINAL_AT + FINAL_LEN;
   })();
-  const levelIn = interpolate(t, [6, 22], [0, 1], {
+  const levelIn = interpolate(t, [levelEl.start, levelEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
@@ -304,14 +318,18 @@ export function CandleRally({
     [1, 0.35],
     CLAMP,
   );
-  const ground = interpolate(t, [FINAL_AT, FINAL_AT + FINAL_LEN + 10], [0, 1], {
-    ...CLAMP,
-    easing: EASE_IO,
-  });
-  const gradK = interpolate(t, [FINAL_AT + 6, FINAL_AT + FINAL_LEN], [0, 1], {
-    ...CLAMP,
-    easing: EASE_IO,
-  });
+  const ground = interpolate(
+    t,
+    [FINAL_AT, finalEl.end + finalEl.beat("glow")],
+    [0, 1],
+    { ...CLAMP, easing: EASE_IO },
+  );
+  const gradK = interpolate(
+    t,
+    [FINAL_AT + finalEl.beat("gradAt"), finalEl.end],
+    [0, 1],
+    { ...CLAMP, easing: EASE_IO },
+  );
 
   const candle = (i: number) => {
     const [o, c, h, l] = all[i];
@@ -329,7 +347,12 @@ export function CandleRally({
     const yB = yOf(Math.min(o, cur));
     const bodyH = Math.max(2 * u, yB - yA);
     const color = c >= o ? p.up : p.down;
-    const appear = interpolate(t, [s, s + 2], [0, 1], CLAMP);
+    const appear = interpolate(
+      t,
+      [s, s + candleEls[i].beat("appear")],
+      [0, 1],
+      CLAMP,
+    );
     const wick = Math.max(1.5 * u, w * (isFinal ? 0.05 : 0.09));
     const fade = isFinal ? 1 : 1 - dim * 0.78;
     return (
@@ -385,7 +408,7 @@ export function CandleRally({
     return { x, y };
   };
   const tag = tagAt(t);
-  const tagRest = tagAt(Math.max(FINAL_AT + FINAL_LEN, SLAM + 16) + 8);
+  const tagRest = tagAt(Math.max(finalEl.end, slamEl.end) + 8);
   const tagDx = tag.x - tagRest.x;
   const tagDy = tag.y - tagRest.y;
   const tagRide =
@@ -393,10 +416,12 @@ export function CandleRally({
       ? ""
       : `translate(${tagDx}px, ${tagDy}px) `;
   const tagMark = glide(moves((f) => tagAt(f).y));
-  const tagIn = interpolate(t, [FINAL_AT + 2, FINAL_AT + 10], [0, 1], {
-    ...CLAMP,
-    easing: EASE_OUT,
-  });
+  const tagIn = interpolate(
+    t,
+    [FINAL_AT + finalEl.beat("tagAt"), FINAL_AT + finalEl.beat("tagEnd")],
+    [0, 1],
+    { ...CLAMP, easing: EASE_OUT },
+  );
   const tagH = 44 * u;
   const tagFont = 21 * u;
   const levelY = yOf(prevHigh);

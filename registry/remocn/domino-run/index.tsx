@@ -6,6 +6,17 @@ import { useId } from "react";
 import { AbsoluteFill, Easing, interpolate, interpolateColors } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import {
+  type ResolvedElement,
+  type Timing,
+  useTimeline,
+} from "@/lib/remocn/timeline";
+import {
+  type DominoRunElementId,
+  dominoCount,
+  dominoRunTimeline,
+  RATIO,
+} from "./timeline";
 
 const { fontFamily: display } = loadFont("normal", {
   weights: ["400", "500"],
@@ -33,6 +44,12 @@ export interface DominoRunProps {
   grain?: boolean;
   theme?: "dark" | "light";
   speed?: number;
+  /**
+   * Moves, trims or stretches the ground line, single dominoes rising and
+   * falling, the value and the caption, by the ids in `./timeline`. Frames
+   * on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<DominoRunElementId>;
 }
 
 const EASE_IO = Easing.bezier(0.65, 0, 0.35, 1);
@@ -67,11 +84,8 @@ const THEMES = {
   },
 } as const;
 
-const RATIO = 1.18;
 const THICK = 0.13;
 const GAP = 0.44;
-const T0 = 14;
-const TAU0 = 3.6;
 const PUSH = 2.2;
 const CHAIN = 1.7;
 const DEG = 180 / Math.PI;
@@ -110,20 +124,27 @@ interface Domino {
   contact: number;
 }
 
-function layout(n: number) {
+/** The row's geometry; each domino falls over its `fall:<i>` element. */
+function layout(n: number, falls: ResolvedElement<DominoRunElementId>[]) {
   const ds: Domino[] = [];
   let x = 0;
-  let start = T0;
   for (let i = 0; i < n; i++) {
     const h = RATIO ** i;
     const w = THICK * h;
     const gap = GAP * h;
     const last = i === n - 1;
     const contact = last ? Math.PI / 2 : Math.asin(gap / h);
-    const tau = TAU0 * Math.sqrt(h) * (last ? 2.1 : 1);
-    ds.push({ h, w, px: x + w, gap, start, tau, contact });
+    const fall = falls[i];
+    ds.push({
+      h,
+      w,
+      px: x + w,
+      gap,
+      start: fall.start,
+      tau: fall.length,
+      contact,
+    });
     x += w + gap;
-    start += tau;
   }
   const lastD = ds[n - 1];
   const extent = lastD.px + lastD.h;
@@ -215,30 +236,43 @@ function ScaleLayer({
   );
 }
 
-export function DominoRun({
-  count = 13,
-  value = "10×",
-  caption = "Every push tips a bigger one.",
-  fontWeight = 500,
-  stagger = 1.2,
-  accent = "#3B5BFD",
-  background,
-  fontFamily = display,
-  scale = 1,
-  delay = 0,
-  grain = true,
-  theme = "dark",
-  speed = 1,
-}: DominoRunProps) {
+export function DominoRun(props: DominoRunProps) {
+  const {
+    count = 13,
+    value = "10×",
+    caption = "Every push tips a bigger one.",
+    fontWeight = 500,
+    accent = "#3B5BFD",
+    background,
+    fontFamily = display,
+    scale = 1,
+    delay = 0,
+    grain = true,
+    theme = "dark",
+    speed = 1,
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width, height } = useSceneConfig();
+  const { width, height, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    dominoRunTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const u = Math.min(width / 1280, height / 720);
   const p = THEMES[theme];
   const stage =
     background === "transparent" ? "transparent" : (background ?? p.bg);
-  const n = Math.max(5, Math.min(24, Math.round(count)));
-  const { ds, extent } = layout(n);
+  const n = dominoCount(count);
+  const { ds, extent } = layout(
+    n,
+    Array.from({ length: n }, (_, i) => tl.get(`fall:${i}`)),
+  );
+  const groundEl = tl.get("ground");
+  const valueEl = tl.get("value");
+  const captionEl = tl.get("caption");
   const last = ds[n - 1];
 
   const groundY = height * 0.66;
@@ -251,7 +285,10 @@ export function DominoRun({
   const impact = last.start + last.tau;
   const rest = poseAt(ds, impact + 400);
 
-  const enter = interpolate(t, [0, 16], [0, 1], { ...CLAMP, easing: EASE_IO });
+  const enter = interpolate(t, [groundEl.start, groundEl.end], [0, 1], {
+    ...CLAMP,
+    easing: EASE_IO,
+  });
   const sw = Math.max(1, u);
   const haloId = `halo${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
   const drift = interpolate(t, [0, 165], [0, 1], CLAMP);
@@ -265,14 +302,24 @@ export function DominoRun({
   const valueRight = x0 + (last.px + last.h) * S;
   const clearTop = topOver(ds, rest, (valueRight - valueW - x0) / S, extent);
   const valueBottom = groundY - clearTop * S - 34 * u;
-  const reveal = interpolate(t, [impact + 2, impact + 22], [0, 1], {
-    ...CLAMP,
-    easing: EASE_OUT,
-  });
-  const capIn = interpolate(t, [impact + 12, impact + 30], [0, 1], {
-    ...CLAMP,
-    easing: EASE_OUT,
-  });
+  const reveal = interpolate(
+    t,
+    [valueEl.start + valueEl.beat("revealAt"), valueEl.end],
+    [0, 1],
+    {
+      ...CLAMP,
+      easing: EASE_OUT,
+    },
+  );
+  const capIn = interpolate(
+    t,
+    [captionEl.start + captionEl.beat("inAt"), captionEl.end],
+    [0, 1],
+    {
+      ...CLAMP,
+      easing: EASE_OUT,
+    },
+  );
 
   return (
     <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
@@ -301,9 +348,10 @@ export function DominoRun({
             />
             {ds.map((d, i) => {
               const isLast = i === n - 1;
+              const rise = tl.get(`domino:${i}`);
               const appear = interpolate(
                 t,
-                [2 + i * stagger, 14 + i * stagger],
+                [rise.start + rise.beat("rise"), rise.end],
                 [0, 1],
                 {
                   ...CLAMP,

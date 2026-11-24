@@ -7,6 +7,13 @@ import { useId } from "react";
 import { AbsoluteFill, Easing, interpolate, interpolateColors } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_CAPTION,
+  DEFAULT_NAME,
+  type GravityGridElementId,
+  gravityGridTimeline,
+} from "./timeline";
 
 const { fontFamily: sans } = loadFont("normal", {
   weights: ["400", "500"],
@@ -73,6 +80,12 @@ export interface GravityGridProps {
   /** Playback multiplier. */
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches the camera tilt, the fall, the impact, the
+   * lockup and the caption, by the ids in `./timeline`. Frames on the scene
+   * timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<GravityGridElementId>;
 }
 
 const EASE_IO = Easing.bezier(0.65, 0, 0.35, 1);
@@ -120,7 +133,6 @@ const THEMES = {
 } as const;
 
 /** Frame the mass reaches the bottom of the well. */
-const IMPACT = 72;
 const WELL_Z = 13;
 const CORE = 2.6;
 const DEPTH = 5.4;
@@ -171,32 +183,45 @@ function ScaleLayer({
   );
 }
 
-export function GravityGrid({
-  logo,
-  name = "remocn",
-  caption = "Launch videos, in components.",
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = sans,
-  impactAt: impact = IMPACT,
-  wellDepth = DEPTH,
-  scale = 1,
-  delay = 0,
-  grain = true,
-  speed = 1,
-  theme = "dark",
-}: GravityGridProps) {
+export function GravityGrid(props: GravityGridProps) {
+  const {
+    logo,
+    name = DEFAULT_NAME,
+    caption = DEFAULT_CAPTION,
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = sans,
+    wellDepth = DEPTH,
+    scale = 1,
+    delay = 0,
+    grain = true,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width, height } = useSceneConfig();
+  const { width, height, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    gravityGridTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const camera = tl.get("camera");
+  const mass = tl.get("mass");
+  const impactEl = tl.get("impact");
+  const lockup = tl.get("lockup");
+  const captionEl = tl.get("caption");
+  const impact = impactEl.start;
   const u = height / 720;
   const pal = THEMES[theme];
   const fg = ink ?? pal.fg;
   const id = useId().replace(/[^a-zA-Z0-9_-]/g, "");
 
   // ---- the mass: accelerates down, lands, the well overshoots and settles ----
-  const fallP = interpolate(t, [14, impact], [0, 1], CLAMP);
+  const fallP = interpolate(t, [mass.start, mass.end], [0, 1], CLAMP);
   const fall = fallP ** 2.2;
   const after = Math.max(0, t - impact);
   const bounce =
@@ -226,7 +251,7 @@ export function GravityGrid({
   };
 
   // ---- camera: slow push in, tilting down to follow the mass ----
-  const follow = interpolate(t, [10, impact + 18], [0, 1], {
+  const follow = interpolate(t, [camera.start, camera.end], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
@@ -258,11 +283,11 @@ export function GravityGrid({
   };
 
   // ---- lockup at the bottom of the well ----
-  const lockIn = interpolate(t, [impact + 6, impact + 32], [0, 1], {
+  const lockIn = interpolate(t, [lockup.start, lockup.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
-  const capIn = interpolate(t, [impact + 18, impact + 40], [0, 1], {
+  const capIn = interpolate(t, [captionEl.start, captionEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
@@ -347,8 +372,19 @@ export function GravityGrid({
   const massS = project(0, Math.max(massY, -depth + 0.4), WELL_Z);
   const massR = (6 * u * f) / Math.max(1, massS.zc) / (height * 0.072);
   const massO =
-    interpolate(t, [10, 22], [0, 1], CLAMP) *
-    (1 - interpolate(t, [impact - 2, impact + 10], [0, 1], CLAMP));
+    interpolate(
+      t,
+      [mass.start + mass.beat("appear"), mass.start + mass.beat("appearEnd")],
+      [0, 1],
+      CLAMP,
+    ) *
+    (1 -
+      interpolate(
+        t,
+        [impact + impactEl.beat("fade"), impact + impactEl.beat("fadeEnd")],
+        [0, 1],
+        CLAMP,
+      ));
   const mixA = (c: string, a: number) =>
     `color-mix(in oklab, ${c} ${Math.round(Math.max(0, Math.min(1, a)) * 100)}%, transparent)`;
   const glowO = pal.glow * (0.35 * fall + 0.65 * lockIn) * (1 + ripAmp * 0.6);

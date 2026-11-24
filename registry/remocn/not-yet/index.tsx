@@ -12,6 +12,13 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_LINES,
+  type NotYetElementId,
+  notYetTimeline,
+  splitWords,
+} from "./timeline";
 
 const golos = loadFont("normal", {
   weights: ["400", "500"],
@@ -36,6 +43,12 @@ export interface NotYetProps {
   delay?: number;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches the rule, single lines and their accent
+   * words, by the ids in `./timeline`. Frames on the scene timeline, after
+   * `delay` and `speed`.
+   */
+  timing?: Timing<NotYetElementId>;
 }
 
 const THEMES = {
@@ -43,17 +56,6 @@ const THEMES = {
   light: { bg: "#FFF4EC", ink: "#1D2B53", accent: "#D9623B", rule: 0.2 },
 } as const;
 
-const DEFAULT_LINES = [
-  "It can’t write your script.",
-  "It can’t pick your music.",
-  "It can’t voice your launch.",
-];
-
-const WORD_GAP = 3;
-const WORD_RISE = 12;
-const YET_PAUSE = 9;
-const YET_HOLD = 20;
-const STEP_DUR = 16;
 const OLD_SCALE = 0.58;
 const OLD_INK = 0.4;
 
@@ -63,29 +65,6 @@ const CLAMP = {
   extrapolateLeft: "clamp",
   extrapolateRight: "clamp",
 } as const;
-
-function splitWords(s: string) {
-  return s.split(/\s+/).filter(Boolean);
-}
-
-function schedule(lines: string[][], stagger: number) {
-  const starts: number[] = [];
-  const yets: number[] = [];
-  let at = 0;
-  for (const words of lines) {
-    starts.push(at);
-    const set =
-      (at === 0 ? 0 : STEP_DUR - 6) +
-      2 +
-      (words.length - 1) * stagger +
-      WORD_RISE;
-    const yet = at + set + YET_PAUSE;
-    yets.push(yet);
-    at = yet + YET_HOLD;
-  }
-  const end = (yets[yets.length - 1] ?? 0) + 10;
-  return { starts, yets, end };
-}
 
 /** The foreground at `scale`, around the frame's center; nothing extra at 1. */
 function ScaleLayer({
@@ -103,23 +82,27 @@ function ScaleLayer({
   );
 }
 
-export function NotYet({
-  lines = DEFAULT_LINES,
-  word = "Yet.",
-  accent,
-  ink,
-  background,
-  fontFamily = golos.fontFamily,
-  fontWeight = 500,
-  stagger = WORD_GAP,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: NotYetProps) {
+export function NotYet(props: NotYetProps) {
+  const {
+    lines = DEFAULT_LINES,
+    word = "Yet.",
+    accent,
+    ink,
+    background,
+    fontFamily = golos.fontFamily,
+    fontWeight = 500,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay);
   const { width: W, height: H, durationInFrames } = useSceneConfig();
+  // The pace that fits the schedule into the clip counts the clip without
+  // `speed`, as before.
+  const tl = useTimeline(notYetTimeline, props, durationInFrames, timing);
   const c = THEMES[theme];
   const hi = accent ?? c.accent;
   const fg = ink ?? c.ink;
@@ -127,9 +110,10 @@ export function NotYet({
     background === "transparent" ? "transparent" : (background ?? c.bg);
 
   const wordLines = lines.map(splitWords);
-  const plan = schedule(wordLines, stagger);
-  const pace = Math.max(1, (plan.end + 30) / Math.max(1, durationInFrames));
-  const t = frame * speed * pace;
+  const lineEls = wordLines.map((_, i) => tl.get(`line:${i}`));
+  const yetEls = wordLines.map((_, i) => tl.get(`yet:${i}`));
+  const rule = tl.get("rule");
+  const t = frame * speed;
 
   const portrait = H > W * 1.1;
   const margin = W * (portrait ? 0.08 : 0.07);
@@ -180,10 +164,12 @@ export function NotYet({
     wordLines.map((_, i) =>
       i === 0
         ? 1
-        : interpolate(tt, [plan.starts[i], plan.starts[i] + STEP_DUR], [0, 1], {
-            ...CLAMP,
-            easing: EASE_STEP,
-          }),
+        : interpolate(
+            tt,
+            [lineEls[i].start, lineEls[i].start + lineEls[i].beat("step")],
+            [0, 1],
+            { ...CLAMP, easing: EASE_STEP },
+          ),
     );
   const agesOf = (steps: number[]) =>
     wordLines.map((_, i) => {
@@ -213,22 +199,18 @@ export function NotYet({
       const steps = stepsAt(tt);
       return [liftOf(i, steps), scaleOf(agesOf(steps)[i]) * blockW];
     };
-    const [now, prev, next] = [
-      at(t),
-      at(t - speed * pace),
-      at(t + speed * pace),
-    ];
+    const [now, prev, next] = [at(t), at(t - speed), at(t + speed)];
     return now.some(
       (v, k) => Math.abs(next[k] - v) > 1e-3 || Math.abs(v - prev[k]) > 1e-3,
     );
   };
 
-  const ruleIn = interpolate(t, [0, 22], [0, 1], {
+  const ruleIn = interpolate(t, [rule.start, rule.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
 
-  const rise = (start: number, dur = WORD_RISE) =>
+  const rise = (start: number, dur: number) =>
     interpolate(t, [start, start + dur], [0, 1], {
       ...CLAMP,
       easing: EASE_OUT,
@@ -270,10 +252,13 @@ export function NotYet({
           const moving = lineMoving(i);
           const inkAlpha = interpolate(a, [0, 1], [1, OLD_INK], CLAMP);
           const gone = interpolate(a, [2.2, 3], [1, 0], CLAMP);
-          const s0 = plan.starts[i] + (i === 0 ? 0 : STEP_DUR - 6);
+          const line = lineEls[i];
+          const s0 = line.start + line.beat("words");
+          const stagger = line.beat("stagger");
+          const wordRise = line.beat("rise");
           const yetT = interpolate(
             t,
-            [plan.yets[i], plan.yets[i] + 8],
+            [yetEls[i].start, yetEls[i].end],
             [0, 1],
             {
               ...CLAMP,
@@ -299,18 +284,18 @@ export function NotYet({
               }}
             >
               {words.map((w, wi) => {
-                const p = rise(s0 + 2 + wi * stagger);
+                const p = rise(s0 + wi * stagger, wordRise);
                 const riseAt = (tt: number) =>
                   interpolate(
                     tt,
-                    [s0 + 2 + wi * stagger, s0 + 2 + wi * stagger + WORD_RISE],
+                    [s0 + wi * stagger, s0 + wi * stagger + wordRise],
                     [0, 1],
                     { ...CLAMP, easing: EASE_OUT },
                   );
                 const rising =
                   !moving &&
-                  (Math.abs(riseAt(t + speed * pace) - p) * 0.3 * size > 1e-3 ||
-                    Math.abs(p - riseAt(t - speed * pace)) * 0.3 * size > 1e-3);
+                  (Math.abs(riseAt(t + speed) - p) * 0.3 * size > 1e-3 ||
+                    Math.abs(p - riseAt(t - speed)) * 0.3 * size > 1e-3);
                 return (
                   <span
                     key={`${wi}-${w}`}

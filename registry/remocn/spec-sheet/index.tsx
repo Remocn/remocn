@@ -8,6 +8,13 @@ import { useId } from "react";
 import { AbsoluteFill, Easing, interpolate, interpolateColors } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_ROWS,
+  type SpecRow,
+  type SpecSheetElementId,
+  specSheetTimeline,
+} from "./timeline";
 
 const { fontFamily: sans } = loadSans("normal", {
   weights: ["400", "500"],
@@ -22,10 +29,7 @@ const manrope = loadManrope("normal", {
   subsets: ["latin"],
 });
 
-export interface SpecRow {
-  label: string;
-  value: string;
-}
+export type { SpecRow };
 
 export interface SpecSheetProps {
   rows?: SpecRow[];
@@ -50,15 +54,13 @@ export interface SpecSheetProps {
   grain?: boolean;
   theme?: "dark" | "light";
   speed?: number;
+  /**
+   * Moves, trims or stretches the title, the lockup, single rules and rows,
+   * and the highlighted row opening, by the ids in `./timeline`. Frames on
+   * the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<SpecSheetElementId>;
 }
-
-const DEFAULT_ROWS: SpecRow[] = [
-  { label: "Resolution", value: "4K" },
-  { label: "Frame rate", value: "60 fps" },
-  { label: "Components", value: "236" },
-  { label: "Install", value: "1 command" },
-  { label: "License", value: "MIT" },
-];
 
 const EASE_IO = Easing.bezier(0.65, 0, 0.35, 1);
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
@@ -88,8 +90,6 @@ const THEMES = {
   },
 } as const;
 
-const STAGGER = 5;
-const EXPAND = 62;
 const FIGURE_SPACE = " ";
 
 function Grain({ opacity }: { opacity: number }) {
@@ -233,27 +233,34 @@ function ScaleLayer({
   );
 }
 
-export function SpecSheet({
-  rows = DEFAULT_ROWS,
-  highlight = 3,
-  title = "Tech specs",
-  name = "3.0",
-  logo,
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = sans,
-  stagger = STAGGER,
-  expandAt = EXPAND,
-  scale = 1,
-  delay = 0,
-  grain = true,
-  theme = "dark",
-  speed = 1,
-}: SpecSheetProps) {
+export function SpecSheet(props: SpecSheetProps) {
+  const {
+    rows = DEFAULT_ROWS,
+    highlight = 3,
+    title = "Tech specs",
+    name = "3.0",
+    logo,
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = sans,
+    scale = 1,
+    delay = 0,
+    grain = true,
+    theme = "dark",
+    speed = 1,
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H } = useSceneConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    specSheetTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const expandEl = tl.get("expand");
   const u = H / 720;
   const c = THEMES[theme];
   const fg = ink ?? c.fg;
@@ -278,7 +285,7 @@ export function SpecSheet({
   );
   const hScale = valueF / hlF;
 
-  const grow = interpolate(t, [expandAt, expandAt + 22], [0, 1], {
+  const grow = interpolate(t, [expandEl.start, expandEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
@@ -309,19 +316,29 @@ export function SpecSheet({
       ? `translateY(${live.rowTop(i) - rowTop(i)}px)${glide(false)}`
       : undefined;
 
-  const rule = (i: number) =>
-    interpolate(t, [4 + i * stagger, 26 + i * stagger], [0, 1], {
+  const rule = (i: number) => {
+    const e = tl.get(`rule:${i}`);
+    return interpolate(t, [e.start, e.end], [0, 1], {
       ...CLAMP,
       easing: EASE_IO,
     });
-  const rise = (d: number) =>
-    interpolate(t, [d, d + 18], [0, 1], { ...CLAMP, easing: EASE_OUT });
-  const valueP = (i: number) =>
-    interpolate(t, [12 + i * stagger, 34 + i * stagger], [0, 1], CLAMP);
+  };
+  const rise = (id: SpecSheetElementId) => {
+    const e = tl.get(id);
+    return interpolate(t, [e.start, e.end], [0, 1], {
+      ...CLAMP,
+      easing: EASE_OUT,
+    });
+  };
+  const valueP = (i: number) => {
+    const e = tl.get(`row:${i}`);
+    const at = e.start + e.beat("value");
+    return interpolate(t, [at, at + e.beat("type")], [0, 1], CLAMP);
+  };
 
   const titleF = 84 * u;
-  const titleP = rise(0);
-  const lockP = rise(8);
+  const titleP = rise("title");
+  const lockP = rise("lockup");
   const bottom = top + total;
 
   return (
@@ -411,7 +428,7 @@ export function SpecSheet({
           // its centre while its slot grows.
           const dy = shift(y + h / 2, live.rowTop(i) + live.heights[i] / 2);
           const isHl = i === hl;
-          const lp = rise(10 + i * stagger);
+          const lp = rise(`row:${i}`);
           // Written to land on exactly 1 when the row is open, so the value
           // rests on the pixel grid there.
           const grown = isHl ? 1 - (1 - hScale) * (1 - grow) : 1;

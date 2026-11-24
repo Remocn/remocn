@@ -13,6 +13,13 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  type CompactStatElementId,
+  compactPlan,
+  compactStatTimeline,
+  type Plan,
+} from "./timeline";
 
 const hanken = loadHanken("normal", {
   weights: ["400", "500"],
@@ -43,6 +50,12 @@ export interface CompactStatProps {
   grain?: boolean;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches the rise, the label, the retract, the suffix
+   * and the grow, by the ids in `./timeline`.
+   * Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<CompactStatElementId>;
 }
 
 const THEMES = {
@@ -71,16 +84,6 @@ const THEMES = {
 const TRACK = -0.025;
 const FONT_PX = 400;
 
-const RISE_AT = 0;
-const RISE_LEN = 18;
-const RISE_GAP = 2;
-const LABEL_AT = 12;
-const RETRACT_AT = 40;
-const RETRACT_LEN = 18;
-const SUFFIX_AT = 52;
-const GROW_AT = 58;
-const GROW_LEN = 28;
-
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
 const EASE_IO = Easing.bezier(0.65, 0, 0.35, 1);
 const EASE_REEL = Easing.bezier(0.55, 0, 0.2, 1);
@@ -88,73 +91,6 @@ const CLAMP = {
   extrapolateLeft: "clamp",
   extrapolateRight: "clamp",
 } as const;
-
-const SCALES = ["", "K", "M", "B", "T"];
-
-interface Plan {
-  full: string[];
-  short: string[];
-  keep: number[];
-  sep: number;
-  mag: number;
-}
-
-function plan(
-  value: number,
-  decimals: number,
-  suffix: string | undefined,
-  prefix: string,
-): Plan {
-  const v = Math.max(0, Math.floor(Math.abs(value)));
-  const digits = String(v);
-  const tier = Math.min(
-    SCALES.length - 1,
-    Math.max(0, Math.floor((digits.length - 1) / 3)),
-  );
-  const intLen = digits.length - tier * 3;
-  let dec = digits.slice(intLen, intLen + Math.max(0, Math.min(2, decimals)));
-  dec = dec.replace(/0+$/, "");
-  const grouped: string[] = [];
-  for (let i = 0; i < digits.length; i++) {
-    const fromEnd = digits.length - i;
-    if (i > 0 && fromEnd % 3 === 0) grouped.push(",");
-    grouped.push(digits[i]);
-  }
-  const pre = Array.from(prefix);
-  const full = [...pre, ...grouped];
-  const mag = suffix ?? SCALES[tier];
-  const short = [
-    ...pre,
-    ...Array.from(digits.slice(0, intLen)),
-    ...(dec ? [".", ...Array.from(dec)] : []),
-    ...Array.from(mag),
-  ];
-  const keep = full.map(() => -1);
-  let j = 0;
-  for (let i = 0; i < pre.length; i++) keep[i] = j++;
-  let seen = 0;
-  let sep = -1;
-  const keptDigits = intLen + dec.length;
-  for (let i = pre.length; i < full.length; i++) {
-    const ch = full[i];
-    if (ch === ",") {
-      if (seen === intLen && dec.length > 0 && tier > 0) {
-        keep[i] = j++;
-        sep = i;
-      }
-      continue;
-    }
-    if (seen < keptDigits) keep[i] = j++;
-    seen++;
-  }
-  return {
-    full,
-    short,
-    keep,
-    sep,
-    mag: tier > 0 || suffix ? j : -1,
-  };
-}
 
 interface Metrics {
   xf: number[];
@@ -292,33 +228,45 @@ function ScaleLayer({
   );
 }
 
-export function CompactStat({
-  value = 1200000,
-  decimals = 1,
-  suffix,
-  prefix = "",
-  label = "frames rendered with remocn",
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = hanken.fontFamily,
-  fontWeight = 500,
-  stagger = RISE_GAP,
-  scale = 1,
-  delay = 0,
-  grain = true,
-  speed = 1,
-  theme = "dark",
-}: CompactStatProps) {
+export function CompactStat(props: CompactStatProps) {
+  const {
+    value = 1200000,
+    decimals = 1,
+    suffix,
+    prefix = "",
+    label = "frames rendered with remocn",
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = hanken.fontFamily,
+    fontWeight = 500,
+    scale = 1,
+    delay = 0,
+    grain = true,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H, fps } = useSceneConfig();
+  const { width: W, height: H, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    compactStatTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const riseEl = tl.get("rise");
+  const labelEl = tl.get("label");
+  const retractEl = tl.get("retract");
+  const suffixEl = tl.get("suffix");
+  const growEl = tl.get("grow");
   const c = THEMES[theme];
   const fg = ink ?? c.ink;
   const bg = background ?? c.bg;
 
   const p = useMemo(
-    () => plan(value, decimals, suffix, prefix),
+    () => compactPlan(value, decimals, suffix, prefix),
     [value, decimals, suffix, prefix],
   );
   const m = useMetrics(p, label, fontFamily, fontWeight);
@@ -329,7 +277,7 @@ export function CompactStat({
 
   const F1 = Math.min(H * 0.3, (W * 0.86) / m.fullW);
   const F2 = Math.min(H * 0.48, (W * 0.8) / m.shortW, F1 * 2.6);
-  const grow = interpolate(t, [GROW_AT, GROW_AT + GROW_LEN], [0, 1], {
+  const grow = interpolate(t, [growEl.start, growEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
@@ -341,12 +289,12 @@ export function CompactStat({
   const growing = grow > 0 && grow < 1;
   const L = F2;
 
-  const reel = interpolate(t, [RETRACT_AT, RETRACT_AT + RETRACT_LEN], [0, 1], {
+  const reel = interpolate(t, [retractEl.start, retractEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_REEL,
   });
   const magP = spring({
-    frame: t - SUFFIX_AT,
+    frame: t - suffixEl.start,
     fps,
     config: { damping: 18, stiffness: 120, mass: 0.9 },
   });
@@ -433,7 +381,10 @@ export function CompactStat({
   const riseAt = (i: number, tt: number) =>
     interpolate(
       tt,
-      [RISE_AT + i * stagger, RISE_AT + i * stagger + RISE_LEN],
+      [
+        riseEl.start + i * riseEl.beat("stagger"),
+        riseEl.start + i * riseEl.beat("stagger") + riseEl.beat("rise"),
+      ],
       [0, 1],
       { ...CLAMP, easing: EASE_OUT },
     );
@@ -488,7 +439,7 @@ export function CompactStat({
     : [];
 
   const labelAt = (tt: number) =>
-    interpolate(tt, [LABEL_AT, LABEL_AT + 18], [0, 1], {
+    interpolate(tt, [labelEl.start, labelEl.end], [0, 1], {
       ...CLAMP,
       easing: EASE_OUT,
     });
@@ -496,10 +447,15 @@ export function CompactStat({
   const labelMoving =
     Math.abs(labelAt(t + speed) - labelP) * labelSize > 1e-3 ||
     Math.abs(labelP - labelAt(t - speed)) * labelSize > 1e-3;
-  const groundP = interpolate(t, [GROW_AT, GROW_AT + GROW_LEN + 10], [0, 1], {
-    ...CLAMP,
-    easing: EASE_OUT,
-  });
+  const groundP = interpolate(
+    t,
+    [growEl.start, growEl.start + growEl.beat("ground")],
+    [0, 1],
+    {
+      ...CLAMP,
+      easing: EASE_OUT,
+    },
+  );
 
   return (
     <AbsoluteFill style={{ background: bg, overflow: "hidden" }}>

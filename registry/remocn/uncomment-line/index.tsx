@@ -13,6 +13,13 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_LINES,
+  linesOf,
+  type UncommentLineElementId,
+  uncommentLineTimeline,
+} from "./timeline";
 
 const geist = loadGeist("normal", {
   weights: ["500"],
@@ -43,6 +50,12 @@ export interface UncommentLineProps {
   delay?: number;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches single lines rising and uncommenting, by the
+   * ids in `./timeline`. Frames on the scene timeline, after `delay` and
+   * `speed`.
+   */
+  timing?: Timing<UncommentLineElementId>;
 }
 
 const THEMES = {
@@ -54,12 +67,6 @@ const TRACK = -0.035;
 const LEADING = 1.06;
 const MARK_SCALE = 0.62;
 const DIM = 0.28;
-
-const RISE_LEN = 16;
-const RISE_GAP = 4;
-const OPEN_AT = 34;
-const OPEN_GAP = 13;
-const OPEN_LEN = 14;
 
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
 const EASE_IO = Easing.bezier(0.65, 0, 0.35, 1);
@@ -151,28 +158,35 @@ function ScaleLayer({
   );
 }
 
-export function UncommentLine({
-  lines = ["Fork the scenes.", "Change anything.", "Own the cut."],
-  marker = "// ",
-  highlight = -1,
-  stagger = OPEN_GAP,
-  dim = DIM,
-  accent,
-  ink,
-  background,
-  fontFamily = geist.fontFamily,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: UncommentLineProps) {
+export function UncommentLine(props: UncommentLineProps) {
+  const {
+    lines = DEFAULT_LINES,
+    marker = "// ",
+    highlight = -1,
+    dim = DIM,
+    accent,
+    ink,
+    background,
+    fontFamily = geist.fontFamily,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H } = useSceneConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    uncommentLineTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const c = THEMES[theme];
   const spot = accent ?? c.pink;
   const fg = ink ?? c.ink;
-  const list = lines.length > 0 ? lines : [" "];
+  const list = linesOf(lines);
   const m = useMetrics(list, marker, fontFamily);
 
   const transparent = background === "transparent";
@@ -200,16 +214,18 @@ export function UncommentLine({
 
   const nodes = list.map((line, i) => {
     const baseY = firstBase + i * lineH;
-    const r = interpolate(t, [i * RISE_GAP, i * RISE_GAP + RISE_LEN], [0, 1], {
+    const riseEl = tl.get(`rise:${i}`);
+    const open = tl.get(`open:${i}`);
+    const r = interpolate(t, [riseEl.start, riseEl.end], [0, 1], {
       ...CLAMP,
       easing: EASE_OUT,
     });
-    const at = OPEN_AT + i * stagger;
-    const o = interpolate(t, [at, at + OPEN_LEN], [0, 1], {
+    const at = open.start;
+    const o = interpolate(t, [at, open.end], [0, 1], {
       ...CLAMP,
       easing: EASE_IO,
     });
-    const lit = interpolate(t, [at + 2, at + OPEN_LEN], [0, 1], {
+    const lit = interpolate(t, [at + open.beat("lit"), open.end], [0, 1], {
       ...CLAMP,
       easing: EASE_OUT,
     });

@@ -6,6 +6,18 @@ import { useId, useMemo } from "react";
 import { AbsoluteFill, Easing, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  buildSplitTree,
+  DEFAULT_TREEMAP_ITEMS,
+  type SplitNode,
+  TREEMAP_SPLIT,
+  type TreemapSplitElementId,
+  treemapLate,
+  treemapList,
+  treemapRoot,
+  treemapSplitTimeline,
+} from "./timeline";
 
 const { fontFamily: sans } = loadFont("normal", {
   weights: ["400", "500"],
@@ -48,19 +60,15 @@ export interface TreemapSplitProps {
   delay?: number;
   theme?: "dark" | "light";
   speed?: number;
+  /**
+   * Moves, trims or stretches the fade-in, the push, the splits and the
+   * accent, by the ids in `./timeline`. Frames on the scene timeline, after
+   * `delay` and `speed`.
+   */
+  timing?: Timing<TreemapSplitElementId>;
 }
 
-const DEFAULT_ITEMS: TreemapItem[] = [
-  { label: "Captions", value: 38 },
-  { label: "Transitions", value: 16 },
-  { label: "Text", value: 12 },
-  { label: "Backgrounds", value: 9 },
-  { label: "Shaders", value: 8 },
-  { label: "Icons", value: 6 },
-  { label: "Charts", value: 5 },
-  { label: "UI", value: 4 },
-  { label: "Effects", value: 2 },
-];
+const DEFAULT_ITEMS: TreemapItem[] = DEFAULT_TREEMAP_ITEMS;
 
 const EASE_IO = Easing.bezier(0.65, 0, 0.35, 1);
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
@@ -91,123 +99,11 @@ const THEMES = {
   },
 } as const;
 
-const T0 = 12;
-const STEP = 16;
-const SPLIT = 22;
-
 interface Rect {
   x: number;
   y: number;
   w: number;
   h: number;
-}
-
-interface TNode {
-  id: string;
-  leaf: number | null;
-  depth: number;
-  vertical: boolean;
-  f: number;
-  start: number;
-  a: TNode | null;
-  b: TNode | null;
-}
-
-function worst(idx: number[], vals: number[], w: number, h: number): number {
-  if (idx.length === 1) {
-    const a = Math.max(w / Math.max(h, 1e-6), h / Math.max(w, 1e-6));
-    return vals[idx[0]] * Math.log(a) * (a > 2.2 ? 2 : 1);
-  }
-  const sum = idx.reduce((s, i) => s + vals[i], 0) || 1;
-  const vertical = w >= h;
-  let best = Number.POSITIVE_INFINITY;
-  let acc = 0;
-  for (let j = 0; j < idx.length - 1; j++) {
-    acc += vals[idx[j]];
-    const ff = acc / sum;
-    const s =
-      worst(
-        idx.slice(0, j + 1),
-        vals,
-        vertical ? w * ff : w,
-        vertical ? h : h * ff,
-      ) +
-      worst(
-        idx.slice(j + 1),
-        vals,
-        vertical ? w * (1 - ff) : w,
-        vertical ? h : h * (1 - ff),
-      );
-    if (s < best) best = s;
-  }
-  return best;
-}
-
-function build(
-  idx: number[],
-  vals: number[],
-  w: number,
-  h: number,
-  depth: number,
-  id: string,
-  stagger: number,
-): TNode {
-  const start = T0 + depth * STEP + stagger;
-  if (idx.length === 1) {
-    return {
-      id,
-      leaf: idx[0],
-      depth,
-      vertical: true,
-      f: 1,
-      start,
-      a: null,
-      b: null,
-    };
-  }
-  const sum = idx.reduce((s, i) => s + vals[i], 0) || 1;
-  const vertical = w >= h;
-  let k = 1;
-  let best = Number.POSITIVE_INFINITY;
-  let acc = 0;
-  for (let j = 0; j < idx.length - 1; j++) {
-    acc += vals[idx[j]];
-    const ff = acc / sum;
-    const s =
-      worst(
-        idx.slice(0, j + 1),
-        vals,
-        vertical ? w * ff : w,
-        vertical ? h : h * ff,
-      ) +
-      worst(
-        idx.slice(j + 1),
-        vals,
-        vertical ? w * (1 - ff) : w,
-        vertical ? h : h * (1 - ff),
-      );
-    if (s < best - 1e-6) {
-      best = s;
-      k = j + 1;
-    }
-  }
-  const left = idx.slice(0, k);
-  const right = idx.slice(k);
-  const f = left.reduce((s, i) => s + vals[i], 0) / sum;
-  const aw = vertical ? w * f : w;
-  const ah = vertical ? h : h * f;
-  const bw = vertical ? w - aw : w;
-  const bh = vertical ? h : h - ah;
-  return {
-    id,
-    leaf: null,
-    depth,
-    vertical,
-    f,
-    start,
-    a: build(left, vals, aw, ah, depth + 1, `${id}a`, stagger),
-    b: build(right, vals, bw, bh, depth + 1, `${id}b`, stagger + 2),
-  };
 }
 
 interface Cell {
@@ -227,13 +123,8 @@ interface Line {
   fade: number;
 }
 
-function lastEnd(n: TNode, split: number): number {
-  if (!n.a || !n.b) return 0;
-  return Math.max(n.start + split, lastEnd(n.a, split), lastEnd(n.b, split));
-}
-
 function layout(
-  n: TNode,
+  n: SplitNode,
   r: Rect,
   t: number,
   gap: number,
@@ -241,12 +132,14 @@ function layout(
   lines: Line[],
   settle: number,
   split: number,
+  startOf: (n: SplitNode) => number,
 ) {
-  if (!n.a || !n.b || t < n.start) {
+  const start = startOf(n);
+  if (!n.a || !n.b || t < start) {
     cells.push({ key: n.id, rect: r, leaf: n.leaf, settle });
     return;
   }
-  const p = (t - n.start) / split;
+  const p = (t - start) / split;
   const draw = interpolate(p, [0, 0.38], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
@@ -257,7 +150,7 @@ function layout(
   });
   const f = 0.5 + (n.f - 0.5) * open;
   const g = gap * open;
-  const end = n.start + split;
+  const end = start + split;
   let ra: Rect;
   let rb: Rect;
   if (n.vertical) {
@@ -287,8 +180,8 @@ function layout(
       fade: 1 - open,
     });
   }
-  layout(n.a, ra, t, gap, cells, lines, end, split);
-  layout(n.b, rb, t, gap, cells, lines, end, split);
+  layout(n.a, ra, t, gap, cells, lines, end, split, startOf);
+  layout(n.b, rb, t, gap, cells, lines, end, split, startOf);
 }
 
 function Grain({ opacity }: { opacity: number }) {
@@ -331,39 +224,43 @@ function ScaleLayer({
   );
 }
 
-export function TreemapSplit({
-  items = DEFAULT_ITEMS,
-  highlight,
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = sans,
-  split = SPLIT,
-  radius: corner = 6,
-  grain = true,
-  scale: zoom = 1,
-  delay = 0,
-  theme = "dark",
-  speed = 1,
-}: TreemapSplitProps) {
+export function TreemapSplit(props: TreemapSplitProps) {
+  const {
+    items = DEFAULT_ITEMS,
+    highlight,
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = sans,
+    radius: corner = 6,
+    grain = true,
+    scale: zoom = 1,
+    delay = 0,
+    theme = "dark",
+    speed = 1,
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width, height } = useSceneConfig();
+  const { width, height, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    treemapSplitTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const enterEl = tl.get("enter");
+  const pushEl = tl.get("push");
+  const splitsEl = tl.get("splits");
+  const accentEl = tl.get("accent");
+  const split = splitsEl.beat("split");
   const u = Math.min(width / 1280, height / 720);
   const p = THEMES[theme];
   const fg = ink ?? p.fg;
   const transparent = background === "transparent";
   const stage = transparent ? "transparent" : (background ?? p.bg);
 
-  const list = useMemo(
-    () =>
-      items
-        .map((it, i) => ({ ...it, i, value: Math.max(0, it.value) }))
-        .filter((it) => it.value > 0)
-        .sort((a, b) => b.value - a.value)
-        .slice(0, 10),
-    [items],
-  );
+  const list = useMemo(() => treemapList(items), [items]);
   const total = list.reduce((s, x) => s + x.value, 0) || 1;
   const hl = (() => {
     if (highlight === undefined) return 0;
@@ -371,15 +268,13 @@ export function TreemapSplit({
     return at < 0 ? 0 : at;
   })();
 
-  const mx = width * 0.07;
-  const my = height * 0.1;
-  const root: Rect = { x: mx, y: my, w: width - mx * 2, h: height - my * 2 };
+  const root: Rect = treemapRoot(width, height);
   const gap = 8 * u;
   const radius = corner * u;
 
   const tree = useMemo(
     () =>
-      build(
+      buildSplitTree(
         list.map((_, i) => i),
         list.map((x) => x.value),
         root.w,
@@ -390,26 +285,48 @@ export function TreemapSplit({
       ),
     [list, root.w, root.h],
   );
-  const splitsDone = Math.max(lastEnd(tree, split), T0);
-  const ACC = splitsDone + 8;
+  // The schedule is laid out at 1280×720; in a frame of another aspect the
+  // tree, and when its last split ends, can differ.
+  const late = treemapLate(list, props.split ?? TREEMAP_SPLIT, width, height);
+  const ACC = accentEl.start + late;
+  const startOf = (n: SplitNode) =>
+    splitsEl.start +
+    n.depth * splitsEl.beat("step") +
+    n.lag * splitsEl.beat("stagger");
 
   const cells: Cell[] = [];
   const lines: Line[] = [];
-  layout(tree, root, t, gap, cells, lines, 0, split);
+  layout(tree, root, t, gap, cells, lines, 0, split, startOf);
   // Where each cell lands once every split has opened. A cell's label is laid
   // out there and rides the cell by a transform: layout rounds a baseline to
   // whole pixels, so a label carried by a growing cell's `top` clicks along.
   const settled = new Map<string, Rect>();
   {
     const done: Cell[] = [];
-    layout(tree, root, Number.POSITIVE_INFINITY, gap, done, [], 0, split);
+    layout(
+      tree,
+      root,
+      Number.POSITIVE_INFINITY,
+      gap,
+      done,
+      [],
+      0,
+      split,
+      startOf,
+    );
     for (const c of done) settled.set(c.key, c.rect);
   }
 
   const enterAt = (tt: number) =>
-    interpolate(tt, [0, 14], [0, 1], { ...CLAMP, easing: EASE_OUT });
+    interpolate(tt, [enterEl.start, enterEl.end], [0, 1], {
+      ...CLAMP,
+      easing: EASE_OUT,
+    });
   const pushAt = (tt: number) =>
-    interpolate(tt, [0, ACC + 50], [0, 1], { ...CLAMP, easing: EASE_IO });
+    interpolate(tt, [pushEl.start, pushEl.end + late], [0, 1], {
+      ...CLAMP,
+      easing: EASE_IO,
+    });
   const scaleAt = (tt: number) =>
     (0.94 + 0.06 * enterAt(tt)) * (0.985 + 0.015 * pushAt(tt));
   const enter = enterAt(t);
@@ -421,24 +338,40 @@ export function TreemapSplit({
     Math.abs(scaleAt(t + 1) - scale) * 700 > 1e-3 ||
     Math.abs(scale - scaleAt(t - 1)) * 700 > 1e-3;
 
-  const fill = interpolate(t, [ACC, ACC + 18], [0, 1], {
+  const fill = interpolate(t, [ACC, ACC + accentEl.beat("fill")], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
-  const preFill = interpolate(t, [ACC - 8, ACC + 2], [0, 1], CLAMP);
-  const heroIn = interpolate(t, [ACC + 10, ACC + 30], [0, 1], {
+  const preFill = interpolate(
+    t,
+    [ACC + accentEl.beat("preFillAt"), ACC + accentEl.beat("preFill")],
+    [0, 1],
+    CLAMP,
+  );
+  const heroAt = ACC + accentEl.beat("heroAt");
+  const heroIn = interpolate(t, [heroAt, ACC + accentEl.beat("hero")], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
-  const heroLab = interpolate(t, [ACC + 18, ACC + 34], [0, 1], {
-    ...CLAMP,
-    easing: EASE_OUT,
-  });
-  const count = interpolate(t, [ACC + 10, ACC + 36], [0.55, 1], {
-    ...CLAMP,
-    easing: Easing.bezier(0.22, 1, 0.36, 1),
-  });
-  const dimOthers = interpolate(t, [ACC, ACC + 20], [0, 1], {
+  const heroLab = interpolate(
+    t,
+    [ACC + accentEl.beat("labelAt"), ACC + accentEl.beat("label")],
+    [0, 1],
+    {
+      ...CLAMP,
+      easing: EASE_OUT,
+    },
+  );
+  const count = interpolate(
+    t,
+    [heroAt, ACC + accentEl.beat("count")],
+    [0.55, 1],
+    {
+      ...CLAMP,
+      easing: Easing.bezier(0.22, 1, 0.36, 1),
+    },
+  );
+  const dimOthers = interpolate(t, [ACC, ACC + accentEl.beat("dim")], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
@@ -460,10 +393,18 @@ export function TreemapSplit({
             const roomy = c.rect.w >= 120 * u && c.rect.h >= 70 * u;
             const labA =
               item && roomy
-                ? interpolate(t, [c.settle - 4, c.settle + 12], [0, 1], {
-                    ...CLAMP,
-                    easing: EASE_OUT,
-                  })
+                ? interpolate(
+                    t,
+                    [
+                      c.settle + splitsEl.beat("labelAt"),
+                      c.settle + splitsEl.beat("label"),
+                    ],
+                    [0, 1],
+                    {
+                      ...CLAMP,
+                      easing: EASE_OUT,
+                    },
+                  )
                 : 0;
             const smallLab = isHl ? labA * (1 - preFill) : labA;
             const home = settled.get(c.key) ?? c.rect;

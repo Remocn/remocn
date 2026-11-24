@@ -6,6 +6,12 @@ import { useId } from "react";
 import { AbsoluteFill, Easing, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  type HatchShadeElementId,
+  hatchShadeTimeline,
+  PASSES,
+} from "./timeline";
 
 const { fontFamily: display } = loadDisplay("normal", {
   weights: ["400", "500"],
@@ -38,6 +44,12 @@ export interface HatchShadeProps {
   grain?: boolean;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches the ghost, single hatching passes, the
+   * outline and the caption, by the ids in `./timeline`. Frames on the scene
+   * timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<HatchShadeElementId>;
 }
 
 const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
@@ -51,16 +63,6 @@ const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
 const PEN = Easing.bezier(0.45, 0, 0.2, 1);
 
 const CAP = 0.72;
-
-const PASSES = [
-  { at: 8, sweep: 30, draw: 11, angle: 45, gap: 8, ink: "fg" },
-  { at: 40, sweep: 30, draw: 11, angle: -45, gap: 8, ink: "fg" },
-  { at: 74, sweep: 26, draw: 10, angle: 0, gap: 6, ink: "copper" },
-] as const;
-
-const OUTLINE_AT = 100;
-const OUTLINE_END = 110;
-const CAPTION_AT = 112;
 
 const THEMES = {
   dark: {
@@ -156,24 +158,35 @@ function ScaleLayer({
   );
 }
 
-export function HatchShade({
-  value = "24",
-  caption = "new components, drawn for launch week",
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = display,
-  fontWeight = 500,
-  density = 1,
-  scale = 1,
-  delay = 0,
-  grain = true,
-  speed = 1,
-  theme = "dark",
-}: HatchShadeProps) {
+export function HatchShade(props: HatchShadeProps) {
+  const {
+    value = "24",
+    caption = "new components, drawn for launch week",
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = display,
+    fontWeight = 500,
+    density = 1,
+    scale = 1,
+    delay = 0,
+    grain = true,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H } = useSceneConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    hatchShadeTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const ghostEl = tl.get("ghost");
+  const outlineEl = tl.get("outline");
+  const captionEl = tl.get("caption");
   const u = H / 720;
   const stage = THEMES[theme];
   const fg = ink ?? stage.fg;
@@ -214,25 +227,33 @@ export function HatchShade({
     letterSpacing: `${-0.02 * size}px`,
   };
 
-  const outline = interpolate(t, [OUTLINE_AT, OUTLINE_END], [0, 1], CLAMP);
+  const outline = interpolate(
+    t,
+    [outlineEl.start, outlineEl.end],
+    [0, 1],
+    CLAMP,
+  );
   const capIn = EASE_OUT(
-    interpolate(t, [CAPTION_AT, CAPTION_AT + 16], [0, 1], CLAMP),
+    interpolate(t, [captionEl.start, captionEl.end], [0, 1], CLAMP),
   );
   const ghost = interpolate(
     t,
-    [0, 10, OUTLINE_AT, OUTLINE_END],
+    [ghostEl.start, ghostEl.end, outlineEl.start, outlineEl.end],
     [0, 1, 1, 0],
     CLAMP,
   );
 
   const passes = PASSES.map((pass, pi) => {
+    const passEl = tl.get(`pass:${pi}`);
     const lines = hatchLines(box, pass.angle, (pass.gap * u) / density);
     const color = pass.ink === "copper" ? `url(#${copperId})` : fg;
     const opacity = pass.ink === "copper" ? 1 : stage.ink;
     const els = lines.map((l, i) => {
       const order = pi === 1 ? l.k : l.k;
-      const start = pass.at + order * pass.sweep;
-      const p = PEN(interpolate(t, [start, start + pass.draw], [0, 1], CLAMP));
+      const start = passEl.start + order * passEl.beat("sweep");
+      const p = PEN(
+        interpolate(t, [start, start + passEl.beat("draw")], [0, 1], CLAMP),
+      );
       if (p <= 0) return null;
       const taper = pi === 1 ? interpolate(l.k, [0.18, 0.8], [0, 1], CLAMP) : 1;
       if (taper * hair * 1.35 < 0.45) return null;

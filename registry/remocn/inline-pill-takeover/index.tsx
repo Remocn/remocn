@@ -1,8 +1,13 @@
 "use client";
 
 import { Easing, interpolate } from "remotion";
-import { useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  type InlinePillTakeoverElementId,
+  inlinePillTakeoverTimeline,
+} from "./timeline";
 
 export interface InlinePillTakeoverProps {
   before: string;
@@ -26,10 +31,14 @@ export interface InlinePillTakeoverProps {
   blur?: number;
   speed?: number;
   className?: string;
+  /**
+   * Moves, trims or stretches the pill opening and growing, the words fading
+   * and the camera push and cut, by the ids in `./timeline`. Frames on the
+   * scene timeline, after `speed`.
+   */
+  timing?: Timing<InlinePillTakeoverElementId>;
 }
 
-const PRE_CUT_FRAMES = 12;
-const TAKEOVER_SETTLE_FRAMES = 6;
 const PRE_CUT_CAMERA_SCALE = 1.25;
 const CAMERA_CUT_ENTRY_PROGRESS = 0.86;
 const expandEasing = Easing.out(Easing.quad);
@@ -38,77 +47,73 @@ const fadeEasing = Easing.in(Easing.cubic);
 const preCutEasing = Easing.out(Easing.quad);
 const takeoverSettleEasing = Easing.out(Easing.cubic);
 
-export function InlinePillTakeover({
-  before,
-  insert,
-  after,
-  fontSize = 52,
-  color = "#fff3df",
-  fontWeight = 400,
-  pillWidth = 260,
-  pillColor = "#fffaf0",
-  pillTextColor = "#1c1210",
-  expandFrames = 12,
-  pillRevealHeightScale = 0.35,
-  pillGrowAt = 12,
-  pillGrowFrames = 24,
-  pillGrowWidthScale = 1.08,
-  pillGrowHeightScale = 1.16,
-  outerExitFrames = 18,
-  takeoverAt = 12,
-  takeoverScale = 2.15,
-  blur = 12,
-  speed = 1,
-  className,
-}: InlinePillTakeoverProps) {
+export function InlinePillTakeover(props: InlinePillTakeoverProps) {
+  const {
+    before,
+    insert,
+    after,
+    fontSize = 52,
+    color = "#fff3df",
+    fontWeight = 400,
+    pillWidth = 260,
+    pillColor = "#fffaf0",
+    pillTextColor = "#1c1210",
+    pillRevealHeightScale = 0.35,
+    pillGrowWidthScale = 1.08,
+    pillGrowHeightScale = 1.16,
+    takeoverScale = 2.15,
+    blur = 12,
+    speed = 1,
+    className,
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = useSceneFrame() * speed;
-  const safeExpandFrames = Math.max(expandFrames, 0.001);
-  const pillGrowEnd = pillGrowAt + Math.max(pillGrowFrames, 0.001);
-  const outerExitEnd = Math.max(outerExitFrames, 2.001);
+  const { durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    inlinePillTakeoverTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const expandEl = tl.get("expand");
+  const fade = tl.get("fade");
+  const grow = tl.get("grow");
+  const push = tl.get("push");
+  const cut = tl.get("cut");
   const dashWidth = fontSize * 0.72;
   const pillHeight = fontSize * 1.22;
-  const cutAt = takeoverAt + PRE_CUT_FRAMES;
   const cutEntryScale = takeoverScale * CAMERA_CUT_ENTRY_PROGRESS;
 
-  const expand = interpolate(frame, [0, safeExpandFrames], [0, 1], {
+  const expand = interpolate(frame, [expandEl.start, expandEl.end], [0, 1], {
     easing: expandEasing,
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
   });
-  const pillGrowProgress = interpolate(
-    frame,
-    [pillGrowAt, pillGrowEnd],
-    [0, 1],
-    {
-      easing: pillGrowEasing,
-      extrapolateLeft: "clamp",
-      extrapolateRight: "clamp",
-    },
-  );
-  const outerExit = interpolate(frame, [2, outerExitEnd], [0, 1], {
+  const pillGrowProgress = interpolate(frame, [grow.start, grow.end], [0, 1], {
+    easing: pillGrowEasing,
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+  });
+  const outerExit = interpolate(frame, [fade.start, fade.end], [0, 1], {
     easing: fadeEasing,
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
   });
-  const pillTextOpacity = frame >= 3 ? 1 : 0;
+  const pillTextOpacity =
+    frame >= expandEl.start + expandEl.beat("text") ? 1 : 0;
   const cameraAt = (f: number) =>
-    f < cutAt
-      ? interpolate(f, [takeoverAt, cutAt - 1], [1, PRE_CUT_CAMERA_SCALE], {
+    f < cut.start
+      ? interpolate(f, [push.start, push.end - 1], [1, PRE_CUT_CAMERA_SCALE], {
           easing: preCutEasing,
           extrapolateLeft: "clamp",
           extrapolateRight: "clamp",
         })
-      : interpolate(
-          f,
-          [cutAt, cutAt + TAKEOVER_SETTLE_FRAMES],
-          [cutEntryScale, takeoverScale],
-          {
-            easing: takeoverSettleEasing,
-            extrapolateLeft: "clamp",
-            extrapolateRight: "clamp",
-          },
-        );
+      : interpolate(f, [cut.start, cut.end], [cutEntryScale, takeoverScale], {
+          easing: takeoverSettleEasing,
+          extrapolateLeft: "clamp",
+          extrapolateRight: "clamp",
+        });
   const cameraScale = cameraAt(frame);
   const cameraMoving =
     Math.abs(cameraAt(frame + speed) - cameraScale) > 1e-6 ||

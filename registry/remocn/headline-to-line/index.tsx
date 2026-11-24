@@ -22,6 +22,14 @@ import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround, gshParams } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  CHARS_PER_FRAME,
+  DEFAULT_CONTINUATION,
+  DEFAULT_WORDS,
+  type HeadlineToLineElementId,
+  headlineToLineTimeline,
+} from "./timeline";
 
 const geist = loadFont("normal", {
   weights: ["300"],
@@ -50,6 +58,12 @@ export interface HeadlineToLineProps {
   theme?: "dark" | "light";
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
+  /**
+   * Moves, trims or stretches the headline words, the accent pop, the ground
+   * rising, the shrink into the line and the typing, by the ids in
+   * `./timeline`. Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<HeadlineToLineElementId>;
 }
 
 const THEMES = {
@@ -77,19 +91,6 @@ const FONT_PX = 200;
 const TRACK_BIG = -0.045;
 const TRACK_SMALL = -0.02;
 const POP_SCALE = 0.12;
-
-const BEAT = {
-  wordStep: 6,
-  enter: 12,
-  pop: 24,
-  shrink: 48,
-  shrinkLen: 18,
-  wordLag: 1,
-  type: 66,
-  charsPerFrame: 1,
-  rise: 42,
-  riseLen: 42,
-};
 
 const ENTER = Easing.bezier(0.22, 1, 0.36, 1);
 const LIGHT_IN = Easing.bezier(0.32, 0.72, 0, 1);
@@ -197,26 +198,34 @@ function ScaleLayer({
   );
 }
 
-export function HeadlineToLine({
-  words = ["Your", "launch", "video"],
-  accentIndex = 1,
-  continuation = ", built from blocks you own",
-  accent,
-  ink,
-  background,
-  fontFamily = geist.fontFamily,
-  stagger = BEAT.wordStep,
-  charsPerFrame = BEAT.charsPerFrame,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-  ground,
-  groundParams,
-}: HeadlineToLineProps) {
+export function HeadlineToLine(props: HeadlineToLineProps) {
+  const {
+    words = DEFAULT_WORDS,
+    accentIndex = 1,
+    continuation = DEFAULT_CONTINUATION,
+    accent,
+    ink,
+    background,
+    fontFamily = geist.fontFamily,
+    charsPerFrame = CHARS_PER_FRAME,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    ground,
+    groundParams,
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay) * speed;
   const { width: W, height: H, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    headlineToLineTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const riseEl = tl.get("rise");
   const c = THEMES[theme];
   const inkC = ink ?? c.ink;
   const hi = accent ?? c.accent;
@@ -225,7 +234,7 @@ export function HeadlineToLine({
   const m = useMeasure(fontFamily);
   const t = frame;
 
-  const rise = interpolate(t, [BEAT.rise, BEAT.rise + BEAT.riseLen], [0, 1], {
+  const rise = interpolate(t, [riseEl.start, riseEl.end], [0, 1], {
     ...CLAMP,
     easing: LIGHT_IN,
   });
@@ -328,18 +337,23 @@ export function HeadlineToLine({
     const smallC = centroid(smallSlots);
     const validAccent = accentIndex >= 0 && accentIndex < words.length;
     const accentW = validAccent ? wb(words[accentIndex]) * B : 0;
+    const shrinkEl = tl.get("shrink");
+    const lag = shrinkEl.beat("lag");
     const shrinkP = (i: number, tt: number) => {
-      const at0 = BEAT.shrink + i * (multi ? BEAT.wordLag * 3 : BEAT.wordLag);
-      return interpolate(tt, [at0, at0 + BEAT.shrinkLen], [0, 1], {
+      const at0 = shrinkEl.start + i * (multi ? lag * 3 : lag);
+      return interpolate(tt, [at0, at0 + shrinkEl.beat("move")], [0, 1], {
         ...CLAMP,
         easing: CAMERA,
       });
     };
-    const popSpring = spring({
-      frame: t - BEAT.pop,
-      fps,
-      config: { mass: 0.5, damping: 12, stiffness: 200 },
-    });
+    const popEl = validAccent ? tl.get("pop") : null;
+    const popSpring = popEl
+      ? spring({
+          frame: t - popEl.start,
+          fps,
+          config: { mass: 0.5, damping: 12, stiffness: 200 },
+        })
+      : 0;
     const popNow = validAccent ? popSpring * (1 - shrinkP(accentIndex, t)) : 0;
     const popShift = (i: number) => {
       if (!validAccent || i === accentIndex) return 0;
@@ -348,8 +362,8 @@ export function HeadlineToLine({
       return i < accentIndex ? -extra : extra;
     };
     const wordNodes = words.map((word, i) => {
-      const enterAt = i * stagger - 4;
-      const e = interpolate(t, [enterAt, enterAt + BEAT.enter], [0, 1], {
+      const wordEl = tl.get(`word:${i}`);
+      const e = interpolate(t, [wordEl.start, wordEl.end], [0, 1], {
         ...CLAMP,
         easing: ENTER,
       });
@@ -375,12 +389,13 @@ export function HeadlineToLine({
       const popAmt = isAccent ? popNow : 0;
       const lifted = -0.14 * popAmt;
       const popScale = 1 + POP_SCALE * popAmt;
-      const tint = isAccent
-        ? interpolate(t - BEAT.pop, [0, 6], [0, 1], {
-            ...CLAMP,
-            easing: LIGHT_IN,
-          })
-        : 0;
+      const tint =
+        isAccent && popEl
+          ? interpolate(t - popEl.start, [0, popEl.length], [0, 1], {
+              ...CLAMP,
+              easing: LIGHT_IN,
+            })
+          : 0;
       const color =
         tint > 0
           ? `color-mix(in oklab, ${hi} ${(tint * 100).toFixed(1)}%, ${inkC})`
@@ -419,16 +434,21 @@ export function HeadlineToLine({
       );
     });
 
+    const typeEl = tl.get("type");
     const landed =
-      BEAT.shrink +
-      BEAT.shrinkLen +
-      (words.length - 1) * BEAT.wordLag * (multi ? 3 : 1);
-    const typeAt = Math.max(BEAT.type, landed);
+      shrinkEl.start +
+      shrinkEl.beat("move") +
+      (words.length - 1) * lag * (multi ? 3 : 1);
+    // A wrapped headline lands later (its lag is measured): the typing waits.
+    const typeAt = multi ? Math.max(typeEl.start, landed) : typeEl.start;
     const typed = Math.max(
       0,
-      Math.min(continuation.length, Math.floor((t - typeAt) * charsPerFrame)),
+      Math.min(
+        continuation.length,
+        Math.floor(((t - typeAt) * charsPerFrame) / typeEl.beat("pace")),
+      ),
     );
-    const typeEnd = typeAt + Math.ceil(continuation.length / charsPerFrame);
+    const typeEnd = typeAt + typeEl.length;
     const headLen = head.length;
     const caretCh = headLen + typed;
     const textNodes = lines.map((ln, li) => {
@@ -456,9 +476,16 @@ export function HeadlineToLine({
       );
     });
 
-    const caretIn = interpolate(t, [landed - 6, landed], [0, 1], CLAMP);
+    const caretIn = interpolate(
+      t,
+      [landed - shrinkEl.beat("caretIn"), landed],
+      [0, 1],
+      CLAMP,
+    );
+    const blinkAfter = typeEl.beat("blinkAfter");
     const blinkOn =
-      t < typeEnd + 6 || Math.floor((t - typeEnd - 6) / 15) % 2 === 1;
+      t < typeEnd + blinkAfter ||
+      Math.floor((t - typeEnd - blinkAfter) / typeEl.beat("blink")) % 2 === 1;
     const caretLine = lineOf(caretCh);
     const caretX = charX(caretCh) + s * 0.06;
     const caret = (

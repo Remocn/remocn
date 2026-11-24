@@ -13,6 +13,17 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_EDITS,
+  DEFAULT_TEXT,
+  join,
+  plan,
+  type Seg,
+  type SelectReplaceElementId,
+  type Step,
+  selectReplaceTimeline,
+} from "./timeline";
 
 const geist = loadGeist("normal", { weights: ["500"], subsets: ["latin"] });
 const serif = loadNewsreader("italic", {
@@ -47,6 +58,12 @@ export interface SelectReplaceProps {
   delay?: number;
   theme?: "dark" | "light";
   speed?: number;
+  /**
+   * Moves, trims or stretches the intro, the selections and the typing, by
+   * the ids in `./timeline`. Frames on the scene timeline, after `delay` and
+   * `speed`.
+   */
+  timing?: Timing<SelectReplaceElementId>;
 }
 
 const CLAMP = {
@@ -63,13 +80,6 @@ const TRACK = -0.032;
 // meets Geist's, and tracked a hair tight.
 const SERIF_SCALE = 1.1;
 const SERIF_TRACK = -0.012;
-const INTRO = 14;
-const CARET_IN = 4;
-const SELECT = 12;
-const SELECTED_HOLD = 9;
-const TYPE_DELAY = 5;
-const BETWEEN = 16;
-const RECENTER = 11;
 const BLINK = 30;
 
 // gradients.sh "mesh" palette (#ecdcf2 #8796ee #2e45b7 #0e1645). The selection
@@ -97,47 +107,6 @@ const THEMES = {
     ink: ["", "#2E45B7", "#0E1645"],
   },
 } as const;
-
-interface Seg {
-  text: string;
-  serif: boolean;
-}
-
-function hash(n: number) {
-  const x = Math.sin(n * 127.1 + 311.7) * 43758.5453;
-  return x - Math.floor(x);
-}
-
-const plain = (segs: Seg[]) => segs.map((s) => s.text).join("");
-
-/** Characters [a, b) of a styled line, keeping each run's style. */
-function slice(segs: Seg[], a: number, b: number): Seg[] {
-  const out: Seg[] = [];
-  let at = 0;
-  for (const s of segs) {
-    const chars = [...s.text];
-    const lo = Math.max(a, at);
-    const hi = Math.min(b, at + chars.length);
-    if (hi > lo)
-      out.push({
-        text: chars.slice(lo - at, hi - at).join(""),
-        serif: s.serif,
-      });
-    at += chars.length;
-  }
-  return out;
-}
-
-function join(...lists: Seg[][]): Seg[] {
-  const out: Seg[] = [];
-  for (const s of lists.flat()) {
-    if (!s.text) continue;
-    const last = out[out.length - 1];
-    if (last && last.serif === s.serif) last.text += s.text;
-    else out.push({ ...s });
-  }
-  return out;
-}
 
 function useMeasurer(fontFamily: string, fontWeight: number) {
   const [ready, setReady] = useState(false);
@@ -189,57 +158,6 @@ function useMeasurer(fontFamily: string, fontWeight: number) {
   return ready ? measure : null;
 }
 
-interface Step {
-  start: number;
-  before: Seg[];
-  from: string;
-  after: Seg[];
-  to: string;
-  selectAt: number;
-  deleteAt: number;
-  /** Frame each typed character lands on. */
-  keys: number[];
-  end: number;
-}
-
-function plan(text: string, edits: SelectReplaceEdit[], hold: number) {
-  const steps: Step[] = [];
-  let line: Seg[] = [{ text, serif: false }];
-  let t = INTRO + 2;
-  edits.forEach((edit, k) => {
-    const flat = plain(line);
-    const idx = flat.indexOf(edit.from);
-    if (idx < 0) return;
-    const a = [...flat.slice(0, idx)].length;
-    const b = a + [...edit.from].length;
-    const before = slice(line, 0, a);
-    const after = slice(line, b, Number.POSITIVE_INFINITY);
-    const selectAt = t + CARET_IN;
-    const deleteAt = selectAt + SELECT + hold;
-    const keys: number[] = [];
-    let at = deleteAt + TYPE_DELAY;
-    [...edit.to].forEach((_, i) => {
-      keys.push(at);
-      at += 2 + Math.round(hash(k * 31 + i) * 2);
-    });
-    const end = keys.length ? keys[keys.length - 1] : deleteAt;
-    steps.push({
-      start: t,
-      before,
-      from: edit.from,
-      after,
-      to: edit.to,
-      selectAt,
-      deleteAt,
-      keys,
-      end,
-    });
-    line = join(before, [{ text: edit.to, serif: true }], after);
-    t = end + BETWEEN;
-  });
-  return { steps, final: line, end: t - BETWEEN };
-}
-
 const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
 
 /** The foreground at `scale`, around the frame's center; nothing extra at 1. */
@@ -258,30 +176,49 @@ function ScaleLayer({
   );
 }
 
-export function SelectReplace({
-  text = "Draft it next week.",
-  edits = [
-    { from: "Draft", to: "Ship" },
-    { from: "next week", to: "tonight" },
-  ],
-  hold = SELECTED_HOLD,
-  fontWeight = WEIGHT,
-  accent = "#3B5BFD",
-  ink: textInk,
-  background,
-  fontFamily = geist.fontFamily,
-  scale = 1,
-  delay = 0,
-  theme = "dark",
-  speed = 1,
-}: SelectReplaceProps) {
+export function SelectReplace(props: SelectReplaceProps) {
+  const {
+    text = DEFAULT_TEXT,
+    edits = DEFAULT_EDITS,
+    fontWeight = WEIGHT,
+    accent = "#3B5BFD",
+    ink: textInk,
+    background,
+    fontFamily = geist.fontFamily,
+    scale = 1,
+    delay = 0,
+    theme = "dark",
+    speed = 1,
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width, height } = useSceneConfig();
+  const { width, height, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    selectReplaceTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const t = THEMES[theme];
   const stage = background === "transparent" ? undefined : (background ?? t.bg);
   const measure = useMeasurer(fontFamily, fontWeight);
-  const { steps } = useMemo(() => plan(text, edits, hold), [text, edits, hold]);
+  // What each edit replaces comes from the plan; when it happens, from the
+  // timeline.
+  const planned = useMemo(() => plan(text, edits).steps, [text, edits]);
+  const steps: Step[] = planned.map((s) => {
+    const sel = tl.get(`select:${s.index}`);
+    const ty = tl.get(`type:${s.index}`);
+    return {
+      ...s,
+      start: sel.start,
+      selectAt: sel.start + sel.beat("caretIn"),
+      deleteAt: ty.start,
+      keys: s.keys.map((_, i) => ty.start + ty.beat(`key:${i}`)),
+      end: ty.end,
+    };
+  });
+  const introEl = tl.get("intro");
 
   if (!measure)
     return (
@@ -293,13 +230,18 @@ export function SelectReplace({
   ];
 
   // Every distinct line state, in time order, for size and re-centering.
-  const states: { at: number; line: Seg[] }[] = [
-    { at: 0, line: [{ text, serif: false }] },
+  const states: { at: number; recenter: number; line: Seg[] }[] = [
+    { at: 0, recenter: 0, line: [{ text, serif: false }] },
   ];
   for (const s of steps) {
-    states.push({ at: s.deleteAt, line: join(s.before, s.after) });
+    const recenter = tl.get(`type:${s.index}`).beat("recenter");
+    states.push({ at: s.deleteAt, recenter, line: join(s.before, s.after) });
     s.keys.forEach((k, i) => {
-      states.push({ at: k, line: join(s.before, typed(s, i + 1), s.after) });
+      states.push({
+        at: k,
+        recenter,
+        line: join(s.before, typed(s, i + 1), s.after),
+      });
     });
   }
   const widest = Math.max(...states.map((s) => measure(s.line)));
@@ -316,10 +258,16 @@ export function SelectReplace({
     lastMove = s.start;
     caretAt = s.before;
     if (frame >= s.selectAt && frame < s.deleteAt) {
-      const p = interpolate(frame, [s.selectAt, s.selectAt + SELECT], [0, 1], {
-        ...CLAMP,
-        easing: EASE_IO,
-      });
+      const sel = tl.get(`select:${s.index}`);
+      const p = interpolate(
+        frame,
+        [s.selectAt, s.selectAt + sel.beat("select")],
+        [0, 1],
+        {
+          ...CLAMP,
+          easing: EASE_IO,
+        },
+      );
       const n = Math.ceil(p * [...s.from].length);
       selection = {
         a: measure(s.before),
@@ -330,7 +278,7 @@ export function SelectReplace({
         ),
         full: measure([{ text: s.from, serif: false }]),
       };
-      lastMove = Math.min(frame, s.selectAt + SELECT);
+      lastMove = Math.min(frame, s.selectAt + sel.beat("select"));
     }
     if (frame >= s.deleteAt) {
       const n = s.keys.filter((k) => frame >= k).length;
@@ -351,10 +299,15 @@ export function SelectReplace({
         ? frame >= states[i].at
           ? 1
           : 0
-        : interpolate(frame, [states[i].at, states[i].at + RECENTER], [0, 1], {
-            ...CLAMP,
-            easing: EASE_OUT,
-          });
+        : interpolate(
+            frame,
+            [states[i].at, states[i].at + states[i].recenter],
+            [0, 1],
+            {
+              ...CLAMP,
+              easing: EASE_OUT,
+            },
+          );
       x += (leftFor(states[i].line) - leftFor(states[i - 1].line)) * p;
     }
     return x;
@@ -368,7 +321,7 @@ export function SelectReplace({
 
   const cy = height / 2;
   const lineTop = cy - em(0.5);
-  const intro = interpolate(frame, [0, INTRO], [0, 1], {
+  const intro = interpolate(frame, [introEl.start, introEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });

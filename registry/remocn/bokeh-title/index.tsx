@@ -9,6 +9,8 @@ import { useId } from "react";
 import { AbsoluteFill, Easing, interpolate, interpolateColors } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import { type BokehTitleElementId, bokehTitleTimeline } from "./timeline";
 
 const { fontFamily: sans } = loadSans("normal", {
   weights: ["400", "500"],
@@ -99,6 +101,12 @@ export interface BokehTitleProps {
   speed?: number;
   /** Dark = night lights; light = soft daylight bokeh. */
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches the focus pull, the rack back, the title,
+   * the subtitle and the lights' drift and opening, by the ids in
+   * `./timeline`. Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<BokehTitleElementId>;
 }
 
 const EASE_IO = Easing.bezier(0.65, 0, 0.35, 1);
@@ -108,9 +116,6 @@ const CLAMP = {
   extrapolateRight: "clamp",
 } as const;
 
-const T_FOCUS_IN = [34, 66] as const;
-const T_FOCUS_OUT = [90, 120] as const;
-const T_TITLE = 106;
 const AMBIENT = 24;
 
 // gradients.sh "halo" palette: bg #030306, [#fff4ec, #ffb36b, #e2457a, #3d4dff].
@@ -307,35 +312,45 @@ function ScaleLayer({
   );
 }
 
-export function BokehTitle({
-  title = "Launch films, made in code",
-  subtitle = "remocn · Spring release",
-  pattern = "mark",
-  shape = "circle",
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = serif,
-  hold = T_FOCUS_OUT[0] - T_FOCUS_IN[1],
-  ambient: ambientCount = AMBIENT,
-  logo,
-  grain = true,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: BokehTitleProps) {
+export function BokehTitle(props: BokehTitleProps) {
+  const {
+    title = "Launch films, made in code",
+    subtitle = "remocn · Spring release",
+    pattern = "mark",
+    shape = "circle",
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = serif,
+    ambient: ambientCount = AMBIENT,
+    logo,
+    grain = true,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width, height } = useSceneConfig();
+  const { width, height, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    bokehTitleTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const eDrift = tl.get("drift");
+  const eOpen = tl.get("open");
+  const eFocus = tl.get("focus");
+  const eRack = tl.get("rack");
+  const eTitle = tl.get("title");
+  const eSubtitle = tl.get("subtitle");
   const u = height / 720;
   const p: Palette = PALETTES[theme];
   const fg = ink ?? p.fg;
   const stage =
     background === "transparent" ? "transparent" : (background ?? p.bg);
-  const shift = hold - (T_FOCUS_OUT[0] - T_FOCUS_IN[1]);
-  const focusOut = [T_FOCUS_OUT[0] + shift, T_FOCUS_OUT[1] + shift];
-  const titleAt = T_TITLE + shift;
 
   const built = buildTargets(pattern);
   const targets = built.targets;
@@ -345,18 +360,27 @@ export function BokehTitle({
 
   // focus pull: 0 = lights defocused, 1 = pattern plane sharp
   const focus =
-    interpolate(t, T_FOCUS_IN, [0, 1], { ...CLAMP, easing: EASE_IO }) -
-    interpolate(t, focusOut, [0, 1], { ...CLAMP, easing: EASE_IO });
+    interpolate(t, [eFocus.start, eFocus.end], [0, 1], {
+      ...CLAMP,
+      easing: EASE_IO,
+    }) -
+    interpolate(t, [eRack.start, eRack.end], [0, 1], {
+      ...CLAMP,
+      easing: EASE_IO,
+    });
   // lens breathing: the frame scales a hair with the focus throw
   const breathe = 1 + focus * 0.025;
-  const drift = interpolate(t, [0, 200], [0, 1], { ...CLAMP, easing: EASE_IO });
-  const open = interpolate(t, [0, 14], [0.55, 1], CLAMP);
+  const drift = interpolate(t, [eDrift.start, eDrift.end], [0, 1], {
+    ...CLAMP,
+    easing: EASE_IO,
+  });
+  const open = interpolate(t, [eOpen.start, eOpen.end], [0.55, 1], CLAMP);
 
-  const titleP = interpolate(t, [titleAt, titleAt + 40], [0, 1], {
+  const titleP = interpolate(t, [eTitle.start, eTitle.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
-  const subP = interpolate(t, [titleAt + 18, titleAt + 46], [0, 1], {
+  const subP = interpolate(t, [eSubtitle.start, eSubtitle.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });

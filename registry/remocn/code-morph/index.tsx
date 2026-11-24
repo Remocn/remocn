@@ -4,6 +4,23 @@ import { useMemo } from "react";
 import { Easing } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import {
+  type ResolvedTimeline,
+  resolve,
+  type Timing,
+  useTimeline,
+} from "@/lib/remocn/timeline";
+import {
+  CODE_MORPH_DURATION,
+  CODE_MORPH_STEPS,
+  type CodeMorphElementId,
+  type CodeMorphStep,
+  codeMorphPlan,
+  codeMorphSteps,
+  codeMorphTimeline,
+} from "./timeline";
+
+export type { CodeMorphStep };
 
 export type CodeMorphTheme = "dark" | "light";
 
@@ -19,11 +36,6 @@ export type CodeMorphKind =
 
 export type CodeMorphRole = "rest" | "stay" | "move" | "exit" | "enter";
 
-export interface CodeMorphStep {
-  at: number;
-  code: string;
-}
-
 export interface CodeMorphProps {
   steps?: CodeMorphStep[];
   morphDuration?: number;
@@ -36,9 +48,14 @@ export interface CodeMorphProps {
   accentColor?: string;
   speed?: number;
   className?: string;
+  /**
+   * Moves, trims or stretches single morphs and their highlights, by the
+   * ids in `./timeline`. Frames on the scene timeline, after `speed`.
+   */
+  timing?: Timing<CodeMorphElementId>;
 }
 
-type Paint = "theme" | "accentColor" | "className";
+type Paint = "theme" | "accentColor" | "className" | "timing";
 
 export interface CodeMorphOptions extends Omit<CodeMorphProps, Paint> {
   width?: number;
@@ -88,38 +105,11 @@ export interface CodeMorphState {
   highlights: CodeMorphRow[];
 }
 
-const BEFORE = `import { useEffect, useState } from "react";
-
-export function Invoices() {
-  const [invoices, setInvoices] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    fetch("/api/invoices")
-      .then((res) => res.json())
-      .then(setInvoices)
-      .finally(() => setLoading(false));
-  }, []);
-
-  if (loading) return <Spinner />;
-  return <InvoiceTable rows={invoices} />;
-}`;
-
-const AFTER = `import useSWR from "swr";
-
-export function Invoices() {
-  const { data, isLoading } = useSWR("/api/invoices", fetcher);
-
-  if (isLoading) return <Spinner />;
-  return <InvoiceTable rows={data} />;
-}`;
-
-export const codeMorphDefaults: Required<Omit<CodeMorphProps, "className">> = {
-  steps: [
-    { at: 0, code: BEFORE },
-    { at: 48, code: AFTER },
-  ],
-  morphDuration: 36,
+export const codeMorphDefaults: Required<
+  Omit<CodeMorphProps, "className" | "timing">
+> = {
+  steps: CODE_MORPH_STEPS,
+  morphDuration: CODE_MORPH_DURATION,
   highlight: true,
   fontSize: 20,
   lineNumbers: true,
@@ -170,12 +160,6 @@ const ENTER_START = 20;
 const ENTER_SPREAD = 4;
 const ENTER_DURATION = 12;
 const ARC = 0.08;
-const RISE = 8;
-const SHOW = 24;
-const FALL = 14;
-const HOLD = 24;
-const MIN_MORPH = 12;
-const MAX_MORPH = 120;
 const MIN_FONT = 10;
 const MAX_FONT = 40;
 const LINE_COST = 10;
@@ -890,18 +874,6 @@ function morphOf(from: CodeMorphVersion, to: CodeMorphVersion) {
   };
 }
 
-function stepsOf(steps: CodeMorphStep[] | undefined) {
-  const source = Array.isArray(steps) ? steps : codeMorphDefaults.steps;
-  const ordered = source
-    .map((step, index) => ({
-      index,
-      at: Math.max(0, finite(step.at, 0)),
-      code: typeof step.code === "string" ? step.code : "",
-    }))
-    .sort((a, b) => a.at - b.at || a.index - b.index);
-  return ordered.length > 0 ? ordered : [{ index: 0, at: 0, code: "" }];
-}
-
 export function getCodeMorphLayout(options: CodeMorphOptions = {}) {
   const width = Math.max(1, finite(options.width, REFERENCE_WIDTH));
   const height = Math.max(1, finite(options.height, REFERENCE_HEIGHT));
@@ -910,7 +882,9 @@ export function getCodeMorphLayout(options: CodeMorphOptions = {}) {
   const lineNumbers = options.lineNumbers !== false;
   const windowDots = options.windowDots !== false;
   const filename = (options.filename ?? codeMorphDefaults.filename).trim();
-  const versions = stepsOf(options.steps).map((step) => versionOf(step.code));
+  const versions = codeMorphSteps(options.steps).map((step) =>
+    versionOf(step.code),
+  );
   const morphs: ReturnType<typeof morphOf>[] = [];
   for (let index = 1; index < versions.length; index += 1) {
     morphs.push(morphOf(versions[index - 1], versions[index]));
@@ -953,41 +927,7 @@ export function getCodeMorphLayout(options: CodeMorphOptions = {}) {
 export type CodeMorphLayout = ReturnType<typeof getCodeMorphLayout>;
 
 export function getCodeMorphTimeline(options: CodeMorphOptions = {}) {
-  const requested = finite(
-    options.morphDuration,
-    codeMorphDefaults.morphDuration,
-  );
-  const morph = clamp(requested, MIN_MORPH, MAX_MORPH);
-  const highlight = options.highlight !== false;
-  const steps = stepsOf(options.steps).map((step) => step.at);
-  const starts: number[] = [];
-  let ready = 0;
-  for (const at of steps.slice(1)) {
-    const start = Math.max(at, ready);
-    starts.push(start);
-    ready = start + morph;
-  }
-  const morphs = starts.map((start, index) => {
-    const highlightStart = start + phase(ENTER_START, morph);
-    const natural = highlightStart + RISE + SHOW;
-    const next = index + 1 < starts.length ? starts[index + 1] : natural;
-    const fallStart = Math.min(natural, next);
-    return {
-      from: index,
-      to: index + 1,
-      start,
-      end: start + morph,
-      highlightStart,
-      fallStart,
-      highlightEnd: fallStart + FALL,
-    };
-  });
-  let settled = 0;
-  if (morphs.length > 0) {
-    const last = morphs[morphs.length - 1];
-    settled = highlight ? Math.max(last.end, last.highlightEnd) : last.end;
-  }
-  return { morph, highlight, steps, morphs, settled, duration: settled + HOLD };
+  return codeMorphPlan(options);
 }
 
 export type CodeMorphTimeline = ReturnType<typeof getCodeMorphTimeline>;
@@ -1122,6 +1062,7 @@ function morphFrame(
 function highlightsAt(
   time: number,
   timeline: CodeMorphTimeline,
+  resolved: ResolvedTimeline<CodeMorphElementId>,
   layout: CodeMorphLayout,
   active: number,
 ) {
@@ -1129,9 +1070,11 @@ function highlightsAt(
   if (!timeline.highlight) return rows;
   for (const index of [active - 1, active]) {
     if (index < 0) continue;
-    const morph = timeline.morphs[index];
-    const rise = easeOutQuad((time - morph.highlightStart) / RISE);
-    const fall = smoothstep((time - morph.fallStart) / FALL);
+    const h = resolved.get(`highlight:${index}`);
+    const rise = easeOutQuad((time - h.start) / h.beat("rise"));
+    const fall = smoothstep(
+      (time - (h.start + h.beat("fallAt"))) / h.beat("fall"),
+    );
     const opacity = rise * (1 - fall);
     if (opacity <= 0) continue;
     for (const row of layout.morphs[index].changed) {
@@ -1145,14 +1088,21 @@ export function getCodeMorphState(
   frame: number,
   options: CodeMorphOptions = {},
   layout: CodeMorphLayout = getCodeMorphLayout(options),
+  /** The schedule with `timing` applied; the plain schedule by default. */
+  resolved: ResolvedTimeline<CodeMorphElementId> = resolve(
+    codeMorphTimeline(options, { length: 0 }),
+  ),
 ): CodeMorphState {
   const timeline = getCodeMorphTimeline(options);
   const time = getCodeMorphTime(frame, options);
+  const morphs = timeline.morphs.map((_, index) =>
+    resolved.get(`morph:${index}`),
+  );
   let active = -1;
-  for (const [index, morph] of timeline.morphs.entries()) {
+  for (const [index, morph] of morphs.entries()) {
     if (morph.start <= time) active = index;
   }
-  const highlights = highlightsAt(time, timeline, layout, active);
+  const highlights = highlightsAt(time, timeline, resolved, layout, active);
   if (active === -1) {
     const lines = layout.versions[0].lines;
     return {
@@ -1166,8 +1116,9 @@ export function getCodeMorphState(
       highlights,
     };
   }
-  const local = time - timeline.morphs[active].start;
-  if (local >= timeline.morph) {
+  const local = time - morphs[active].start;
+  const morph = morphs[active].length;
+  if (local >= morph) {
     const version = active + 1;
     const lines = layout.versions[version].lines;
     return {
@@ -1181,12 +1132,12 @@ export function getCodeMorphState(
       highlights,
     };
   }
-  const motion = morphFrame(layout, active, local, timeline.morph);
+  const motion = morphFrame(layout, active, local, morph);
   return {
     time,
     version: active + 1,
     morphing: true,
-    progress: local / timeline.morph,
+    progress: local / morph,
     lines: motion.lines,
     tokens: motion.tokens,
     lineNumbers: motion.lineNumbers,
@@ -1206,35 +1157,43 @@ function transformOf(
     : `${move} scale(${token.scale})${tilt(moving)}`;
 }
 
-export function CodeMorph({
-  steps = codeMorphDefaults.steps,
-  morphDuration = codeMorphDefaults.morphDuration,
-  highlight = codeMorphDefaults.highlight,
-  fontSize = codeMorphDefaults.fontSize,
-  lineNumbers = codeMorphDefaults.lineNumbers,
-  filename = codeMorphDefaults.filename,
-  windowDots = codeMorphDefaults.windowDots,
-  theme = codeMorphDefaults.theme,
-  accentColor = codeMorphDefaults.accentColor,
-  speed = codeMorphDefaults.speed,
-  className,
-}: CodeMorphProps) {
+export function CodeMorph(props: CodeMorphProps) {
+  const {
+    steps = codeMorphDefaults.steps,
+    morphDuration = codeMorphDefaults.morphDuration,
+    highlight = codeMorphDefaults.highlight,
+    fontSize = codeMorphDefaults.fontSize,
+    lineNumbers = codeMorphDefaults.lineNumbers,
+    filename = codeMorphDefaults.filename,
+    windowDots = codeMorphDefaults.windowDots,
+    theme = codeMorphDefaults.theme,
+    accentColor = codeMorphDefaults.accentColor,
+    speed = codeMorphDefaults.speed,
+    className,
+    timing,
+  } = props;
   const frame = useSceneFrame();
   // `glide` is taken by the easing above.
   const tilt = useGlide();
-  const { width, height, fps } = useSceneConfig();
+  const { width, height, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    codeMorphTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const layout = useMemo(() => {
     const shape = { steps, fontSize, lineNumbers, filename, windowDots };
     return getCodeMorphLayout({ ...shape, width, height });
   }, [steps, fontSize, lineNumbers, filename, windowDots, width, height]);
   const motion = { steps, morphDuration, highlight, speed, fps };
-  const state = getCodeMorphState(frame, motion, layout);
+  const state = getCodeMorphState(frame, motion, layout, tl);
   // The same tokens a frame either side, to tell one in motion from one at
   // rest.
   const around = [frame - 1, frame + 1].map(
     (f) =>
       new Map(
-        getCodeMorphState(f, motion, layout).tokens.map((t) => [t.key, t]),
+        getCodeMorphState(f, motion, layout, tl).tokens.map((t) => [t.key, t]),
       ),
   );
   const tokenMoves = (token: CodeMorphRenderToken) =>

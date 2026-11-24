@@ -7,6 +7,8 @@ import { useId } from "react";
 import { AbsoluteFill, Easing, interpolate, spring } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import { type CollabLockupElementId, collabLockupTimeline } from "./timeline";
 
 const manrope = loadManrope("normal", {
   weights: ["400", "500", "600"],
@@ -44,6 +46,12 @@ export interface CollabLockupProps {
   grain?: boolean;
   theme?: "dark" | "light";
   speed?: number;
+  /**
+   * Moves, trims or stretches the names, the joiner, the rule, the caption,
+   * the dawn and the push, by the ids in `./timeline`. Frames on the scene
+   * timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<CollabLockupElementId>;
 }
 
 const DEFAULT_LEFT = "remocn";
@@ -257,29 +265,44 @@ function ScaleLayer({
   );
 }
 
-export function CollabLockup({
-  left = DEFAULT_LEFT,
-  right = DEFAULT_RIGHT,
-  leftLogo,
-  rightLogo,
-  joiner = "×",
-  caption = "Launch videos, rendered from every Kitebase workspace.",
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = sans,
-  fontWeight = 500,
-  trail = true,
-  scale = 1,
-  delay = 0,
-  grain = true,
-  theme = "dark",
-  speed = 1,
-}: CollabLockupProps) {
+export function CollabLockup(props: CollabLockupProps) {
+  const {
+    left = DEFAULT_LEFT,
+    right = DEFAULT_RIGHT,
+    leftLogo,
+    rightLogo,
+    joiner = "×",
+    caption = "Launch videos, rendered from every Kitebase workspace.",
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = sans,
+    fontWeight = 500,
+    trail = true,
+    scale = 1,
+    delay = 0,
+    grain = true,
+    theme = "dark",
+    speed = 1,
+    timing,
+  } = props;
   // `glide` is the names' travel below.
   const tilt = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H, fps } = useSceneConfig();
+  const { width: W, height: H, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    collabLockupTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const leftEl = tl.get("left");
+  const rightEl = tl.get("right");
+  const joinerEl = tl.get("joiner");
+  const ruleEl = tl.get("rule");
+  const captionEl = tl.get("caption");
+  const pushEl = tl.get("push");
+  const dawnEl = tl.get("dawn");
   const u = H / 720;
   const c = THEMES[theme];
   const fg = ink ?? c.fg;
@@ -305,34 +328,48 @@ export function CollabLockup({
     rightLogo ??
     (right === DEFAULT_RIGHT ? <KiteMark size={markSize} color={fg} /> : null);
 
-  const glide = (start: number) => (frame: number) =>
-    interpolate(frame, [start, start + 26], [0, 1], {
+  const glide = (e: { start: number; end: number }) => (frame: number) =>
+    interpolate(frame, [e.start, e.end], [0, 1], {
       ...CLAMP,
       easing: EASE_OUT,
     });
-  const gL = glide(0);
-  const gR = glide(2);
+  const gL = glide(leftEl);
+  const gR = glide(rightEl);
   const travel = W * 0.36;
 
   const drop = spring({
-    frame: t - 16,
+    frame: t - joinerEl.start,
     fps,
     config: { damping: 22, stiffness: 170, mass: 0.9 },
   });
-  const dropIn = interpolate(t, [16, 22], [0, 1], CLAMP);
+  const dropIn = interpolate(
+    t,
+    [joinerEl.start, joinerEl.start + joinerEl.beat("fadeIn")],
+    [0, 1],
+    CLAMP,
+  );
   const impact = spring({
-    frame: t - 25,
+    frame: t - (joinerEl.start + joinerEl.beat("impact")),
     fps,
     config: { damping: 11, stiffness: 220, mass: 0.6 },
   });
   const recoil = Math.sin(Math.min(1, impact) * Math.PI) * 7 * u;
 
-  const rule = interpolate(t, [34, 62], [0, 1], { ...CLAMP, easing: EASE_IO });
-  const cap = interpolate(t, [54, 78], [0, 1], { ...CLAMP, easing: EASE_OUT });
-  const push = interpolate(t, [0, 150], [0, 1], CLAMP);
+  const rule = interpolate(t, [ruleEl.start, ruleEl.end], [0, 1], {
+    ...CLAMP,
+    easing: EASE_IO,
+  });
+  const cap = interpolate(t, [captionEl.start, captionEl.end], [0, 1], {
+    ...CLAMP,
+    easing: EASE_OUT,
+  });
+  const push = interpolate(t, [pushEl.start, pushEl.end], [0, 1], CLAMP);
 
   const baseline = H * 0.47;
-  const dawn = interpolate(t, [8, 70], [0, 1], { ...CLAMP, easing: EASE_IO });
+  const dawn = interpolate(t, [dawnEl.start, dawnEl.end], [0, 1], {
+    ...CLAMP,
+    easing: EASE_IO,
+  });
   const arcY = 134 - dawn * 6 - push * 2;
   const ground = [
     `radial-gradient(64% 78% at 50% ${arcY}%, transparent 55%, ${c.arc[0]} 58.4%, ${c.arc[1]} 61.5%, ${c.arc[2]} 69%, transparent 84%)`,
@@ -347,9 +384,15 @@ export function CollabLockup({
     const now = x(t);
     const v = now - x(t - 1);
     const off = now + dir * recoil;
-    const opacity = interpolate(t, side === "l" ? [0, 9] : [2, 11], [0, 1], {
-      ...CLAMP,
-    });
+    const el = side === "l" ? leftEl : rightEl;
+    const opacity = interpolate(
+      t,
+      [el.start, el.start + el.beat("fade")],
+      [0, 1],
+      {
+        ...CLAMP,
+      },
+    );
     const node = (
       <Side
         name={side === "l" ? left : right}

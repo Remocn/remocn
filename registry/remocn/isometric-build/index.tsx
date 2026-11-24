@@ -3,6 +3,12 @@
 import { useMemo } from "react";
 import { AbsoluteFill, interpolate, random, spring } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  type IsometricBuildElementId,
+  isometricBuildTimeline,
+  tilesOf,
+} from "./timeline";
 
 export type IsometricBuildProps = {
   /** Tiles per side. */
@@ -22,9 +28,16 @@ export type IsometricBuildProps = {
   floors?: boolean;
   /** Gap between neighbouring blocks, as a share of a tile. */
   gap?: number;
+  /**
+   * Moves, trims or stretches single rows of the build, by the ids in
+   * `./timeline`. Frames on the scene timeline, after `speed`.
+   */
+  timing?: Timing<IsometricBuildElementId>;
 };
 
-export const isometricBuildDefaults: Required<IsometricBuildProps> = {
+export const isometricBuildDefaults: Required<
+  Omit<IsometricBuildProps, "timing">
+> = {
   grid: 5,
   maxHeight: 2.2,
   stagger: 2,
@@ -52,15 +65,13 @@ type Block = {
   j: number;
   height: number;
   accent: boolean;
-  delay: number;
+  /** The diagonal it rises with, counted from the front. */
+  row: number;
+  /** Seeded share of the row's stagger it waits after the row starts. */
+  jitter: number;
 };
 
-function makeBlocks(
-  n: number,
-  maxHeight: number,
-  seed: number,
-  stagger: number,
-) {
+function makeBlocks(n: number, maxHeight: number, seed: number) {
   const r = (key: string) => random(`isometric-build-${seed}-${key}`);
   const inner = Math.max(1, n - 2);
   const ai = n > 2 ? 1 + Math.floor(r("ai") * inner) : 0;
@@ -88,32 +99,40 @@ function makeBlocks(
         accent,
         height: accent ? maxHeight * 1.35 : h,
         // Front rows rise first.
-        delay: (2 * (n - 1) - sum) * stagger + r(`d${i}-${j}`) * stagger,
+        row: 2 * (n - 1) - sum,
+        jitter: r(`d${i}-${j}`),
       });
     }
   }
   return blocks;
 }
 
-export function IsometricBuild({
-  grid = isometricBuildDefaults.grid,
-  maxHeight = isometricBuildDefaults.maxHeight,
-  stagger = isometricBuildDefaults.stagger,
-  seed = isometricBuildDefaults.seed,
-  speed = isometricBuildDefaults.speed,
-  background = isometricBuildDefaults.background,
-  color = isometricBuildDefaults.color,
-  accent = isometricBuildDefaults.accent,
-  floors = isometricBuildDefaults.floors,
-  gap = isometricBuildDefaults.gap,
-}: IsometricBuildProps) {
+export function IsometricBuild(props: IsometricBuildProps) {
+  const {
+    grid = isometricBuildDefaults.grid,
+    maxHeight = isometricBuildDefaults.maxHeight,
+    seed = isometricBuildDefaults.seed,
+    speed = isometricBuildDefaults.speed,
+    background = isometricBuildDefaults.background,
+    color = isometricBuildDefaults.color,
+    accent = isometricBuildDefaults.accent,
+    floors = isometricBuildDefaults.floors,
+    gap = isometricBuildDefaults.gap,
+    timing,
+  } = props;
   const inset = Math.min(0.45, Math.max(0, gap)) / 2;
   const frame = useSceneFrame();
-  const { width, height, fps } = useSceneConfig();
-  const n = Math.max(1, Math.round(grid));
+  const { width, height, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    isometricBuildTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const n = tilesOf(grid);
   const blocks = useMemo(
-    () => makeBlocks(n, maxHeight, seed, stagger),
-    [n, maxHeight, seed, stagger],
+    () => makeBlocks(n, maxHeight, seed),
+    [n, maxHeight, seed],
   );
 
   const tallest = maxHeight * 1.35;
@@ -156,8 +175,9 @@ export function IsometricBuild({
           strokeWidth={unit}
         />
         {blocks.map((block) => {
+          const row = tl.get(`row:${block.row}`);
           const s = spring({
-            frame: time - block.delay,
+            frame: time - (row.start + block.jitter * row.beat("stagger")),
             fps,
             config: { damping: 11, stiffness: 140, mass: 0.7 },
           });

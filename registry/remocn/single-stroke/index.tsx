@@ -7,6 +7,13 @@ import { useMemo } from "react";
 import { AbsoluteFill, Easing, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_LABEL,
+  labelWordsOf,
+  type SingleStrokeElementId,
+  singleStrokeTimeline,
+} from "./timeline";
 
 const archivo = loadVariableFont("normal", { subsets: ["latin"] });
 
@@ -30,6 +37,12 @@ export interface SingleStrokeProps {
   delay?: number;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches the guide, the panel, the stroke, the unit and
+   * each label word, by the ids in `./timeline`.
+   * Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<SingleStrokeElementId>;
 }
 
 const THEMES = {
@@ -120,9 +133,6 @@ const SPACE = 0.34;
 const REACH = 0.26;
 const JOIN_DY = 0.46;
 const STROKE = 0.13;
-
-const DRAW_AT = 16;
-const DRAW_LEN = 46;
 
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
 const EASE_IN_OUT = Easing.bezier(0.65, 0, 0.35, 1);
@@ -217,24 +227,34 @@ function ScaleLayer({
   );
 }
 
-export function SingleStroke({
-  value = "27",
-  unit = "Mar",
-  label = "Demo day. Every team shows a film.",
-  accent,
-  ink,
-  background,
-  fontFamily = archivo.fontFamily,
-  drawDuration = DRAW_LEN,
-  stagger = 3,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: SingleStrokeProps) {
+export function SingleStroke(props: SingleStrokeProps) {
+  const {
+    value = "27",
+    unit = "Mar",
+    label = DEFAULT_LABEL,
+    accent,
+    ink,
+    background,
+    fontFamily = archivo.fontFamily,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H } = useSceneConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    singleStrokeTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const guideEl = tl.get("guide");
+  const panelEl = tl.get("panel");
+  const drawEl = tl.get("draw");
+  const unitEl = tl.get("unit");
   const c = THEMES[theme];
   const bg = background ?? c.bg;
   const panelFill = theme === "dark" ? (accent ?? c.panel) : c.panel;
@@ -261,12 +281,15 @@ export function SingleStroke({
   const d = useMemo(() => buildPath(chars, k, ox, oy), [chars, k, ox, oy]);
   const len = useMemo(() => (d ? getLength(d) : 0), [d]);
 
-  const intro = interpolate(t, [0, 14], [0, 1], { ...CLAMP, easing: EASE_OUT });
-  const panelP = interpolate(t, [2, 20], [0, 1], {
+  const intro = interpolate(t, [guideEl.start, guideEl.end], [0, 1], {
+    ...CLAMP,
+    easing: EASE_OUT,
+  });
+  const panelP = interpolate(t, [panelEl.start, panelEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_IN_OUT,
   });
-  const p = interpolate(t, [DRAW_AT, DRAW_AT + drawDuration], [0, 1], {
+  const p = interpolate(t, [drawEl.start, drawEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_SWEEP,
   });
@@ -276,14 +299,11 @@ export function SingleStroke({
 
   const sw = STROKE * k;
   const hairW = Math.max(1.5, k * 0.012);
-  const unitP = interpolate(
-    t,
-    [DRAW_AT + drawDuration - 10, DRAW_AT + drawDuration + 8],
-    [0, 1],
-    { ...CLAMP, easing: EASE_OUT },
-  );
-  const labelAt = DRAW_AT + drawDuration - 2;
-  const words = label ? label.split(" ") : [];
+  const unitP = interpolate(t, [unitEl.start, unitEl.end], [0, 1], {
+    ...CLAMP,
+    easing: EASE_OUT,
+  });
+  const words = labelWordsOf(label);
 
   const panelBox = portrait
     ? { left: 0, top: split, width: W, height: H - split }
@@ -384,12 +404,11 @@ export function SingleStroke({
               }}
             >
               {words.map((w, i) => {
-                const q = interpolate(
-                  t,
-                  [labelAt + i * stagger, labelAt + i * stagger + 16],
-                  [0, 1],
-                  { ...CLAMP, easing: EASE_OUT },
-                );
+                const e = tl.get(`word:${i}`);
+                const q = interpolate(t, [e.start, e.end], [0, 1], {
+                  ...CLAMP,
+                  easing: EASE_OUT,
+                });
                 return (
                   <span key={`${w}-${i}`}>
                     <span

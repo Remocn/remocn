@@ -9,6 +9,12 @@ import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_CHECKS,
+  type PrMergeElementId,
+  prMergeTimeline,
+} from "./timeline";
 
 const geist = loadFont("normal", {
   weights: ["300", "400"],
@@ -60,14 +66,13 @@ export interface PrMergeProps {
   theme?: "light" | "dark";
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
+  /**
+   * Moves, trims or stretches the title lines, the card, each check row and
+   * pass, and the merge clicks, by the ids in `./timeline`. Frames on the
+   * scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<PrMergeElementId>;
 }
-
-const DEFAULT_CHECKS: PrCheck[] = [
-  { name: "lint", workflow: "ci", seconds: 18 },
-  { name: "typecheck", workflow: "ci", seconds: 41 },
-  { name: "build", workflow: "ci", seconds: 72 },
-  { name: "e2e", workflow: "playwright", seconds: 128 },
-];
 
 const ENTER = Easing.bezier(0.32, 0.72, 0, 1);
 const MOVE = Easing.bezier(0.65, 0, 0.35, 1);
@@ -364,36 +369,43 @@ function ScaleLayer({
   );
 }
 
-export function PrMerge({
-  repo = "remocn/remocn",
-  title = "Add launch pack",
-  number = 312,
-  author = "maya-chen",
-  reviewer = "leo-park",
-  branch = "feat/launch-pack",
-  base = "main",
-  commits = 14,
-  checks = DEFAULT_CHECKS,
-  additions = 1248,
-  deletions = 96,
-  mergeSha = "3f2a9c1",
-  mergeLabel = "Merge",
-  confirmLabel = "Confirm merge",
-  stagger = 12,
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = geist.fontFamily,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "light",
-  ground,
-  groundParams,
-}: PrMergeProps) {
+export function PrMerge(props: PrMergeProps) {
+  const {
+    repo = "remocn/remocn",
+    title = "Add launch pack",
+    number = 312,
+    author = "maya-chen",
+    reviewer = "leo-park",
+    branch = "feat/launch-pack",
+    base = "main",
+    commits = 14,
+    checks = DEFAULT_CHECKS,
+    additions = 1248,
+    deletions = 96,
+    mergeSha = "3f2a9c1",
+    mergeLabel = "Merge",
+    confirmLabel = "Confirm merge",
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = geist.fontFamily,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "light",
+    ground,
+    groundParams,
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width, height, fps } = useSceneConfig();
+  const { width, height, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    prMergeTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const tall = height > width * 1.2;
   const u = tall ? width / 640 : Math.min(width / 1280, height / 720);
   const dw = width / u;
@@ -405,28 +417,29 @@ export function PrMerge({
   const list = checks.map((k) => (typeof k === "string" ? { name: k } : k));
   const n = list.length;
 
-  const starts = list.map((_, i) => 10 + i * 3);
-  const dones = list.map((_, i) => 46 + i * stagger);
-  const allDone = (dones[n - 1] ?? 46) + 6;
-  const T = {
-    mergeClick: allDone + 22,
-    confirmClick: allDone + 46,
-    merged: allDone + 56,
-  };
+  const rows = list.map((_, i) => tl.get(`check:${i}`));
+  const starts = rows.map((e) => e.start + e.beat("run"));
+  const dones = list.map((_, i) => tl.get(`pass:${i}`).start);
+  const ready = tl.get("ready");
+  const mergeEl = tl.get("merge");
+  const confirmEl = tl.get("confirm");
+  const mergedEl = tl.get("merged");
+  const allDone = ready.start;
   const passed = dones.filter((d) => frame >= d).length;
   const ok = frame >= allDone;
   const enable = sp(frame - allDone, CHIP);
-  const confirmP = sp(frame - T.mergeClick - 1, CARD);
-  const merging = frame >= T.confirmClick + 1 && frame < T.merged;
-  const isMerged = frame >= T.merged;
+  const confirmP = sp(frame - mergeEl.start - mergeEl.beat("swap"), CARD);
+  const merging =
+    frame >= confirmEl.start + confirmEl.beat("run") && frame < mergedEl.start;
+  const isMerged = frame >= mergedEl.start;
   const collapse = spring({
-    frame: frame - T.merged,
+    frame: frame - mergedEl.start,
     fps,
     config: MORPH,
-    durationInFrames: 22,
+    durationInFrames: mergedEl.beat("collapse"),
   });
-  const mergedIn = sp(frame - T.merged - 6, CARD);
-  const statusP = sp(frame - T.merged - 2, CHIP);
+  const mergedIn = sp(frame - mergedEl.start - mergedEl.beat("card"), CARD);
+  const statusP = sp(frame - mergedEl.start - mergedEl.beat("status"), CHIP);
 
   const ROW = 54;
   const HEAD = 72;
@@ -451,20 +464,28 @@ export function PrMerge({
   const leftX = tall ? cardX : 96;
   const leftY0 = tall ? cardY0 - leftH - 40 : (dh - leftH) / 2;
 
-  const enterCard = sp(frame - 4, HEAVY);
-  const L = (k: number) => ramp(frame, k * 3, 16);
+  const card = tl.get("card");
+  const enterCard = sp(frame - card.start, HEAVY);
+  const L = (k: number) => {
+    const line = tl.get(`line:${k}`);
+    return ramp(frame, line.start, line.length);
+  };
 
   const footY = cardY + HEAD + SUM + rowsH;
   const mergeBtn = { x: cardX + cardW - 24 - 62, y: footY + FOOT / 2 };
   const confirmBtn = { x: cardX + cardW - 24 - 82, y: footY + FOOT / 2 };
   const deleteBtn = { x: cardX + cardW - 24 - 70, y: footY + FOOT / 2 };
   const keys: Key[] = [
-    { t: allDone - 14, x: dw * 0.92, y: dh * 0.98 },
-    { t: T.mergeClick - 4, ...mergeBtn },
-    { t: T.mergeClick + 8, ...mergeBtn },
-    { t: T.confirmClick - 4, ...confirmBtn },
-    { t: T.merged + 8, ...confirmBtn },
-    { t: T.merged + 34, x: deleteBtn.x + 40, y: deleteBtn.y + 70 },
+    { t: allDone + ready.beat("cursor"), x: dw * 0.92, y: dh * 0.98 },
+    { t: mergeEl.start + mergeEl.beat("reach"), ...mergeBtn },
+    { t: mergeEl.start + mergeEl.beat("leave"), ...mergeBtn },
+    { t: confirmEl.start + confirmEl.beat("reach"), ...confirmBtn },
+    { t: mergedEl.start + mergedEl.beat("cursorAway"), ...confirmBtn },
+    {
+      t: mergedEl.start + mergedEl.beat("cursorOff"),
+      x: deleteBtn.x + 40,
+      y: deleteBtn.y + 70,
+    },
   ];
   const cur = pathAt(keys, frame);
   // Where the last key lands while the card still holds its list: a fixed
@@ -473,17 +494,34 @@ export function PrMerge({
     x: deleteBtn.x + 40,
     y: cardY0 + HEAD + SUM + rowsH + FOOT / 2 + 70,
   };
-  const curOpacity = ramp(frame, allDone - 14, 8);
-  const pressAt = (k: number) => {
-    if (frame < k - 4) return 0;
-    if (frame < k) return ramp(frame, k - 4, 4, MOVE);
+  const curOpacity = ramp(
+    frame,
+    allDone + ready.beat("cursor"),
+    ready.beat("cursorIn"),
+  );
+  // The button sinks over the cursor's last `reach` frames before the click.
+  const pressAt = (e: typeof mergeEl) => {
+    const k = e.start;
+    const lead = k + e.beat("reach");
+    if (frame < lead) return 0;
+    if (frame < k) return ramp(frame, lead, -e.beat("reach"), MOVE);
     return clamp(1 - sp(frame - k, CHIP), -0.3, 1);
   };
-  const press = Math.max(pressAt(T.mergeClick), pressAt(T.confirmClick));
-  const push = interpolate(frame, [0, 210], [1, 1.03], CL);
+  const press = Math.max(pressAt(mergeEl), pressAt(confirmEl));
+  const pushEl = tl.get("push");
+  const push = interpolate(frame, [pushEl.start, pushEl.end], [1, 1.03], CL);
 
-  const footA = 1 - ramp(frame, T.mergeClick + 1, 7, EXIT);
-  const footB = confirmP * (1 - ramp(frame, T.merged, 7, EXIT));
+  const footA =
+    1 -
+    ramp(
+      frame,
+      mergeEl.start + mergeEl.beat("swap"),
+      mergeEl.beat("swapOut"),
+      EXIT,
+    );
+  const footB =
+    confirmP *
+    (1 - ramp(frame, mergedEl.start, mergedEl.beat("footOut"), EXIT));
   const btn = (solid: boolean): React.CSSProperties =>
     flex(8, {
       height: 44,
@@ -594,7 +632,15 @@ export function PrMerge({
                 }}
               >
                 {[false, true].map((m) => {
-                  const on = m ? statusP : 1 - ramp(frame, T.merged, 6, EXIT);
+                  const on = m
+                    ? statusP
+                    : 1 -
+                      ramp(
+                        frame,
+                        mergedEl.start,
+                        mergedEl.beat("openOut"),
+                        EXIT,
+                      );
                   if (on <= 0.001) return null;
                   return (
                     <div
@@ -680,7 +726,7 @@ export function PrMerge({
                 backdropFilter: c.dark ? "blur(28px)" : undefined,
                 boxShadow: c.depth,
                 overflow: "hidden",
-                opacity: ramp(frame, 4, 10),
+                opacity: ramp(frame, card.start, card.length),
                 transform: `translateY(${cardShift + (1 - enterCard) * 48}px) scale(${0.97 + 0.03 * enterCard})`,
                 transformOrigin: "50% 0%",
               }}
@@ -744,7 +790,9 @@ export function PrMerge({
                   top: HEAD + SUM,
                   height: rowsH * (1 - collapse),
                   overflow: "hidden",
-                  opacity: 1 - ramp(frame, T.merged, 8, EXIT),
+                  opacity:
+                    1 -
+                    ramp(frame, mergedEl.start, mergedEl.beat("listOut"), EXIT),
                 }}
               >
                 {list.map((k, i) => {
@@ -754,7 +802,7 @@ export function PrMerge({
                       : frame >= starts[i]
                         ? "running"
                         : "queued";
-                  const rowIn = ramp(frame, 8 + i * 3, 14);
+                  const rowIn = ramp(frame, rows[i].start, rows[i].length);
                   return (
                     <div
                       key={k.name}
@@ -832,7 +880,7 @@ export function PrMerge({
                         ...btn(true),
                         marginLeft: "auto",
                         opacity: 0.35 + 0.65 * clamp(enable),
-                        transform: `scale(${(0.96 + 0.04 * enable) * (1 - 0.04 * pressAt(T.mergeClick))})`,
+                        transform: `scale(${(0.96 + 0.04 * enable) * (1 - 0.04 * pressAt(mergeEl))})`,
                       }}
                     >
                       <Icon name="merge" size={18} color={c.onSolid} />
@@ -860,7 +908,7 @@ export function PrMerge({
                         ...btn(true),
                         background: accent,
                         color: "#FFFFFF",
-                        transform: `scale(${1 - 0.04 * pressAt(T.confirmClick)})`,
+                        transform: `scale(${1 - 0.04 * pressAt(confirmEl)})`,
                       }}
                     >
                       {merging ? (

@@ -2,7 +2,12 @@
 
 import type { CSSProperties } from "react";
 import { Easing, interpolate } from "remotion";
-import { useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  type TypedSplitWipeElementId,
+  typedSplitWipeTimeline,
+} from "./timeline";
 
 export interface TypedSplitWipeProps {
   prefix: string;
@@ -18,6 +23,11 @@ export interface TypedSplitWipeProps {
   fontWeight?: number;
   speed?: number;
   className?: string;
+  /**
+   * Moves, trims or stretches the typing, the split and single suffix words,
+   * by the ids in `./timeline`. Frames on the scene timeline, after `speed`.
+   */
+  timing?: Timing<TypedSplitWipeElementId>;
 }
 
 const clamp = {
@@ -45,25 +55,36 @@ export function getTypedSplitWipeText(
   return characters.slice(0, visibleLength).join("");
 }
 
-export function TypedSplitWipe({
-  prefix,
-  anchor,
-  suffix,
-  typeFrames = 30,
-  exitAt = 50,
-  exitFrames = 20,
-  wordStagger = 4,
-  anchorShift = -72,
-  fontSize = 42,
-  color = "#e8e8e8",
-  fontWeight = 400,
-  speed = 1,
-  className,
-}: TypedSplitWipeProps) {
+export function TypedSplitWipe(props: TypedSplitWipeProps) {
+  const {
+    prefix,
+    anchor,
+    suffix,
+    anchorShift = -72,
+    fontSize = 42,
+    color = "#e8e8e8",
+    fontWeight = 400,
+    speed = 1,
+    className,
+    timing,
+  } = props;
   const frame = useSceneFrame() * speed;
+  const { durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    typedSplitWipeTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const typing = tl.get("type");
+  const exit = tl.get("exit");
+  const closing = tl.get("anchor");
   const fullText = [prefix, anchor, suffix].filter(Boolean).join(" ");
-  const safeExitFrames = Math.max(exitFrames, 0.001);
-  const typedText = getTypedSplitWipeText(fullText, frame, typeFrames);
+  const typedText = getTypedSplitWipeText(
+    fullText,
+    frame - typing.start,
+    typing.length,
+  );
   const suffixWords = suffix.trim().split(/\s+/).filter(Boolean);
 
   const textStyle: CSSProperties = {
@@ -77,19 +98,14 @@ export function TypedSplitWipe({
     whiteSpace: "pre",
   };
 
-  const prefixExit = interpolate(
-    frame,
-    [exitAt, exitAt + safeExitFrames],
-    [0, 1],
-    { ...clamp, easing: wipeEasing },
-  );
-  const anchorExitStart = exitAt + Math.max(exitFrames - 6, 0);
-  const anchorExit = interpolate(
-    frame,
-    [anchorExitStart, anchorExitStart + 6],
-    [0, 1],
-    { ...clamp, easing: wipeEasing },
-  );
+  const prefixExit = interpolate(frame, [exit.start, exit.end], [0, 1], {
+    ...clamp,
+    easing: wipeEasing,
+  });
+  const anchorExit = interpolate(frame, [closing.start, closing.end], [0, 1], {
+    ...clamp,
+    easing: wipeEasing,
+  });
 
   return (
     <div
@@ -103,7 +119,7 @@ export function TypedSplitWipe({
         background: "transparent",
       }}
     >
-      {frame < exitAt ? (
+      {frame < exit.start ? (
         <span className={className} style={textStyle}>
           {typedText}
         </span>
@@ -141,10 +157,10 @@ export function TypedSplitWipe({
           )}
 
           {suffixWords.map((word, index) => {
-            const wordExitStart = exitAt + 2 + index * wordStagger;
+            const wipe = tl.get(`word:${index}`);
             const wordExit = interpolate(
               frame,
-              [wordExitStart, wordExitStart + safeExitFrames * 0.65],
+              [wipe.start, wipe.end],
               [0, 1],
               { ...clamp, easing: wipeEasing },
             );

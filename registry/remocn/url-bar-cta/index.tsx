@@ -17,6 +17,12 @@ import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_URL,
+  type UrlBarCtaElementId,
+  urlBarCtaTimeline,
+} from "./timeline";
 
 const geist = loadGeist("normal", {
   weights: ["300", "400"],
@@ -59,6 +65,12 @@ export interface UrlBarCtaProps {
   /** Frames to hold the first frame before anything moves. */
   delay?: number;
   speed?: number;
+  /**
+   * Moves, trims or stretches the bar, single keys, the suggestions, the
+   * Enter press, the dock, the page and the camera push, by the ids in
+   * `./timeline`. Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<UrlBarCtaElementId>;
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
 }
@@ -104,11 +116,6 @@ function RemocnLogo({ fontSize, color }: { fontSize: number; color: string }) {
   );
 }
 
-function hash(n: number) {
-  const x = Math.sin(n * 91.7 + 17.3) * 43758.5453;
-  return x - Math.floor(x);
-}
-
 function withAlpha(hex: string, alpha: number) {
   const h = hex.replace("#", "");
   const full = h.length === 3 ? h.replace(/./g, (c) => c + c) : h.slice(0, 6);
@@ -123,20 +130,6 @@ const shift = (dx: number, dy: number) =>
   Math.abs(dx) < 1e-3 && Math.abs(dy) < 1e-3
     ? undefined
     : `translate(${dx}px, ${dy}px)`;
-
-function keyTimes(text: string, start: number, typingSpeed: number) {
-  const times: number[] = [];
-  let t = start;
-  for (let i = 0; i < text.length; i++) {
-    const prev = text[i - 1];
-    let gap = 2.1 + (hash(i) - 0.4) * 2.2;
-    if (prev === "." || prev === "/") gap += 3;
-    if (i === 0) gap = 0;
-    t += Math.max(0.8, gap) / typingSpeed;
-    times.push(t);
-  }
-  return times;
-}
 
 interface Pal {
   dark: boolean;
@@ -294,6 +287,7 @@ function BuiltInHero({
   accent,
   frame,
   start,
+  beat,
   fps,
   u,
   portrait,
@@ -313,6 +307,8 @@ function BuiltInHero({
   accent: string;
   frame: number;
   start: number;
+  /** The page element's beats: line stagger and rise, card, playhead. */
+  beat: (name: string) => number;
   fps: number;
   u: number;
   portrait: boolean;
@@ -329,22 +325,41 @@ function BuiltInHero({
   logo: React.ReactNode;
 }) {
   const textIn = (i: number) =>
-    interpolate(frame, [start + i * 3, start + i * 3 + 14], [0, 1], {
-      ...CLAMP,
-      easing: TYPE_IN,
-    });
+    interpolate(
+      frame,
+      [start + i * beat("stagger"), start + i * beat("stagger") + beat("rise")],
+      [0, 1],
+      {
+        ...CLAMP,
+        easing: TYPE_IN,
+      },
+    );
   const rise = (i: number) => {
     const p = textIn(i);
     return { opacity: p, transform: `translateY(${(1 - p) * 14 * u}px)` };
   };
-  const card = spring({ frame: frame - start - 6, fps, config: CARD });
-  const cardOpacity = interpolate(frame, [start + 6, start + 14], [0, 1], {
-    ...CLAMP,
-    easing: TYPE_IN,
+  const card = spring({
+    frame: frame - start - beat("card"),
+    fps,
+    config: CARD,
   });
-  const playhead = interpolate(frame, [start, start + 120], [0.18, 0.86], {
-    ...CLAMP,
-  });
+  const cardOpacity = interpolate(
+    frame,
+    [start + beat("card"), start + beat("cardEnd")],
+    [0, 1],
+    {
+      ...CLAMP,
+      easing: TYPE_IN,
+    },
+  );
+  const playhead = interpolate(
+    frame,
+    [start, start + beat("playhead")],
+    [0.18, 0.86],
+    {
+      ...CLAMP,
+    },
+  );
   const clipSeconds = 6;
   const now = playhead * clipSeconds;
   const stamp = `0:${String(Math.floor(now)).padStart(2, "0")}`;
@@ -578,95 +593,139 @@ function ScaleLayer({
 
 const NAV_LINKS = ["Components", "Templates", "Docs"];
 
-export function UrlBarCta({
-  url = "remocn.dev",
-  children,
-  typingSpeed = 1,
-  showCursor = true,
-  suggestionTitle = "Launch videos from components",
-  headline = "Ship your launch video this afternoon.",
-  body = "Remotion components you install with one command and own the code.",
-  cta = "Browse components",
-  command = "npx shadcn add remocn/zoom-blur",
-  image,
-  clipName = "Zoom Blur",
-  navLinks = NAV_LINKS,
-  navCta = "Get started",
-  theme = "light",
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = geist.fontFamily,
-  logo,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  ground,
-  groundParams,
-}: UrlBarCtaProps) {
+export function UrlBarCta(props: UrlBarCtaProps) {
+  const {
+    url = DEFAULT_URL,
+    children,
+    showCursor = true,
+    suggestionTitle = "Launch videos from components",
+    headline = "Ship your launch video this afternoon.",
+    body = "Remotion components you install with one command and own the code.",
+    cta = "Browse components",
+    command = "npx shadcn add remocn/zoom-blur",
+    image,
+    clipName = "Zoom Blur",
+    navLinks = NAV_LINKS,
+    navCta = "Get started",
+    theme = "light",
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = geist.fontFamily,
+    logo,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    ground,
+    groundParams,
+    timing,
+  } = props;
   const glide = useGlide();
   const raw = useSceneFrame();
   const frame = Math.max(0, raw - delay) * speed;
-  const { width: W, height: H, fps } = useSceneConfig();
+  const { width: W, height: H, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    urlBarCtaTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const portrait = H > W;
   const u = portrait ? W / 760 : Math.min(W / 1280, H / 720);
   const pal = palette(theme);
   const fg = ink ?? pal.text;
   const src = image ?? staticFile("reel/reel-2.jpg");
 
-  const typeStart = 8;
-  const times = keyTimes(url, typeStart, typingSpeed);
-  const typeEnd = times[times.length - 1] ?? typeStart;
-  const keyIn = typeEnd - 6;
-  const enter = typeEnd + 6;
-  const dock = enter + 5;
-  const heroStart = dock + 1;
+  const times = Array.from(
+    { length: url.length },
+    (_, i) => tl.get(`key:${i}`).start,
+  );
+  const suggestEl = tl.get("suggest");
+  const enterEl = tl.get("enter");
+  const dockEl = tl.get("dock");
+  const heroEl = tl.get("hero");
+  const camera = tl.get("camera");
+  const appearEl = tl.get("appear");
+  // The caret blinks from the last key; with no key, from the first slot.
+  const typeEnd = times[times.length - 1] ?? suggestEl.start;
+  const keyIn = tl.get("hint").start;
+  const enter = enterEl.start;
+  const dock = dockEl.start;
 
   const typed = times.filter((t) => frame >= t).length;
   const typedText = url.slice(0, typed);
   const completion = typed >= 3 && typed < url.length ? url.slice(typed) : "";
 
-  const appear = spring({ frame: frame + 2, fps, config: CARD });
-  const appearO = interpolate(frame, [-2, 8], [0, 1], {
+  const appear = spring({ frame: frame - appearEl.start, fps, config: CARD });
+  const appearO = interpolate(frame, [appearEl.start, appearEl.end], [0, 1], {
     ...CLAMP,
     easing: TYPE_IN,
   });
   const suggestOpen = spring({
-    frame: frame - (times[1] ?? typeStart),
+    frame: frame - suggestEl.start,
     fps,
     config: CARD,
   });
-  const suggestClose = interpolate(frame, [enter + 1, dock + 3], [0, 1], {
-    ...CLAMP,
-    easing: EXIT,
-  });
+  const suggestClose = interpolate(
+    frame,
+    [enter + enterEl.beat("close"), dock + dockEl.beat("closeEnd")],
+    [0, 1],
+    {
+      ...CLAMP,
+      easing: EXIT,
+    },
+  );
   const suggest = Math.max(0, suggestOpen * (1 - suggestClose));
 
   const pressDown = spring({ frame: frame - enter, fps, config: CHIP });
-  const pressUp = spring({ frame: frame - enter - 4, fps, config: CHIP });
+  const pressUp = spring({
+    frame: frame - enter - enterEl.beat("release"),
+    fps,
+    config: CHIP,
+  });
   const press = Math.max(0, pressDown - pressUp);
   const keyShow = spring({ frame: frame - keyIn, fps, config: CHIP });
-  const keyHide = interpolate(frame, [enter + 3, enter + 9], [0, 1], {
-    ...CLAMP,
-    easing: EXIT,
-  });
+  const keyHide = interpolate(
+    frame,
+    [enter + enterEl.beat("hide"), enter + enterEl.beat("hideEnd")],
+    [0, 1],
+    {
+      ...CLAMP,
+      easing: EXIT,
+    },
+  );
 
   const dockAt = (f: number) =>
-    spring({ frame: f - dock, fps, config: MORPH, durationInFrames: 22 });
+    spring({
+      frame: f - dock,
+      fps,
+      config: MORPH,
+      durationInFrames: dockEl.length,
+    });
   const d = dockAt(frame);
   const docking =
     Math.abs(dockAt(frame + speed) - d) > 1e-6 ||
     Math.abs(d - dockAt(frame - speed)) > 1e-6;
-  const load = interpolate(frame, [dock, dock + 24], [0, 1], {
+  const load = interpolate(frame, [dock, dock + dockEl.beat("load")], [0, 1], {
     ...CLAMP,
     easing: MOVE,
   });
-  const loadFade = interpolate(frame, [dock + 24, dock + 30], [1, 0], {
-    ...CLAMP,
-    easing: EXIT,
-  });
+  const loadFade = interpolate(
+    frame,
+    [dock + dockEl.beat("load"), dock + dockEl.beat("loadFade")],
+    [1, 0],
+    {
+      ...CLAMP,
+      easing: EXIT,
+    },
+  );
   const pushAt = (r: number) =>
-    interpolate(Math.max(0, r - delay) * speed, [0, 120], [1, 1.03], CLAMP);
+    interpolate(
+      Math.max(0, r - delay) * speed,
+      [camera.start, camera.end],
+      [1, 1.03],
+      CLAMP,
+    );
   const push = pushAt(raw);
   // The push carries the bar, the window and the key, so its tilt covers
   // every piece of text riding inside them.
@@ -862,7 +921,8 @@ export function UrlBarCta({
                   pal={pal}
                   accent={accent}
                   frame={frame}
-                  start={heroStart}
+                  start={heroEl.start}
+                  beat={heroEl.beat}
                   fps={fps}
                   u={u}
                   portrait={portrait}

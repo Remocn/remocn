@@ -7,6 +7,12 @@ import { useId } from "react";
 import { AbsoluteFill, Easing, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  type ComboCounterElementId,
+  comboCounterTimeline,
+  DEFAULT_HITS,
+} from "./timeline";
 
 const { fontFamily: sairaItalic } = loadFont("italic", {
   weights: ["400", "500"],
@@ -82,6 +88,12 @@ export interface ComboCounterProps {
   delay?: number;
   theme?: "dark" | "light";
   speed?: number;
+  /**
+   * Moves, trims or stretches each hit, the glide to the poster, the fill
+   * and the logo, by the ids in `./timeline`. Frames on the scene timeline,
+   * after `delay` and `speed`.
+   */
+  timing?: Timing<ComboCounterElementId>;
 }
 
 // Beat sheet (30fps, speed 1):
@@ -94,14 +106,6 @@ export interface ComboCounterProps {
 //  72–86  the meter glides to the centre and scales up into the poster, the
 //          number fills with the "swirl" gradient
 //  92–    the logo rises in, poster hold
-const HIT_GAPS = [8, 7, 7, 6, 6, 5, 5, 4, 4, 4, 4];
-const FIRST_HIT = 6;
-const WORD_LIFE = 11;
-const GLIDE_DELAY = 6;
-const GLIDE_LEN = 14;
-const FILL_DELAY = 10;
-const FILL_LEN = 10;
-const LOGO_DELAY = 26;
 
 const SLAM = Easing.bezier(0.12, 0.9, 0.25, 1);
 const OUT = Easing.bezier(0.22, 1, 0.36, 1);
@@ -182,42 +186,41 @@ function ScaleLayer({
   );
 }
 
-export function ComboCounter({
-  hits = [
-    "Captions",
-    "Transitions",
-    "Logo reveal",
-    "Backgrounds",
-    "Charts",
-    "Text effects",
-    "Lower thirds",
-    "Mockups",
-    "Countdowns",
-    "Kinetic type",
-    "Particles",
-    "Templates",
-  ],
-  ratings = [
-    { from: 2, text: "Nice" },
-    { from: 6, text: "Great" },
-    { from: 12, text: "PERFECT" },
-  ],
-  accent = "#3B5BFD",
-  hitLabel = "HIT",
-  comboLabel = "COMBO",
-  ink,
-  background,
-  fontFamily = sairaItalic,
-  logo,
-  scale = 1,
-  delay = 0,
-  theme = "dark",
-  speed = 1,
-}: ComboCounterProps) {
+export function ComboCounter(props: ComboCounterProps) {
+  const {
+    hits = DEFAULT_HITS,
+    ratings = [
+      { from: 2, text: "Nice" },
+      { from: 6, text: "Great" },
+      { from: 12, text: "PERFECT" },
+    ],
+    accent = "#3B5BFD",
+    hitLabel = "HIT",
+    comboLabel = "COMBO",
+    ink,
+    background,
+    fontFamily = sairaItalic,
+    logo,
+    scale = 1,
+    delay = 0,
+    theme = "dark",
+    speed = 1,
+    timing,
+  } = props;
   // `glide` is the meter's move to the poster below.
   const tilt = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H } = useSceneConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    comboCounterTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const hitEls = hits.map((_, i) => tl.get(`hit:${i}`));
+  const glideEl = tl.get("glide");
+  const fillEl = tl.get("fill");
+  const logoEl = tl.get("logo");
   const c = THEMES[theme];
   const fg = ink ?? c.ink;
   const stage =
@@ -225,15 +228,7 @@ export function ComboCounter({
   const u = Math.min(W / 1280, H / 720);
   const id = useId().replace(/[^a-zA-Z0-9_-]/g, "");
 
-  const times: number[] = [];
-  hits.forEach((_, i) => {
-    times.push(
-      i === 0
-        ? FIRST_HIT
-        : times[i - 1] + (HIT_GAPS[i - 1] ?? HIT_GAPS[HIT_GAPS.length - 1]),
-    );
-  });
-  const lastAt = times[times.length - 1] ?? FIRST_HIT;
+  const times = hitEls.map((e) => e.start);
 
   // ── Meter ─────────────────────────────────────────────────────────────────
   const numFs = 210 * u;
@@ -262,7 +257,7 @@ export function ComboCounter({
 
     // Glide to the poster: the meter block is laid out from its left edge, so
     // the target x centres an estimate of its width (number + label column).
-    const glide = INOUT(ramp(tt, lastAt + GLIDE_DELAY, GLIDE_LEN));
+    const glide = INOUT(ramp(tt, glideEl.start, glideEl.length));
     const gx = interpolate(
       glide,
       [0, 1],
@@ -293,9 +288,9 @@ export function ComboCounter({
   // there by a transform all its life: a block moved by `left` rounds its
   // edges to whole pixels and steps unevenly, and a hand-over between the two
   // would jump by the rounding.
-  const gxRest = meterAt(lastAt + GLIDE_DELAY + GLIDE_LEN).gx;
-  const fillP = OUT(ramp(t, lastAt + FILL_DELAY, FILL_LEN));
-  const logoP = OUT(ramp(t, lastAt + LOGO_DELAY, 10));
+  const gxRest = meterAt(glideEl.end).gx;
+  const fillP = OUT(ramp(t, fillEl.start, fillEl.length));
+  const logoP = OUT(ramp(t, logoEl.start, logoEl.length));
 
   const numberGlyphs = (text: string, gradient: boolean) => (
     <div
@@ -338,20 +333,20 @@ export function ComboCounter({
       <ScaleLayer scale={scale}>
         {/* Hit-sparks: one per feature. */}
         {hits.map((word, i) => {
-          const h = times[i];
-          const dd = t - h;
-          if (dd < 0 || dd > WORD_LIFE + 4) return null;
+          const e = hitEls[i];
+          const dd = t - e.start;
+          if (dd < 0 || dd > e.beat("gone")) return null;
           const slot = SLOTS[i % SLOTS.length];
           const x = slot.x * W;
           const y = slot.y * H;
           const isFinal = i === hits.length - 1;
-          const wordIn = SLAM(ramp(dd, 0, 4));
-          const out = ramp(dd, WORD_LIFE - 3, 5);
-          const starP = ramp(dd, 0, 7);
+          const wordIn = SLAM(ramp(dd, 0, e.beat("in")));
+          const out = ramp(dd, e.beat("outAt"), e.beat("out"));
+          const starP = ramp(dd, 0, e.beat("star"));
           const L =
             interpolate(OUT(starP), [0, 1], [50, isFinal ? 190 : 120]) * u;
-          const streak = OUT(ramp(dd, 0, 3));
-          const streakOut = ramp(dd, 3, 6);
+          const streak = OUT(ramp(dd, 0, e.beat("streak")));
+          const streakOut = ramp(dd, e.beat("streak"), e.beat("streakOut"));
           const sl = 0.2 * W * streak;
           return (
             <div key={`${i}-${word}`}>
@@ -393,7 +388,7 @@ export function ComboCounter({
                   alignItems: "center",
                   justifyContent: "center",
                   transform: `translateY(${-18 * u * out}px) rotate(${slot.r}deg) scale(${interpolate(wordIn, [0, 1], [1.4, 1]) * (1 - 0.08 * out)})`,
-                  opacity: ramp(dd, 0, 2) * (1 - out),
+                  opacity: ramp(dd, 0, e.beat("fade")) * (1 - out),
                   fontFamily,
                   fontStyle: "italic",
                   fontWeight: 500,
@@ -419,7 +414,13 @@ export function ComboCounter({
             aria-hidden
           >
             {POSTER_SLASHES.map((p) => {
-              const g = OUT(ramp(t, lastAt + GLIDE_DELAY + 6 + p.delay, 8));
+              const g = OUT(
+                ramp(
+                  t,
+                  glideEl.start + glideEl.beat("slashAt") + p.delay,
+                  glideEl.beat("slash"),
+                ),
+              );
               const len = p.len * W * g;
               return (
                 <g

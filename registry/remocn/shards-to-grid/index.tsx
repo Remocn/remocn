@@ -17,6 +17,8 @@ import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import { type ShardsToGridElementId, shardsToGridTimeline } from "./timeline";
 
 const geist = loadFont("normal", {
   weights: ["300", "400"],
@@ -52,6 +54,12 @@ export interface ShardsToGridProps {
   /** Frames to hold the first frame before anything moves. */
   delay?: number;
   speed?: number;
+  /**
+   * Moves, trims or stretches the pill, the shards, the morph into the
+   * window, the converge, the snap and the content, by the ids in
+   * `./timeline`. Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<ShardsToGridElementId>;
 }
 
 const THEMES = {
@@ -97,18 +105,6 @@ const DEFAULT_IMAGES = [
   "templates/product-showcase/courtyard.jpg",
   "templates/brand-guidelines/chair.jpg",
 ];
-
-const BEATS = [
-  { name: "enter", at: 0 },
-  { name: "drift", at: 66 },
-  { name: "morph", at: 60 },
-  { name: "converge", at: 62 },
-  { name: "snap", at: 84 },
-  { name: "content", at: 84 },
-  { name: "end", at: 144 },
-] as const;
-type BeatName = (typeof BEATS)[number]["name"];
-const beat = (n: BeatName) => BEATS.find((b) => b.name === n)?.at ?? 0;
 
 const CARD = { mass: 0.8, damping: 18, stiffness: 160 };
 const CHIP = { mass: 0.5, damping: 12, stiffness: 200 };
@@ -335,29 +331,48 @@ function ScaleLayer({
   );
 }
 
-export function ShardsToGrid({
-  images,
-  title = "Launch v1",
-  status = "Assembling",
-  headline = "Every frame, written in code.",
-  labels = ["Motion", "Type", "Sound", "Play reel", "Brand"],
-  ctaLabel = "Publish",
-  theme = "dark",
-  background,
-  accent = "#3B5BFD",
-  ink,
-  fontFamily = geist.fontFamily,
-  logo,
-  blooms,
-  ground,
-  groundParams,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-}: ShardsToGridProps) {
+export function ShardsToGrid(props: ShardsToGridProps) {
+  const {
+    images,
+    title = "Launch v1",
+    status = "Assembling",
+    headline = "Every frame, written in code.",
+    labels = ["Motion", "Type", "Sound", "Play reel", "Brand"],
+    ctaLabel = "Publish",
+    theme = "dark",
+    background,
+    accent = "#3B5BFD",
+    ink,
+    fontFamily = geist.fontFamily,
+    logo,
+    blooms,
+    ground,
+    groundParams,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H, fps } = useSceneConfig();
+  const { width: W, height: H, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    shardsToGridTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const pillEl = tl.get("pill");
+  const shardsEl = tl.get("shards");
+  const pushEl = tl.get("push");
+  const morphEl = tl.get("morph");
+  const morphAt = morphEl.start;
+  const snapEl = tl.get("snap");
+  const snapAt = snapEl.start;
+  const contentEl = tl.get("content");
+  const contentAt = contentEl.start;
+  const enterAt = shardsEl.start;
+  const convergeAt = tl.get("converge").start;
   const t = THEMES[theme];
   const light = theme === "light";
   const srcs =
@@ -454,17 +469,20 @@ export function ShardsToGrid({
         rx: (random(`sg-rx-${i}`) - 0.5) * 30,
         ry: (random(`sg-ry-${i}`) - 0.5) * 36,
         rz: (random(`sg-rz-${i}`) - 0.5) * 14,
-        delay: ci * 3 + Math.round(random(`sg-d-${i}`) * 8) - 16,
+        delay: enterAt + ci * 3 + Math.round(random(`sg-d-${i}`) * 8) - 16,
         conv: isCell
-          ? beat("converge") + i * 2
-          : beat("converge") - 2 + Math.round((1.2 - dist) * 6),
+          ? convergeAt + i * 2
+          : convergeAt - 2 + Math.round((1.2 - dist) * 6),
         seed: random(`sg-b-${i}`) * Math.PI * 2,
       };
     });
-  }, [portrait, W]);
+  }, [portrait, W, enterAt, convergeAt]);
 
   const swirlP = (f: number) =>
-    interpolate(f, [0, beat("drift")], [0, 1], { ...CLAMP, easing: MOVE });
+    interpolate(f, [shardsEl.start, shardsEl.end], [0, 1], {
+      ...CLAMP,
+      easing: MOVE,
+    });
 
   const shardAt = (s: (typeof shards)[number], f: number) => {
     const e = spring({ frame: f - s.delay, fps, config: CARD });
@@ -525,7 +543,7 @@ export function ShardsToGrid({
     };
   };
 
-  const morph = sp(beat("morph"), MORPH);
+  const morph = sp(morphAt, MORPH);
   const pillH = portrait ? H * 0.046 : H * 0.096;
   const pillW = portrait ? W * 0.76 : W * 0.34;
   const pillFont = pillH * 0.38;
@@ -536,22 +554,22 @@ export function ShardsToGrid({
     h: pillH + (win.h - pillH) * morph,
   };
   const winRadius = pillH / 2 + (cellRadius * 1.7 - pillH / 2) * morph;
-  const pillIn = sp(-8, CARD);
+  const pillIn = sp(pillEl.start + pillEl.beat("lead"), CARD);
   const pct = Math.round(
-    interpolate(frame, [0, beat("morph")], [12, 100], {
+    interpolate(frame, [pillEl.start, pillEl.end], [12, 100], {
       ...CLAMP,
       easing: Easing.bezier(0.33, 0, 0.2, 1),
     }),
   );
   const pillText = interpolate(
     frame,
-    [beat("morph"), beat("morph") + 5],
+    [morphAt, morphAt + morphEl.beat("textOut")],
     [1, 0],
     { ...CLAMP, easing: Easing.bezier(0.55, 0, 1, 0.45) },
   );
   const chrome = interpolate(
     frame,
-    [beat("morph") + 10, beat("morph") + 22],
+    [morphAt + morphEl.beat("chrome"), morphAt + morphEl.beat("chromeEnd")],
     [0, 1],
     { ...CLAMP, easing: TYPE_IN },
   );
@@ -561,20 +579,24 @@ export function ShardsToGrid({
     : `rgba(${t.window},${0.66 + 0.34 * fill})`;
   const snapPunch = interpolate(
     frame,
-    [beat("snap"), beat("snap") + 2, beat("snap") + 10],
+    [snapAt, snapAt + snapEl.beat("peak"), snapEl.end],
     [0, 1, 0],
     { ...CLAMP, easing: MOVE },
   );
-  const push = interpolate(frame, [0, beat("end")], [1.02, 1.05]);
+  const push = interpolate(frame, [pushEl.start, pushEl.end], [1.02, 1.05]);
 
   const label = Math.max(16 * unit, portrait ? W * 0.026 : W * 0.0135);
   const heroCell = cells[0] as Rect;
   const heroFont = portrait ? heroCell.w * 0.088 : heroCell.w * 0.088;
-  const contentIn = (k: number) => sp(beat("content") + k * 3, CARD);
+  const contentIn = (k: number) =>
+    sp(contentAt + k * contentEl.beat("stagger"), CARD);
   const headlineIn = (k: number) =>
     interpolate(
       frame,
-      [beat("content") + k * 2, beat("content") + k * 2 + 13],
+      [
+        contentAt + k * contentEl.beat("word"),
+        contentAt + k * contentEl.beat("word") + contentEl.beat("wordRise"),
+      ],
       [0, 1],
       { ...CLAMP, easing: TYPE_IN },
     );
@@ -686,9 +708,7 @@ export function ShardsToGrid({
             transform: `scale(${push * (1 + snapPunch * 0.012)})${glide(frame > 0)}`,
           }}
         >
-          {order
-            .filter((s) => !s.isCell || frame < beat("morph"))
-            .map(renderShard)}
+          {order.filter((s) => !s.isCell || frame < morphAt).map(renderShard)}
           <div
             style={{
               position: "absolute",
@@ -815,7 +835,7 @@ export function ShardsToGrid({
                     boxShadow: "inset 0 1px 0 rgba(255,255,255,0.22)",
                     fontSize: label * 0.94,
                     color: "#ffffff",
-                    transform: `scale(${0.9 + 0.1 * sp(beat("snap") + 6, CHIP)})`,
+                    transform: `scale(${0.9 + 0.1 * sp(snapAt + snapEl.beat("cta"), CHIP)})`,
                   }}
                 >
                   {ctaLabel}
@@ -823,7 +843,7 @@ export function ShardsToGrid({
               </div>
             </div>
           </div>
-          {frame >= beat("morph")
+          {frame >= morphAt
             ? order.filter((s) => s.isCell).map(renderShard)
             : null}
           {cells.map((c, k) => {
@@ -925,7 +945,7 @@ export function ShardsToGrid({
                 >
                   <div
                     style={{
-                      transform: `scale(${sp(beat("content") + 9, CHIP)})`,
+                      transform: `scale(${sp(contentAt + contentEl.beat("play"), CHIP)})`,
                       transformOrigin: "0% 0%",
                     }}
                   >
@@ -960,7 +980,14 @@ export function ShardsToGrid({
             }
             const cp = interpolate(
               frame,
-              [beat("content") + 4 + k * 3, beat("content") + 16 + k * 3],
+              [
+                contentAt +
+                  contentEl.beat("caption") +
+                  k * contentEl.beat("stagger"),
+                contentAt +
+                  contentEl.beat("captionEnd") +
+                  k * contentEl.beat("stagger"),
+              ],
               [0, 1],
               { ...CLAMP, easing: TYPE_IN },
             );

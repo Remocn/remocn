@@ -8,6 +8,8 @@ import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import { type RotaryDialElementId, rotaryDialTimeline } from "./timeline";
 
 const { fontFamily: sans } = loadFont("normal", {
   weights: ["300", "400"],
@@ -38,6 +40,12 @@ export interface RotaryDialProps {
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
   speed?: number;
+  /**
+   * Moves, trims or stretches the camera, the copy, the grab, the turn and
+   * the land, by the ids in `./timeline`.
+   * Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<RotaryDialElementId>;
 }
 
 const ENTER = Easing.bezier(0.32, 0.72, 0, 1);
@@ -45,14 +53,6 @@ const MOVE = Easing.bezier(0.65, 0, 0.35, 1);
 const CLAMP = {
   extrapolateLeft: "clamp",
   extrapolateRight: "clamp",
-} as const;
-
-const BEATS = {
-  label: 6,
-  value: 12,
-  grab: 18,
-  turn: 24,
-  land: 72,
 } as const;
 
 const HEAVY = { mass: 1, damping: 26, stiffness: 120 };
@@ -231,34 +231,44 @@ function ScaleLayer({
   );
 }
 
-export function RotaryDial({
-  from = 1,
-  to = 10,
-  unit = "×",
-  label = "Render speed",
-  accent = "#3B5BFD",
-  turn = BEATS.land - BEATS.turn,
-  minorTicks = 5,
-  ink: inkColor,
-  background,
-  fontFamily = sans,
-  scale = 1,
-  delay = 0,
-  theme = "dark",
-  ground,
-  groundParams,
-  speed = 1,
-}: RotaryDialProps) {
+export function RotaryDial(props: RotaryDialProps) {
+  const {
+    from = 1,
+    to = 10,
+    unit = "×",
+    label = "Render speed",
+    accent = "#3B5BFD",
+    minorTicks = 5,
+    ink: inkColor,
+    background,
+    fontFamily = sans,
+    scale = 1,
+    delay = 0,
+    theme = "dark",
+    ground,
+    groundParams,
+    speed = 1,
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = useSceneFrame();
   const t = Math.max(0, frame - delay) * speed;
-  const { width: VW, height: VH, fps } = useSceneConfig();
+  const { width: VW, height: VH, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    rotaryDialTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const camera = tl.get("camera");
+  const grabEl = tl.get("grab");
+  const turnEl = tl.get("turn");
+  const landEl = tl.get("land");
   const tall = VH > VW;
   const u = tall ? VW / 760 : Math.min(VW / 1280, VH / 720);
   const p = THEMES[theme];
   const fg = inkColor ?? p.fg;
-  // The grab ramp eases off over the last 6 frames of the turn, so it needs more than 6.
-  const land = BEATS.turn + Math.max(7, turn);
+  const land = landEl.start;
   const dark = theme === "dark";
   const acc = hexToRgb(accent);
   const lit = p.lit || accent;
@@ -275,7 +285,7 @@ export function RotaryDial({
   const A0 = -135;
   const A1 = 135;
   const prog = (f: number) => {
-    const move = interpolate(f, [BEATS.turn, land], [0, 1.025], {
+    const move = interpolate(f, [turnEl.start, turnEl.end], [0, 1.025], {
       ...CLAMP,
       easing: MOVE,
     });
@@ -291,7 +301,7 @@ export function RotaryDial({
 
   const grab = interpolate(
     t,
-    [BEATS.grab, BEATS.turn, land - 6, land],
+    [grabEl.start, grabEl.end, land + landEl.beat("release"), land],
     [0, 1, 1, 0],
     { ...CLAMP, easing: MOVE },
   );
@@ -380,12 +390,12 @@ export function RotaryDial({
   const camAt = (f: number) => {
     const tt = Math.max(0, f - delay) * speed;
     const cam = spring({
-      frame: tt,
+      frame: tt - camera.start,
       fps,
       config: HEAVY,
-      durationInFrames: 54,
+      durationInFrames: camera.length,
     });
-    const push = interpolate(tt, [land, land + 60], [0, 1], {
+    const push = interpolate(tt, [land, landEl.end], [0, 1], {
       ...CLAMP,
       easing: MOVE,
     });
@@ -398,25 +408,40 @@ export function RotaryDial({
   const camMoving =
     Math.abs(camAt(frame + 1) - camK) * reach > 1e-3 ||
     Math.abs(camK - camAt(frame - 1)) * reach > 1e-3;
-  const light = interpolate(t, [BEATS.turn, land + 6], [0, 1], {
-    ...CLAMP,
-    easing: ENTER,
-  });
+  const light = interpolate(
+    t,
+    [turnEl.start, land + landEl.beat("light")],
+    [0, 1],
+    {
+      ...CLAMP,
+      easing: ENTER,
+    },
+  );
   const scrim = interpolate(light, [0, 1], [p.scrimFrom, p.scrimTo]);
-  const bloom = interpolate(t, [land, land + 4, land + 40], [0, 1, 0.55], {
-    ...CLAMP,
-    easing: ENTER,
-  });
+  const bloom = interpolate(
+    t,
+    [land, land + landEl.beat("flash"), land + landEl.beat("bloom")],
+    [0, 1, 0.55],
+    {
+      ...CLAMP,
+      easing: ENTER,
+    },
+  );
 
-  const word = (start: number) =>
-    interpolate(t, [start, start + 14], [0, 1], { ...CLAMP, easing: ENTER });
+  const word = (id: "label" | "value") => {
+    const e = tl.get(id);
+    return interpolate(t, [e.start, e.end], [0, 1], {
+      ...CLAMP,
+      easing: ENTER,
+    });
+  };
   const ink = (v: number): React.CSSProperties => ({
     opacity: v,
     transform: `translateY(${(1 - v) * 0.22}em)`,
     filter: v < 1 ? `blur(${(1 - v) * 6 * u}px)` : undefined,
   });
-  const wLabel = word(BEATS.label);
-  const wValue = word(BEATS.value);
+  const wLabel = word("label");
+  const wValue = word("value");
   const numSize = (tall ? 168 : 150) * u;
 
   const dial = (

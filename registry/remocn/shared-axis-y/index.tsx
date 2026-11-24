@@ -1,7 +1,9 @@
 "use client";
 
 import { Easing, interpolate } from "remotion";
-import { useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import { type SharedAxisYElementId, sharedAxisYTimeline } from "./timeline";
 
 export interface SharedAxisYProps {
   fromText: string;
@@ -11,31 +13,35 @@ export interface SharedAxisYProps {
   fontWeight?: number;
   speed?: number;
   className?: string;
+  /**
+   * Moves, trims or stretches single words, by the ids in `./timeline`.
+   * Frames on the scene timeline, after `speed`.
+   */
+  timing?: Timing<SharedAxisYElementId>;
 }
 
-export function SharedAxisY({
-  fromText,
-  toText,
-  fontSize = 72,
-  color = "#171717",
-  fontWeight = 600,
-  speed = 1,
-  className,
-}: SharedAxisYProps) {
+export function SharedAxisY(props: SharedAxisYProps) {
+  const {
+    fromText,
+    toText,
+    fontSize = 72,
+    color = "#171717",
+    fontWeight = 600,
+    speed = 1,
+    className,
+    timing,
+  } = props;
   const frame = useSceneFrame() * speed;
+  const { durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    sharedAxisYTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
 
   const fromWords = fromText.split(" ");
   const toWords = toText.split(" ");
-
-  const enterDur = 5;
-  const exitDur = 4;
-  const enterStagger = 2;
-  const exitStagger = 2;
-  const overlapF = 0;
-  const microDelayF = 1;
-
-  const exitTotal = exitDur + (fromWords.length - 1) * exitStagger;
-  const newStart = Math.max(0, exitTotal - overlapF + microDelayF);
 
   const fontStack =
     "var(--font-geist-sans), -apple-system, BlinkMacSystemFont, sans-serif";
@@ -68,8 +74,9 @@ export function SharedAxisY({
           }}
         >
           {fromWords.map((word, i) => {
-            const local = frame - i * exitStagger;
-            const opacity = interpolate(local, [0, exitDur], [1, 0], {
+            const out = tl.get(`out:${i}`);
+            const local = frame - out.start;
+            const opacity = interpolate(local, [0, out.length], [1, 0], {
               extrapolateLeft: "clamp",
               extrapolateRight: "clamp",
               easing: Easing.step1,
@@ -109,8 +116,9 @@ export function SharedAxisY({
           }}
         >
           {toWords.map((word, j) => {
-            const local = frame - newStart - j * enterStagger;
-            const opacity = interpolate(local, [0, enterDur], [0, 1], {
+            const arrival = tl.get(`in:${j}`);
+            const local = frame - arrival.start;
+            const opacity = interpolate(local, [0, arrival.length], [0, 1], {
               extrapolateLeft: "clamp",
               extrapolateRight: "clamp",
               easing: Easing.step1,

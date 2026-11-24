@@ -6,6 +6,8 @@ import { useId } from "react";
 import { AbsoluteFill, Easing, interpolate, spring } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import { type GrowthLineElementId, growthLineTimeline } from "./timeline";
 
 const { fontFamily: sans } = loadFont("normal", {
   weights: ["400", "500"],
@@ -48,6 +50,12 @@ export interface GrowthLineProps {
   /** Playback multiplier. */
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches the draw, the camera pull-back and the value
+   * landing, by the ids in `./timeline`. Frames on the scene timeline, after
+   * `delay` and `speed`.
+   */
+  timing?: Timing<GrowthLineElementId>;
 }
 
 const DEFAULT_MILESTONES: GrowthMilestone[] = [
@@ -93,24 +101,25 @@ const THEMES = {
   },
 } as const;
 
-/** Beats, in frames at speed 1. */
-const DRAW = [-4, 118] as const;
-const PULL = [84, 128] as const;
-const HIT = 120;
 const DRAW_EASE = Easing.bezier(0.3, 0.05, 0.55, 1);
 
-/** Every camera move has landed by here. */
-const SETTLED = Math.max(DRAW[1], PULL[1], HIT + 22);
+interface Span {
+  start: number;
+  end: number;
+}
 
-const drawProgress = (t: number) =>
-  interpolate(t, DRAW, [0, 1], { ...CLAMP, easing: DRAW_EASE });
+const drawProgress = (t: number, draw: Span) =>
+  interpolate(t, [draw.start, draw.end], [0, 1], {
+    ...CLAMP,
+    easing: DRAW_EASE,
+  });
 
 /** The frame at which the tip reaches `at` (inverts the draw easing). */
-function reachFrame(at: number) {
-  for (let fr = DRAW[0]; fr <= DRAW[1]; fr += 0.5) {
-    if (drawProgress(fr) >= at) return fr;
+function reachFrame(at: number, draw: Span) {
+  for (let fr = draw.start; fr <= draw.end; fr += 0.5) {
+    if (drawProgress(fr, draw) >= at) return fr;
   }
-  return DRAW[1];
+  return draw.end;
 }
 
 function Grain({ opacity }: { opacity: number }) {
@@ -165,26 +174,40 @@ function ScaleLayer({
   );
 }
 
-export function GrowthLine({
-  value = "100k",
-  label = "creators in the first year",
-  milestones = DEFAULT_MILESTONES,
-  steepness = 4.6,
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = sans,
-  fontWeight = 400,
-  strokeWidth = 3,
-  scale = 1,
-  delay = 0,
-  grain = true,
-  speed = 1,
-  theme = "dark",
-}: GrowthLineProps) {
+export function GrowthLine(props: GrowthLineProps) {
+  const {
+    value = "100k",
+    label = "creators in the first year",
+    milestones = DEFAULT_MILESTONES,
+    steepness = 4.6,
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = sans,
+    fontWeight = 400,
+    strokeWidth = 3,
+    scale = 1,
+    delay = 0,
+    grain = true,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width, height, fps } = useSceneConfig();
+  const { width, height, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    growthLineTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const draw = tl.get("draw");
+  const pullEl = tl.get("pull");
+  const hitEl = tl.get("hit");
+  const landAt = hitEl.start;
+  /** Every camera move has landed by here. */
+  const SETTLED = Math.max(draw.end, pullEl.end, landAt + hitEl.beat("kick"));
   const u = height / 720;
   const p = THEMES[theme];
   const fg = ink ?? p.fg;
@@ -211,22 +234,30 @@ export function GrowthLine({
 
   const camera = (tt: number) => {
     // Tip progress
-    const prog = drawProgress(tt);
+    const prog = drawProgress(tt, draw);
     const [tipWx, tipWy] = world(prog);
 
     // Camera: tracks the tip close-up, then pulls back to the whole curve.
-    const pull = interpolate(tt, PULL, [0, 1], { ...CLAMP, easing: EASE_IO });
-    const zTrack = interpolate(tt, [0, PULL[0]], [2.9, 2.2], {
+    const pull = interpolate(tt, [pullEl.start, pullEl.end], [0, 1], {
+      ...CLAMP,
+      easing: EASE_IO,
+    });
+    const zTrack = interpolate(tt, [0, pullEl.start], [2.9, 2.2], {
       ...CLAMP,
       easing: EASE_IO,
     });
     const kick =
       1 +
       0.014 *
-        interpolate(tt, [HIT, HIT + 4, HIT + 22], [0, 1, 0], {
-          ...CLAMP,
-          easing: EASE_OUT,
-        });
+        interpolate(
+          tt,
+          [landAt, landAt + hitEl.beat("peak"), landAt + hitEl.beat("kick")],
+          [0, 1, 0],
+          {
+            ...CLAMP,
+            easing: EASE_OUT,
+          },
+        );
     const z = lerp(zTrack, 1, pull) * kick;
     // the tip rides low-left of centre early on, drifting up as the curve steepens
     const anchorX = width * lerp(0.56, 0.6, prog);
@@ -289,7 +320,13 @@ export function GrowthLine({
   const gx = (((ax - cx * zp) % gap) + gap) % gap;
   const gy = (((ay - cy * zp) % gap) + gap) % gap;
 
-  const enter = interpolate(t, [0, 10], [0.55, 1], CLAMP);
+  const fadeAt = draw.start + draw.beat("fadeAt");
+  const enter = interpolate(
+    t,
+    [fadeAt, fadeAt + draw.beat("fade")],
+    [0.55, 1],
+    CLAMP,
+  );
 
   // A running count rides just ahead of the tip and hands off to the value.
   const target = parseValue(value);
@@ -303,27 +340,48 @@ export function GrowthLine({
   });
   const count = target === null ? null : Math.round(target * base(prog));
   const countO =
-    interpolate(t, [0, 6], [0.4, 1], CLAMP) *
-    interpolate(t, [HIT - 4, HIT + 2], [1, 0], CLAMP);
+    interpolate(t, [fadeAt, fadeAt + draw.beat("count")], [0.4, 1], CLAMP) *
+    interpolate(
+      t,
+      [
+        landAt + hitEl.beat("countAt"),
+        landAt + hitEl.beat("countAt") + hitEl.beat("count"),
+      ],
+      [1, 0],
+      CLAMP,
+    );
 
   // Final hit
   const hitAt = (tt: number) =>
     spring({
-      frame: tt - HIT,
+      frame: tt - landAt,
       fps,
       config: { damping: 15, stiffness: 170, mass: 0.7 },
     });
   const hit = hitAt(t);
-  const hitO = interpolate(t, [HIT, HIT + 6], [0, 1], CLAMP);
-  const ring = interpolate(t, [HIT, HIT + 26], [0, 1], {
+  const hitO = interpolate(
+    t,
+    [landAt, landAt + hitEl.beat("fade")],
+    [0, 1],
+    CLAMP,
+  );
+  const ring = interpolate(t, [landAt, landAt + hitEl.beat("ring")], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
   const labAt = (tt: number) =>
-    interpolate(tt, [HIT + 8, HIT + 28], [0, 1], {
-      ...CLAMP,
-      easing: EASE_OUT,
-    });
+    interpolate(
+      tt,
+      [
+        landAt + hitEl.beat("labelAt"),
+        landAt + hitEl.beat("labelAt") + hitEl.beat("label"),
+      ],
+      [0, 1],
+      {
+        ...CLAMP,
+        easing: EASE_OUT,
+      },
+    );
   const lab = labAt(t);
   // The value block rides the tip, drops in on a spring and settles its
   // scale; the spring overshoots, so its motion is judged frame to frame. The
@@ -452,7 +510,7 @@ export function GrowthLine({
           {/* milestones */}
           {marks.map((m) => {
             const [mx, my] = proj(...world(m.at));
-            const reach = reachFrame(m.at);
+            const reach = reachFrame(m.at, draw);
             const pop = spring({
               frame: t - reach,
               fps,
@@ -483,7 +541,7 @@ export function GrowthLine({
             fill="none"
             stroke={p.line[2]}
             strokeWidth={1.5 * u}
-            opacity={t >= HIT ? (1 - ring) * 0.7 : 0}
+            opacity={t >= landAt ? (1 - ring) * 0.7 : 0}
           />
           <circle cx={tipX} cy={tipY} r={5 * u} fill={p.tip} />
           <circle cx={tipX} cy={tipY} r={1.8 * u} fill={p.bg} opacity={0.9} />
@@ -493,9 +551,10 @@ export function GrowthLine({
         {marks.map((m) => {
           const [mx, my] = proj(...world(m.at));
           const [rx, ry] = rest.proj(...world(m.at));
-          const reach = reachFrame(m.at);
+          const reach = reachFrame(m.at, draw);
+          const markAt = reach + draw.beat("markAt");
           const aAt = (tt: number) =>
-            interpolate(tt, [reach + 1, reach + 14], [0, 1], {
+            interpolate(tt, [markAt, markAt + draw.beat("mark")], [0, 1], {
               ...CLAMP,
               easing: EASE_OUT,
             });
@@ -504,7 +563,13 @@ export function GrowthLine({
             (tt) => camera(tt).proj(...world(m.at))[1] + (1 - aAt(tt)) * 10 * u,
           );
           // labels quiet down once the camera pulls back so the value owns the frame
-          const quiet = interpolate(t, [HIT - 6, HIT + 14], [1, 0.55], CLAMP);
+          const quietAt = landAt + hitEl.beat("quietAt");
+          const quiet = interpolate(
+            t,
+            [quietAt, quietAt + hitEl.beat("quiet")],
+            [1, 0.55],
+            CLAMP,
+          );
           return (
             <div
               key={m.label}

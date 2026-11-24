@@ -3,6 +3,8 @@
 import { type ReactNode, useId } from "react";
 import { AbsoluteFill, Easing, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import { SCAN_END, type XRayScanElementId, xRayScanTimeline } from "./timeline";
 
 export type XRayScanColors = {
   background: string;
@@ -30,6 +32,11 @@ export type XRayScanProps = {
   /** "horizontal" sweeps left to right, "vertical" top to bottom. */
   direction?: "horizontal" | "vertical";
   speed?: number;
+  /**
+   * Moves, trims or stretches the scan, by the ids in `./timeline`.
+   * Frames on the scene timeline, after `speed`.
+   */
+  timing?: Timing<XRayScanElementId>;
 };
 
 export const xRayScanDefaults = {
@@ -45,7 +52,7 @@ export const xRayScanDefaults = {
   speed: 1,
 };
 
-export const xRayScanLength = 32;
+export const xRayScanLength = SCAN_END;
 
 const MONO = "ui-monospace, 'SF Mono', Menlo, Consolas, monospace";
 
@@ -254,19 +261,28 @@ function Inside({ d, c, u }: { d: Device; c: XRayScanColors; u: number }) {
   );
 }
 
-export function XRayScan({
-  outside,
-  inside,
-  colors,
-  shell,
-  accent,
-  line,
-  background,
-  direction = xRayScanDefaults.direction,
-  speed = xRayScanDefaults.speed,
-}: XRayScanProps) {
+export function XRayScan(props: XRayScanProps) {
+  const {
+    outside,
+    inside,
+    colors,
+    shell,
+    accent,
+    line,
+    background,
+    direction = xRayScanDefaults.direction,
+    speed = xRayScanDefaults.speed,
+    timing,
+  } = props;
   const frame = useSceneFrame();
-  const { width: W, height: H, fps } = useSceneConfig();
+  const { width: W, height: H, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    xRayScanTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const scan = tl.get("scan");
   const id = useId().replace(/[^a-zA-Z0-9_-]/g, "");
   const merged = { ...xRayScanDefaults.colors, ...colors };
   const c: XRayScanColors = {
@@ -292,12 +308,12 @@ export function XRayScan({
   const span = vertical ? H : W;
   const start = vertical ? d.y - 0.1 * H : d.x - 0.12 * W;
   const end = vertical ? d.y + d.h + 0.1 * H : d.x + d.w + 0.12 * W;
-  const bar = interpolate(t, [5, 32], [start, end], {
+  const bar = interpolate(t, [scan.start, scan.end], [start, end], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
     easing: Easing.inOut(Easing.sin),
   });
-  const scanning = t > 5 && t < 32;
+  const scanning = t > scan.start && t < scan.end;
   const band = 0.12 * span;
   const behind = vertical
     ? `inset(0 0 ${H - bar}px 0)`

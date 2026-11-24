@@ -4,6 +4,13 @@ import type React from "react";
 import { useId, useMemo } from "react";
 import { AbsoluteFill, random } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  CLOTH_DELAY,
+  CLOTH_PULL,
+  type ClothRevealElementId,
+  clothRevealTimeline,
+} from "./timeline";
 
 export type ClothRevealDirection = "right" | "left" | "up" | "down";
 
@@ -21,6 +28,11 @@ export type ClothRevealProps = {
   delay?: number;
   seed?: number;
   speed?: number;
+  /**
+   * Moves, trims or stretches the pull, by the id in `./timeline`. Frames on
+   * the scene timeline, after `speed`; the pull starts at `delay`.
+   */
+  timing?: Timing<ClothRevealElementId>;
 };
 
 export const clothRevealDefaults = {
@@ -28,7 +40,7 @@ export const clothRevealDefaults = {
   undersideColor: "#8E1A16",
   background: "#111111",
   direction: "right" as ClothRevealDirection,
-  delay: 6,
+  delay: CLOTH_DELAY,
   seed: 2,
   speed: 1,
 };
@@ -320,18 +332,26 @@ function PlaceholderLockup({
   );
 }
 
-export function ClothReveal({
-  children,
-  clothColor = clothRevealDefaults.clothColor,
-  undersideColor = clothRevealDefaults.undersideColor,
-  background = clothRevealDefaults.background,
-  direction = clothRevealDefaults.direction,
-  delay = clothRevealDefaults.delay,
-  seed = clothRevealDefaults.seed,
-  speed = clothRevealDefaults.speed,
-}: ClothRevealProps) {
+export function ClothReveal(props: ClothRevealProps) {
+  const {
+    children,
+    clothColor = clothRevealDefaults.clothColor,
+    undersideColor = clothRevealDefaults.undersideColor,
+    background = clothRevealDefaults.background,
+    direction = clothRevealDefaults.direction,
+    delay = clothRevealDefaults.delay,
+    seed = clothRevealDefaults.seed,
+    speed = clothRevealDefaults.speed,
+    timing,
+  } = props;
   const frame = useSceneFrame();
-  const { width, height, fps } = useSceneConfig();
+  const { width, height, fps, durationInFrames } = useSceneConfig();
+  const pull = useTimeline(
+    clothRevealTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  ).get("pull");
   const uid = `cloth-reveal-${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
   const shadowId = `${uid}-shadow`;
   const softenId = `${uid}-soften`;
@@ -339,7 +359,13 @@ export function ClothReveal({
     () => simulate(width, height, direction, delay, seed),
     [width, height, direction, delay, seed],
   );
-  const t = Math.min(FRAMES, Math.max(0, (frame * speed * 30) / fps));
+  // The simulation was baked with the tug at `delay`: play it back from the
+  // pull's start, at the pace its length asks for.
+  const pace = CLOTH_PULL / pull.length;
+  const t = Math.min(
+    FRAMES,
+    Math.max(0, delay + ((frame * speed * 30) / fps - pull.start) * pace),
+  );
   const f0 = Math.floor(t);
   const f1 = Math.min(FRAMES, f0 + 1);
   const mix = t - f0;

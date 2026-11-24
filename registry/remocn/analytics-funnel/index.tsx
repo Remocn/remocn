@@ -8,18 +8,20 @@ import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  type AnalyticsFunnelElementId,
+  analyticsFunnelTimeline,
+  DEFAULT_STEPS,
+  type FunnelStep,
+} from "./timeline";
+
+export type { FunnelStep };
 
 const { fontFamily: geist } = loadFont("normal", {
   weights: ["300", "400"],
   subsets: ["latin"],
 });
-
-export interface FunnelStep {
-  label: string;
-  event: string;
-  control: number;
-  variant: number;
-}
 
 export interface FunnelBreakdownRow {
   label: string;
@@ -54,24 +56,14 @@ export interface AnalyticsFunnelProps {
   speed?: number;
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
+  /**
+   * Moves, trims or stretches the panel, single bars and morphs, the
+   * cursor's moves, the badge, the tooltip and the camera, by the ids in
+   * `./timeline`. Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<AnalyticsFunnelElementId>;
 }
 
-const DEFAULT_STEPS: FunnelStep[] = [
-  {
-    label: "Visit",
-    event: "Viewed landing page",
-    control: 18420,
-    variant: 18420,
-  },
-  { label: "Sign up", event: "Signed up", control: 7920, variant: 8288 },
-  {
-    label: "Activate",
-    event: "Created first project",
-    control: 4277,
-    variant: 5304,
-  },
-  { label: "Pay", event: "Started subscription", control: 1540, variant: 1820 },
-];
 const DEFAULT_BREAKDOWN: FunnelBreakdownRow[] = [
   { label: "Web", share: 0.61 },
   { label: "iOS", share: 0.26 },
@@ -241,18 +233,6 @@ function Cursor({
   );
 }
 
-const T = {
-  win: 0,
-  bars: 8,
-  cursorIn: 26,
-  click: 50,
-  morph: 56,
-  badge: 74,
-  toHover: 70,
-  tip: 96,
-  end: 165,
-};
-
 /** The foreground at `scale`, around the frame's center; nothing extra at 1. */
 function ScaleLayer({
   scale,
@@ -269,30 +249,46 @@ function ScaleLayer({
   );
 }
 
-export function AnalyticsFunnel({
-  steps = DEFAULT_STEPS,
-  title = "Activation funnel",
-  variantLabel = "New onboarding",
-  tooltipStep = 2,
-  breakdown = DEFAULT_BREAKDOWN,
-  dateRange = "Last 30 days",
-  totalLabel = "Total conversion",
-  allUsersLabel = "All users",
-  controlLabel = "Control",
-  theme = "light",
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = geist,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  ground,
-  groundParams,
-}: AnalyticsFunnelProps) {
+export function AnalyticsFunnel(props: AnalyticsFunnelProps) {
+  const {
+    steps = DEFAULT_STEPS,
+    title = "Activation funnel",
+    variantLabel = "New onboarding",
+    tooltipStep = 2,
+    breakdown = DEFAULT_BREAKDOWN,
+    dateRange = "Last 30 days",
+    totalLabel = "Total conversion",
+    allUsersLabel = "All users",
+    controlLabel = "Control",
+    theme = "light",
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = geist,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    ground,
+    groundParams,
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H, fps } = useSceneConfig();
+  const { width: W, height: H, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    analyticsFunnelTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const panel = tl.get("panel");
+  const camera = tl.get("camera");
+  const cursorEl = tl.get("cursor");
+  const clickEl = tl.get("click");
+  const hoverEl = tl.get("hover");
+  const badgeAt = tl.get("badge");
+  const tipEl = tl.get("tip");
+  const leave = tl.get("leave");
   const themePal = palette(theme);
   const pal: Pal = ink ? { ...themePal, text: ink, stageText: ink } : themePal;
   const tall = H > W * 1.2;
@@ -321,31 +317,33 @@ export function AnalyticsFunnel({
   const colX = (i: number) => PLOT.x + slot * i + (slot - BAR_W) / 2;
   const yOf = (p: number) => PLOT.y + PLOT.h * (1 - p / 100);
 
-  const morph = steps.map((_, i) => sp(T.morph + i * 3, MORPH));
+  const morphEls = steps.map((_, i) => tl.get(`morph:${i}`));
+  const barEls = steps.map((_, i) => tl.get(`bar:${i}`));
+  const morph = morphEls.map((e) => sp(e.start, MORPH));
   const value = (i: number) =>
     lerp(steps[i].control, steps[i].variant, morph[i]);
   const first = value(0) || 1;
   const ofFirst = (i: number) => (value(i) / first) * 100;
   const fromPrev = (i: number) =>
     i === 0 ? 100 : (value(i) / value(i - 1)) * 100;
-  const grow = steps.map((_, i) => sp(T.bars + i * 3, CARD));
+  const grow = barEls.map((e) => sp(e.start, CARD));
   const totalC = (steps[n - 1].control / steps[0].control) * 100;
   const totalV = (steps[n - 1].variant / steps[0].variant) * 100;
   const uplift = Math.round(((totalV - totalC) / totalC) * 100);
   const totalNow = lerp(totalC, totalV, morph[n - 1]);
 
-  const win = sp(T.win, HEAVY);
-  const winA = tween(frame, 0, 10);
-  const toggleOn = sp(T.click + 2, CHIP);
+  const win = sp(panel.start, HEAVY);
+  const winA = tween(frame, panel.start, panel.end);
+  const toggleOn = sp(clickEl.start + clickEl.beat("toggleAt"), CHIP);
   const on = toggleOn > 0.5;
-  const badge = sp(T.badge, CHIP);
-  const tip = sp(T.tip, CARD);
-  const tipA = tween(frame, T.tip, T.tip + 8);
+  const badge = sp(badgeAt.start, CHIP);
+  const tip = sp(tipEl.start, CARD);
+  const tipA = tween(frame, tipEl.start, tipEl.end);
   const tt = clamp(tooltipStep, 0, n - 1);
-  const cam = tween(frame, 20, T.end, camEase);
+  const cam = tween(frame, camera.start, camera.end, camEase);
   // The window springs in until the camera push takes over, and the push runs
   // to the last frame, so the foreground never stands still in between.
-  const moving = frame > 0 && frame < T.end;
+  const moving = frame > panel.start && frame < camera.end;
 
   const TOG_W = 236;
   const togX = WIN.w - PAD - TOG_W;
@@ -361,8 +359,8 @@ export function AnalyticsFunnel({
     y: WIN.y + yOf((steps[tt].variant / (steps[0].variant || 1)) * 100 * 0.55),
   };
   const startPt = { x: D.w * 0.86, y: D.h + 40 };
-  const leg1 = sp(T.cursorIn, HEAVY);
-  const leg2 = sp(T.toHover, HEAVY);
+  const leg1 = sp(cursorEl.start, HEAVY);
+  const leg2 = sp(hoverEl.start, HEAVY);
   const arc = (
     a: { x: number; y: number },
     b: { x: number; y: number },
@@ -378,20 +376,26 @@ export function AnalyticsFunnel({
     };
   };
   const cur =
-    frame < T.toHover
+    frame < hoverEl.start
       ? arc(startPt, togglePt, leg1)
       : arc(togglePt, hoverPt, leg2);
-  const press = sp(T.click - 3, CHIP) - sp(T.click + 2, CHIP);
+  const press =
+    sp(clickEl.start + clickEl.beat("pressAt"), CHIP) -
+    sp(clickEl.start + clickEl.beat("toggleAt"), CHIP);
   const cursorScale = 1 - 0.04 * clamp(press, 0, 1.2);
   const cursorA =
-    tween(frame, T.cursorIn, T.cursorIn + 6) *
-    (1 - tween(frame, T.end - 20, T.end - 10, exitEase));
+    tween(frame, cursorEl.start, cursorEl.end) *
+    (1 - tween(frame, leave.start, leave.end, exitEase));
 
   const tint = withAlpha(accent, pal.dark ? 0.16 : 0.1);
   const labelInk = (t: number) => (t > 0.5 ? pal.text : pal.muted);
 
   const stat = (label: string, val: React.ReactNode, i: number) => {
-    const a = tween(frame, 12 + i * 3, 24 + i * 3);
+    const a = tween(
+      frame,
+      panel.start + panel.beat("statAt") + i * panel.beat("statStep"),
+      panel.start + panel.beat("statEnd") + i * panel.beat("statStep"),
+    );
     return (
       <div
         style={{
@@ -506,7 +510,11 @@ export function AnalyticsFunnel({
                   style={{
                     fontSize: 24,
                     color: pal.stageMuted,
-                    opacity: tween(frame, 4, 16),
+                    opacity: tween(
+                      frame,
+                      panel.start + panel.beat("headAt"),
+                      panel.start + panel.beat("headEnd"),
+                    ),
                   }}
                 >
                   Paid conversion · {dateRange.toLowerCase()}
@@ -528,7 +536,7 @@ export function AnalyticsFunnel({
                       lineHeight: 1.05,
                       color: pal.stageText,
                       fontVariantNumeric: "tabular-nums",
-                      transform: `translateY(${(1 - tween(frame, 6, 20)) * 100}%)`,
+                      transform: `translateY(${(1 - tween(frame, panel.start + panel.beat("bigAt"), panel.start + panel.beat("bigEnd"))) * 100}%)`,
                     }}
                   >
                     {pct(totalNow)}
@@ -673,7 +681,7 @@ export function AnalyticsFunnel({
                             color: pal.text,
                             fontVariantNumeric: "tabular-nums",
                             lineHeight: 1.1,
-                            transform: `translateY(${(1 - tween(frame, 8, 22)) * 100}%)`,
+                            transform: `translateY(${(1 - tween(frame, panel.start + panel.beat("totalAt"), panel.start + panel.beat("totalEnd"))) * 100}%)`,
                           }}
                         >
                           {pct(totalNow)}
@@ -753,7 +761,11 @@ export function AnalyticsFunnel({
                       display: "flex",
                       alignItems: "center",
                       gap: 8,
-                      opacity: tween(frame, T.morph + 4, T.morph + 14),
+                      opacity: tween(
+                        frame,
+                        morphEls[0].start + morphEls[0].beat("legendAt"),
+                        morphEls[0].start + morphEls[0].beat("legendEnd"),
+                      ),
                     }}
                   >
                     <span
@@ -816,8 +828,8 @@ export function AnalyticsFunnel({
                       i > 0
                         ? tween(
                             frame,
-                            T.morph + 6 + i * 3,
-                            T.morph + 16 + i * 3,
+                            morphEls[i].start + morphEls[i].beat("ghostAt"),
+                            morphEls[i].start + morphEls[i].beat("ghostEnd"),
                           )
                         : 0;
                     return (
@@ -866,8 +878,8 @@ export function AnalyticsFunnel({
                   const labRise = yOf(ofFirst(i) * grow[i]) - 30 - labTop;
                   const lab = tween(
                     frame,
-                    T.bars + i * 3 + 6,
-                    T.bars + i * 3 + 18,
+                    barEls[i].start + barEls[i].beat("labelAt"),
+                    barEls[i].end,
                   );
                   return (
                     <div key={st.label}>
@@ -971,7 +983,12 @@ export function AnalyticsFunnel({
                   }}
                 />
                 {breakdown.map((b, k) => {
-                  const r = sp(T.tip + 6 + k * 3, CARD);
+                  const r = sp(
+                    tipEl.start +
+                      tipEl.beat("rowAt") +
+                      k * tipEl.beat("rowStep"),
+                    CARD,
+                  );
                   return (
                     <div
                       key={b.label}

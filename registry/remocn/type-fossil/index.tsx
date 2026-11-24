@@ -4,6 +4,21 @@ import { useId } from "react";
 import { Easing } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import {
+  type ResolvedTimeline,
+  resolve,
+  type Timing,
+  useTimeline,
+} from "@/lib/remocn/timeline";
+import {
+  DEFAULT_DRAFTS,
+  DEFAULT_TEXT,
+  fossilElements,
+  fossilSchedule,
+  parseDrafts,
+  type TypeFossilElementId,
+  typeFossilTimeline,
+} from "./timeline";
 
 export interface TypeFossilProps {
   text?: string;
@@ -19,11 +34,15 @@ export interface TypeFossilProps {
   backgroundColor?: string;
   speed?: number;
   className?: string;
+  /**
+   * Moves, trims or stretches the opening, single wipes and the collapse, by
+   * the ids in `./timeline`. Frames on the scene timeline, after `speed`.
+   */
+  timing?: Timing<TypeFossilElementId>;
 }
 
 export const typeFossilLength = 174;
-export const typeFossilDefaultDrafts =
-  "Idea | Maybe | Try | Almost | Again | Closer";
+export const typeFossilDefaultDrafts = DEFAULT_DRAFTS;
 const finite = (n: number, fallback: number) =>
   Number.isFinite(n) ? n : fallback;
 const clamp = (n: number) => Math.min(1, Math.max(0, n));
@@ -32,30 +51,22 @@ const progress = (t: number, a: number, b: number) => clamp((t - a) / (b - a));
 const ease = Easing.bezier(0.65, 0, 0.3, 1);
 const out = Easing.bezier(0.16, 1, 0.3, 1);
 
-export function parseFossilDrafts(drafts: string) {
-  return drafts
-    .split(/[|\n\r]+/)
-    .map((value) => value.trim().replace(/\s+/g, " "))
-    .filter(Boolean)
-    .slice(0, 12);
-}
-
-function timing(draftCount: number) {
-  const count = Math.round(Math.max(0, Math.min(12, finite(draftCount, 6))));
-  const collapseStart = count === 0 ? 16 : 20 + (count - 1) * 18 + 16;
-  return { draftCount: count, collapseStart, settle: collapseStart + 48 };
-}
+export const parseFossilDrafts = parseDrafts;
 
 export function getTypeFossilDuration({
   drafts = typeFossilDefaultDrafts,
   speed = 1,
 }: Pick<TypeFossilProps, "drafts" | "speed"> = {}) {
   const rate = Math.max(0, finite(speed, 1));
-  const { settle } = timing(parseFossilDrafts(drafts).length);
+  const { settle } = fossilSchedule(parseFossilDrafts(drafts).length);
   return rate === 0 ? 1 : Math.max(1, Math.ceil((settle + 34) / rate));
 }
 
-/** One readable revision at a time, followed by a single compression into print. */
+/**
+ * One readable revision at a time, followed by a single compression into
+ * print. `schedule` is the component's resolved timeline; without it the
+ * default schedule for `draftCount` drafts is used.
+ */
 export function getTypeFossilState(
   frame: number,
   {
@@ -63,28 +74,34 @@ export function getTypeFossilState(
     depth = 100,
     draftCount = 6,
   }: Pick<TypeFossilProps, "layers" | "depth"> & { draftCount?: number } = {},
+  schedule: ResolvedTimeline<TypeFossilElementId> = resolve(
+    fossilElements(draftCount),
+  ),
 ) {
   const t = Math.max(0, finite(frame, 0));
   const count = Math.round(Math.max(4, Math.min(24, finite(layers, 16))));
   const thickness = Math.max(50, Math.min(150, finite(depth, 100)));
-  const schedule = timing(draftCount);
-  const collapse = ease(progress(t, schedule.collapseStart, schedule.settle));
-  const open = mix(0.55, 1, out(progress(t, 0, 16)));
+  const opening = schedule.get("open");
+  const collapsing = schedule.get("collapse");
+  const revisions = schedule.lane("Revisions");
+  const settle = collapsing.end;
+  const collapse = ease(progress(t, collapsing.start, settle));
+  const open = mix(0.55, 1, out(progress(t, opening.start, opening.end)));
   const spread = open * (1 - collapse);
   let from = 0;
   let to = 0;
   let change = 0;
-  for (let revision = 0; revision < schedule.draftCount; revision++) {
-    const start = 20 + revision * 18;
+  for (let revision = 0; revision < revisions.length; revision++) {
+    const { start, end } = revisions[revision];
     if (t < start) break;
-    if (t >= start + 8) {
+    if (t >= end) {
       from = revision + 1;
       to = from;
       change = 0;
     } else {
       from = revision;
       to = revision + 1;
-      change = ease(progress(t, start, start + 8));
+      change = ease(progress(t, start, end));
       break;
     }
   }
@@ -95,14 +112,15 @@ export function getTypeFossilState(
     from,
     to,
     change,
-    draftCount: schedule.draftCount,
-    settle: schedule.settle,
+    draftCount: revisions.length,
+    settle,
     collapse,
     spread,
     spanX: thickness * 1.35 * spread,
     spanY: -thickness * 0.68 * spread,
     skew: -10 * (1 - collapse),
-    ghostOpacity: 1 - ease(progress(t, schedule.settle - 18, schedule.settle)),
+    ghostOpacity:
+      1 - ease(progress(t, settle + collapsing.beat("fade"), settle)),
   };
 }
 
@@ -140,31 +158,43 @@ function fitSize(text: string, fontSize: number) {
   return Math.min(fontSize, 720 / Math.max(1, widthUnits));
 }
 
-export function TypeFossil({
-  text = "Form",
-  drafts = typeFossilDefaultDrafts,
-  layers = 16,
-  depth = 100,
-  fontSize = 220,
-  fontWeight = 600,
-  color = "#302b26",
-  accentColor = "#a800b7",
-  backgroundColor = "#eeeae2",
-  speed = 1,
-  className,
-}: TypeFossilProps) {
+export function TypeFossil(props: TypeFossilProps) {
+  const {
+    text = DEFAULT_TEXT,
+    drafts = typeFossilDefaultDrafts,
+    layers = 16,
+    depth = 100,
+    fontSize = 220,
+    fontWeight = 600,
+    color = "#302b26",
+    accentColor = "#a800b7",
+    backgroundColor = "#eeeae2",
+    speed = 1,
+    className,
+    timing,
+  } = props;
   const id = useId().replace(/:/g, "");
   const glide = useGlide();
   const frame = useSceneFrame();
-  const { fps } = useSceneConfig();
+  const { fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    typeFossilTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const finalText = text.trim().replace(/\s+/g, " ");
   const revisions = [...parseFossilDrafts(drafts), finalText];
   const stateAt = (f: number) =>
-    getTypeFossilState(((f * 30) / fps) * Math.max(0, finite(speed, 1)), {
-      layers,
-      depth,
-      draftCount: revisions.length - 1,
-    });
+    getTypeFossilState(
+      ((f * 30) / fps) * Math.max(0, finite(speed, 1)),
+      {
+        layers,
+        depth,
+        draftCount: revisions.length - 1,
+      },
+      tl,
+    );
   const state = stateAt(frame);
   // The slice opens and collapses by moving every contour, so the drawing is
   // marked as moving while the far contour still travels, by the neighbouring

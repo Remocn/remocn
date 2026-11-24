@@ -7,6 +7,16 @@ import { useId } from "react";
 import { AbsoluteFill, Easing, Img, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import {
+  type ResolvedElement,
+  type Timing,
+  useTimeline,
+} from "@/lib/remocn/timeline";
+import {
+  DEFAULT_QUOTES,
+  type QuoteHeroElementId,
+  quoteHeroTimeline,
+} from "./timeline";
 
 const { fontFamily: sans } = loadFont("normal", {
   weights: ["400", "500"],
@@ -58,26 +68,12 @@ export interface QuoteHeroProps {
   /** Playback multiplier. */
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches each quote coming in and leaving, by the ids
+   * in `./timeline`. Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<QuoteHeroElementId>;
 }
-
-const DEFAULT_QUOTES: Quote[] = [
-  {
-    quote:
-      "remocn turned our launch video from a two-week agency project into an afternoon. We shipped it the same day.",
-    highlight: "into an afternoon",
-    name: "Maya Chen",
-    role: "Head of Design",
-    company: "Kitebase",
-  },
-  {
-    quote:
-      "The components feel art-directed, not generated. Our changelog videos finally look like the product.",
-    highlight: "finally look like the product",
-    name: "Leo Park",
-    role: "Founder",
-    company: "Fernway",
-  },
-];
 
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
 const EASE_IO = Easing.bezier(0.65, 0, 0.35, 1);
@@ -293,8 +289,8 @@ function initials(name: string) {
 function QuoteBlock({
   q,
   t,
-  start,
-  exitAt,
+  entry,
+  exit,
   u,
   c,
   accent,
@@ -302,13 +298,12 @@ function QuoteBlock({
   height,
   fg,
   fontFamily,
-  stagger,
-  sweep,
 }: {
   q: Quote;
   t: number;
-  start: number;
-  exitAt: number;
+  entry: ResolvedElement<QuoteHeroElementId>;
+  /** None for the last quote, which stays. */
+  exit: ResolvedElement<QuoteHeroElementId> | null;
   u: number;
   c: Theme;
   accent: string;
@@ -316,9 +311,8 @@ function QuoteBlock({
   height: number;
   fg: string;
   fontFamily: string;
-  stagger: number;
-  sweep: number;
 }) {
+  const start = entry.start;
   const F = 70 * u;
   const LH = 1.1;
   const maxW = width * 0.7;
@@ -329,15 +323,17 @@ function QuoteBlock({
   const blockH = lines.length * F * LH + authorGap + avatar;
   const top = (height - blockH) / 2 - 6 * u;
 
-  const lineAt = (i: number) => start + i * stagger;
-  const revealEnd = lineAt(lines.length - 1) + 16;
-  const authorAt = revealEnd - 6;
-  const sweepAt = revealEnd + 4;
+  const lineAt = (i: number) => start + i * entry.beat("stagger");
+  const revealEnd = lineAt(lines.length - 1) + entry.beat("reveal");
+  const authorAt = revealEnd + entry.beat("authorLead");
+  const sweepAt = revealEnd + entry.beat("sweepAfter");
 
-  const out = interpolate(t, [exitAt, exitAt + 12], [0, 1], {
-    ...CLAMP,
-    easing: EASE_IN,
-  });
+  const out = exit
+    ? interpolate(t, [exit.start, exit.end], [0, 1], {
+        ...CLAMP,
+        easing: EASE_IN,
+      })
+    : 0;
   if (t < start - 1 || out >= 1) return null;
 
   // highlight pieces sweep one after another, timed by their length
@@ -345,22 +341,34 @@ function QuoteBlock({
   for (const line of lines)
     for (const p of line) if (p.hl) hlLengths.push(p.text.length);
   const hlTotal = hlLengths.reduce((a, b) => a + b, 0) || 1;
-  const SWEEP = sweep;
+  const SWEEP = entry.beat("sweep");
   let hlIndex = 0;
   let hlOffset = 0;
 
   const G = 7.6 * F; // the big mark
-  const markIn = interpolate(t, [start - 2, start + 20], [0, 1], {
-    ...CLAMP,
-    easing: EASE_OUT,
-  });
-  const drift = interpolate(t, [start, start + 200], [0, 1], CLAMP);
+  const markIn = interpolate(
+    t,
+    [start + entry.beat("markLead"), start + entry.beat("markIn")],
+    [0, 1],
+    {
+      ...CLAMP,
+      easing: EASE_OUT,
+    },
+  );
+  const drift = interpolate(
+    t,
+    [start, start + entry.beat("drift")],
+    [0, 1],
+    CLAMP,
+  );
 
-  const settle = (k: number) =>
-    interpolate(t, [authorAt + k * 3, authorAt + k * 3 + 18], [0, 1], {
+  const settle = (k: number) => {
+    const from = authorAt + k * entry.beat("settleStep");
+    return interpolate(t, [from, from + entry.beat("settle")], [0, 1], {
       ...CLAMP,
       easing: EASE_OUT,
     });
+  };
 
   const markerColor = withAlpha(accent, c.marker);
 
@@ -404,10 +412,15 @@ function QuoteBlock({
         </div>
       </div>
       {lines.map((pieces, li) => {
-        const p = interpolate(t, [lineAt(li), lineAt(li) + 18], [0, 1], {
-          ...CLAMP,
-          easing: EASE_OUT,
-        });
+        const p = interpolate(
+          t,
+          [lineAt(li), lineAt(li) + entry.beat("lineIn")],
+          [0, 1],
+          {
+            ...CLAMP,
+            easing: EASE_OUT,
+          },
+        );
         return (
           <div
             key={li}
@@ -434,8 +447,13 @@ function QuoteBlock({
               {pieces.map((piece, pi) => {
                 if (!piece.hl) return <span key={pi}>{piece.text}</span>;
                 const from =
-                  sweepAt + (hlOffset / hlTotal) * SWEEP + hlIndex * 1;
-                const dur = Math.max(6, (piece.text.length / hlTotal) * SWEEP);
+                  sweepAt +
+                  (hlOffset / hlTotal) * SWEEP +
+                  hlIndex * entry.beat("hlGap");
+                const dur = Math.max(
+                  entry.beat("minSweep"),
+                  (piece.text.length / hlTotal) * SWEEP,
+                );
                 hlOffset += piece.text.length;
                 hlIndex += 1;
                 const s = interpolate(t, [from, from + dur], [0, 1], {
@@ -598,24 +616,29 @@ function ScaleLayer({
   );
 }
 
-export function QuoteHero({
-  quotes = DEFAULT_QUOTES,
-  quoteDuration = 120,
-  stagger = 5,
-  sweep = 18,
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = serif,
-  scale = 1,
-  delay = 0,
-  grain = true,
-  speed = 1,
-  theme = "dark",
-}: QuoteHeroProps) {
+export function QuoteHero(props: QuoteHeroProps) {
+  const {
+    quotes = DEFAULT_QUOTES,
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = serif,
+    scale = 1,
+    delay = 0,
+    grain = true,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay);
-  const { width, height } = useSceneConfig();
+  const { width, height, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    quoteHeroTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const t = frame * speed;
   const u = Math.min(width / 1280, height / 720);
   const c = THEMES[theme];
@@ -623,7 +646,8 @@ export function QuoteHero({
   const transparent = background === "transparent";
   const stage = transparent ? "transparent" : (background ?? c.bg);
   const n = quotes.length;
-  const total = 6 + n * quoteDuration;
+  const last = n > 0 ? tl.get(`quote:${n - 1}`) : null;
+  const total = last ? last.end + last.beat("tail") : 6;
   const push = interpolate(t, [0, total], [0, 1], CLAMP);
 
   return (
@@ -645,15 +669,13 @@ export function QuoteHero({
           }}
         >
           {quotes.map((q, i) => {
-            const start = 6 + i * quoteDuration;
-            const exitAt = i === n - 1 ? 1e9 : start + quoteDuration - 8;
             return (
               <QuoteBlock
                 key={i}
                 q={q}
                 t={t}
-                start={start}
-                exitAt={exitAt}
+                entry={tl.get(`quote:${i}`)}
+                exit={i < n - 1 ? tl.get(`exit:${i}`) : null}
                 u={u}
                 c={c}
                 accent={accent}
@@ -661,8 +683,6 @@ export function QuoteHero({
                 height={height}
                 fg={fg}
                 fontFamily={fontFamily}
-                stagger={stagger}
-                sweep={sweep}
               />
             );
           })}

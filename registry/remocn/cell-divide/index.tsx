@@ -5,6 +5,13 @@ import { type CSSProperties, type ReactNode, useId } from "react";
 import { AbsoluteFill, Easing, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  type CellDivideElementId,
+  cellDivideTimeline,
+  generationsOf,
+  gridOf,
+} from "./timeline";
 
 const { fontFamily: sora } = loadFont("normal", {
   weights: ["300", "400"],
@@ -39,16 +46,17 @@ export interface CellDivideProps {
   grain?: boolean;
   theme?: "dark" | "light";
   speed?: number;
+  /**
+   * Moves, trims or stretches the push, the intro, the count and label, each
+   * division and the closing ripple, by the ids in `./timeline`.
+   * Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<CellDivideElementId>;
 }
 
 const RAYS = 96;
 const R_RATIO = 0.4;
 const SQ2 = Math.SQRT2;
-const START = 14;
-const MOTION = [17, 15, 14, 13, 12, 12, 12];
-const PAUSE = 4;
-const SWITCH_AT = 0.74;
-const ROLL = 9;
 
 const EASE_IO = Easing.bezier(0.65, 0, 0.35, 1);
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
@@ -78,21 +86,6 @@ const THEMES = {
     grain: 0.045,
   },
 } as const;
-
-function gridOf(g: number) {
-  return { cols: 2 ** Math.ceil(g / 2), rows: 2 ** Math.floor(g / 2) };
-}
-
-function schedule(G: number, pause: number) {
-  let t = START;
-  const divs: { start: number; dur: number }[] = [];
-  for (let g = 0; g < G; g++) {
-    const dur = MOTION[Math.min(g, MOTION.length - 1)];
-    divs.push({ start: t, dur });
-    t += dur + pause;
-  }
-  return { divs, end: t - pause };
-}
 
 function smin(a: number, b: number, k: number) {
   if (k <= 1e-6) return Math.min(a, b);
@@ -208,30 +201,40 @@ function Grain({ opacity }: { opacity: number }) {
   );
 }
 
-export function CellDivide({
-  generations = 6,
-  label = "×2 every week",
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = sora,
-  fontWeight = 300,
-  pause = PAUSE,
-  scale = 1,
-  delay = 0,
-  grain = true,
-  theme = "dark",
-  speed = 1,
-}: CellDivideProps) {
+export function CellDivide(props: CellDivideProps) {
+  const {
+    generations = 6,
+    label = "×2 every week",
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = sora,
+    fontWeight = 300,
+    scale = 1,
+    delay = 0,
+    grain = true,
+    theme = "dark",
+    speed = 1,
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width, height } = useSceneConfig();
+  const { width, height, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    cellDivideTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const u = Math.min(width / 1280, height / 720);
   const p = THEMES[theme];
   const fg = ink ?? p.fg;
   const stage = background ?? p.bg;
-  const G = Math.max(2, Math.min(7, Math.round(generations)));
-  const { divs, end } = schedule(G, pause);
+  const G = generationsOf(generations);
+  const divs = Array.from({ length: G }, (_, g) => tl.get(`division:${g}`));
+  const pushEl = tl.get("push");
+  const introEl = tl.get("intro");
+  const ripple = tl.get("ripple");
 
   const heroSize = 176 * u;
   const labelSize = 24 * u;
@@ -265,16 +268,19 @@ export function CellDivide({
   let s = 0;
   for (let g = 0; g < divs.length; g++) {
     const d = divs[g];
-    if (t >= d.start + d.dur) gen = g + 1;
+    if (t >= d.end) gen = g + 1;
     else if (t >= d.start) {
       active = g;
-      s = (t - d.start) / d.dur;
+      s = (t - d.start) / d.length;
       break;
     }
   }
 
-  const intro = interpolate(t, [0, 16], [0, 1], { ...CLAMP, easing: EASE_OUT });
-  const push = interpolate(t, [0, end + 30], [0, 1], {
+  const intro = interpolate(t, [introEl.start, introEl.end], [0, 1], {
+    ...CLAMP,
+    easing: EASE_OUT,
+  });
+  const push = interpolate(t, [pushEl.start, pushEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
@@ -334,7 +340,12 @@ export function CellDivide({
                 Math.PI *
                   interpolate(
                     t,
-                    [end + 2 + (c + r) * 0.6, end + 11 + (c + r) * 0.6],
+                    [
+                      ripple.start + (c + r) * ripple.beat("step"),
+                      ripple.start +
+                        ripple.beat("swell") +
+                        (c + r) * ripple.beat("step"),
+                    ],
                     [0, 1],
                     CLAMP,
                   ),
@@ -354,14 +365,17 @@ export function CellDivide({
     }
   }
 
-  const switches = divs.map((d) => d.start + d.dur * SWITCH_AT);
+  const switches = divs.map((d) => d.start + d.beat("switch"));
   let shown = 0;
   for (let i = 0; i < switches.length; i++) if (t >= switches[i]) shown = i + 1;
   const rollK =
     shown > 0
       ? interpolate(
           t,
-          [switches[shown - 1], switches[shown - 1] + ROLL],
+          [
+            switches[shown - 1],
+            switches[shown - 1] + divs[shown - 1].beat("roll"),
+          ],
           [0, 1],
           {
             ...CLAMP,
@@ -373,11 +387,13 @@ export function CellDivide({
   const prev = shown > 0 ? 2 ** (shown - 1) : cur;
   const rolling = rollK < 1;
 
-  const textIn = interpolate(t, [6, 24], [0, 1], {
+  const countEl = tl.get("count");
+  const labelEl = tl.get("label");
+  const textIn = interpolate(t, [countEl.start, countEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
-  const labelIn = interpolate(t, [12, 30], [0, 1], {
+  const labelIn = interpolate(t, [labelEl.start, labelEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });

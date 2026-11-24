@@ -12,6 +12,13 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_LINES,
+  type EmbargoLiftElementId,
+  embargoLiftTimeline,
+  rowsOf,
+} from "./timeline";
 
 const shoulders = loadFont("normal", {
   weights: ["400", "500"],
@@ -38,6 +45,12 @@ export interface EmbargoLiftProps {
   delay?: number;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches single lines, the slug, its flip and single
+   * bars, by the ids in `./timeline`. Frames on the scene timeline, after
+   * `delay` and `speed`.
+   */
+  timing?: Timing<EmbargoLiftElementId>;
 }
 
 const THEMES = {
@@ -49,41 +62,12 @@ const WGHT = 500;
 const PX = 200;
 const LEAD = 1.2;
 
-const T_SLUG = 50;
-const T_LIFT = 58;
-const LIFT_STEP = 14;
-const LIFT_DUR = 16;
-const HOLD = 34;
-
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
 const EASE_LIFT = Easing.bezier(0.7, 0, 0.25, 1);
 const CLAMP = {
   extrapolateLeft: "clamp",
   extrapolateRight: "clamp",
 } as const;
-
-interface Seg {
-  text: string;
-  hidden: boolean;
-  bar: number;
-}
-
-function parseLine(line: string, start: number): Seg[] {
-  const out: Seg[] = [];
-  let bar = start;
-  const re = /\[([^\]]*)\]/g;
-  let last = 0;
-  for (let r = re.exec(line); r; r = re.exec(line)) {
-    if (r.index > last)
-      out.push({ text: line.slice(last, r.index), hidden: false, bar: -1 });
-    out.push({ text: r[1], hidden: true, bar });
-    bar += 1;
-    last = r.index + r[0].length;
-  }
-  if (last < line.length)
-    out.push({ text: line.slice(last), hidden: false, bar: -1 });
-  return out;
-}
 
 interface Metrics {
   w: Record<string, number>;
@@ -161,44 +145,38 @@ function ScaleLayer({
   );
 }
 
-export function EmbargoLift({
-  lines = ["remocn is [free],", "[open source]", "and [out today]."],
-  slug = "Embargoed until 9:00 a.m.",
-  liftedSlug = "Embargo lifted, 9:00 a.m.",
-  highlight,
-  accent,
-  ink,
-  background,
-  fontFamily = shoulders.fontFamily,
-  fontWeight = WGHT,
-  stagger = LIFT_STEP,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: EmbargoLiftProps) {
+export function EmbargoLift(props: EmbargoLiftProps) {
+  const {
+    lines = DEFAULT_LINES,
+    slug = "Embargoed until 9:00 a.m.",
+    liftedSlug = "Embargo lifted, 9:00 a.m.",
+    highlight,
+    accent,
+    ink,
+    background,
+    fontFamily = shoulders.fontFamily,
+    fontWeight = WGHT,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay);
   const { width: W, height: H, durationInFrames } = useSceneConfig();
+  // The pace that fits the bars into the clip counts the clip without
+  // `speed`, so the schedule gets `durationInFrames`.
+  const tl = useTimeline(embargoLiftTimeline, props, durationInFrames, timing);
   const c = THEMES[theme];
   const hi = accent ?? c.accent;
   const fg = ink ?? c.ink;
   const stage =
     background === "transparent" ? "transparent" : (background ?? c.bg);
 
-  const rows: Seg[][] = [];
-  let barCount = 0;
-  for (const l of lines.length > 0 ? lines : ["[out today]."]) {
-    const segs = parseLine(l, barCount);
-    barCount += segs.filter((s) => s.hidden).length;
-    rows.push(segs);
-  }
+  const { rows, barCount } = rowsOf(lines);
   const hiBar = highlight ?? barCount - 1;
-
-  const naturalEnd =
-    T_LIFT + Math.max(0, barCount - 1) * stagger + LIFT_DUR + HOLD;
-  const pace = Math.max(1, naturalEnd / Math.max(1, durationInFrames));
-  const t = frame * speed * pace;
+  const t = frame * speed;
 
   const texts: string[] = [];
   for (const segs of rows) {
@@ -252,7 +230,8 @@ export function EmbargoLift({
     const lineW = m.w[lineTexts[r]] * size;
     const left = (W - lineW) / 2;
     const base = firstBase + r * LEAD * size;
-    const p = interpolate(t, [2 + r * 4, 22 + r * 4], [0, 1], {
+    const lineEl = tl.get(`line:${r}`);
+    const p = interpolate(t, [lineEl.start, lineEl.end], [0, 1], {
       ...CLAMP,
       easing: EASE_OUT,
     });
@@ -289,8 +268,8 @@ export function EmbargoLift({
       const barTop = base - (m.cap + 0.05) * size;
       const barBottom =
         base + (Math.min(Math.max(m.dsc, 0.1), 0.24) + 0.02) * size;
-      const startAt = T_LIFT + s.bar * stagger;
-      const g = interpolate(t, [startAt, startAt + LIFT_DUR], [1, 0], {
+      const bar = tl.get(`bar:${s.bar}`);
+      const g = interpolate(t, [bar.start, bar.end], [1, 0], {
         ...CLAMP,
         easing: EASE_LIFT,
       });
@@ -315,11 +294,13 @@ export function EmbargoLift({
   });
 
   const slugBase = top + m.cap * slugSize;
-  const slugIn = interpolate(t, [10, 26], [0, 1], {
+  const slugEl = tl.get("slug");
+  const flipEl = tl.get("flip");
+  const slugIn = interpolate(t, [slugEl.start, slugEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
-  const flip = interpolate(t, [T_SLUG, T_SLUG + 12], [0, 1], {
+  const flip = interpolate(t, [flipEl.start, flipEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_LIFT,
   });

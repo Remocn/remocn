@@ -7,6 +7,14 @@ import type React from "react";
 import { AbsoluteFill, Easing, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_NAME,
+  PREROLL,
+  type WalkoutNameElementId,
+  walkoutLines,
+  walkoutNameTimeline,
+} from "./timeline";
 
 const { fontFamily: oswald } = loadFont("normal", {
   weights: ["400", "500"],
@@ -84,6 +92,12 @@ export interface WalkoutNameProps {
   delay?: number;
   theme?: "dark" | "light";
   speed?: number;
+  /**
+   * Moves, trims or stretches single shots, the whip-out, the band, the
+   * stats, the nickname and the billing, by the ids in `./timeline`. Frames
+   * on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<WalkoutNameElementId>;
 }
 
 // Beat sheet (internal clock = frame + 2, 30fps, speed 1):
@@ -97,18 +111,6 @@ export interface WalkoutNameProps {
 //  52–63   record label + record slam in beside the name, then the finishes stat
 //  64–74   the nickname wipes in beside the last line; billing and logo rise
 //  80–     fight-poster hold
-const SHOT_2 = 12;
-const SHOT_3 = 26;
-const SLAM_LEN = 5;
-const WHIP_OUT = 37;
-const WHIP_OUT_LEN = 9;
-const BAND_AT = 44;
-const BAND_LEN = 18;
-const RECORD_AT = 52;
-const FINISH_AT = 58;
-const NICK_AT = 64;
-const META_AT = 70;
-
 const SLAM = Easing.bezier(0.12, 0.9, 0.25, 1);
 const OUT = Easing.bezier(0.22, 1, 0.36, 1);
 const INOUT = Easing.bezier(0.7, 0, 0.2, 1);
@@ -185,35 +187,43 @@ function ScaleLayer({
   );
 }
 
-export function WalkoutName({
-  name = ["The", "Launch", "Kid"],
-  nickname = "Ships before lunch",
-  record = "12–0",
-  finishes = "12 KO",
-  recordLabel = "Pro record",
-  billing = "Main event · Tonight",
-  bandWidth = 0.19,
-  impact = 1,
-  logo,
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = oswald,
-  scale = 1,
-  delay = 0,
-  theme = "dark",
-  speed = 1,
-}: WalkoutNameProps) {
+export function WalkoutName(props: WalkoutNameProps) {
+  const {
+    name = DEFAULT_NAME,
+    nickname = "Ships before lunch",
+    record = "12–0",
+    finishes = "12 KO",
+    recordLabel = "Pro record",
+    billing = "Main event · Tonight",
+    bandWidth = 0.19,
+    impact = 1,
+    logo,
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = oswald,
+    scale = 1,
+    delay = 0,
+    theme = "dark",
+    speed = 1,
+    timing,
+  } = props;
   const glide = useGlide();
-  const t = Math.max(0, useSceneFrame() - delay) * speed + 2;
-  const { width: W, height: H } = useSceneConfig();
+  const t = Math.max(0, useSceneFrame() - delay) * speed + PREROLL;
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    walkoutNameTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const c = THEMES[theme];
   const fg = ink ?? c.ink;
   const stage =
     background === "transparent" ? "transparent" : (background ?? c.stage);
   const u = Math.min(W / 1280, H / 720);
 
-  const lines = name.slice(0, 4).map((l) => l.toUpperCase());
+  const lines = walkoutLines(name);
   const n = Math.max(1, lines.length);
 
   // ── Poster layout (world coordinates = poster pixels) ─────────────────────
@@ -237,9 +247,19 @@ export function WalkoutName({
 
   // ── Shots ─────────────────────────────────────────────────────────────────
   // One shot per line: line i becomes visible when its shot starts.
-  const shotAt = [0, SHOT_2, SHOT_3, SHOT_3 + 6].slice(0, n);
+  // The schedule counts scene frames; `t` runs `PREROLL` ahead of them.
+  const shots = Array.from({ length: n }, (_, i) => tl.get(`shot:${i}`));
+  const shotAt = shots.map((e) => e.start + PREROLL);
   const lastShot = shotAt[n - 1];
-  const whipOut = n === 1 ? SHOT_2 : WHIP_OUT + (n > 3 ? 6 : 0);
+  const lastEl = shots[n - 1];
+  const whipEl = tl.get("whip-out");
+  const whipOut = whipEl.start + PREROLL;
+  const bandEl = tl.get("band");
+  const recordEl = tl.get("record");
+  const finishEl = tl.get("finishes");
+  const RECORD_AT = recordEl.start + PREROLL;
+  const FINISH_AT = finishEl.start + PREROLL;
+  const BAND_AT = bandEl.start + PREROLL;
   const poster: Cam = { cx: W / 2, cy: H / 2, s: 1, dx: 0 };
 
   const framing = (i: number): Cam => {
@@ -250,7 +270,7 @@ export function WalkoutName({
 
   const camAt = (tt: number): Cam => {
     if (tt >= whipOut) {
-      const p = INOUT(ramp(tt, whipOut, WHIP_OUT_LEN));
+      const p = INOUT(ramp(tt, whipOut, whipEl.length));
       const f = framing(n - 1);
       return {
         cx: interpolate(p, [0, 1], [f.cx, poster.cx]),
@@ -263,12 +283,14 @@ export function WalkoutName({
     for (let k = 0; k < n; k++) if (tt >= shotAt[k]) i = k;
     const f = framing(i);
     const local = tt - shotAt[i];
-    const push = 1 + 0.04 * ramp(local, 0, 14);
+    const push = 1 + 0.04 * ramp(local, 0, shots[i].beat("push"));
     // Lines 1 and 2 whip in (from the right, then from the left); the last
     // line lands in place and slams instead.
     const whipping = i < n - 1 || n === 1;
     const dir = i % 2 === 0 ? 1 : -1;
-    const dx = whipping ? dir * 0.95 * W * (1 - OUT(ramp(local, 0, 7))) : 0;
+    const dx = whipping
+      ? dir * 0.95 * W * (1 - OUT(ramp(local, 0, shots[i].beat("whip"))))
+      : 0;
     return { ...f, s: f.s * push, dx };
   };
 
@@ -288,21 +310,39 @@ export function WalkoutName({
   const ghosts = speedPx > 18 * u ? [0.32, 0.2, 0.12, 0.07] : [];
 
   // ── Impact on the last line ───────────────────────────────────────────────
-  const slamP = SLAM(ramp(t, lastShot, SLAM_LEN));
+  const slamP = SLAM(ramp(t, lastShot, lastEl.beat("slam")));
   const lastScale = n > 1 ? 1.7 - 0.7 * slamP : 1;
-  const hit = lastShot + SLAM_LEN;
+  const hit = lastShot + lastEl.beat("slam");
   const inverted = n > 1 && t >= hit && t < hit + speed;
-  const s1 = n > 1 ? shake(t, hit, 9, 14 * u * impact) : { x: 0, y: 0 };
-  const s2 = shake(t, RECORD_AT + SLAM_LEN, 6, 5 * u * impact);
-  const s3 = shake(t, FINISH_AT + SLAM_LEN, 6, 5 * u * impact);
+  const s1 =
+    n > 1
+      ? shake(t, hit, lastEl.beat("shake"), 14 * u * impact)
+      : { x: 0, y: 0 };
+  const s2 = shake(
+    t,
+    RECORD_AT + recordEl.length,
+    recordEl.beat("shake"),
+    5 * u * impact,
+  );
+  const s3 = shake(
+    t,
+    FINISH_AT + finishEl.length,
+    finishEl.beat("shake"),
+    5 * u * impact,
+  );
   const shX = s1.x + s2.x + s3.x;
   const shY = s1.y + s2.y + s3.y;
 
   // ── Spotlight band (world coordinates, leaning right) ─────────────────────
   const bandW = bandWidth * W;
   const lean = Math.tan((20 * Math.PI) / 180);
-  const bandIn = OUT(ramp(t, BAND_AT, BAND_LEN));
-  const bandDrift = interpolate(t, [BAND_AT + BAND_LEN, 160], [0, 0.03], CLAMP);
+  const bandIn = OUT(ramp(t, BAND_AT, bandEl.length));
+  const bandDrift = interpolate(
+    t,
+    [BAND_AT + bandEl.length, BAND_AT + bandEl.beat("driftEnd")],
+    [0, 0.03],
+    CLAMP,
+  );
   const bandCx =
     interpolate(bandIn, [0, 1], [-0.35 * W, 0.4 * W]) + bandDrift * W;
   // The band is laid out where it parks; the swing and the drift are a
@@ -326,16 +366,20 @@ export function WalkoutName({
   const labelFs = 19 * u;
   const recordTop = top + 46 * u;
   const finishTop = recordTop + CAP * statFs + 34 * u;
-  const recP = SLAM(ramp(t, RECORD_AT, SLAM_LEN));
-  const finP = SLAM(ramp(t, FINISH_AT, SLAM_LEN));
-  const ruleP = OUT(ramp(t, FINISH_AT - 1, 8));
+  const recP = SLAM(ramp(t, RECORD_AT, recordEl.length));
+  const finP = SLAM(ramp(t, FINISH_AT, finishEl.length));
+  const ruleP = OUT(
+    ramp(t, FINISH_AT + finishEl.beat("ruleAt"), finishEl.beat("rule")),
+  );
 
   // ── Nickname + meta ───────────────────────────────────────────────────────
   const nickFs = 74 * u;
   const lastBase = lineTop(n - 1) + capH;
   const nickX = x0 + lineW(n - 1) + 44 * u;
-  const nickP = OUT(ramp(t, NICK_AT, 11));
-  const metaP = OUT(ramp(t, META_AT, 10));
+  const nickEl = tl.get("nickname");
+  const metaEl = tl.get("meta");
+  const nickP = OUT(ramp(t, nickEl.start + PREROLL, nickEl.length));
+  const metaP = OUT(ramp(t, metaEl.start + PREROLL, metaEl.length));
 
   // Everything that carries text on a transform, in pixels, so the tilt on
   // the shake layer can follow it: the camera, the shake, the slams and the
@@ -343,19 +387,32 @@ export function WalkoutName({
   const pose = (tt: number) => {
     const cm = camAt(tt);
     const sh = [
-      n > 1 ? shake(tt, hit, 9, 14 * u * impact) : { x: 0, y: 0 },
-      shake(tt, RECORD_AT + SLAM_LEN, 6, 5 * u * impact),
-      shake(tt, FINISH_AT + SLAM_LEN, 6, 5 * u * impact),
+      n > 1
+        ? shake(tt, hit, lastEl.beat("shake"), 14 * u * impact)
+        : { x: 0, y: 0 },
+      shake(
+        tt,
+        RECORD_AT + recordEl.length,
+        recordEl.beat("shake"),
+        5 * u * impact,
+      ),
+      shake(
+        tt,
+        FINISH_AT + finishEl.length,
+        finishEl.beat("shake"),
+        5 * u * impact,
+      ),
     ];
     return [
       W / 2 - cm.s * cm.cx + cm.dx,
       H / 2 - cm.s * cm.cy,
       cm.s * W,
       ...sh.flatMap((v) => [v.x, v.y]),
-      (n > 1 ? 1.7 - 0.7 * SLAM(ramp(tt, lastShot, SLAM_LEN)) : 1) * W,
-      SLAM(ramp(tt, RECORD_AT, SLAM_LEN)) * W,
-      SLAM(ramp(tt, FINISH_AT, SLAM_LEN)) * W,
-      OUT(ramp(tt, META_AT, 10)) * 12 * u,
+      (n > 1 ? 1.7 - 0.7 * SLAM(ramp(tt, lastShot, lastEl.beat("slam"))) : 1) *
+        W,
+      SLAM(ramp(tt, RECORD_AT, recordEl.length)) * W,
+      SLAM(ramp(tt, FINISH_AT, finishEl.length)) * W,
+      OUT(ramp(tt, metaEl.start + PREROLL, metaEl.length)) * 12 * u,
     ];
   };
   const here = pose(t);
@@ -405,7 +462,7 @@ export function WalkoutName({
               top: lineTop(i) - CAP_TOP * nameFs,
               transform: `scale(${k})`,
               transformOrigin: `${p.x - x0}px ${CAP_TOP * nameFs + capH / 2}px`,
-              opacity: isLast ? ramp(t, lastShot, 2) : 1,
+              opacity: isLast ? ramp(t, lastShot, lastEl.beat("show")) : 1,
             }}
           >
             {text(l, nameFs, ink, { letterSpacing: "-0.015em" })}
@@ -526,7 +583,7 @@ export function WalkoutName({
                   display: "flex",
                   alignItems: "center",
                   gap: 12 * u,
-                  opacity: ramp(t, RECORD_AT, 3),
+                  opacity: ramp(t, RECORD_AT, recordEl.beat("label")),
                   fontFamily,
                   fontWeight: 400,
                   fontSize: labelFs,
@@ -549,7 +606,7 @@ export function WalkoutName({
                   top: recordTop - CAP_TOP * statFs,
                   transform: `scale(${1.55 - 0.55 * recP})`,
                   transformOrigin: `0 ${CAP_TOP * statFs + (CAP * statFs) / 2}px`,
-                  opacity: ramp(t, RECORD_AT, 2),
+                  opacity: ramp(t, RECORD_AT, recordEl.beat("show")),
                 }}
               >
                 {text(record, statFs, fg, {
@@ -578,7 +635,7 @@ export function WalkoutName({
                   top: finishTop - CAP_TOP * statFs,
                   transform: `scale(${1.55 - 0.55 * finP})`,
                   transformOrigin: `0 ${CAP_TOP * statFs + (CAP * statFs) / 2}px`,
-                  opacity: ramp(t, FINISH_AT, 2),
+                  opacity: ramp(t, FINISH_AT, finishEl.beat("show")),
                 }}
               >
                 {text(finishes, statFs, "transparent", {

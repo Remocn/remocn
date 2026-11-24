@@ -10,6 +10,8 @@ import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import { type RatingLaurelElementId, ratingLaurelTimeline } from "./timeline";
 
 const { fontFamily: hanken } = loadFont("normal", {
   weights: ["300", "400"],
@@ -67,6 +69,13 @@ export interface RatingLaurelProps {
   theme?: "light" | "dark";
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
+  /**
+   * Moves, trims or stretches the laurels, the rating, the copy, the camera,
+   * the categories, the cards, the install bar and the card glide, by the
+   * ids in `./timeline`. Frames on the scene timeline, after `delay` and
+   * `speed`.
+   */
+  timing?: Timing<RatingLaurelElementId>;
 }
 
 const DEFAULT_REVIEWS: RatingReview[] = [
@@ -150,20 +159,6 @@ const CHIP = { mass: 0.5, damping: 12, stiffness: 200 };
 
 const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
 
-const BEAT = {
-  laurel: 4,
-  number: 10,
-  title: 36,
-  sub: 42,
-  camFrom: 60,
-  camTo: 108,
-  categories: 72,
-  cards: 84,
-  glideFrom: 108,
-  glideTo: 250,
-  cta: 96,
-};
-
 const LIGHT = {
   page: "#FFFFFF",
   ink: "#1C1C1E",
@@ -222,6 +217,9 @@ function Laurel({
   h,
   f,
   at,
+  stemLength,
+  leafAt,
+  leafGap,
   fps,
   mirror,
   c,
@@ -229,11 +227,14 @@ function Laurel({
   h: number;
   f: number;
   at: number;
+  stemLength: number;
+  leafAt: number;
+  leafGap: number;
   fps: number;
   mirror?: boolean;
   c: Palette;
 }) {
-  const stem = interpolate(f, [at, at + 22], [0, 1], {
+  const stem = interpolate(f, [at, at + stemLength], [0, 1], {
     ...clamp,
     easing: ENTER,
   });
@@ -259,7 +260,7 @@ function Laurel({
       />
       {LEAVES.map((leaf, i) => {
         const g = spring({
-          frame: f - at - 3 - i * 2.4,
+          frame: f - at - leafAt - i * leafGap,
           fps,
           config: CHIP,
         });
@@ -709,34 +710,53 @@ function ScaleLayer({
   );
 }
 
-export function RatingLaurel({
-  rating = 4.96,
-  title = "Loved by builders",
-  subtitle = "remocn is in the **top 5%** of launch tools, based on ratings, reviews, and reliability",
-  reviews = DEFAULT_REVIEWS,
-  reviewCount = 298,
-  categories = DEFAULT_CATEGORIES,
-  device = "web",
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = hanken,
-  ctaLabel = "Install",
-  priceLabel = "Free",
-  logo,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "light",
-  ground,
-  groundParams,
-}: RatingLaurelProps) {
+export function RatingLaurel(props: RatingLaurelProps) {
+  const {
+    rating = 4.96,
+    title = "Loved by builders",
+    subtitle = "remocn is in the **top 5%** of launch tools, based on ratings, reviews, and reliability",
+    reviews = DEFAULT_REVIEWS,
+    reviewCount = 298,
+    categories = DEFAULT_CATEGORIES,
+    device = "web",
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = hanken,
+    ctaLabel = "Install",
+    priceLabel = "Free",
+    logo,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "light",
+    ground,
+    groundParams,
+    timing,
+  } = props;
   // `glide` names the card strip's travel below, so the glide mark is `tilt`.
   const tilt = useGlide();
   const rawFrame = useSceneFrame();
   const frame = Math.max(0, rawFrame - delay);
-  const { fps, width, height } = useSceneConfig();
+  const { fps, width, height, durationInFrames } = useSceneConfig();
   const f = frame * speed;
+  const tl = useTimeline(
+    ratingLaurelTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const pageEl = tl.get("page");
+  const laurelEl = tl.get("laurel");
+  const numberEl = tl.get("number");
+  const headlineEl = tl.get("headline");
+  const titleEl = tl.get("title");
+  const subEl = tl.get("subtitle");
+  const cameraEl = tl.get("camera");
+  const catsEl = tl.get("categories");
+  const cardsEl = tl.get("cards");
+  const ctaEl = tl.get("cta");
+  const glideEl = tl.get("glide");
   const dark = theme === "dark";
   const palette = dark ? DARK : LIGHT;
   const c = ink === undefined ? palette : { ...palette, ink };
@@ -753,8 +773,8 @@ export function RatingLaurel({
     rawFrame >= delay &&
     (Math.abs(at(f + speed) - at(f)) > eps ||
       Math.abs(at(f) - at(f - speed)) > eps);
-  const fadeUp = (at: number, dy = 14): React.CSSProperties => {
-    const v = interpolate(f, [at, at + 14], [0, 1], {
+  const fadeUp = (at: number, len: number, dy = 14): React.CSSProperties => {
+    const v = interpolate(f, [at, at + len], [0, 1], {
       ...clamp,
       easing: ENTER,
     });
@@ -800,15 +820,34 @@ export function RatingLaurel({
       }}
     >
       <div style={{ display: "flex", alignItems: "center", gap: 10 * scale }}>
-        <Laurel h={104 * scale} f={f} at={BEAT.laurel} fps={fps} c={c} />
+        <Laurel
+          h={104 * scale}
+          f={f}
+          at={laurelEl.start}
+          stemLength={laurelEl.length}
+          leafAt={laurelEl.beat("leaves")}
+          leafGap={laurelEl.beat("leafGap")}
+          fps={fps}
+          c={c}
+        />
         <RollingNumber
           text={rating.toFixed(2)}
           f={f}
-          at={BEAT.number}
+          at={numberEl.start}
           size={92 * scale}
           color={c.ink}
         />
-        <Laurel h={104 * scale} f={f} at={BEAT.laurel} fps={fps} c={c} mirror />
+        <Laurel
+          h={104 * scale}
+          f={f}
+          at={laurelEl.start}
+          stemLength={laurelEl.length}
+          leafAt={laurelEl.beat("leaves")}
+          leafGap={laurelEl.beat("leafGap")}
+          fps={fps}
+          c={c}
+          mirror
+        />
       </div>
       <div
         style={{
@@ -817,7 +856,7 @@ export function RatingLaurel({
           fontWeight: 400,
           letterSpacing: "-0.02em",
           color: c.ink,
-          ...fadeUp(BEAT.title),
+          ...fadeUp(titleEl.start, titleEl.length),
         }}
       >
         {title}
@@ -830,7 +869,7 @@ export function RatingLaurel({
           lineHeight: 1.45,
           color: c.muted,
           textWrap: "balance",
-          ...fadeUp(BEAT.sub, 10),
+          ...fadeUp(subEl.start, subEl.length, 10),
         }}
       >
         <RichText text={subtitle} color={c.ink} />
@@ -842,25 +881,23 @@ export function RatingLaurel({
     const u = 1;
     const cardW = 300;
     const step = cardW + 28;
-    const glide = interpolate(
-      f,
-      [BEAT.glideFrom, BEAT.glideTo],
-      [0, step * 2],
-      {
-        ...clamp,
-        easing: MOVE,
-      },
-    );
+    const glide = interpolate(f, [glideEl.start, glideEl.end], [0, step * 2], {
+      ...clamp,
+      easing: MOVE,
+    });
     const pk = tall ? (height * 0.6) / BH : (height * 0.9) / BH;
     const phoneC = tall
       ? { x: width / 2, y: height * 0.37 }
       : { x: width * 0.7, y: height / 2 };
-    const rise = sp(0, HEAVY);
+    const rise = sp(pageEl.start, HEAVY);
     const s = width / (tall ? 1080 : 1280);
     const lineAt = (t: number, d: number) =>
-      interpolate(t, [18 + d, 34 + d], [0, 1], { ...clamp, easing: ENTER });
+      interpolate(t, [headlineEl.start + d, headlineEl.end + d], [0, 1], {
+        ...clamp,
+        easing: ENTER,
+      });
     const lineIn = (d: number) => lineAt(f, d);
-    const barIn = sp(BEAT.cta, CARD);
+    const barIn = sp(ctaEl.start, CARD);
     return (
       <AbsoluteFill style={{ fontFamily, overflow: "hidden" }}>
         {groundEl}
@@ -922,13 +959,17 @@ export function RatingLaurel({
                     borderTop: `1px solid ${c.hair}`,
                     borderBottom: `1px solid ${c.hair}`,
                     padding: "12px 0",
-                    ...fadeUp(BEAT.categories - 4, 0),
+                    ...fadeUp(
+                      catsEl.start + catsEl.beat("fadeAt"),
+                      catsEl.beat("fade"),
+                      0,
+                    ),
                   }}
                 >
                   {categories.slice(0, 4).map((cat, i) => {
-                    const v = sp(BEAT.categories + i * 3, CHIP);
+                    const v = sp(catsEl.start + i * catsEl.beat("gap"), CHIP);
                     const settling = stirs((t) =>
-                      spAt(t, BEAT.categories + i * 3, CHIP),
+                      spAt(t, catsEl.start + i * catsEl.beat("gap"), CHIP),
                     );
                     return (
                       <div
@@ -969,7 +1010,10 @@ export function RatingLaurel({
                   }}
                 >
                   {[...reviews, ...reviews].map((r, i) => {
-                    const v = sp(BEAT.cards + Math.min(i, 4) * 3, CARD);
+                    const v = sp(
+                      cardsEl.start + Math.min(i, 4) * cardsEl.beat("gap"),
+                      CARD,
+                    );
                     return (
                       <div
                         key={`${r.name}-${i < reviews.length ? "a" : "b"}`}
@@ -1004,7 +1048,11 @@ export function RatingLaurel({
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    ...fadeUp(BEAT.cta + 6, 8),
+                    ...fadeUp(
+                      ctaEl.start + ctaEl.beat("linkAt"),
+                      ctaEl.beat("link"),
+                      8,
+                    ),
                   }}
                 >
                   Show all {reviewCount} reviews
@@ -1023,7 +1071,7 @@ export function RatingLaurel({
                     justifyContent: "space-between",
                     padding: "18px 22px 0",
                     boxSizing: "border-box",
-                    transform: `translateY(${(1 - barIn) * 112}px)${tilt(stirs((t) => spAt(t, BEAT.cta, CARD)))}`,
+                    transform: `translateY(${(1 - barIn) * 112}px)${tilt(stirs((t) => spAt(t, ctaEl.start, CARD)))}`,
                   }}
                 >
                   <div style={{ color: c.ink }}>
@@ -1088,7 +1136,7 @@ export function RatingLaurel({
                   lineHeight: 1.04,
                   letterSpacing: "-0.04em",
                   textWrap: "balance",
-                  transform: `translateY(${(1 - lineIn(4)) * 105}%)${tilt(stirs((t) => lineAt(t, 4) * 105, 1e-4))}`,
+                  transform: `translateY(${(1 - lineIn(headlineEl.beat("second"))) * 105}%)${tilt(stirs((t) => lineAt(t, headlineEl.beat("second")) * 105, 1e-4))}`,
                 }}
               >
                 Rated {rating.toFixed(2)} by the people who{" "}
@@ -1112,7 +1160,7 @@ export function RatingLaurel({
 
   const cardW = 270;
   const step = cardW + 40;
-  const glide = interpolate(f, [BEAT.glideFrom, BEAT.glideTo], [0, step * 2], {
+  const glide = interpolate(f, [glideEl.start, glideEl.end], [0, step * 2], {
     ...clamp,
     easing: MOVE,
   });
@@ -1122,14 +1170,22 @@ export function RatingLaurel({
   const winY = (720 - winH) / 2;
   const focusY = winY + 215;
   const camAt = (t: number) => {
-    const cam = interpolate(t, [BEAT.camFrom, BEAT.camTo], [0, 1], {
+    const cam = interpolate(t, [cameraEl.start, cameraEl.end], [0, 1], {
       ...clamp,
       easing: CAM,
     });
     const zoom = 1.8 - 0.8 * cam;
     const ty = (1 - cam) * (360 - focusY);
-    const winIn = spAt(t, 0, HEAVY);
-    const push = 1 + 0.02 * interpolate(t, [BEAT.camTo, 270], [0, 1], clamp);
+    const winIn = spAt(t, pageEl.start, HEAVY);
+    const push =
+      1 +
+      0.02 *
+        interpolate(
+          t,
+          [cameraEl.end, cameraEl.end + cameraEl.beat("push")],
+          [0, 1],
+          clamp,
+        );
     return { y: ty + (1 - winIn) * 30, k: zoom * push };
   };
   const view = camAt(f);
@@ -1187,7 +1243,7 @@ export function RatingLaurel({
                   padding: "0 32px",
                   opacity: interpolate(
                     f,
-                    [BEAT.camFrom + 10, BEAT.camTo],
+                    [cameraEl.start + cameraEl.beat("fadeAt"), cameraEl.end],
                     [0, 1],
                     {
                       ...clamp,
@@ -1243,13 +1299,17 @@ export function RatingLaurel({
                   borderTop: `1px solid ${c.hair}`,
                   borderBottom: `1px solid ${c.hair}`,
                   padding: "16px 0",
-                  ...fadeUp(BEAT.categories - 4, 0),
+                  ...fadeUp(
+                    catsEl.start + catsEl.beat("fadeAt"),
+                    catsEl.beat("fade"),
+                    0,
+                  ),
                 }}
               >
                 {categories.map((cat, i) => {
-                  const v = sp(BEAT.categories + i * 3, CHIP);
+                  const v = sp(catsEl.start + i * catsEl.beat("gap"), CHIP);
                   const settling = stirs((t) =>
-                    spAt(t, BEAT.categories + i * 3, CHIP),
+                    spAt(t, catsEl.start + i * catsEl.beat("gap"), CHIP),
                   );
                   return (
                     <div
@@ -1303,7 +1363,10 @@ export function RatingLaurel({
                   }}
                 >
                   {[...reviews, ...reviews].map((r, i) => {
-                    const v = sp(BEAT.cards + Math.min(i, 4) * 3, CARD);
+                    const v = sp(
+                      cardsEl.start + Math.min(i, 4) * cardsEl.beat("gap"),
+                      CARD,
+                    );
                     return (
                       <div
                         key={`${r.name}-${i < reviews.length ? "a" : "b"}`}

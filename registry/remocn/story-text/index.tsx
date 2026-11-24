@@ -17,6 +17,13 @@ import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_TEXT,
+  type StoryTextElementId,
+  storyTextTimeline,
+  storyWords,
+} from "./timeline";
 
 const figtree = loadFont("normal", {
   weights: ["400"],
@@ -46,6 +53,12 @@ export interface StoryTextProps {
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
   speed?: number;
+  /**
+   * Moves, trims or stretches each word, the caret, the sticker styles and
+   * the ground's push, by the ids in `./timeline`. Frames on the scene
+   * timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<StoryTextElementId>;
 }
 
 const FONT_PX = 100;
@@ -90,10 +103,6 @@ const THEMES = {
     shadow: "0 1px 16px rgba(242,237,230,0.6)",
   },
 } as const;
-
-const FIRST_WORD = -2;
-const WORD_GAP = 5;
-const WORD_IN = 8;
 
 function measureWith(_version: number, family: string) {
   const ctx = document.createElement("canvas").getContext("2d");
@@ -219,32 +228,38 @@ function ScaleLayer({
   );
 }
 
-export function StoryText({
-  text = "okay, it’s live — the update you kept asking for is finally here",
-  measure,
-  accent = "#3B5BFD",
-  ink: inkColor,
-  background,
-  fontFamily = sans,
-  stagger = WORD_GAP,
-  hold = 14,
-  scale = 1,
-  delay = 0,
-  theme = "dark",
-  ground,
-  groundParams,
-  speed = 1,
-}: StoryTextProps) {
+export function StoryText(props: StoryTextProps) {
+  const {
+    text = DEFAULT_TEXT,
+    measure,
+    accent = "#3B5BFD",
+    ink: inkColor,
+    background,
+    fontFamily = sans,
+    scale = 1,
+    delay = 0,
+    theme = "dark",
+    ground,
+    groundParams,
+    speed = 1,
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H, fps } = useSceneConfig();
+  const { width: W, height: H, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    storyTextTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const t = THEMES[theme];
   const fg = inkColor ?? t.fg;
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
   const width = useMeasure(fontFamily);
   const tall = H > W;
 
-  const words = text.split(/\s+/).filter(Boolean);
+  const words = storyWords(text);
   const F = tall ? W * 0.115 : H * 0.125;
   const space = width(" ");
   const widths = words.map((w) => width(w));
@@ -259,34 +274,32 @@ export function StoryText({
   const padX = F * 0.36;
   const R = lh * 0.3;
 
-  const appear = words.map((_, i) =>
+  const wordEls = words.map((_, i) => tl.get(`word:${i}`));
+  const appear = wordEls.map((e) =>
     Math.max(
       0,
       spring({
-        frame: frame - (FIRST_WORD + i * stagger),
+        frame: frame - e.start,
         fps,
         config: CARD,
       }),
     ),
   );
-  const ink = words.map((_, i) =>
-    interpolate(
-      frame,
-      [FIRST_WORD + i * stagger + 2, FIRST_WORD + i * stagger + WORD_IN + 1],
-      [0, 1],
-      { ...CLAMP, easing: ENTER },
-    ),
+  const ink = wordEls.map((e) =>
+    interpolate(frame, [e.start + e.beat("ink"), e.end + 1], [0, 1], {
+      ...CLAMP,
+      easing: ENTER,
+    }),
   );
-  const typedEnd = FIRST_WORD + (words.length - 1) * stagger + WORD_IN;
+  const caretEl = tl.get("caret");
 
-  const C1 = typedEnd + hold;
-  const C2 = C1 + 22;
-  const C3 = C2 + 22;
-  const step = (a: number) =>
-    interpolate(frame, [a, a + 9], [0, 1], { ...CLAMP, easing: MOVE });
-  const toOutline = step(C1);
-  const toNone = step(C2);
-  const toFill = step(C3);
+  const fillEl = tl.get("fill");
+  const C3 = fillEl.start;
+  const step = (e: { start: number; end: number }) =>
+    interpolate(frame, [e.start, e.end], [0, 1], { ...CLAMP, easing: MOVE });
+  const toOutline = step(tl.get("outline"));
+  const toNone = step(tl.get("clear"));
+  const toFill = step(fillEl);
   const fillAmt = 1 - toOutline + toFill;
   const strokeAmt = toOutline * (1 - toNone);
   const textColor = interpolateColors(fillAmt, [0, 1], [fg, t.onFill]);
@@ -351,7 +364,10 @@ export function StoryText({
 
   const caretOpacity = interpolate(
     frame,
-    [typedEnd - 2, typedEnd + 6],
+    [
+      caretEl.start + caretEl.beat("fadeAt"),
+      caretEl.start + caretEl.beat("fadeEnd"),
+    ],
     [1, 0],
     { ...CLAMP, easing: EXIT },
   );
@@ -368,7 +384,8 @@ export function StoryText({
     }
   }
 
-  const push = interpolate(frame, [0, 200], [1, 1.04], CLAMP);
+  const pushEl = tl.get("push");
+  const push = interpolate(frame, [pushEl.start, pushEl.end], [1, 1.04], CLAMP);
 
   return (
     <AbsoluteFill

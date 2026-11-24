@@ -6,6 +6,8 @@ import type React from "react";
 import { AbsoluteFill, Easing, Img, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import { type DepthHeadlineElementId, depthHeadlineTimeline } from "./timeline";
 
 const { fontFamily: display } = loadDisplay("normal", {
   weights: ["300", "400"],
@@ -44,6 +46,12 @@ export interface DepthHeadlineProps {
   /** Playback multiplier. */
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches the headline opening, the subject rising, the
+   * push and the caption, by the ids in `./timeline`. Frames on the scene
+   * timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<DepthHeadlineElementId>;
 }
 
 const THEMES = {
@@ -142,26 +150,37 @@ function ScaleLayer({
   );
 }
 
-export function DepthHeadline({
-  title = "Studio",
-  src,
-  caption = "Studio",
-  showLogo = true,
-  logo,
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = display,
-  fontWeight = 400,
-  riseFrames = 44,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: DepthHeadlineProps) {
+export function DepthHeadline(props: DepthHeadlineProps) {
+  const {
+    title = "Studio",
+    src,
+    caption = "Studio",
+    showLogo = true,
+    logo,
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = display,
+    fontWeight = 400,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H } = useSceneConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    depthHeadlineTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const openEl = tl.get("open");
+  const riseEl = tl.get("rise");
+  const pushEl = tl.get("push");
+  const captionEl = tl.get("caption");
   const c = THEMES[theme];
   const fg = ink ?? c.fg;
   const stage =
@@ -173,7 +192,7 @@ export function DepthHeadline({
   );
 
   // Far plane: the headline tracks open and drifts a short distance.
-  const open = interpolate(frame, [0, 54], [0, 1], {
+  const open = interpolate(frame, [openEl.start, openEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
@@ -182,24 +201,29 @@ export function DepthHeadline({
   const headY = (1 - open) * H * 0.035;
 
   // Near plane: the subject rises from below and covers much more ground.
-  const rise = interpolate(frame, [4, 4 + riseFrames], [0, 1], {
+  const rise = interpolate(frame, [riseEl.start, riseEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
   const subjectY = (1 - rise) * H * 0.78;
 
   // A slow push after the rise: near plane grows more than far plane.
-  const push = interpolate(frame, [30, 96], [0, 1], {
+  const push = interpolate(frame, [pushEl.start, pushEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
   const headScale = 1 + push * 0.014;
   const subjectScale = 1 + push * 0.04;
 
-  const captionIn = interpolate(frame, [46, 62], [0, 1], {
-    ...CLAMP,
-    easing: EASE_OUT,
-  });
+  const captionIn = interpolate(
+    frame,
+    [captionEl.start, captionEl.end],
+    [0, 1],
+    {
+      ...CLAMP,
+      easing: EASE_OUT,
+    },
+  );
 
   const disc = H * 0.48;
   const headTop = H * 0.42;

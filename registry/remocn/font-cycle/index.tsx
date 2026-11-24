@@ -19,6 +19,8 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import { type FontCycleElementId, fontCycleTimeline, PASSES } from "./timeline";
 
 const LATIN = { subsets: ["latin"] as ["latin"] };
 // Every face stays at 500 or lighter: the cycle is about letterforms, not weight.
@@ -71,6 +73,12 @@ export interface FontCycleProps {
   grain?: boolean;
   theme?: "dark" | "light";
   speed?: number;
+  /**
+   * Moves, trims or stretches the entry, single faces of the cycle and the
+   * landing, by the ids in `./timeline`. Frames on the scene timeline, after
+   * `delay` and `speed`.
+   */
+  timing?: Timing<FontCycleElementId>;
 }
 
 const DEFAULT_FONTS: FontCycleFace[] = [
@@ -222,18 +230,6 @@ function Grain({ opacity }: { opacity: number }) {
   );
 }
 
-function schedule(count: number, beat: number) {
-  const ends: number[] = [];
-  let at = 0;
-  for (let k = 0; k < count; k++) {
-    const intro = 9 * Math.max(0, 1 - k / 2.4) ** 2;
-    const tail = 9 * Math.max(0, (k - (count - 6)) / 5) ** 1.7;
-    at += Math.round(beat + intro + tail);
-    ends.push(at);
-  }
-  return ends;
-}
-
 /** The foreground at `scale`, around the frame's center; nothing extra at 1. */
 function ScaleLayer({
   scale,
@@ -250,26 +246,33 @@ function ScaleLayer({
   );
 }
 
-export function FontCycle({
-  word = "Launch",
-  fonts = DEFAULT_FONTS,
-  final = FINAL_FACE,
-  passes = 2,
-  showLabel = true,
-  beat = 3,
-  guides = true,
-  accent = "#3B5BFD",
-  ink,
-  background,
-  scale = 1,
-  delay = 0,
-  grain = true,
-  theme = "dark",
-  speed = 1,
-}: FontCycleProps) {
+export function FontCycle(props: FontCycleProps) {
+  const {
+    word = "Launch",
+    fonts = DEFAULT_FONTS,
+    final = FINAL_FACE,
+    passes = PASSES,
+    showLabel = true,
+    guides = true,
+    accent = "#3B5BFD",
+    ink,
+    background,
+    scale = 1,
+    delay = 0,
+    grain = true,
+    theme = "dark",
+    speed = 1,
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H } = useSceneConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    fontCycleTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const c = THEMES[theme];
   const fg = ink ?? c.fg;
   const stage =
@@ -287,11 +290,9 @@ export function FontCycle({
     }
     return list;
   }, [fonts.length, passes]);
-  const ends = useMemo(
-    () => schedule(sequence.length, beat),
-    [sequence.length, beat],
-  );
-  const landAt = ends[ends.length - 1] ?? 0;
+  const enterEl = tl.get("enter");
+  const land = tl.get("land");
+  const landAt = land.start;
 
   if (!metrics) {
     return (
@@ -299,9 +300,13 @@ export function FontCycle({
     );
   }
 
-  const slot = ends.findIndex((e) => t < e);
-  const faceIndex = slot < 0 ? faces.length - 1 : sequence[slot];
-  const landed = slot < 0;
+  // The face showing is the last slot that started; the landing ends them.
+  const landed = t >= landAt;
+  let slot = 0;
+  sequence.forEach((_, k) => {
+    if (t >= tl.get(`face:${k}`).start) slot = k;
+  });
+  const faceIndex = landed ? faces.length - 1 : sequence[slot];
   const face = faces[faceIndex];
   const m = metrics[faceIndex];
 
@@ -317,25 +322,37 @@ export function FontCycle({
   const blockH = capPx + (showLabel ? labelGap + labelSize : 0);
   const baseline = H / 2 - blockH / 2 + capPx;
 
-  const enter = interpolate(t, [0, 10], [0, 1], { ...CLAMP, easing: EASE_OUT });
-  const guideIn = interpolate(t, [0, 16], [0, 1], {
-    ...CLAMP,
-    easing: EASE_IO,
-  });
-  const settle = interpolate(t, [landAt, landAt + 16], [0, 1], {
+  const enter = interpolate(t, [enterEl.start, enterEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
-  const guideOut = interpolate(t, [landAt + 4, landAt + 26], [1, 0], {
-    ...CLAMP,
-    easing: EASE_IO,
-  });
+  const guideIn = interpolate(
+    t,
+    [enterEl.start, enterEl.start + enterEl.beat("guides")],
+    [0, 1],
+    {
+      ...CLAMP,
+      easing: EASE_IO,
+    },
+  );
+  const settle = interpolate(
+    t,
+    [landAt, landAt + land.beat("settle")],
+    [0, 1],
+    { ...CLAMP, easing: EASE_OUT },
+  );
+  const guideOut = interpolate(
+    t,
+    [landAt + land.beat("guidesOut"), landAt + land.beat("guidesEnd")],
+    [1, 0],
+    { ...CLAMP, easing: EASE_IO },
+  );
   const guideAlpha = guideIn * (0.12 + 0.06 * (1 - guideOut)) * guideOut;
   const guideHalf = W * 0.42 * guideIn;
   const lift = (1 - enter) * capPx * 0.08;
   const zoom = landed ? 1.035 - 0.035 * settle : 1;
   const hair = Math.max(1, u);
-  const sheen = interpolate(t, [landAt, landAt + 60], [0.34, 0.48], {
+  const sheen = interpolate(t, [landAt, land.end], [0.34, 0.48], {
     ...CLAMP,
     easing: EASE_IO,
   });

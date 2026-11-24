@@ -3,6 +3,14 @@
 import { spring } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  columnsOf,
+  DEFAULT_FROM,
+  DEFAULT_TO,
+  type SlotMachineRollElementId,
+  slotMachineRollTimeline,
+} from "./timeline";
 
 export interface SlotMachineRollProps {
   from?: string;
@@ -12,30 +20,42 @@ export interface SlotMachineRollProps {
   fontWeight?: number;
   speed?: number;
   className?: string;
+  /**
+   * Moves, trims or stretches single columns, by the ids in `./timeline`.
+   * Frames on the scene timeline, after `speed`.
+   */
+  timing?: Timing<SlotMachineRollElementId>;
 }
 
-export function SlotMachineRoll({
-  from = "$99",
-  to = "$199",
-  fontSize = 120,
-  color = "#171717",
-  fontWeight = 700,
-  speed = 1,
-  className,
-}: SlotMachineRollProps) {
+export function SlotMachineRoll(props: SlotMachineRollProps) {
+  const {
+    from = DEFAULT_FROM,
+    to = DEFAULT_TO,
+    fontSize = 120,
+    color = "#171717",
+    fontWeight = 700,
+    speed = 1,
+    className,
+    timing,
+  } = props;
   const glide = useGlide();
   const current = useSceneFrame();
-  const { fps } = useSceneConfig();
+  const { fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    slotMachineRollTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
 
-  const len = Math.max(from.length, to.length);
-  const paddedFrom = from.padStart(len, " ");
-  const paddedTo = to.padStart(len, " ");
+  const { len, from: paddedFrom, to: paddedTo } = columnsOf(from, to);
 
   const columns = [];
   for (let i = 0; i < len; i++) {
+    const { start } = tl.get(`column:${i}`);
     const roll = (f: number) => {
       const raw = spring({
-        frame: f * speed - i * 4,
+        frame: f * speed - start,
         fps,
         config: { damping: 14 },
       });

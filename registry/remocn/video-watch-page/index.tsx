@@ -10,6 +10,11 @@ import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  type VideoWatchPageElementId,
+  videoWatchPageTimeline,
+} from "./timeline";
 
 const { fontFamily: geist } = loadFont("normal", {
   weights: ["300", "400"],
@@ -70,13 +75,13 @@ export interface VideoWatchPageProps {
   theme?: "light" | "dark";
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
+  /**
+   * Moves, trims or stretches the page's parts rising in, the scrub, the
+   * subscribe and the like, by the ids in `./timeline`. Frames on the scene
+   * timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<VideoWatchPageElementId>;
 }
-
-const HOVER_IN = 30;
-const HOVER_OUT = 72;
-const SUB_CLICK = 92;
-const LIKE_CLICK = 120;
-const END = 210;
 
 const HEAVY = { mass: 1, damping: 26, stiffness: 120 };
 const CARD = { mass: 0.8, damping: 18, stiffness: 160 };
@@ -633,30 +638,51 @@ function ScaleLayer({
   );
 }
 
-export function VideoWatchPage({
-  title = "Introducing remocn 2.0",
-  channel,
-  stats,
-  src,
-  children,
-  breadcrumb = "Launch videos",
-  description = "Kinetic captions, 40+ transitions, one install command.",
-  published = "3 hours ago",
-  logo,
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = geist,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "light",
-  ground,
-  groundParams,
-}: VideoWatchPageProps) {
+export function VideoWatchPage(props: VideoWatchPageProps) {
+  const {
+    title = "Introducing remocn 2.0",
+    channel,
+    stats,
+    src,
+    children,
+    breadcrumb = "Launch videos",
+    description = "Kinetic captions, 40+ transitions, one install command.",
+    published = "3 hours ago",
+    logo,
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = geist,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "light",
+    ground,
+    groundParams,
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width, height, fps } = useSceneConfig();
+  const { width, height, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    videoWatchPageTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const pageEl = tl.get("page");
+  const chaptersEl = tl.get("chapters");
+  const transcriptEl = tl.get("transcript");
+  const cursorEl = tl.get("cursor");
+  const controlsEl = tl.get("controls");
+  const hoverEl = tl.get("hover");
+  const subEl = tl.get("subscribe");
+  const likeEl = tl.get("like");
+  const camEl = tl.get("camera");
+  const HOVER_IN = hoverEl.start;
+  const HOVER_OUT = hoverEl.end;
+  const SUB_CLICK = subEl.start;
+  const LIKE_CLICK = likeEl.start;
   const dark = theme === "dark";
   const pal = dark ? DARK : LIGHT;
   const fg = ink ?? pal.text;
@@ -696,16 +722,21 @@ export function VideoWatchPage({
     spring({ frame: frame - at, fps, config });
   const ease = (a: number, b: number, e = ENTER) =>
     interpolate(frame, [a, b], [0, 1], { ...CL, easing: e });
-  const press = (at: number) =>
+  const press = (e: typeof subEl) =>
     Math.max(
       0,
-      spring({ frame: frame - at, fps, config: CHIP }) -
-        spring({ frame: frame - at - 5, fps, config: CHIP }),
+      spring({ frame: frame - e.start, fps, config: CHIP }) -
+        spring({
+          frame: frame - e.start - e.beat("release"),
+          fps,
+          config: CHIP,
+        }),
     );
 
-  const winAt = (f: number) => spring({ frame: f, fps, config: HEAVY });
+  const winAt = (f: number) =>
+    spring({ frame: f - pageEl.start, fps, config: HEAVY });
   const winIn = winAt(frame);
-  const cam = interpolate(frame, [LIKE_CLICK, END], [1, 1.03], {
+  const cam = interpolate(frame, [camEl.start, camEl.end], [1, 1.03], {
     ...CL,
     easing: CAMERA,
   });
@@ -714,35 +745,52 @@ export function VideoWatchPage({
   const carrying =
     Math.abs(winAt(frame + 1) - winIn) > 1e-5 ||
     Math.abs(winIn - winAt(frame - 1)) > 1e-5 ||
-    midway(interpolate(frame, [LIKE_CLICK, END], [0, 1], CL));
+    midway(interpolate(frame, [camEl.start, camEl.end], [0, 1], CL));
 
   const seconds = 30 + frame / 30;
   const vt = clamp(seconds / DURATION);
   const hover =
-    ease(HOVER_IN - 6, HOVER_IN + 4, RISE) *
-    (1 - ease(HOVER_OUT, HOVER_OUT + 8, EXIT));
-  const ctrlShow = Math.max(hover, 1 - ease(18, 28, EXIT));
+    ease(
+      HOVER_IN + hoverEl.beat("lead"),
+      HOVER_IN + hoverEl.beat("lit"),
+      RISE,
+    ) *
+    (1 - ease(HOVER_OUT, HOVER_OUT + hoverEl.beat("fade"), EXIT));
+  const ctrlShow = Math.max(
+    hover,
+    1 - ease(controlsEl.start, controlsEl.end, EXIT),
+  );
 
-  const subbed = frame >= SUB_CLICK + 1;
-  const subPop = sp(SUB_CLICK + 1, CHIP);
-  const bellT = frame - SUB_CLICK - 4;
+  const subbed = frame >= SUB_CLICK + subEl.beat("pop");
+  const subPop = sp(SUB_CLICK + subEl.beat("pop"), CHIP);
+  const bellT = frame - SUB_CLICK - subEl.beat("bell");
   const bellRot =
     bellT > 0 ? Math.sin(bellT * 1.2) * 18 * Math.exp(-bellT * 0.1) : 0;
   const subs = subbed
-    ? ch.subscribers + 100 * ease(SUB_CLICK, SUB_CLICK + 20, RISE)
+    ? ch.subscribers +
+      100 * ease(SUB_CLICK, SUB_CLICK + subEl.beat("count"), RISE)
     : ch.subscribers;
 
-  const liked = frame >= LIKE_CLICK + 1;
-  const likePop = sp(LIKE_CLICK + 1, CHIP);
+  const liked = frame >= LIKE_CLICK + likeEl.beat("pop");
+  const likePop = sp(LIKE_CLICK + likeEl.beat("pop"), CHIP);
   const STEPS = 14;
-  const stepF = ease(LIKE_CLICK + 2, LIKE_CLICK + 42, RISE) * STEPS;
+  const stepF =
+    ease(
+      LIKE_CLICK + likeEl.beat("roll"),
+      LIKE_CLICK + likeEl.beat("rollEnd"),
+      RISE,
+    ) * STEPS;
   const stepI = Math.floor(stepF);
   const stepFrac = clamp((stepF - stepI) * 3);
   const likeAt = (i: number) =>
     compact(expLerp(st.likesFrom, st.likesTo, clamp(i / STEPS)));
   const rollP = !liked || stepI === 0 || stepI >= STEPS ? 1 : stepFrac;
 
-  const vT = ease(LIKE_CLICK + 6, LIKE_CLICK + 70, MOVE);
+  const vT = ease(
+    LIKE_CLICK + likeEl.beat("views"),
+    LIKE_CLICK + likeEl.beat("viewsEnd"),
+    MOVE,
+  );
   const views =
     vT >= 1
       ? `${compact(st.viewsTo)} views`
@@ -755,16 +803,35 @@ export function VideoWatchPage({
   const subBtn = { x: L.meta.x + 252, y: rowY + 20 };
   const likeBtn = { x: L.meta.x + metaW - 70, y: rowY + 20 };
   const keys: Key[] = [
-    { f: 8, x: L.win.w * 0.86, y: L.win.h * 0.92 },
+    { f: cursorEl.start, x: L.win.w * 0.86, y: L.win.h * 0.92 },
     { f: HOVER_IN, x: barL + barW * 0.3, y: barY + 2, bend: 0.14 },
-    { f: HOVER_OUT - 8, x: barL + barW * 0.68, y: barY + 1 },
-    { f: SUB_CLICK - 2, x: subBtn.x, y: subBtn.y, bend: 0.16 },
-    { f: SUB_CLICK + 8, x: subBtn.x + 4, y: subBtn.y + 3 },
-    { f: LIKE_CLICK - 2, x: likeBtn.x, y: likeBtn.y, bend: -0.18 },
-    { f: LIKE_CLICK + 24, x: likeBtn.x + 50, y: likeBtn.y + 60, bend: 0.1 },
+    {
+      f: HOVER_IN + hoverEl.beat("leave"),
+      x: barL + barW * 0.68,
+      y: barY + 1,
+    },
+    {
+      f: SUB_CLICK + subEl.beat("reach"),
+      x: subBtn.x,
+      y: subBtn.y,
+      bend: 0.16,
+    },
+    { f: SUB_CLICK + subEl.beat("leave"), x: subBtn.x + 4, y: subBtn.y + 3 },
+    {
+      f: LIKE_CLICK + likeEl.beat("reach"),
+      x: likeBtn.x,
+      y: likeBtn.y,
+      bend: -0.18,
+    },
+    {
+      f: LIKE_CLICK + likeEl.beat("leave"),
+      x: likeBtn.x + 50,
+      y: likeBtn.y + 60,
+      bend: 0.1,
+    },
   ];
   const cur = along(keys, frame);
-  const curPress = Math.max(press(SUB_CLICK), press(LIKE_CLICK));
+  const curPress = Math.max(press(subEl), press(likeEl));
   const hoverT = clamp((cur.x - barL) / barW);
   const chapterOf = (t: number) =>
     CHAPTERS.reduce((a, c, i) => (t >= c.at ? i : a), 0);
@@ -1101,7 +1168,7 @@ export function VideoWatchPage({
                   letterSpacing: "-0.02em",
                   color: fg,
                   whiteSpace: "nowrap",
-                  ...rise(8),
+                  ...rise(tl.get("title").start),
                 }}
               >
                 {title}
@@ -1115,7 +1182,7 @@ export function VideoWatchPage({
                   height: 40,
                   display: "flex",
                   alignItems: "center",
-                  ...rise(12),
+                  ...rise(tl.get("actions").start),
                 }}
               >
                 <div
@@ -1153,7 +1220,7 @@ export function VideoWatchPage({
                     padding: subbed ? "0 16px 0 12px" : "0 18px",
                     background: subbed ? pal.surface : pal.strong,
                     color: subbed ? pal.text : pal.onStrong,
-                    transform: `scale(${(1 - 0.04 * press(SUB_CLICK)) * (subbed ? 0.94 + 0.06 * subPop : 1)})`,
+                    transform: `scale(${(1 - 0.04 * press(subEl)) * (subbed ? 0.94 + 0.06 * subPop : 1)})`,
                   }}
                 >
                   {subbed ? (
@@ -1183,7 +1250,7 @@ export function VideoWatchPage({
                       ? `color-mix(in oklab, ${accent} ${dark ? 22 : 12}%, ${pal.surface})`
                       : pal.surface,
                     color: liked ? (dark ? "#fff" : accent) : pal.text,
-                    transform: `scale(${1 - 0.04 * press(LIKE_CLICK)})`,
+                    transform: `scale(${1 - 0.04 * press(likeEl)})`,
                   }}
                 >
                   <div
@@ -1247,7 +1314,7 @@ export function VideoWatchPage({
                   fontSize: 16,
                   lineHeight: "23px",
                   color: pal.muted,
-                  ...rise(16),
+                  ...rise(tl.get("description").start),
                 }}
               >
                 <div style={{ color: fg, fontVariantNumeric: "tabular-nums" }}>
@@ -1280,7 +1347,7 @@ export function VideoWatchPage({
                     fontSize: 16,
                     color: pal.muted,
                     height: 28,
-                    ...rise(6),
+                    ...rise(chaptersEl.start),
                   }}
                 >
                   Chapters
@@ -1304,7 +1371,12 @@ export function VideoWatchPage({
                           : hovered
                             ? `color-mix(in oklab, ${pal.surface} ${Math.round(hover * 55)}%, transparent)`
                             : "transparent",
-                        ...rise(8 + i * 2, 10),
+                        ...rise(
+                          chaptersEl.start +
+                            chaptersEl.beat("rows") +
+                            i * chaptersEl.beat("stagger"),
+                          10,
+                        ),
                       }}
                     >
                       <span
@@ -1334,7 +1406,7 @@ export function VideoWatchPage({
                     height: 1,
                     background: pal.hair,
                     margin: "16px 0 16px",
-                    ...rise(18),
+                    ...rise(transcriptEl.start),
                   }}
                 />
                 <div
@@ -1342,7 +1414,7 @@ export function VideoWatchPage({
                     fontSize: 16,
                     color: pal.muted,
                     height: 28,
-                    ...rise(18),
+                    ...rise(transcriptEl.start),
                   }}
                 >
                   Transcript
@@ -1359,7 +1431,10 @@ export function VideoWatchPage({
                         display: "flex",
                         gap: 14,
                         padding: "8px 0",
-                        ...rise(20, 10),
+                        ...rise(
+                          transcriptEl.start + transcriptEl.beat("lines"),
+                          10,
+                        ),
                       }}
                     >
                       <span
@@ -1394,7 +1469,7 @@ export function VideoWatchPage({
               y={cur.y}
               rest={keys[keys.length - 1]}
               press={curPress}
-              opacity={ease(8, 16)}
+              opacity={ease(cursorEl.start, cursorEl.end)}
             />
           </div>
         </div>

@@ -2,6 +2,17 @@
 
 import { Easing, interpolateColors, spring } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import {
+  type ResolvedTimeline,
+  resolve,
+  type Timing,
+  useTimeline,
+} from "@/lib/remocn/timeline";
+import {
+  BURST_LENGTH,
+  type RadialBurstElementId,
+  radialBurstTimeline,
+} from "./timeline";
 
 export interface RadialBurstProps {
   /** Number of rounded segments, from 4 to 16. */
@@ -24,10 +35,16 @@ export interface RadialBurstProps {
   speed?: number;
   loop?: boolean;
   className?: string;
+  /**
+   * Moves, trims or stretches the dot, the launch, the spin, the assembly,
+   * the ring and its exit, by the ids in `./timeline`. Frames on the scene
+   * timeline, after `speed`.
+   */
+  timing?: Timing<RadialBurstElementId>;
 }
 
 /** The ring has completely left the composition by this frame at 30 fps. */
-export const radialBurstLength = 114;
+export const radialBurstLength = BURST_LENGTH;
 const CYCLE = 120;
 const finite = (value: number, fallback: number) =>
   Number.isFinite(value) ? value : fallback;
@@ -65,7 +82,19 @@ export function getRadialBurstState(
     width?: number;
     height?: number;
   } = {},
+  tl: ResolvedTimeline<RadialBurstElementId> = resolve(
+    radialBurstTimeline({}, { length: CYCLE }),
+  ),
 ) {
+  const dot = tl.get("dot");
+  const launchEl = tl.get("launch");
+  const spin = tl.get("spin");
+  const assembleEl = tl.get("assemble");
+  const closeEl = tl.get("close");
+  const ring = tl.get("ring");
+  const anticipateEl = tl.get("anticipate");
+  const exitEl = tl.get("exit");
+  const curlAt = assembleEl.start + assembleEl.beat("curlAt");
   const w = Math.max(1, finite(width, 1280));
   const h = Math.max(1, finite(height, 720));
   const unit = Math.min(w, h) / 720;
@@ -75,21 +104,25 @@ export function getRadialBurstState(
   const burstRadius = Math.min(280, Math.max(100, finite(radius, 210))) * unit;
   const stroke = Math.min(60, Math.max(8, finite(thickness, 30))) * unit;
   const ringRadius = burstRadius * 0.68;
-  const assemble = easeInOut(progress(local, 44, 76));
-  const curl = easeInOut(progress(local, 48, 78));
-  const close = easeInOut(progress(local, 72, 84));
-  const anticipate = easeInOut(progress(local, 86, 96));
-  const exit = progress(local, 96, radialBurstLength) ** 2.6;
+  const assemble = easeInOut(progress(local, assembleEl.start, assembleEl.end));
+  const curl = easeInOut(
+    progress(local, curlAt, curlAt + assembleEl.beat("curl")),
+  );
+  const close = easeInOut(progress(local, closeEl.start, closeEl.end));
+  const anticipate = easeInOut(
+    progress(local, anticipateEl.start, anticipateEl.end),
+  );
+  const exit = progress(local, exitEl.start, exitEl.end) ** 2.6;
   const launch = spring({
-    frame: Math.max(0, local - 18),
+    frame: Math.max(0, local - launchEl.start),
     fps: 30,
-    durationInFrames: 26,
+    durationInFrames: launchEl.beat("spring"),
     config: { damping: 13, stiffness: 170, mass: 0.8 },
   });
   const pop = spring({
-    frame: Math.max(0, local - 2),
+    frame: Math.max(0, local - dot.start),
     fps: 30,
-    durationInFrames: 16,
+    durationInFrames: dot.length,
     config: { damping: 11, stiffness: 180, mass: 0.65 },
   });
   const ringStroke = mix(stroke * 0.8, stroke * 1.1, anticipate);
@@ -103,10 +136,16 @@ export function getRadialBurstState(
   );
   const finalRadius = mix(ringRadius, ringRadius * 0.84, anticipate);
   const strength = Math.min(1.5, Math.max(0, finite(intensity, 1)));
-  const energy = Math.sin(Math.PI * progress(local, 18, 84));
+  const energy = Math.sin(
+    Math.PI * progress(local, launchEl.start, ring.start),
+  );
   const tilt =
-    easeOut(progress(local, 18, 48)) *
-    (1 - easeInOut(progress(local, 96, 114)));
+    easeOut(
+      progress(local, launchEl.start, launchEl.start + launchEl.beat("tilt")),
+    ) *
+    (1 - easeInOut(progress(local, exitEl.start, exitEl.end)));
+  const plane = progress(local, launchEl.start, exitEl.end);
+  const shrinkAt = dot.start + dot.beat("shrinkAt");
 
   return {
     frame: local,
@@ -115,28 +154,37 @@ export function getRadialBurstState(
     strength,
     energy: Math.max(0, energy) * strength,
     planeScale: 1 - tilt * 0.46 * Math.min(1.5, strength),
-    planeAngle:
-      Math.sin(progress(local, 18, 114) * Math.PI * 1.6) * 32 * strength,
-    offsetX:
-      Math.sin(Math.PI * progress(local, 18, 114)) * 65 * unit * strength,
-    offsetY:
-      -Math.sin(Math.PI * progress(local, 18, 114)) * 32 * unit * strength,
-    dotRadius: 37 * unit * pop * (1 - easeOut(progress(local, 18, 26))),
-    dotSquash: 1 - Math.sin(Math.PI * progress(local, 2, 18)) * 0.16,
-    showSegments: local >= 18 && local < 84,
-    showRing: local >= 84 && local < radialBurstLength,
-    segmentOpacity: easeOut(progress(local, 18, 23)),
-    radius: local < 84 ? orbitRadius : mix(finalRadius, clearRadius, exit),
-    strokeWidth: local < 84 ? mix(stroke, stroke * 0.8, assemble) : exitStroke,
+    planeAngle: Math.sin(plane * Math.PI * 1.6) * 32 * strength,
+    offsetX: Math.sin(Math.PI * plane) * 65 * unit * strength,
+    offsetY: -Math.sin(Math.PI * plane) * 32 * unit * strength,
+    dotRadius:
+      37 *
+      unit *
+      pop *
+      (1 - easeOut(progress(local, shrinkAt, shrinkAt + dot.beat("shrink")))),
+    dotSquash:
+      1 - Math.sin(Math.PI * progress(local, dot.start, dot.end)) * 0.16,
+    showSegments: local >= launchEl.start && local < ring.start,
+    showRing: local >= ring.start && local < exitEl.end,
+    segmentOpacity: easeOut(
+      progress(local, launchEl.start, launchEl.start + launchEl.beat("fade")),
+    ),
+    radius:
+      local < ring.start ? orbitRadius : mix(finalRadius, clearRadius, exit),
+    strokeWidth:
+      local < ring.start ? mix(stroke, stroke * 0.8, assemble) : exitStroke,
     segmentLength: mix(
       12 * unit,
       Math.min(82 * unit, burstRadius * 0.42),
-      easeOut(progress(local, 18, 36)),
+      easeOut(
+        progress(local, launchEl.start, launchEl.start + launchEl.beat("grow")),
+      ),
     ),
     curl,
     // Gaps close with a tiny overlap to prevent raster seams at the weld.
     arcAngle: ((Math.PI * 2) / count) * mix(0.62, 1.002, close),
-    rotation: finite(rotation, 135) * easeInOut(progress(local, 34, 84)),
+    rotation:
+      finite(rotation, 135) * easeInOut(progress(local, spin.start, spin.end)),
   };
 }
 
@@ -253,24 +301,35 @@ export function getRadialBurstRibbonPath(
   return `M ${upper.join(" L ")} A ${lastWidth} ${lastWidth} 0 0 0 ${lower[36]} L ${lower.slice(0, -1).reverse().join(" L ")} A ${firstWidth} ${firstWidth} 0 0 0 ${upper[0]} Z`;
 }
 
-export function RadialBurst({
-  segments = 8,
-  radius = 210,
-  thickness = 30,
-  rotation = 135,
-  intensity = 1,
-  twist = 110,
-  echoes = 3,
-  color = "#ffffff",
-  accentColor = "#f4e4a7",
-  backgroundColor = "#a800b7",
-  speed = 1,
-  loop = false,
-  className,
-}: RadialBurstProps) {
+export function RadialBurst(props: RadialBurstProps) {
+  const {
+    segments = 8,
+    radius = 210,
+    thickness = 30,
+    rotation = 135,
+    intensity = 1,
+    twist = 110,
+    echoes = 3,
+    color = "#ffffff",
+    accentColor = "#f4e4a7",
+    backgroundColor = "#a800b7",
+    speed = 1,
+    loop = false,
+    className,
+    timing,
+  } = props;
   const frame = useSceneFrame();
-  const { width, height, fps } = useSceneConfig();
-  const time = frame * (30 / fps) * Math.max(0, finite(speed, 1));
+  const { width, height, fps, durationInFrames } = useSceneConfig();
+  const rate = Math.max(0, finite(speed, 1));
+  const time = frame * (30 / fps) * rate;
+  const tl = useTimeline(
+    radialBurstTimeline,
+    props,
+    durationInFrames * rate,
+    timing,
+  );
+  const launchEl = tl.get("launch");
+  const exitEl = tl.get("exit");
   const options = {
     segments,
     radius,
@@ -281,7 +340,7 @@ export function RadialBurst({
     width,
     height,
   };
-  const state = getRadialBurstState(time, options);
+  const state = getRadialBurstState(time, options, tl);
   const path = getRadialBurstSegmentPath(state);
   const echoCount = Math.round(Math.min(5, Math.max(0, finite(echoes, 3))));
   const plane = (pose: typeof state) =>
@@ -328,19 +387,27 @@ export function RadialBurst({
       >
         <g transform={`translate(${width / 2} ${height / 2})`}>
           {state.strength > 0 &&
-          state.frame >= 18 &&
-          state.frame < radialBurstLength
+          state.frame >= launchEl.start &&
+          state.frame < exitEl.end
             ? Array.from({ length: echoCount }, (_, index) => {
                 const lag = (echoCount - index) * 2.2;
                 const echo = getRadialBurstState(
-                  Math.max(18, state.frame - lag),
+                  Math.max(launchEl.start, state.frame - lag),
                   { ...options, loop: false },
+                  tl,
                 );
                 const opacity =
                   0.36 *
                   (1 - index / (echoCount + 1)) *
                   Math.min(1, state.strength) *
-                  (1 - easeOut(progress(state.frame, 107, 114)));
+                  (1 -
+                    easeOut(
+                      progress(
+                        state.frame,
+                        exitEl.start + exitEl.beat("fadeAt"),
+                        exitEl.end,
+                      ),
+                    ));
                 return (
                   <g key={index} transform={plane(echo)} opacity={opacity}>
                     {echo.showSegments ? (

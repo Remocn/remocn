@@ -4,6 +4,8 @@ import { getLength, getPointAtLength } from "@remotion/paths";
 import { useMemo } from "react";
 import { AbsoluteFill, Easing, interpolate, random } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import { FILL_END, type LineBoilElementId, lineBoilTimeline } from "./timeline";
 
 export type LineBoilColors = {
   line: string;
@@ -32,6 +34,12 @@ export type LineBoilProps = {
   /** Background. Overrides `colors.background` when set. */
   background?: string;
   speed?: number;
+  /**
+   * Moves, trims or stretches the outline drawing in and the fill popping
+   * in, by the ids in `./timeline`. Frames on the scene timeline, after
+   * `speed`.
+   */
+  timing?: Timing<LineBoilElementId>;
 };
 
 const starPath = (() => {
@@ -59,9 +67,6 @@ export const lineBoilDefaults = {
 };
 
 const SAMPLES = 160;
-const DRAW_END = 22;
-const FILL_START = 28;
-const FILL_END = 40;
 export const lineBoilLength = FILL_END;
 
 const clamp = {
@@ -97,21 +102,31 @@ function boil(points: Point[], seed: string, amp: number): Point[] {
   });
 }
 
-export function LineBoil({
-  path = lineBoilDefaults.path,
-  boilEvery = lineBoilDefaults.boilEvery,
-  drawings = lineBoilDefaults.drawings,
-  amplitude = lineBoilDefaults.amplitude,
-  strokeWidth = lineBoilDefaults.strokeWidth,
-  size = lineBoilDefaults.size,
-  colors,
-  line: lineColor,
-  fill: fillColor,
-  background: backgroundColor,
-  speed = lineBoilDefaults.speed,
-}: LineBoilProps) {
+export function LineBoil(props: LineBoilProps) {
+  const {
+    path = lineBoilDefaults.path,
+    boilEvery = lineBoilDefaults.boilEvery,
+    drawings = lineBoilDefaults.drawings,
+    amplitude = lineBoilDefaults.amplitude,
+    strokeWidth = lineBoilDefaults.strokeWidth,
+    size = lineBoilDefaults.size,
+    colors,
+    line: lineColor,
+    fill: fillColor,
+    background: backgroundColor,
+    speed = lineBoilDefaults.speed,
+    timing,
+  } = props;
   const frame = useSceneFrame();
-  const { width, height, fps } = useSceneConfig();
+  const { width, height, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    lineBoilTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const drawEl = tl.get("draw");
+  const fillEl = tl.get("fill");
   const merged = { ...lineBoilDefaults.colors, ...colors };
   const palette: LineBoilColors = {
     line: lineColor ?? merged.line,
@@ -149,12 +164,12 @@ export function LineBoil({
   const line = boil(base, `line-boil-${drawing}`, amp);
   const fillShape = boil(base, `line-boil-fill-${drawing}`, amp * 1.4);
 
-  const draw = interpolate(t, [0, DRAW_END], [0, 1], {
+  const draw = interpolate(t, [drawEl.start, drawEl.end], [0, 1], {
     ...clamp,
     easing: Easing.inOut(Easing.cubic),
   });
   const visible = Math.round(draw * SAMPLES);
-  const fill = interpolate(t, [FILL_START, FILL_END], [0, 1], {
+  const fill = interpolate(t, [fillEl.start, fillEl.end], [0, 1], {
     ...clamp,
     easing: Easing.out(Easing.back(1.6)),
   });

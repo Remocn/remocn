@@ -8,6 +8,13 @@ import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_COUNTRIES,
+  DEFAULT_SIGNUPS,
+  type WorldSignupsElementId,
+  worldSignupsTimeline,
+} from "./timeline";
 
 const { fontFamily: hanken } = loadFont("normal", {
   weights: ["300", "400"],
@@ -56,153 +63,14 @@ export interface WorldSignupsProps {
   speed?: number;
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
+  /**
+   * Moves, trims or stretches the panel, the map, the counter, the country
+   * rows and each signup's landing, by the ids in `./timeline`. A signup's
+   * id is its index in `signups`. Frames on the scene timeline, after
+   * `delay` and `speed`.
+   */
+  timing?: Timing<WorldSignupsElementId>;
 }
-
-const DEFAULT_SIGNUPS: Signup[] = [
-  {
-    name: "Maya Chen",
-    city: "Lisbon",
-    country: "PT",
-    lon: -9.14,
-    lat: 38.72,
-    plan: "Pro",
-    at: 26,
-  },
-  {
-    name: "Kenji Sato",
-    city: "Tokyo",
-    country: "JP",
-    lon: 139.69,
-    lat: 35.69,
-    plan: "Free",
-    at: 38,
-  },
-  {
-    name: "Ana Souza",
-    city: "São Paulo",
-    country: "BR",
-    lon: -46.63,
-    lat: -23.55,
-    plan: "Pro",
-    at: 49,
-  },
-  {
-    name: "Leo Park",
-    city: "Seoul",
-    country: "KR",
-    lon: 126.98,
-    lat: 37.57,
-    plan: "Team",
-    at: 59,
-  },
-  {
-    name: "Priya Raman",
-    city: "Bengaluru",
-    country: "IN",
-    lon: 77.59,
-    lat: 12.97,
-    plan: "Free",
-    at: 68,
-  },
-  {
-    name: "Jonas Weber",
-    city: "Berlin",
-    country: "DE",
-    lon: 13.4,
-    lat: 52.52,
-    plan: "Pro",
-    at: 77,
-  },
-  {
-    name: "Sam Ortiz",
-    city: "Austin",
-    country: "US",
-    lon: -97.74,
-    lat: 30.27,
-    plan: "Free",
-    at: 85,
-  },
-  {
-    name: "Amara Okafor",
-    city: "Lagos",
-    country: "NG",
-    lon: 3.38,
-    lat: 6.52,
-    plan: "Free",
-    at: 93,
-  },
-  {
-    name: "Chloé Martin",
-    city: "Paris",
-    country: "FR",
-    lon: 2.35,
-    lat: 48.86,
-    plan: "Pro",
-    at: 101,
-  },
-  {
-    name: "Noah Williams",
-    city: "Sydney",
-    country: "AU",
-    lon: 151.21,
-    lat: -33.87,
-    plan: "Team",
-    at: 108,
-  },
-  {
-    name: "Olivia Brown",
-    city: "Toronto",
-    country: "CA",
-    lon: -79.38,
-    lat: 43.65,
-    plan: "Free",
-    at: 115,
-  },
-  {
-    name: "Elena Rossi",
-    city: "Milan",
-    country: "IT",
-    lon: 9.19,
-    lat: 45.46,
-    plan: "Pro",
-    at: 122,
-  },
-  {
-    name: "Diego Ramírez",
-    city: "Mexico City",
-    country: "MX",
-    lon: -99.13,
-    lat: 19.43,
-    plan: "Free",
-    at: 129,
-  },
-  {
-    name: "Aiko Tanaka",
-    city: "Osaka",
-    country: "JP",
-    lon: 135.5,
-    lat: 34.69,
-    plan: "Pro",
-    at: 137,
-  },
-  {
-    name: "Tom Becker",
-    city: "Seattle",
-    country: "US",
-    lon: -122.33,
-    lat: 47.61,
-    plan: "Team",
-    at: 145,
-  },
-];
-
-const DEFAULT_COUNTRIES: CountryStat[] = [
-  { name: "United States", code: "US", count: 2184 },
-  { name: "Germany", code: "DE", count: 1032 },
-  { name: "Brazil", code: "BR", count: 902 },
-  { name: "India", code: "IN", count: 871 },
-  { name: "Japan", code: "JP", count: 655 },
-];
 
 const LAND: string[] = [
   "............................#######..#################...........#..............##.........######.......................",
@@ -445,29 +313,42 @@ function ScaleLayer({
   );
 }
 
-export function WorldSignups({
-  signups = DEFAULT_SIGNUPS,
-  startCount = 12847,
-  countries = DEFAULT_COUNTRIES,
-  title = "Signups around the world",
-  counterLabel = "Signups today",
-  delta = "+18.2% vs. yesterday",
-  feedLabel = "Latest signups",
-  rangeLabel = "Today",
-  theme = "light",
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = hanken,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  ground,
-  groundParams,
-}: WorldSignupsProps) {
+export function WorldSignups(props: WorldSignupsProps) {
+  const {
+    signups = DEFAULT_SIGNUPS,
+    startCount = 12847,
+    countries = DEFAULT_COUNTRIES,
+    title = "Signups around the world",
+    counterLabel = "Signups today",
+    delta = "+18.2% vs. yesterday",
+    feedLabel = "Latest signups",
+    rangeLabel = "Today",
+    theme = "light",
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = hanken,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    ground,
+    groundParams,
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H, fps } = useSceneConfig();
+  const { width: W, height: H, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    worldSignupsTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const windowEl = tl.get("panel");
+  const mapEl = tl.get("map");
+  const counterEl = tl.get("counter");
+  const deltaEl = tl.get("delta");
+  const camera = tl.get("camera");
   const pal = palette(theme);
   const fg = ink ?? pal.text;
   const tall = H > W * 1.2;
@@ -513,7 +394,13 @@ export function WorldSignups({
     return { x: (c + 0.5) * PITCH, y: (r + 0.5) * PITCH_Y };
   };
 
-  const events = [...signups].sort((a, b) => a.at - b.at);
+  // Each signup lands at its element's start.
+  const events = signups
+    .map((e, i) => {
+      const el = tl.get(`signup:${i}`);
+      return { ...e, at: el.start, el };
+    })
+    .sort((a, b) => a.at - b.at);
   const landed = events.filter((e) => e.at <= frame);
   const inc = (k: number) => 1 + Math.floor(hash(k) * 3);
 
@@ -530,22 +417,25 @@ export function WorldSignups({
     count = next;
   });
 
-  const win = sp(0, HEAVY);
-  const winA = tween(frame, 0, 10);
-  const lastAt = events.length ? events[events.length - 1].at : 120;
-  const cam = tween(frame, 10, lastAt + 30, camEase);
+  const win = sp(windowEl.start, HEAVY);
+  const winA = tween(frame, windowEl.start, windowEl.end);
+  const cam = tween(frame, camera.start, camera.end, camEase);
   const blink = 0.4 + 0.6 * (0.5 + 0.5 * Math.cos((frame / 30) * Math.PI * 2));
 
   const heatSrc = landed.map((e) => ({
     ...project(e.lon, e.lat),
-    w: tween(frame, e.at, e.at + 18),
+    w: tween(frame, e.at, e.at + e.el.beat("heat")),
   }));
   const hot = pal.dark ? lighten(accent, 0.28) : accent;
   const dots: React.ReactNode[] = [];
   LAND.forEach((row, r) => {
     for (let c = 0; c < row.length; c++) {
       if (row[c] !== "#") continue;
-      const reveal = tween(frame, 4 + c * 0.12, 14 + c * 0.12);
+      const reveal = tween(
+        frame,
+        mapEl.start + c * mapEl.beat("column"),
+        mapEl.start + mapEl.beat("dot") + c * mapEl.beat("column"),
+      );
       const cx = (c + 0.5) * PITCH;
       const cy = (r + 0.5) * PITCH_Y;
       let heat = 0;
@@ -577,7 +467,7 @@ export function WorldSignups({
       ),
   );
   const maxCountry = Math.max(...countryTotals);
-  const counterIn = tween(frame, 4, 18);
+  const counterIn = tween(frame, counterEl.start, counterEl.end);
 
   const counter = (size: number, labelSize: number, onStage: boolean) => (
     <div>
@@ -626,7 +516,7 @@ export function WorldSignups({
           color: pal.green,
           marginTop: 6,
           fontVariantNumeric: "tabular-nums",
-          opacity: tween(frame, 12, 22),
+          opacity: tween(frame, deltaEl.start, deltaEl.end),
         }}
       >
         {delta}
@@ -743,8 +633,18 @@ export function WorldSignups({
                   if (k === 0) return null;
                   const a = project(events[k - 1].lon, events[k - 1].lat);
                   const b = project(e.lon, e.lat);
-                  const head = tween(frame, e.at - 12, e.at, moveEase);
-                  const tail = tween(frame, e.at - 3, e.at + 12, moveEase);
+                  const head = tween(
+                    frame,
+                    e.at + e.el.beat("arcHead"),
+                    e.at,
+                    moveEase,
+                  );
+                  const tail = tween(
+                    frame,
+                    e.at + e.el.beat("arcTail"),
+                    e.at + e.el.beat("arcTailEnd"),
+                    moveEase,
+                  );
                   if (head <= 0 || tail >= 1) return null;
                   const mx = (a.x + b.x) / 2;
                   const my = (a.y + b.y) / 2;
@@ -767,7 +667,7 @@ export function WorldSignups({
                   if (frame < e.at) return null;
                   const p = project(e.lon, e.lat);
                   const land = sp(e.at, CHIP);
-                  const ring = tween(frame, e.at, e.at + 24);
+                  const ring = tween(frame, e.at, e.at + e.el.beat("ring"));
                   return (
                     <g key={`city-${e.name}`}>
                       <circle
@@ -794,17 +694,18 @@ export function WorldSignups({
               {events.map((e, k) => {
                 const nextAt = events[k + 1]?.at ?? e.at + 40;
                 const hold = Math.max(14, Math.min(26, nextAt - e.at + 8));
-                const a = sp(e.at + 1, CHIP);
+                const chipAt = e.at + e.el.beat("chip");
+                const a = sp(chipAt, CHIP);
                 const out = tween(
                   frame,
                   e.at + hold,
-                  e.at + hold + 6,
+                  e.at + hold + e.el.beat("chipOut"),
                   exitEase,
                 );
-                if (frame < e.at + 1 || out >= 1) return null;
+                if (frame < chipAt || out >= 1) return null;
                 const p = project(e.lon, e.lat);
                 const chipMoving =
-                  moved((f) => spAt(f, e.at + 1, CHIP)) || midway(out);
+                  moved((f) => spAt(f, chipAt, CHIP)) || midway(out);
                 return (
                   <div
                     key={`label-${e.name}`}
@@ -848,16 +749,21 @@ export function WorldSignups({
                 }}
               >
                 {countries.map((c, i) => {
-                  const a = tween(frame, 10 + i * 3, 22 + i * 3);
-                  const bumpAt = events
+                  const row = tl.get(`country:${i}`);
+                  const a = tween(frame, row.start, row.end);
+                  const bumper = events
                     .filter((e) => e.country === c.code && e.at <= frame)
-                    .map((e) => e.at)
                     .pop();
                   const bump =
-                    bumpAt === undefined
+                    bumper === undefined
                       ? 0
-                      : 1 - tween(frame, bumpAt, bumpAt + 24);
-                  const fill = sp(10 + i * 3, CARD);
+                      : 1 -
+                        tween(
+                          frame,
+                          bumper.at,
+                          bumper.at + bumper.el.beat("bump"),
+                        );
+                  const fill = sp(row.start, CARD);
                   return (
                     <div
                       key={c.code}
@@ -988,8 +894,19 @@ export function WorldSignups({
                   const slot =
                     ROW *
                     events.filter((n, j) => j > k && n.at <= frame).length;
-                  const a = tween(frame, e.at + 1, e.at + 10);
-                  const hl = 1 - tween(frame, e.at + 6, e.at + 30, moveEase);
+                  const a = tween(
+                    frame,
+                    e.at + e.el.beat("row"),
+                    e.at + e.el.beat("rowIn"),
+                  );
+                  const hl =
+                    1 -
+                    tween(
+                      frame,
+                      e.at + e.el.beat("glow"),
+                      e.at + e.el.beat("glowEnd"),
+                      moveEase,
+                    );
                   return (
                     <div
                       key={`row-${e.name}`}

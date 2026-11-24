@@ -11,10 +11,17 @@ import {
   FONT,
   type Rect,
   Spotlight,
-  TokenMarks,
   type TokenSpec,
+  TokenTag,
   useAuditFrame,
 } from "@/lib/remocn/audit-core";
+import { useSceneConfig } from "@/lib/remocn/frame-rate";
+import {
+  type ResolvedTimeline,
+  type Timing,
+  useTimeline,
+} from "@/lib/remocn/timeline";
+import { type TokenTagsElementId, tokenTagsTimeline } from "./timeline";
 
 export type TokenTagsProps = {
   /** UI to tag, laid out in a 1280x720 frame. Defaults to a demo calendar dashboard. */
@@ -28,6 +35,11 @@ export type TokenTagsProps = {
   /** Frames between one tag and the next. */
   stagger?: number;
   speed?: number;
+  /**
+   * Moves, trims or stretches the wash and single tags, by the ids in
+   * `./timeline`. Frames on the scene timeline, after `speed`.
+   */
+  timing?: Timing<TokenTagsElementId>;
 };
 
 export const tokenTagsDefaults = {
@@ -39,13 +51,18 @@ export const tokenTagsDefaults = {
 
 export const tokenTagsLength = 61;
 
-const START = 12;
-
 export function TokenTags(props: TokenTagsProps) {
-  const { speed = 1 } = props;
+  const { speed = 1, timing } = props;
+  const { durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    tokenTagsTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   return (
     <AuditClock speed={speed}>
-      <Scene {...props} />
+      <Scene {...props} tl={tl} />
     </AuditClock>
   );
 }
@@ -56,25 +73,31 @@ function Scene({
   focus = children ? null : DEMO.after.cardRow,
   lineColor = tokenTagsDefaults.lineColor,
   background = tokenTagsDefaults.background,
-  stagger = tokenTagsDefaults.stagger,
-}: TokenTagsProps) {
+  tl,
+}: TokenTagsProps & { tl: ResolvedTimeline<TokenTagsElementId> }) {
   const frame = useAuditFrame();
+  const wash = focus ? tl.get("wash") : null;
   return (
     <AbsoluteFill style={{ background, fontFamily: FONT }}>
       {children ?? <DemoDashboard v={2} />}
-      {focus && (
+      {focus && wash && (
         <Spotlight
           rect={focus}
           color={background}
-          opacity={easeInOut(frame, [0, 12], [0, 1])}
+          opacity={easeInOut(frame, [wash.start, wash.end], [0, 1])}
         />
       )}
-      <TokenMarks
-        tokens={tokens}
-        start={START}
-        stagger={stagger}
-        lineColor={lineColor}
-      />
+      {tokens.map((tag, i) => (
+        <TokenTag
+          key={`${tag.label}-${tag.anchor.join()}`}
+          anchor={tag.anchor}
+          at={tag.at}
+          label={tag.label}
+          swatch={tag.swatch}
+          lineColor={lineColor}
+          delay={tl.get(`tag:${i}`).start}
+        />
+      ))}
     </AbsoluteFill>
   );
 }

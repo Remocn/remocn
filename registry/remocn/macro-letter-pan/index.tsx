@@ -16,6 +16,16 @@ import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround, gshParams } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  BEAT,
+  DEFAULT_LINE,
+  DEFAULT_WORD,
+  type MacroLetterPanElementId,
+  macroLetterPanTimeline,
+  macroShots,
+  macroTarget,
+} from "./timeline";
 
 const geist = loadFont("normal", {
   weights: ["300", "400"],
@@ -43,6 +53,12 @@ export interface MacroLetterPanProps {
   /** Frames to hold the first frame before anything moves. */
   delay?: number;
   speed?: number;
+  /**
+   * Moves, trims or stretches single close-ups, the pull-back, the accent
+   * and the hold, by the ids in `./timeline`. Frames on the scene timeline,
+   * after `delay` and `speed`.
+   */
+  timing?: Timing<MacroLetterPanElementId>;
 }
 
 const LIGHT_GROUND: Partial<GradientParams> = {
@@ -76,15 +92,6 @@ const THEMES = {
     scrim: "246,245,242",
     scrimAlpha: 0.55,
   },
-};
-
-const BEAT = {
-  decay: 0.8,
-  minShot: 6,
-  settle: 3,
-  pullLen: 30,
-  accentAt: 16,
-  hold: 42,
 };
 
 const TRACK = -0.035;
@@ -190,26 +197,39 @@ function ScaleLayer({
   );
 }
 
-export function MacroLetterPan({
-  line = "Ready to launch.",
-  word = "launch",
-  accent,
-  ink,
-  theme = "dark",
-  ground,
-  groundParams,
-  firstShot = 15,
-  maxShots = 6,
-  pullLen = BEAT.pullLen,
-  background,
-  fontFamily = geist.fontFamily,
-  scale: zoom = 1,
-  delay = 0,
-  speed = 1,
-}: MacroLetterPanProps) {
+export function MacroLetterPan(props: MacroLetterPanProps) {
+  const {
+    line = DEFAULT_LINE,
+    word = DEFAULT_WORD,
+    accent,
+    ink,
+    theme = "dark",
+    ground,
+    groundParams,
+    firstShot = 15,
+    maxShots = 6,
+    background,
+    fontFamily = geist.fontFamily,
+    scale: zoom = 1,
+    delay = 0,
+    speed = 1,
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H, fps } = useSceneConfig();
+  const { width: W, height: H, fps, durationInFrames } = useSceneConfig();
+  const portrait = H > W * 1.1;
+  // A portrait frame frames one letter per close-up, so the schedule needs it.
+  const scheduleProps = useMemo(
+    () => ({ ...props, portrait }),
+    [props, portrait],
+  );
+  const tl = useTimeline(
+    macroLetterPanTimeline,
+    scheduleProps,
+    durationInFrames * speed,
+    timing,
+  );
   const c = THEMES[theme];
   const inkC = ink ?? c.ink;
   const hi = accent ?? c.accent;
@@ -222,14 +242,10 @@ export function MacroLetterPan({
       : background === "transparent"
         ? undefined
         : background;
-  const portrait = H > W * 1.1;
   const u = Math.min(W, H) / 720;
   const m = useMetrics(fontFamily);
 
-  const found = word ? line.indexOf(word) : -1;
-  const text = found >= 0 ? line : word || line;
-  const ws = found >= 0 ? found : 0;
-  const we = ws + (word ? word.length : text.length);
+  const { text, ws, we } = macroTarget(line, word);
   const before = text.slice(0, ws);
   const target = text.slice(ws, we);
   const after = text.slice(we);
@@ -237,23 +253,19 @@ export function MacroLetterPan({
   const tail = period ? after.slice(0, -1) : after;
 
   const unit = portrait ? 1 : 2;
-  const nShots = Math.max(1, Math.min(maxShots, target.length - unit + 1));
-  const shots = useMemo(() => {
-    const out: { start: number; len: number; from: number }[] = [];
-    let t = 0;
-    const span = Math.max(0, target.length - unit);
-    for (let k = 0; k < nShots; k++) {
-      const len = Math.max(
-        BEAT.minShot,
-        Math.round(firstShot * BEAT.decay ** k),
-      );
-      const from = nShots === 1 ? 0 : Math.round((k * span) / (nShots - 1));
-      out.push({ start: t, len, from });
-      t += len;
-    }
-    return out;
-  }, [nShots, target.length, unit, firstShot]);
-  const pullStart = shots[shots.length - 1].start + shots[shots.length - 1].len;
+  const shots = useMemo(
+    () =>
+      macroShots(target.length, unit, firstShot, maxShots).map((s, k) => {
+        const e = tl.get(`shot:${k}`);
+        return { start: e.start, len: e.length, from: s.from, e };
+      }),
+    [target.length, unit, firstShot, maxShots, tl],
+  );
+  const pullEl = tl.get("pull");
+  const accentEl = tl.get("accent");
+  const holdEl = tl.get("hold");
+  const pullStart = pullEl.start;
+  const pullLen = pullEl.length;
 
   const layout = useMemo(() => {
     if (!m) return null;
@@ -320,12 +332,10 @@ export function MacroLetterPan({
     config: { mass: 1, damping: 26, stiffness: 120 },
     durationInFrames: pullLen,
   });
-  const hold = interpolate(
-    frame,
-    [pullStart + pullLen - 6, pullStart + pullLen + BEAT.hold],
-    [0, 1],
-    { ...CLAMP, easing: HOLD },
-  );
+  const hold = interpolate(frame, [holdEl.start, holdEl.end], [0, 1], {
+    ...CLAMP,
+    easing: HOLD,
+  });
 
   let scale: number;
   let ox: number;
@@ -339,7 +349,12 @@ export function MacroLetterPan({
     const s = shots[cam.k];
     blur =
       cam.k > 0
-        ? interpolate(frame - s.start, [0, BEAT.settle], [5 * u, 0], CLAMP)
+        ? interpolate(
+            frame - s.start,
+            [0, s.e.beat("settle")],
+            [5 * u, 0],
+            CLAMP,
+          )
         : 0;
   } else {
     const s0 = lastEnd.scale;
@@ -359,22 +374,25 @@ export function MacroLetterPan({
     const v = Math.abs(pull - pullPrev) * Math.log(s0);
     blur = Math.min(7 * u, v * 26 * u);
   }
-  const dof = interpolate(frame, [pullStart, pullStart + 16], [1, 0], {
-    ...CLAMP,
-    easing: COLOR,
-  });
-  const reveal = interpolate(frame, [pullStart + 4, pullStart + 20], [0, 1], {
-    ...CLAMP,
-    easing: COLOR,
-  });
-  const colorHit = interpolate(
+  const dof = interpolate(
     frame,
-    [pullStart + BEAT.accentAt, pullStart + BEAT.accentAt + 9],
+    [pullStart, pullStart + pullEl.beat("dof")],
+    [1, 0],
+    { ...CLAMP, easing: COLOR },
+  );
+  const revealAt = pullStart + pullEl.beat("revealAt");
+  const reveal = interpolate(
+    frame,
+    [revealAt, revealAt + pullEl.beat("reveal")],
     [0, 1],
     { ...CLAMP, easing: COLOR },
   );
+  const colorHit = interpolate(frame, [accentEl.start, accentEl.end], [0, 1], {
+    ...CLAMP,
+    easing: COLOR,
+  });
   const dot = spring({
-    frame: frame - pullStart - BEAT.accentAt - 3,
+    frame: frame - accentEl.start - accentEl.beat("dot"),
     fps,
     config: { mass: 0.5, damping: 12, stiffness: 200 },
   });

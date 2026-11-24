@@ -13,6 +13,13 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  countRange,
+  easeCount,
+  type FuchidoriCountElementId,
+  fuchidoriCountTimeline,
+} from "./timeline";
 
 const kaku = loadZenKaku("normal", {
   weights: ["400", "500"],
@@ -43,6 +50,12 @@ export interface FuchidoriCountProps {
   delay?: number;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches the rise, the label, the count and single
+   * rings, by the ids in `./timeline`. Frames on the scene timeline, after
+   * `delay` and `speed`.
+   */
+  timing?: Timing<FuchidoriCountElementId>;
 }
 
 const VERMILION = "#E03C31";
@@ -57,15 +70,7 @@ const RING = 0.04;
 const STEP = GAP + RING;
 const TRACK = 0.02;
 
-const RISE_AT = 0;
-const RISE_LEN = 14;
-const LABEL_AT = 6;
-const COUNT_AT = 8;
-const COUNT_LEN = 68;
-const RING_LEN = 12;
-
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
-const EASE_COUNT = Easing.bezier(0.3, 0.1, 0.3, 1);
 const CLAMP = {
   extrapolateLeft: "clamp",
   extrapolateRight: "clamp",
@@ -165,36 +170,42 @@ function ScaleLayer({
   );
 }
 
-export function FuchidoriCount({
-  value = 4096,
-  from = 1,
-  prefix = "",
-  suffix = "",
-  label = "captions styled without opening an editor",
-  maxBorders = 4,
-  colors,
-  accent,
-  ink,
-  background,
-  fontFamily = kaku.fontFamily,
-  fontWeight = 500,
-  countLength = COUNT_LEN,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: FuchidoriCountProps) {
+export function FuchidoriCount(props: FuchidoriCountProps) {
+  const {
+    value = 4096,
+    from = 1,
+    prefix = "",
+    suffix = "",
+    label = "captions styled without opening an editor",
+    maxBorders = 4,
+    colors,
+    accent,
+    ink,
+    background,
+    fontFamily = kaku.fontFamily,
+    fontWeight = 500,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H, fps } = useSceneConfig();
+  const { width: W, height: H, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    fuchidoriCountTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const c = THEMES[theme];
   const fg = ink ?? c.ink;
   const bg = background ?? c.bg;
   const stage = bg === "transparent" ? c.bg : bg;
   const red = accent ?? VERMILION;
 
-  const end = Math.max(1, Math.floor(value));
-  const start = Math.min(end, Math.max(1, Math.floor(from)));
+  const { end, lo, hi, shown } = countRange(value, from, maxBorders);
   const finalText = `${prefix}${group(end)}${suffix}`;
   const chars = useMemo(
     () => Array.from(new Set(Array.from(`${finalText}0123456789,`))),
@@ -202,48 +213,39 @@ export function FuchidoriCount({
   );
   const m = useMetrics(chars, label, fontFamily, fontWeight);
 
-  const lo = Math.log10(start);
-  const hi = Math.log10(end);
-  const powers: number[] = [];
-  for (let k = Math.floor(lo) + 1; k <= Math.floor(hi); k++) powers.push(k);
-  const shown = powers.slice(-Math.max(0, Math.floor(maxBorders)));
   const N = shown.length;
+  const riseEl = tl.get("rise");
+  const labelEl = tl.get("label");
+  const countEl = tl.get("count");
+  const ringEls = shown.map((_, j) => tl.get(`ring:${j}`));
 
   if (!m) {
     return <div style={{ position: "absolute", inset: 0, background: bg }} />;
   }
 
-  const countP = interpolate(t, [COUNT_AT, COUNT_AT + countLength], [0, 1], {
+  const countP = interpolate(t, [countEl.start, countEl.end], [0, 1], {
     ...CLAMP,
-    easing: EASE_COUNT,
+    easing: easeCount,
   });
   const logV = lo + (hi - lo) * countP;
   const current = countP >= 1 ? end : Math.min(end, Math.floor(10 ** logV));
   const text = `${prefix}${group(current)}${suffix}`;
 
-  const crossAt = (k: number) => {
-    const target = hi === lo ? 1 : (k - lo) / (hi - lo);
-    let a = 0;
-    let b = 1;
-    for (let i = 0; i < 24; i++) {
-      const mid = (a + b) / 2;
-      if (EASE_COUNT(mid) < target) a = mid;
-      else b = mid;
-    }
-    return COUNT_AT + b * countLength;
-  };
-  const grows = shown.map((k) =>
+  const grows = ringEls.map((e) =>
     spring({
-      frame: t - crossAt(k),
+      frame: t - e.start,
       fps,
-      durationInFrames: RING_LEN,
+      durationInFrames: e.length,
       config: { damping: 14, stiffness: 170, mass: 0.7 },
     }),
   );
-  const press = shown.reduce((acc, k) => {
-    const d = t - crossAt(k);
-    if (d < 0 || d > 10) return acc;
-    return acc + Math.sin((d / 10) * Math.PI) * 0.03 * (1 - d / 14);
+  const press = ringEls.reduce((acc, e) => {
+    const d = t - e.start;
+    const len = e.beat("press");
+    if (d < 0 || d > len) return acc;
+    return (
+      acc + Math.sin((d / len) * Math.PI) * 0.03 * (1 - d / e.beat("pressFade"))
+    );
   }, 0);
 
   const advOf = (ch: string) => (/[0-9]/.test(ch) ? m.digit : m.adv[ch]);
@@ -284,7 +286,7 @@ export function FuchidoriCount({
   const riseAt = (f: number) =>
     (
       (1 -
-        interpolate(f, [RISE_AT, RISE_AT + RISE_LEN], [0, 1], {
+        interpolate(f, [riseEl.start, riseEl.end], [0, 1], {
           ...CLAMP,
           easing: EASE_OUT,
         })) *
@@ -341,7 +343,7 @@ export function FuchidoriCount({
 
   const clipTop = top - F * 0.1;
   const clipH = (m.cap + 2 * R) * F + F * 0.4;
-  const labelP = interpolate(t, [LABEL_AT, LABEL_AT + 18], [0, 1], {
+  const labelP = interpolate(t, [labelEl.start, labelEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });

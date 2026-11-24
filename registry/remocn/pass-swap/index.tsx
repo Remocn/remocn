@@ -6,6 +6,16 @@ import { useId } from "react";
 import { AbsoluteFill, Easing, Img, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_LINES,
+  FIRST_PASS,
+  linesOf,
+  PASS_GAP,
+  PASS_LEN,
+  type PassSwapElementId,
+  passSwapTimeline,
+} from "./timeline";
 
 const { fontFamily: display } = loadDisplay("normal", {
   weights: ["500"],
@@ -48,6 +58,11 @@ export interface PassSwapProps {
   grain?: boolean;
   theme?: "dark" | "light";
   speed?: number;
+  /**
+   * Moves, trims or stretches the intro and single passes, by the ids in
+   * `./timeline`. Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<PassSwapElementId>;
 }
 
 // Beat sheet (30fps), for three lines / two passes:
@@ -57,9 +72,6 @@ export interface PassSwapProps {
 //  60–76   hold on line 2
 //  76–106  pass 2, right → left, swaps to the final line
 //  106–150 hold on the final line (poster frame)
-const FIRST_PASS = 30;
-const PASS_LEN = 30;
-const PASS_GAP = 46;
 const FINAL_HOLD = 44;
 
 export function passSwapDuration(lineCount = 3) {
@@ -151,26 +163,32 @@ function ScaleLayer({
   );
 }
 
-export function PassSwap({
-  lines = ["Copy the code.", "Own every frame.", "Ship the film."],
-  shape = "mixed",
-  src,
-  accentLastWord = true,
-  accent = "#3B5BFD",
-  ink: inkProp,
-  background,
-  fontFamily = display,
-  passLength = PASS_LEN,
-  passGap = PASS_GAP,
-  scale = 1,
-  delay = 0,
-  grain = true,
-  theme = "dark",
-  speed = 1,
-}: PassSwapProps) {
+export function PassSwap(props: PassSwapProps) {
+  const {
+    lines = DEFAULT_LINES,
+    shape = "mixed",
+    src,
+    accentLastWord = true,
+    accent = "#3B5BFD",
+    ink: inkProp,
+    background,
+    fontFamily = display,
+    scale = 1,
+    delay = 0,
+    grain = true,
+    theme = "dark",
+    speed = 1,
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H } = useSceneConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    passSwapTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const u = H / 720;
   const c = THEMES[theme];
   const fg = inkProp ?? c.fg;
@@ -179,22 +197,24 @@ export function PassSwap({
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
   const blurId = `ps-blur-${uid}`;
 
-  const safeLines = lines.length > 0 ? lines : [""];
+  const safeLines = linesOf(lines);
   const passes = Math.max(0, safeLines.length - 1);
   const longest = Math.max(...safeLines.map((l) => l.length), 1);
   // Hanken Grotesk 500 at -0.035em averages ~0.47em per character.
   const fs = Math.min(150 * u, (W * 0.86) / (longest * 0.47));
 
   // Which pass is live (or last finished).
+  const passAt = (i: number) => tl.get(`pass:${i}`);
   let index = 0;
   let passP = -1;
   for (let i = 0; i < passes; i++) {
-    const t0 = FIRST_PASS + i * passGap;
+    const t0 = passAt(i).start;
     if (frame >= t0) {
       index = i;
-      passP = (frame - t0) / passLength;
+      passP = (frame - t0) / passAt(i).length;
     }
   }
+  const passLength = passes > 0 ? passAt(index).length : 1;
   const passing = passP >= 0 && passP < 1;
   const done = passP >= 1;
   const dir: 1 | -1 = index % 2 === 0 ? 1 : -1;
@@ -225,15 +245,18 @@ export function PassSwap({
   const current = passes === 0 ? safeLines[0] : done ? toLine : fromLine;
 
   // First line arrives.
-  const intro = interpolate(frame, [0, 22], [0, 1], {
+  const introEl = tl.get("intro");
+  const intro = interpolate(frame, [introEl.start, introEl.end], [0, 1], {
     ...CLAMP,
     easing: SETTLE,
   });
   // New line is dragged a touch by the object and settles.
-  const tStart = FIRST_PASS + index * passGap;
+  // Only read once a pass is done, so there is a pass to read.
+  const tStart = passes > 0 ? passAt(index).start : 0;
+  const settleFor = passes > 0 ? passAt(index).beat("settle") : 0;
   const drag = interpolate(
     frame,
-    [tStart + passLength * 0.3, tStart + passLength + 16],
+    [tStart + passLength * 0.3, tStart + passLength + settleFor],
     [1, 0],
     { ...CLAMP, easing: SETTLE },
   );

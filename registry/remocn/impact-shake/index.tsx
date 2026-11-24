@@ -5,6 +5,12 @@ import { useId, useMemo } from "react";
 import { AbsoluteFill, Easing, interpolate, random, spring } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_IMPACT,
+  type ImpactShakeElementId,
+  impactShakeTimeline,
+} from "./timeline";
 
 export type ImpactShakeColors = {
   background: string;
@@ -30,12 +36,17 @@ export type ImpactShakeProps = {
   backgroundColor?: string;
   seed?: number;
   speed?: number;
+  /**
+   * Moves, trims or stretches the fall and the hit, by the ids in
+   * `./timeline`. Frames on the scene timeline, after `speed`.
+   */
+  timing?: Timing<ImpactShakeElementId>;
 };
 
 export const impactShakeDefaults = {
   text: "LAUNCH",
   intensity: 1,
-  impact: 7,
+  impact: DEFAULT_IMPACT,
   colors: {
     background: "#111111",
     foreground: "#FFFFFF",
@@ -59,20 +70,29 @@ function tintMatrix(hex: string) {
   return `0 0 0 0 ${r} 0 0 0 0 ${g} 0 0 0 0 ${b} 0 0 0 1 0`;
 }
 
-export function ImpactShake({
-  children,
-  text = impactShakeDefaults.text,
-  intensity = impactShakeDefaults.intensity,
-  impact = impactShakeDefaults.impact,
-  colors: colorOverrides,
-  foregroundColor,
-  backgroundColor,
-  seed = impactShakeDefaults.seed,
-  speed = impactShakeDefaults.speed,
-}: ImpactShakeProps) {
+export function ImpactShake(props: ImpactShakeProps) {
+  const {
+    children,
+    text = impactShakeDefaults.text,
+    intensity = impactShakeDefaults.intensity,
+    colors: colorOverrides,
+    foregroundColor,
+    backgroundColor,
+    seed = impactShakeDefaults.seed,
+    speed = impactShakeDefaults.speed,
+    timing,
+  } = props;
   const tilt = useGlide();
   const frame = useSceneFrame();
-  const { width, height, fps } = useSceneConfig();
+  const { width, height, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    impactShakeTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const fallEl = tl.get("fall");
+  const hit = tl.get("hit");
   const uid = `impact-shake-${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
   const baseColors = { ...impactShakeDefaults.colors, ...colorOverrides };
   const colors = {
@@ -83,20 +103,27 @@ export function ImpactShake({
   const t = (frame * speed * 30) / fps;
   const k = Math.max(0, intensity);
   const unit = height / 720;
-  const since = t - impact;
+  const since = t - hit.start;
 
   const phase = random(`impact-shake-${seed}`) * Math.PI * 2;
   const motionAt = (tt: number) => {
-    const sinceT = tt - impact;
+    const sinceT = tt - hit.start;
     // Fall: pure acceleration into the hit, no easing out.
-    const fall = interpolate(tt, [0, impact], [-height * 0.85, 0], {
-      extrapolateLeft: "clamp",
-      extrapolateRight: "clamp",
-      easing: Easing.in(Easing.quad),
-    });
+    const fall = interpolate(
+      tt,
+      [fallEl.start, fallEl.end],
+      [-height * 0.85, 0],
+      {
+        extrapolateLeft: "clamp",
+        extrapolateRight: "clamp",
+        easing: Easing.in(Easing.quad),
+      },
+    );
     const falling = sinceT < 0;
     const stretch = falling
-      ? interpolate(tt, [0, impact], [1, 1.18], { extrapolateRight: "clamp" })
+      ? interpolate(tt, [fallEl.start, fallEl.end], [1, 1.18], {
+          extrapolateRight: "clamp",
+        })
       : 1;
     const squash = falling
       ? 0
@@ -139,11 +166,18 @@ export function ImpactShake({
   const glide = tilt(moving);
 
   const split =
-    since >= 0 && since < 2 ? (1 - since / 2) * 18 * unit * k + 6 * unit : 0;
-  const flash = interpolate(since, [0, 0.5, 2.5], [0, 0.12, 0], {
-    extrapolateLeft: "clamp",
-    extrapolateRight: "clamp",
-  });
+    since >= 0 && since < hit.beat("split")
+      ? (1 - since / hit.beat("split")) * 18 * unit * k + 6 * unit
+      : 0;
+  const flash = interpolate(
+    since,
+    [0, hit.beat("flashPeak"), hit.beat("flash")],
+    [0, 0.12, 0],
+    {
+      extrapolateLeft: "clamp",
+      extrapolateRight: "clamp",
+    },
+  );
 
   const floorY = height * 0.62;
   const dust = useMemo(

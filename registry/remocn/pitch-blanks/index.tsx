@@ -13,6 +13,14 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_LABELS,
+  DEFAULT_LINE,
+  type PitchBlanksElementId,
+  parse,
+  pitchBlanksTimeline,
+} from "./timeline";
 
 const bitter = loadFont("normal", {
   weights: ["400", "500"],
@@ -38,6 +46,11 @@ export interface PitchBlanksProps {
   delay?: number;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches single words, blanks and fills, by the ids in
+   * `./timeline`. Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<PitchBlanksElementId>;
 }
 
 const THEMES = {
@@ -58,55 +71,8 @@ const LABEL_SCALE = 0.2;
 const BOX = 1.15;
 const PITCH = 1.72;
 const RULE_Y = 1.02;
-const FIRST_FILL = 42;
-const FILL_GAP = 32;
-const MOTION_TAIL = 24;
 
 const midway = (q: number) => q > 5e-4 && q < 1 - 5e-4;
-
-interface Tok {
-  text: string;
-  attach: boolean;
-  blank: number;
-  label: string;
-}
-
-function parse(line: string, labels: string[]) {
-  const toks: Tok[] = [];
-  const re = /\{([^}]*)\}/g;
-  let last = 0;
-  let n = 0;
-  let glue = false;
-  const pushText = (s: string) => {
-    if (!s) return;
-    const lead = /^\s/.test(s);
-    const parts = s.split(/\s+/).filter(Boolean);
-    parts.forEach((p, i) => {
-      toks.push({
-        text: p,
-        attach: i === 0 && !lead && glue,
-        blank: -1,
-        label: "",
-      });
-    });
-    glue = !/\s$/.test(s);
-  };
-  for (let m = re.exec(line); m; m = re.exec(line)) {
-    pushText(line.slice(last, m.index));
-    const attach = toks.length > 0 && glue;
-    toks.push({
-      text: m[1].trim(),
-      attach,
-      blank: n,
-      label: labels[n] ?? "",
-    });
-    n++;
-    glue = true;
-    last = m.index + m[0].length;
-  }
-  pushText(line.slice(last));
-  return { toks, blanks: n };
-}
 
 function useFontsReady(family: string) {
   const [ready, setReady] = useState(false);
@@ -198,23 +164,25 @@ function ScaleLayer({
   );
 }
 
-export function PitchBlanks({
-  line = "{remocn} is a {launch-film kit} for {teams of one}.",
-  labels = ["product", "category", "audience"],
-  accent,
-  ink,
-  background,
-  fontFamily = bitter.fontFamily,
-  firstFill = FIRST_FILL,
-  fillGap = FILL_GAP,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: PitchBlanksProps) {
+export function PitchBlanks(props: PitchBlanksProps) {
+  const {
+    line = DEFAULT_LINE,
+    labels = DEFAULT_LABELS,
+    accent,
+    ink,
+    background,
+    fontFamily = bitter.fontFamily,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
-  const frame = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H, durationInFrames: T } = useSceneConfig();
+  const t = Math.max(0, useSceneFrame() - delay) * speed;
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  // The pace is counted from the clip without `speed`, as before.
+  const tl = useTimeline(pitchBlanksTimeline, props, durationInFrames, timing);
   const c = THEMES[theme];
   const hi = accent ?? c.accent;
   const fg = ink ?? c.ink;
@@ -229,11 +197,11 @@ export function PitchBlanks({
     );
   }
 
-  const { toks, blanks } = parse(line, labels);
-  const motionEnd = firstFill + Math.max(0, blanks - 1) * fillGap + MOTION_TAIL;
-  const tail = Math.max(30, T * 0.18);
-  const pace = Math.min(1.5, Math.max(0.5, (T - delay - tail) / motionEnd));
-  const t = frame / pace;
+  const { toks } = parse(line, labels);
+  let wordCount = 0;
+  const intros = toks.map((tk) =>
+    tk.blank < 0 ? tl.get(`word:${wordCount++}`) : tl.get(`blank:${tk.blank}`),
+  );
 
   const portrait = H > W * 1.1;
   const mx = W * (portrait ? 0.08 : 0.075);
@@ -293,17 +261,20 @@ export function PitchBlanks({
     return l;
   });
 
-  const fillAt = (b: number) => firstFill + b * fillGap;
-  const fillP = (b: number, tt = t) =>
-    interpolate(tt, [fillAt(b), fillAt(b) + 14], [0, 1], {
+  const fillP = (b: number, tt = t) => {
+    const e = tl.get(`fill:${b}`);
+    return interpolate(tt, [e.start, e.start + e.beat("fill")], [0, 1], {
       ...CLAMP,
       easing: EASE_IO,
     });
-  const wordP = (b: number) =>
-    interpolate(t, [fillAt(b) + 10, fillAt(b) + 26], [0, 1], {
+  };
+  const wordP = (b: number) => {
+    const e = tl.get(`fill:${b}`);
+    return interpolate(t, [e.start + e.beat("word"), e.end], [0, 1], {
       ...CLAMP,
       easing: EASE_OUT,
     });
+  };
 
   const widthsAt = (tt: number) =>
     toks.map((tk, i) =>
@@ -328,7 +299,8 @@ export function PitchBlanks({
   // layout rounds a rule's edges to whole pixels, so a pushed rule stepped in
   // uneven pixels. While it is pushed it is laid out where the line ends up
   // and the push is a transform; standing still it keeps its plain layout.
-  const dt = speed / pace;
+  // One composition frame, on the scene timeline.
+  const dt = speed;
   const xsNext = xsAt(widthsAt(t + dt));
   const xsPrev = xsAt(widthsAt(t - dt));
   const xsEnd = xsAt(widthsAt(1e9));
@@ -340,7 +312,10 @@ export function PitchBlanks({
   const ruleH = Math.max(2, Fs * 0.03);
 
   const intro = (i: number) =>
-    interpolate(t, [i * 2, i * 2 + 16], [0, 1], { ...CLAMP, easing: EASE_OUT });
+    interpolate(t, [intros[i].start, intros[i].end], [0, 1], {
+      ...CLAMP,
+      easing: EASE_OUT,
+    });
 
   return (
     <AbsoluteFill
@@ -379,14 +354,19 @@ export function PitchBlanks({
               </div>
             );
           }
-          const draw = interpolate(t, [4 + i * 2, 22 + i * 2], [0, 1], {
-            ...CLAMP,
-            easing: EASE_OUT,
-          });
-          const lab = interpolate(t, [12 + i * 2, 28 + i * 2], [0, 1], {
-            ...CLAMP,
-            easing: EASE_OUT,
-          });
+          const blank = intros[i];
+          const draw = interpolate(
+            t,
+            [blank.start, blank.start + blank.beat("draw")],
+            [0, 1],
+            { ...CLAMP, easing: EASE_OUT },
+          );
+          const lab = interpolate(
+            t,
+            [blank.start + blank.beat("label"), blank.end],
+            [0, 1],
+            { ...CLAMP, easing: EASE_OUT },
+          );
           const f = fillP(tk.blank);
           const wp = wordP(tk.blank);
           const pushed =

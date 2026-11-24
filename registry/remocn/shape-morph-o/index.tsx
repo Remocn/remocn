@@ -14,6 +14,12 @@ import {
   spring,
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  MORPHS,
+  type ShapeMorphOElementId,
+  shapeMorphOTimeline,
+} from "./timeline";
 
 const WEIGHT = 500;
 const display = loadFont("normal", { weights: ["500"], subsets: ["latin"] });
@@ -54,6 +60,12 @@ export interface ShapeMorphOProps {
   theme?: "dark" | "light";
   /** Playback multiplier. */
   speed?: number;
+  /**
+   * Moves, trims or stretches the grow-in, single morphs, the landing, the
+   * word reveal and the counter, by the ids in `./timeline`. Frames on the
+   * scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<ShapeMorphOElementId>;
 }
 
 const THEMES = {
@@ -67,17 +79,6 @@ const PROBE = 600;
 const TRACK = -0.02;
 /** Minimum clear ink space between neighbouring glyphs, in em. */
 const MIN_GAP = 0.03;
-
-// Timeline (frames at speed 1).
-const ENTER = 10;
-const FIRST = 8;
-const GAP = 16;
-const MORPHS = 5;
-const LAND = FIRST + MORPHS * GAP + 2;
-const REVEAL = LAND + 9;
-/** The counter opens once the word is out, after a short solid beat. */
-const COUNTER = REVEAL + 15;
-const COUNTER_LEN = 9;
 
 /** Absolute rotation (deg) each shape settles at: circle, cookie, clover, burst, pill, square. */
 const ROT = [0, 90, 135, 210, 270, 360];
@@ -430,30 +431,38 @@ function ScaleLayer({
   );
 }
 
-export function ShapeMorphO({
-  word = "remocn",
-  mark = true,
-  logo,
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = display.fontFamily,
-  fontWeight = WEIGHT,
-  beat = GAP,
-  scale: zoom = 1,
-  delay = 0,
-  theme = "dark",
-  speed = 1,
-}: ShapeMorphOProps) {
+export function ShapeMorphO(props: ShapeMorphOProps) {
+  const {
+    word = "remocn",
+    mark = true,
+    logo,
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = display.fontFamily,
+    fontWeight = WEIGHT,
+    scale: zoom = 1,
+    delay = 0,
+    theme = "dark",
+    speed = 1,
+    timing,
+  } = props;
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H, fps } = useSceneConfig();
+  const { width: W, height: H, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    shapeMorphOTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const c = THEMES[theme];
   const fg = ink ?? c.fg;
   const stage =
     background === "transparent" ? "transparent" : (background ?? c.bg);
-  const landAt = FIRST + MORPHS * beat + 2;
-  const revealAt = landAt + (REVEAL - LAND);
-  const counterAt = revealAt + (COUNTER - REVEAL);
+  const enterEl = tl.get("enter");
+  const landAt = tl.get("land").start;
+  const revealAt = tl.get("reveal").start;
+  const counter = tl.get("counter");
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
   const chars = useMemo(() => Array.from(word), [word]);
   const withMark = mark && chars.length > 1 && /^r$/i.test(chars[0]);
@@ -478,14 +487,14 @@ export function ShapeMorphO({
   // Shape chain: each morph starts from wherever the previous one was.
   const prog = (k: number) =>
     spring({
-      frame: t - (FIRST + (k - 1) * beat),
+      frame: t - tl.get(`morph:${k}`).start,
       fps,
       config: SPRING_MORPH,
     });
   let d = shapes[0];
   let rot = 0;
   for (let k = 1; k <= MORPHS; k++) {
-    const start = FIRST + (k - 1) * beat;
+    const start = tl.get(`morph:${k}`).start;
     const p = prog(k);
     rot += (ROT[k] - ROT[k - 1]) * p;
     if (t >= start) d = interpolatePath(p, d, shapes[k]);
@@ -494,7 +503,7 @@ export function ShapeMorphO({
   if (t >= landAt) d = interpolatePath(land, d, oPath);
 
   // The counter eases open from the centre, turning the solid bowl into the letter.
-  const open = interpolate(t, [counterAt, counterAt + COUNTER_LEN], [0, 1], {
+  const open = interpolate(t, [counter.start, counter.end], [0, 1], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
     easing: Easing.bezier(0.22, 1, 0.36, 1),
@@ -504,7 +513,7 @@ export function ShapeMorphO({
   }
 
   const R0 = Math.min(W, H) * 0.28;
-  const enter = interpolate(t, [0, ENTER], [0, 1], {
+  const enter = interpolate(t, [enterEl.start, enterEl.end], [0, 1], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
     easing: (x) => 1 - (1 - x) ** 3,

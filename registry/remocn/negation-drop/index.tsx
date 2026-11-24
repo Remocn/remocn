@@ -13,6 +13,12 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_LINES,
+  type NegationDropElementId,
+  negationDropTimeline,
+} from "./timeline";
 
 const barlow = loadFont("normal", { weights: ["500"], subsets: ["latin"] });
 
@@ -34,6 +40,11 @@ export interface NegationDropProps {
   delay?: number;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches single lines and their drops, by the ids in
+   * `./timeline`. Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<NegationDropElementId>;
 }
 
 const THEMES = {
@@ -55,14 +66,6 @@ const THEMES = {
 
 const TRACK = -0.01;
 const LINE_H = 0.88;
-const ENTER_AT = -4;
-const ENTER_STAGGER = 6;
-const ENTER_LEN = 16;
-const FLIP_AT = 44;
-const FLIP_GAP = 14;
-const FALL_LEN = 9;
-const CLOSE_DELAY = 6;
-const LIT_DELAY = 6;
 
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
 const EASE_FALL = Easing.bezier(0.55, 0, 0.9, 0.45);
@@ -70,12 +73,6 @@ const CLAMP = {
   extrapolateLeft: "clamp",
   extrapolateRight: "clamp",
 } as const;
-
-const DEFAULT_LINES = [
-  "You can’t animate.",
-  "You don’t have a team.",
-  "It isn’t done.",
-];
 
 type PartKind = "plain" | "keep" | "drop";
 interface Part {
@@ -198,22 +195,28 @@ function ScaleLayer({
   );
 }
 
-export function NegationDrop({
-  lines = DEFAULT_LINES,
-  dropAt = FLIP_AT,
-  stagger = FLIP_GAP,
-  accent,
-  ink,
-  background,
-  fontFamily = barlow.fontFamily,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: NegationDropProps) {
+export function NegationDrop(props: NegationDropProps) {
+  const {
+    lines = DEFAULT_LINES,
+    accent,
+    ink,
+    background,
+    fontFamily = barlow.fontFamily,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H, fps } = useSceneConfig();
+  const { width: W, height: H, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    negationDropTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const c = THEMES[theme];
   const fg = ink ?? c.ink;
   const block = accent ?? c.accent;
@@ -251,11 +254,11 @@ export function NegationDrop({
     return { full, drop };
   });
 
-  const flipAt = (i: number) => dropAt + i * stagger;
   const closeAt = (tt: number) =>
     rows.map((_, i) =>
       spring({
-        frame: tt - flipAt(i) - CLOSE_DELAY,
+        frame:
+          tt - tl.get(`drop:${i}`).start - tl.get(`drop:${i}`).beat("close"),
         fps,
         config: { damping: 15, stiffness: 150, mass: 0.8 },
       }),
@@ -313,15 +316,21 @@ export function NegationDrop({
           // Room on both sides so the clip never trims a line laid out at
           // its closed size, which is wider than the live one.
           const ox = W;
-          const f0 = flipAt(i);
-          const tint = interpolate(t, [f0 - 8, f0 - 1], [0, 1], CLAMP);
-          const fall = interpolate(t, [f0, f0 + FALL_LEN], [0, 1], {
+          const d = tl.get(`drop:${i}`);
+          const f0 = d.start;
+          const tint = interpolate(
+            t,
+            [f0 + d.beat("tint"), f0 + d.beat("tintEnd")],
+            [0, 1],
+            CLAMP,
+          );
+          const fall = interpolate(t, [f0, f0 + d.beat("fall")], [0, 1], {
             ...CLAMP,
             easing: EASE_FALL,
           });
           const lit = interpolate(
             t,
-            [f0 + LIT_DELAY, f0 + LIT_DELAY + 10],
+            [f0 + d.beat("lit"), f0 + d.beat("lit") + d.beat("litLen")],
             [0, 1],
             { ...CLAMP, easing: EASE_OUT },
           );
@@ -390,17 +399,13 @@ export function NegationDrop({
             }
           });
 
+          const enter = tl.get(`line:${i}`);
           const enterY = (tt: number) =>
             (1 -
-              interpolate(
-                tt,
-                [
-                  ENTER_AT + i * ENTER_STAGGER,
-                  ENTER_AT + i * ENTER_STAGGER + ENTER_LEN,
-                ],
-                [0, 1],
-                { ...CLAMP, easing: EASE_OUT },
-              )) *
+              interpolate(tt, [enter.start, enter.end], [0, 1], {
+                ...CLAMP,
+                easing: EASE_OUT,
+              })) *
             (clipBottom - clipTop + F * 0.05);
           const rising =
             Math.abs(enterY(t + 1) - enterY(t)) > 1e-3 ||

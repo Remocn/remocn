@@ -3,6 +3,8 @@
 import { useId } from "react";
 import { interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import { type ChromaticWaveElementId, chromaticWaveTimeline } from "./timeline";
 
 export interface ChromaticWaveProps {
   className?: string;
@@ -38,6 +40,11 @@ export interface ChromaticWaveProps {
   maxDisplacementPx?: number;
   glassPasses?: number;
   channelOrder?: ("red" | "green" | "blue")[];
+  /**
+   * Moves, trims or stretches the band sweep, by the ids in `./timeline`.
+   * Frames on the scene timeline.
+   */
+  timing?: Timing<ChromaticWaveElementId>;
 }
 
 function boxBlurSigma(radius: number, iterations: number): number {
@@ -105,50 +112,63 @@ function buildMapUri({
   return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
 }
 
-export function ChromaticWave({
-  className,
-  width = 1920,
-  height = 1080,
-  headline = "MUSIC",
-  kicker = "APPLES",
-  headlineFontFamily = "'Helvetica Neue', Helvetica, Arial, sans-serif",
-  kickerFontFamily = "'Helvetica Neue', Helvetica, Arial, sans-serif",
-  headlineFontSize = 174,
-  kickerFontSize = 52,
-  kickerTracking = 32,
-  headlineBaselineY = 601,
-  kickerBaselines = [444, 670],
-  textCenterX = 960,
-  fill = "#ffffff",
-  background = "#000000",
-  bandHeight = 147.1,
-  bandCopies = 7,
-  bandPitch = 750,
-  mapStartY = 31,
-  mapEndY = 1560,
-  mapTravelFrames = 150,
-  waveHeight = 28,
-  waveWidth = 272,
-  waveSpeed = 1,
-  turbulentAmount = 130,
-  turbulentSize = 163,
-  evolutionPerSecond = 50,
-  mapBlurRadius = 13,
-  mapBlurIterations = 6,
-  glassDisplacement = 100,
-  maxDisplacementPx = 39,
-  glassPasses = 3,
-  channelOrder = ["blue", "green", "red"],
-}: ChromaticWaveProps) {
+export function ChromaticWave(props: ChromaticWaveProps) {
+  const {
+    className,
+    width = 1920,
+    height = 1080,
+    headline = "MUSIC",
+    kicker = "APPLES",
+    headlineFontFamily = "'Helvetica Neue', Helvetica, Arial, sans-serif",
+    kickerFontFamily = "'Helvetica Neue', Helvetica, Arial, sans-serif",
+    headlineFontSize = 174,
+    kickerFontSize = 52,
+    kickerTracking = 32,
+    headlineBaselineY = 601,
+    kickerBaselines = [444, 670],
+    textCenterX = 960,
+    fill = "#ffffff",
+    background = "#000000",
+    bandHeight = 147.1,
+    bandCopies = 7,
+    bandPitch = 750,
+    mapStartY = 31,
+    mapEndY = 1560,
+    waveHeight = 28,
+    waveWidth = 272,
+    waveSpeed = 1,
+    turbulentAmount = 130,
+    turbulentSize = 163,
+    evolutionPerSecond = 50,
+    mapBlurRadius = 13,
+    mapBlurIterations = 6,
+    glassDisplacement = 100,
+    maxDisplacementPx = 39,
+    glassPasses = 3,
+    channelOrder = ["blue", "green", "red"],
+    timing,
+  } = props;
   const frame = useSceneFrame();
-  const { fps } = useSceneConfig();
+  const { fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    chromaticWaveTimeline,
+    props,
+    durationInFrames,
+    timing,
+  );
+  const sweep = tl.get("sweep");
   const filterId = useId();
   const seconds = frame / fps;
 
-  const mapY = interpolate(frame, [0, mapTravelFrames], [mapStartY, mapEndY], {
-    extrapolateLeft: "clamp",
-    extrapolateRight: "clamp",
-  });
+  const mapY = interpolate(
+    frame,
+    [sweep.start, sweep.end],
+    [mapStartY, mapEndY],
+    {
+      extrapolateLeft: "clamp",
+      extrapolateRight: "clamp",
+    },
+  );
 
   const mapUri = buildMapUri({
     width,

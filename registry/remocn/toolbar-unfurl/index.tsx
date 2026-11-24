@@ -15,6 +15,14 @@ import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_FINAL_LINE,
+  DEFAULT_LINES,
+  TOOLBAR_UNFURL_END,
+  type ToolbarUnfurlElementId,
+  toolbarUnfurlTimeline,
+} from "./timeline";
 
 const figtree = loadFigtree("normal", {
   weights: ["300", "400"],
@@ -30,18 +38,7 @@ const TILE = { mass: 0.8, damping: 18, stiffness: 160 };
 const CHIP = { mass: 0.5, damping: 12, stiffness: 200 };
 const GLIDE = { mass: 0.8, damping: 22, stiffness: 150 };
 
-const B = {
-  pop: -8,
-  unfurl: [6, 10, 14],
-  disc: 18,
-  hops: [42, 62, 78],
-  retract: 94,
-  punch: 106,
-  caption: 100,
-  end: 150,
-};
-
-export const TOOLBAR_UNFURL_DURATION = B.end;
+export const TOOLBAR_UNFURL_DURATION = TOOLBAR_UNFURL_END;
 
 const CLAMP = {
   extrapolateLeft: "clamp",
@@ -116,6 +113,12 @@ export interface ToolbarUnfurlProps {
   speed?: number;
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
+  /**
+   * Moves, trims or stretches the pop, the unfurl, each click of the disc
+   * with its caption, the retract and the final line, by the ids in
+   * `./timeline`. Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<ToolbarUnfurlElementId>;
 }
 
 /** The foreground at `scale`, around the frame's center; nothing extra at 1. */
@@ -134,30 +137,43 @@ function ScaleLayer({
   );
 }
 
-export function ToolbarUnfurl({
-  theme = "dark",
-  accent = "#3B5BFD",
-  lines = [
-    "Leave a note.",
-    "Sketch the shot.",
-    "Type on the frame.",
-    "Select any layer.",
-  ],
-  finalLine = "Every tool, one tap away.",
-  fontWeight = 300,
-  cursor = true,
-  ink,
-  background,
-  fontFamily = figtree.fontFamily,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  ground,
-  groundParams,
-}: ToolbarUnfurlProps) {
+export function ToolbarUnfurl(props: ToolbarUnfurlProps) {
+  const {
+    theme = "dark",
+    accent = "#3B5BFD",
+    lines = DEFAULT_LINES,
+    finalLine = DEFAULT_FINAL_LINE,
+    fontWeight = 300,
+    cursor = true,
+    ink,
+    background,
+    fontFamily = figtree.fontFamily,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    ground,
+    groundParams,
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width, height, fps } = useSceneConfig();
+  const { width, height, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    toolbarUnfurlTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const popEl = tl.get("pop");
+  const cursorEl = tl.get("cursor");
+  const pushEl = tl.get("push");
+  const discEl = tl.get("disc");
+  const hopEls = tl.lane("Disc").slice(1);
+  const retractEl = tl.get("retract");
+  const captionEl = tl.get("caption");
+  const punchEl = tl.get("punch");
+  // The disc's stops: dropped on the last tool, then each hop.
+  const stepEls = [discEl, ...hopEls];
   const dark = theme === "dark";
   const portrait = height > width * 1.2;
   const stageW = portrait ? 1080 : 1280;
@@ -187,13 +203,17 @@ export function ToolbarUnfurl({
   const captionTop = portrait ? 686 : centerY + 118;
   const caretW = portrait ? 92 : 50;
 
-  const pop = spring({ frame: frame - B.pop, fps, config: CHIP });
+  const pop = spring({ frame: frame - popEl.start, fps, config: CHIP });
   const unfurl = ORDER.slice(0, last).map((_, i) =>
-    spring({ frame: frame - B.unfurl[i], fps, config: TILE }),
+    spring({
+      frame: frame - tl.get(`unfurl:${i}`).start,
+      fps,
+      config: TILE,
+    }),
   );
   const retract = Math.min(
     1,
-    spring({ frame: frame - B.retract, fps, config: HEAVY }),
+    spring({ frame: frame - retractEl.start, fps, config: HEAVY }),
   );
 
   const spanOut = Math.max(
@@ -203,7 +223,12 @@ export function ToolbarUnfurl({
   const span = spanOut * (1 - retract);
   const pillLen = slot + pad * 2 + span;
   const extra = caretW * Math.max(0, retract);
-  const caretIn = ramp(frame, B.retract + 8, 12, LIGHT);
+  const caretIn = ramp(
+    frame,
+    retractEl.start + retractEl.beat("caretAt"),
+    retractEl.beat("caret"),
+    LIGHT,
+  );
 
   const pos = (i: number) => {
     const retracted = i * slot * (1 - retract);
@@ -212,17 +237,17 @@ export function ToolbarUnfurl({
     return span / 2 + off;
   };
 
-  const discK = B.hops.reduce(
-    (acc, h) => acc + spring({ frame: frame - h, fps, config: CHIP }),
+  const discK = hopEls.reduce(
+    (acc, h) => acc + spring({ frame: frame - h.start, fps, config: CHIP }),
     0,
   );
-  const discKPrev = B.hops.reduce(
-    (acc, h) => acc + spring({ frame: frame - 1 - h, fps, config: CHIP }),
+  const discKPrev = hopEls.reduce(
+    (acc, h) => acc + spring({ frame: frame - 1 - h.start, fps, config: CHIP }),
     0,
   );
   const discSlot = last - discK;
   const vel = Math.abs(discK - discKPrev);
-  const discIn = spring({ frame: frame - B.disc, fps, config: CHIP });
+  const discIn = spring({ frame: frame - discEl.start, fps, config: CHIP });
   const discPos =
     retract > 0
       ? pos(0)
@@ -234,9 +259,11 @@ export function ToolbarUnfurl({
         );
   const stretch = 1 + Math.min(0.22, vel * 0.6);
   const squash = 1 - Math.min(0.1, vel * 0.3);
-  const punch = spring({ frame: frame - B.punch, fps, config: CHIP });
+  const punch = spring({ frame: frame - punchEl.start, fps, config: CHIP });
   const punchS =
-    frame >= B.punch ? 1 + 0.05 * Math.sin(Math.min(1, punch) * Math.PI) : 1;
+    frame >= punchEl.start
+      ? 1 + 0.05 * Math.sin(Math.min(1, punch) * Math.PI)
+      : 1;
 
   const toolPresence = (i: number) => {
     const anchor = retract > 0 ? 0 : last;
@@ -251,24 +278,31 @@ export function ToolbarUnfurl({
 
   const along = (v: number) => `translate(${v}px, 0px)`;
 
-  const lineStarts = [B.disc, ...B.hops];
   const capItems = lines.slice(0, N).map((text, i) => {
-    const start = lineStarts[i];
-    const nextStart = i < N - 1 ? lineStarts[i + 1] : B.retract;
-    const enter = ramp(frame, start + (i === 0 ? 0 : 3), 12);
-    const exit = ramp(frame, nextStart, 7, EXIT);
+    const st = stepEls[i];
+    const next = i < N - 1 ? stepEls[i + 1] : retractEl;
+    const enter = ramp(
+      frame,
+      st.start + st.beat("captionAt"),
+      st.beat("caption"),
+    );
+    const exit = ramp(frame, next.start, next.beat("out"), EXIT);
     return { text, enter, exit, key: `l${i.toString()}` };
   });
-  const finalEnter = ramp(frame, B.caption, 14);
+  const finalEnter = ramp(frame, captionEl.start, captionEl.length);
 
   const groupAt = (f: number) => {
     const lift = Math.min(
       1,
-      spring({ frame: f - B.retract - 2, fps, config: HEAVY }),
+      spring({
+        frame: f - retractEl.start - retractEl.beat("lift"),
+        fps,
+        config: HEAVY,
+      }),
     );
     return {
       lift,
-      push: 1 + 0.04 * ramp(f, 0, B.end, SWAY),
+      push: 1 + 0.04 * ramp(f, pushEl.start, pushEl.length, SWAY),
       y: mix(0, portrait ? 0 : 24, lift),
     };
   };
@@ -284,15 +318,17 @@ export function ToolbarUnfurl({
   });
   const fold = 1 + 0.16 * lift;
 
-  const cursorPts = [
-    { f: -4, x: centerX + 260, y: centerY + 260 },
-    { f: B.disc - 4, x: 0, y: 0, tool: last },
-    { f: B.disc + 2, x: 0, y: 0, tool: last },
-    ...B.hops.flatMap((h, i) => [
-      { f: h - 5, x: 0, y: 0, tool: last - 1 - i },
-      { f: h + 2, x: 0, y: 0, tool: last - 1 - i },
+  const cursorPts: { f: number; x: number; y: number; tool?: number }[] = [
+    { f: cursorEl.start, x: centerX + 260, y: centerY + 260 },
+    ...stepEls.flatMap((h, i) => [
+      { f: h.start + h.beat("reach"), x: 0, y: 0, tool: last - i },
+      { f: h.start + h.beat("leave"), x: 0, y: 0, tool: last - i },
     ]),
-    { f: B.retract + 14, x: centerX + 220, y: centerY + 230 },
+    {
+      f: retractEl.start + retractEl.beat("cursorAt"),
+      x: centerX + 220,
+      y: centerY + 230,
+    },
   ];
   const resolvePt = (p: (typeof cursorPts)[number]) => {
     if (p.tool === undefined) return { x: p.x, y: p.y };
@@ -329,7 +365,7 @@ export function ToolbarUnfurl({
     Math.abs(cursorDx) < 1e-3 && Math.abs(cursorDy) < 1e-3
       ? ""
       : `translate(${cursorDx}px, ${cursorDy}px) `;
-  const clicks = [B.disc, ...B.hops];
+  const clicks = stepEls.map((e) => e.start);
   const pressAt = (c: number) =>
     Math.max(
       0,
@@ -337,7 +373,14 @@ export function ToolbarUnfurl({
         spring({ frame: frame - c - 2, fps, config: CHIP }),
     );
   const press = clicks.reduce((acc, c) => Math.max(acc, pressAt(c)), 0);
-  const cursorFade = 1 - ramp(frame, B.retract + 4, 10, EXIT);
+  const cursorFade =
+    1 -
+    ramp(
+      frame,
+      retractEl.start + retractEl.beat("fadeAt"),
+      retractEl.beat("fade"),
+      EXIT,
+    );
 
   const resolvedGround: GshPresetId | undefined =
     ground ?? (groundParams ? undefined : dark ? "afterhours" : "glasswork");
@@ -418,7 +461,7 @@ export function ToolbarUnfurl({
                   boxShadow: pillShadow,
                   backdropFilter: "blur(24px)",
                   transform: `scale(${mix(0.55, 1, pop) * punchS})`,
-                  opacity: ramp(frame, B.pop, 6, LIGHT),
+                  opacity: ramp(frame, popEl.start, popEl.beat("fade"), LIGHT),
                 }}
               />
               <div
@@ -595,7 +638,9 @@ export function ToolbarUnfurl({
                   position: "absolute",
                   left: restPt.x - 6,
                   top: restPt.y - 4,
-                  opacity: cursorFade * ramp(frame, -4, 6, LIGHT),
+                  opacity:
+                    cursorFade *
+                    ramp(frame, cursorEl.start, cursorEl.length, LIGHT),
                   transform: `${cursorTravel}scale(${1 - 0.04 * press})`,
                   transformOrigin: "20% 15%",
                 }}

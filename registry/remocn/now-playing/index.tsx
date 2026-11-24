@@ -9,6 +9,13 @@ import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_LYRICS,
+  MINI_OFFSET,
+  type NowPlayingElementId,
+  nowPlayingTimeline,
+} from "./timeline";
 
 const figtree = loadFont("normal", {
   weights: ["300", "400"],
@@ -44,18 +51,13 @@ export interface NowPlayingProps {
   speed?: number;
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
+  /**
+   * Moves, trims or stretches the finger's taps, the scroll to the lyrics
+   * and single lyric lines, by the ids in `./timeline`. Frames on the scene
+   * timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<NowPlayingElementId>;
 }
-
-const DEFAULT_LYRICS = [
-  "Shipped it at midnight",
-  "and the build came green",
-  "every frame in motion",
-  "every pixel in line",
-  "press play on launch day",
-  "watch the counter climb",
-  "we wrote it all in React",
-  "and rendered it in time",
-];
 
 const SW = 393;
 const SH = 852;
@@ -67,14 +69,6 @@ const PLAY = { x: SW / 2, y: 650 };
 const HEART = { x: SW - 38, y: 524 };
 const MINI_Y = SH - 84 - 62;
 const MINI_ART = { x: 8, y: 8, s: 40 };
-
-const TAP_PLAY = 28;
-const TAP_HEART = 64;
-const LYRICS = 100;
-const LINE0 = 124;
-const LINE_LEN = 18;
-const MINI_TAP = 30;
-const MINI_OFFSET = 52;
 
 const clamp = { extrapolateLeft: "clamp", extrapolateRight: "clamp" } as const;
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
@@ -779,34 +773,52 @@ function ScaleLayer({
   );
 }
 
-export function NowPlaying({
-  title = "Launch Day",
-  artist = "remocn",
-  playlist = "Launch Week Mix",
-  src,
-  tint = "#B8553A",
-  lyrics = DEFAULT_LYRICS,
-  duration = 165,
-  variant = "full",
-  nowPlayingLabel = "Now playing",
-  pausedLabel = "Paused",
-  lineHold = LINE_LEN,
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = figtree.fontFamily,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  ground,
-  groundParams,
-}: NowPlayingProps) {
+export function NowPlaying(props: NowPlayingProps) {
+  const {
+    title = "Launch Day",
+    artist = "remocn",
+    playlist = "Launch Week Mix",
+    src,
+    tint = "#B8553A",
+    lyrics = DEFAULT_LYRICS,
+    duration = 165,
+    variant = "full",
+    nowPlayingLabel = "Now playing",
+    pausedLabel = "Paused",
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = figtree.fontFamily,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    ground,
+    groundParams,
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay);
-  const { fps, width, height } = useSceneConfig();
+  const { fps, width, height, durationInFrames } = useSceneConfig();
   const f = frame * speed;
+  const tl = useTimeline(
+    nowPlayingTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const mini = variant === "mini";
   const t = f - (mini ? MINI_OFFSET : 0);
+  // The schedule counts scene frames; the player's own clock `t` runs
+  // `off` behind them in the mini variant.
+  const off = mini ? MINI_OFFSET : 0;
+  const phoneEl = tl.get("phone");
+  const reach = tl.get("reach");
+  const playEl = tl.get("play");
+  const heartEl = tl.get("heart");
+  const lyricEls = lyrics.map((_, i) => tl.get(`lyric:${i}`));
+  const playAt = playEl.start - off;
+  const heartAt = heartEl.start - off;
+  const lyricsAt = tl.get("scroll").start - off;
   const portrait = height > width;
   const stageW = portrait ? 720 : 1280;
   const stageH = portrait ? 1280 : 720;
@@ -817,31 +829,39 @@ export function NowPlaying({
   const sp = (at: number, config: typeof CARD | typeof MORPH = CARD) =>
     spring({ frame: t - at, fps, config });
 
-  const rise = spring({ frame: f, fps, config: HEAVY });
-  const playing = sp(TAP_PLAY, MORPH);
-  const elapsed = 24 + Math.max(0, t - TAP_PLAY) / 30;
+  const rise = spring({ frame: f - phoneEl.start, fps, config: HEAVY });
+  const playing = sp(playAt, MORPH);
+  const elapsed = 24 + Math.max(0, t - playAt) / 30;
   const progress = Math.min(1, elapsed / duration);
-  const liked = sp(TAP_HEART, CHIP);
-  const artScale = 0.94 + 0.06 * sp(TAP_PLAY, CARD);
+  const liked = sp(heartAt, CHIP);
+  const artScale = 0.94 + 0.06 * sp(playAt, CARD);
   const heartPop =
-    t < TAP_HEART
+    t < heartAt
       ? 1
       : 1 +
         0.3 *
-          (1 - spring({ frame: t - TAP_HEART, fps, config: CHIP })) *
-          Math.min(1, (t - TAP_HEART) / 2);
+          (1 - spring({ frame: t - heartAt, fps, config: CHIP })) *
+          Math.min(1, (t - heartAt) / 2);
 
-  const scroll = 430 * sp(LYRICS, { mass: 1, damping: 24, stiffness: 90 });
-  const lineT = (t - LINE0) / lineHold;
+  const scroll = 430 * sp(lyricsAt, { mass: 1, damping: 24, stiffness: 90 });
+  const first = lyricEls[0];
+  const lineT = first ? (t - (first.start - off)) / first.length : 0;
   const maxShift = Math.max(0, lyrics.length * 42 - 340);
   let listShift = 0;
   for (let i = 4; i < lyrics.length; i++) {
     listShift +=
-      42 * spring({ frame: t - (LINE0 + i * lineHold), fps, config: MORPH });
+      42 * spring({ frame: t - (lyricEls[i].start - off), fps, config: MORPH });
   }
   listShift = Math.min(maxShift, listShift);
 
-  const ex = mini ? spring({ frame: f - MINI_TAP - 2, fps, config: HEAVY }) : 1;
+  const openEl = mini ? tl.get("open") : undefined;
+  const ex = openEl
+    ? spring({
+        frame: f - openEl.start - openEl.beat("expandAt"),
+        fps,
+        config: HEAVY,
+      })
+    : 1;
   const sheet = {
     top: lerp(MINI_Y, 0, ex),
     left: lerp(8, 0, ex),
@@ -859,17 +879,20 @@ export function NowPlaying({
     easing: ENTER,
   });
 
-  const off = mini ? MINI_OFFSET : 0;
-  const keys = mini
+  const keys = openEl
     ? [
-        { at: 8, x: 300, y: 760 },
-        { at: MINI_TAP - 14, x: 170, y: MINI_Y + 28 },
-        { at: MINI_OFFSET - 4, x: 250, y: 760 },
+        { at: reach.start, x: 300, y: 760 },
+        {
+          at: openEl.start + openEl.beat("approachAt"),
+          x: 170,
+          y: MINI_Y + 28,
+        },
+        { at: openEl.start + openEl.beat("leaveAt"), x: 250, y: 760 },
       ]
-    : [{ at: 4, x: 270, y: 770 }];
+    : [{ at: reach.start, x: 270, y: 770 }];
   keys.push(
-    { at: TAP_PLAY - 16 + off, x: PLAY.x, y: PLAY.y },
-    { at: TAP_HEART - 16 + off, x: HEART.x, y: HEART.y },
+    { at: playEl.start + playEl.beat("approachAt"), x: PLAY.x, y: PLAY.y },
+    { at: heartEl.start + heartEl.beat("approachAt"), x: HEART.x, y: HEART.y },
   );
   let tap = { x: keys[0].x, y: keys[0].y };
   for (let i = 1; i < keys.length; i++) {
@@ -883,10 +906,15 @@ export function NowPlaying({
       y: lerp(a.y, b.y, e) + (b.x - a.x) * bow,
     };
   }
-  const lastTap = TAP_HEART + off;
+  const lastTap = heartEl.start;
   const tapOpacity = interpolate(
     f,
-    [keys[0].at, keys[0].at + 6, lastTap + 6, lastTap + 14],
+    [
+      keys[0].at,
+      keys[0].at + reach.beat("fadeIn"),
+      lastTap + heartEl.beat("fadeAt"),
+      lastTap + heartEl.beat("fadeEnd"),
+    ],
     [0, 0.9, 0.9, 0],
     { ...clamp, easing: ENTER },
   );
@@ -897,11 +925,11 @@ export function NowPlaying({
         spring({ frame: f - at, fps, config: CHIP }),
     );
   const tapPress = Math.max(
-    click(TAP_PLAY + off),
-    click(TAP_HEART + off),
-    mini ? click(MINI_TAP) : 0,
+    click(playEl.start),
+    click(heartEl.start),
+    openEl ? click(openEl.start) : 0,
   );
-  const playPress = click(TAP_PLAY + off);
+  const playPress = click(playEl.start);
 
   const bg = mix(tint, "#000000", 0.42);
   const card = mix(tint, "#000000", 0.12);
@@ -909,7 +937,11 @@ export function NowPlaying({
 
   const items = [
     { at: -999, text: title, sub: artist },
-    ...lyrics.map((l, i) => ({ at: LINE0 + i * lineHold, text: l, sub: "" })),
+    ...lyrics.map((l, i) => ({
+      at: lyricEls[i].start - off,
+      text: l,
+      sub: "",
+    })),
   ];
   let cur = 0;
   for (let i = 0; i < items.length; i++) if (t >= items[i].at) cur = i;
@@ -979,7 +1011,7 @@ export function NowPlaying({
             </div>
           </div>
           <div style={{ position: "relative", width: 28, height: 28 }}>
-            <HeartBurst t={t - TAP_HEART} accent={accent} />
+            <HeartBurst t={t - heartAt} accent={accent} />
             <div style={{ transform: `scale(${heartPop})` }}>
               <Glyph
                 d={ICON.heart}
@@ -1352,10 +1384,18 @@ export function NowPlaying({
               top: textTop,
               width: textW,
               color: ink ?? "#fff",
-              opacity: interpolate(f, [10, 24], [0, 1], {
-                ...clamp,
-                easing: ENTER,
-              }),
+              opacity: interpolate(
+                f,
+                [
+                  phoneEl.start + phoneEl.beat("copyAt"),
+                  phoneEl.start + phoneEl.beat("copyEnd"),
+                ],
+                [0, 1],
+                {
+                  ...clamp,
+                  easing: ENTER,
+                },
+              ),
             }}
           >
             <div
@@ -1376,7 +1416,7 @@ export function NowPlaying({
                   transform: `scale(${Math.min(1, playing)})`,
                 }}
               />
-              {t < TAP_PLAY ? pausedLabel : nowPlayingLabel} · {playlist}
+              {t < playAt ? pausedLabel : nowPlayingLabel} · {playlist}
             </div>
             <div
               style={{
@@ -1393,17 +1433,33 @@ export function NowPlaying({
                 const inP = isCur
                   ? idx === 0
                     ? 1
-                    : interpolate(t, [it.at + 4, it.at + 15], [0, 1], {
-                        ...clamp,
-                        easing: ENTER,
-                      })
+                    : interpolate(
+                        t,
+                        [
+                          it.at + lyricEls[idx - 1].beat("inAt"),
+                          it.at + lyricEls[idx - 1].beat("inEnd"),
+                        ],
+                        [0, 1],
+                        {
+                          ...clamp,
+                          easing: ENTER,
+                        },
+                      )
                   : 1;
                 const outP = isCur
                   ? 0
-                  : interpolate(t, [items[cur].at, items[cur].at + 6], [0, 1], {
-                      ...clamp,
-                      easing: EXIT,
-                    });
+                  : interpolate(
+                      t,
+                      [
+                        items[cur].at,
+                        items[cur].at + lyricEls[cur - 1].beat("out"),
+                      ],
+                      [0, 1],
+                      {
+                        ...clamp,
+                        easing: EXIT,
+                      },
+                    );
                 if (outP >= 1) return null;
                 return (
                   <div

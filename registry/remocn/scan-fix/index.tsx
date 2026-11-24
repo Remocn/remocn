@@ -16,6 +16,9 @@ import {
   useAuditFrame,
   VersionChip,
 } from "@/lib/remocn/audit-core";
+import { useSceneConfig } from "@/lib/remocn/frame-rate";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import { type ScanFixElementId, scanFixTimeline } from "./timeline";
 
 export type ScanFixProps = {
   /** Frame before the fix, 1280x720. Defaults to the demo dashboard with red redlines. */
@@ -31,6 +34,11 @@ export type ScanFixProps = {
   afterColor?: string;
   background?: string;
   speed?: number;
+  /**
+   * Moves, trims or stretches the scan, by the ids in `./timeline`. Frames
+   * on the scene timeline, after `speed`.
+   */
+  timing?: Timing<ScanFixElementId>;
 };
 
 export const scanFixDefaults = {
@@ -44,9 +52,6 @@ export const scanFixDefaults = {
 };
 
 export const scanFixLength = 100;
-
-const SCAN_START = 18;
-const SCAN_LENGTH = 80;
 
 export function ScanFix(props: ScanFixProps) {
   const { speed = 1 } = props;
@@ -86,29 +91,36 @@ function DemoAfter({ color }: { color: string }) {
   );
 }
 
-function Scene({
-  before,
-  after,
-  brand = scanFixDefaults.brand,
-  versions = scanFixDefaults.versions,
-  scanColor = scanFixDefaults.scanColor,
-  beforeColor = scanFixDefaults.beforeColor,
-  afterColor = scanFixDefaults.afterColor,
-  background = scanFixDefaults.background,
-}: ScanFixProps) {
+function Scene(props: ScanFixProps) {
+  const {
+    before,
+    after,
+    brand = scanFixDefaults.brand,
+    versions = scanFixDefaults.versions,
+    scanColor = scanFixDefaults.scanColor,
+    beforeColor = scanFixDefaults.beforeColor,
+    afterColor = scanFixDefaults.afterColor,
+    background = scanFixDefaults.background,
+    speed = 1,
+    timing,
+  } = props;
   const frame = useAuditFrame();
-  const y = easeInOut(
-    frame,
-    [SCAN_START, SCAN_START + SCAN_LENGTH],
-    [-20, 760],
+  const { durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    scanFixTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
   );
+  const scan = tl.get("scan");
+  const y = easeInOut(frame, [scan.start, scan.end], [-20, 760]);
   const band = easeInOut(
     frame,
     [
-      SCAN_START - 4,
-      SCAN_START + 2,
-      SCAN_START + SCAN_LENGTH - 6,
-      SCAN_START + SCAN_LENGTH + 2,
+      scan.start + scan.beat("bandIn"),
+      scan.start + scan.beat("bandOn"),
+      scan.start + scan.beat("bandOff"),
+      scan.start + scan.beat("bandGone"),
     ],
     [0, 1, 1, 0],
   );

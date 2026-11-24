@@ -8,6 +8,8 @@ import { useId } from "react";
 import { AbsoluteFill, Easing, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import { type GotEmElementId, gotEmTimeline } from "./timeline";
 
 const { fontFamily: display } = loadFont("normal", {
   weights: ["500"],
@@ -78,6 +80,12 @@ export interface GotEmProps {
   delay?: number;
   theme?: "dark" | "light";
   speed?: number;
+  /**
+   * Moves, trims or stretches the intro, the spinner, the pause, the boom
+   * and the subline, by the ids in `./timeline`. Frames on the scene
+   * timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<GotEmElementId>;
 }
 
 // Unbounded 500 (fontTools, wght 500): cap 0.75; G .955 O .956 T .801
@@ -104,8 +112,6 @@ const DOTS = [0, 0.2, 0.385, 0.571];
 //  62–70   GOT ’EM explodes from 1.6× with a flash and a zoom-punch; the
 //          ticks shoot out into full-frame gradient rays
 //  74–     subline with the logo rises; poster hold, the rays turn slowly
-const PAUSE_AT = 48;
-const BOOM_AT = 62;
 const RAYS = 40;
 
 const SLAM = Easing.bezier(0.22, 1, 0.36, 1);
@@ -173,24 +179,37 @@ function ScaleLayer({
   );
 }
 
-export function GotEm({
-  pending = "Entry submitted",
-  title = "GOT ’EM",
-  subline = "You got remocn 2.0.",
-  logo,
-  pause = BOOM_AT - PAUSE_AT,
-  rays: rayCount = RAYS,
-  ink,
-  background,
-  fontFamily = display,
-  scale = 1,
-  delay = 0,
-  theme = "dark",
-  speed = 1,
-}: GotEmProps) {
+export function GotEm(props: GotEmProps) {
+  const {
+    pending = "Entry submitted",
+    title = "GOT ’EM",
+    subline = "You got remocn 2.0.",
+    logo,
+    rays: rayCount = RAYS,
+    ink,
+    background,
+    fontFamily = display,
+    scale = 1,
+    delay = 0,
+    theme = "dark",
+    speed = 1,
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H } = useSceneConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    gotEmTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const introEl = tl.get("intro");
+  const spinner = tl.get("spinner");
+  const pauseEl = tl.get("pause");
+  const boom = tl.get("boom");
+  const sublineEl = tl.get("subline");
+  const PAUSE_AT = pauseEl.start;
   const u = Math.min(W / 1280, H / 720);
   const c = THEMES[theme];
   const fg = ink ?? c.ink;
@@ -201,30 +220,31 @@ export function GotEm({
     background === undefined || background === "transparent"
       ? c.stage
       : background;
-  const boomAt = PAUSE_AT + pause;
+  const boomAt = boom.start;
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
   const cx = W / 2;
   const cy = H * 0.47;
 
   // ── Suspense ──
   const boomed = t >= boomAt;
-  const intro = SLAM(ramp(t, 0, 12));
+  const intro = SLAM(ramp(t, introEl.start, introEl.length));
   const paused = t >= PAUSE_AT;
   const dots = paused
     ? 3
     : t < 8
       ? 0
       : Math.min(3, Math.floor((t - 8) / 6) % 4);
-  const head = (Math.min(t, PAUSE_AT) - 6) * 13; // degrees, clockwise
-  const settle = ramp(t, PAUSE_AT, 6);
-  const creep = interpolate(t, [PAUSE_AT, boomAt], [1, 1.035], {
+  // degrees, clockwise
+  const head = (Math.min(t, PAUSE_AT) - spinner.start - 6) * 13;
+  const settle = ramp(t, PAUSE_AT, pauseEl.beat("settle"));
+  const creep = interpolate(t, [PAUSE_AT, pauseEl.end], [1, 1.035], {
     ...CLAMP,
     easing: Easing.bezier(0.33, 0, 0.67, 1),
   });
 
   // ── Boom ──
   const d = t - boomAt;
-  const zoom = SLAM(ramp(t, boomAt, 8));
+  const zoom = SLAM(ramp(t, boomAt, boom.length));
   const camScale = boomed ? 1.16 - 0.16 * zoom + 0.03 * kick(d - 5) : creep;
   const sh = shake(d - 5, 11 * u, 2.2);
   // The camera eases, kicks and shakes; it moves while any of that does.
@@ -233,8 +253,8 @@ export function GotEm({
     const s = shake(dd - 5, 11 * u, 2.2);
     const k =
       f >= boomAt
-        ? 1.16 - 0.16 * SLAM(ramp(f, boomAt, 8)) + 0.03 * kick(dd - 5)
-        : interpolate(f, [PAUSE_AT, boomAt], [1, 1.035], {
+        ? 1.16 - 0.16 * SLAM(ramp(f, boomAt, boom.length)) + 0.03 * kick(dd - 5)
+        : interpolate(f, [PAUSE_AT, pauseEl.end], [1, 1.035], {
             ...CLAMP,
             easing: Easing.bezier(0.33, 0, 0.67, 1),
           });
@@ -243,18 +263,18 @@ export function GotEm({
   const camMoving =
     Math.abs(camAt(t + speed) - camAt(t)) > 1e-3 ||
     Math.abs(camAt(t) - camAt(t - speed)) > 1e-3;
-  const titleP = SLAM(ramp(t, boomAt, 6));
+  const titleP = SLAM(ramp(t, boomAt, boom.beat("title")));
   const titleScale = 1.6 - 0.6 * titleP;
   const titleBlur = (1 - titleP) * 18;
   const flash = interpolate(
     t,
-    [boomAt, boomAt + 1, boomAt + 5],
+    [boomAt, boomAt + 1, boomAt + boom.beat("flash")],
     [0, 0.7, 0],
     CLAMP,
   );
   const spin = boomed ? d * 0.12 : 0;
-  const drift = ramp(t, boomAt, 70);
-  const rise = SLAM(ramp(t, boomAt + 12, 16));
+  const drift = ramp(t, boomAt, boom.beat("drift"));
+  const rise = SLAM(ramp(t, sublineEl.start, sublineEl.length));
 
   // ── Rays: ticks on a ring, then full-frame bars ──
   const R0 = 0.29 * H;

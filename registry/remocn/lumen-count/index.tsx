@@ -12,6 +12,8 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import { type LumenCountElementId, lumenCountTimeline } from "./timeline";
 
 const geist = loadGeist("normal", {
   weights: ["300", "400"],
@@ -41,6 +43,12 @@ export interface LumenCountProps {
   delay?: number;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches the count, the eyebrow, the flare and the
+   * label, by the ids in `./timeline`.
+   * Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<LumenCountElementId>;
 }
 
 const BEAM = ["#f4f7ff", "#8fb4ff", "#3d5bff", "#1a1660"] as const;
@@ -87,11 +95,6 @@ const THEMES = {
 
 const TRACK = -0.045;
 const FONT_PX = 200;
-const COUNT_AT = 6;
-const COUNT_END = 58;
-const FLARE_AT = 56;
-const LABEL_AT = 68;
-const SHIFT = 8;
 
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
 const EASE_COUNT = Easing.bezier(0.5, 0, 0.25, 1);
@@ -219,33 +222,45 @@ function ScaleLayer({
   );
 }
 
-export function LumenCount({
-  value = 200,
-  from = 1,
-  suffix = "",
-  label = "components, ready to light up your launch video",
-  eyebrow = "",
-  countFrames = COUNT_END - COUNT_AT,
-  glow = 1,
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = geist.fontFamily,
-  grain = true,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: LumenCountProps) {
+export function LumenCount(props: LumenCountProps) {
+  const {
+    value = 200,
+    from = 1,
+    suffix = "",
+    label = "components, ready to light up your launch video",
+    eyebrow = "",
+    glow = 1,
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = geist.fontFamily,
+    grain = true,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H } = useSceneConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    lumenCountTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const countEl = tl.get("count");
+  const eyeEl = tl.get("eyebrow");
+  const flareEl = tl.get("flare");
+  const labelEl = tl.get("label");
+  const countAt = countEl.start;
+  const countEnd = countEl.end;
+  const shift = countEl.beat("shift");
+  const flareAt = flareEl.start;
   const c = THEMES[theme];
   const bg =
     background === "transparent" ? "transparent" : (background ?? c.bg);
-  const countEnd = COUNT_AT + countFrames;
-  const flareAt = FLARE_AT + countEnd - COUNT_END;
-  const labelAt = LABEL_AT + countEnd - COUNT_END;
   const m = useMetrics(fontFamily);
 
   if (!m) {
@@ -256,7 +271,7 @@ export function LumenCount({
   const hi = Math.max(lo + 1, value);
   const valueAt = (u: number) => lo * (hi / lo) ** u;
   const uAt = (tt: number) =>
-    EASE_COUNT(interpolate(tt, [COUNT_AT, countEnd], [0, 1], CLAMP));
+    EASE_COUNT(interpolate(tt, [countAt, countEnd], [0, 1], CLAMP));
   const u = uAt(t);
   const v = u >= 1 ? value : valueAt(u);
   const text = `${fmt(v)}${suffix}`;
@@ -264,11 +279,11 @@ export function LumenCount({
 
   const b0 = Math.log(v / lo) / Math.log(hi / lo);
   const flare =
-    interpolate(t, [flareAt, flareAt + 5], [0, 1], {
+    interpolate(t, [flareAt, flareAt + flareEl.beat("rise")], [0, 1], {
       ...CLAMP,
       easing: EASE_OUT,
     }) *
-    interpolate(t, [flareAt + 6, flareAt + 24], [1, 0], {
+    interpolate(t, [flareAt + flareEl.beat("fadeFrom"), flareEl.end], [1, 0], {
       ...CLAMP,
       easing: Easing.bezier(0.65, 0, 0.35, 1),
     });
@@ -278,13 +293,13 @@ export function LumenCount({
   const wEffAt = (tt: number) => {
     let acc = m.width(`${fmt(lo)}${suffix}`);
     let prev = acc;
-    for (let s = COUNT_AT; s <= countEnd + 1; s += 0.5) {
+    for (let s = countAt; s <= countEnd + 1; s += 0.5) {
       const uu = uAt(s);
       const w = m.width(`${fmt(uu >= 1 ? value : valueAt(uu))}${suffix}`);
       if (w !== prev) {
         acc +=
           (w - prev) *
-          interpolate(tt, [s, s + SHIFT], [0, 1], {
+          interpolate(tt, [s, s + shift], [0, 1], {
             ...CLAMP,
             easing: EASE_OUT,
           });
@@ -344,9 +359,9 @@ export function LumenCount({
         const w = ((isDigit ? m.digit : m.width(ch)) + TRACK) * F;
         let dy = 0;
         let op = 1;
-        if (i === 0 && lead >= 0 && t > COUNT_AT) {
+        if (i === 0 && lead >= 0 && t > countAt) {
           let since = 99;
-          for (let s = t; s > t - SHIFT && s >= COUNT_AT; s -= 0.5) {
+          for (let s = t; s > t - shift && s >= countAt; s -= 0.5) {
             const uu = uAt(s - 0.5);
             const before = fmt(uu >= 1 ? value : valueAt(uu)).length;
             if (before < fmt(v).length) {
@@ -354,8 +369,8 @@ export function LumenCount({
               break;
             }
           }
-          if (since < SHIFT) {
-            const p = EASE_OUT(since / SHIFT);
+          if (since < shift) {
+            const p = EASE_OUT(since / shift);
             dy = (1 - p) * F * 0.18;
             op = p;
           }
@@ -387,11 +402,11 @@ export function LumenCount({
   const fillOn = Math.min(1, Math.max(0, (b - 0.35) / 0.65)) * (1 - flare);
   const flareCol = flare;
   const glowB = Math.min(1.6, b + flare * 0.6);
-  const labP = interpolate(t, [labelAt, labelAt + 18], [0, 1], {
+  const labP = interpolate(t, [labelEl.start, labelEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
-  const eyeP = interpolate(t, [countEnd - 10, countEnd + 8], [0, 1], {
+  const eyeP = interpolate(t, [eyeEl.start, eyeEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });

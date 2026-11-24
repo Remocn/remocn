@@ -6,6 +6,13 @@ import type React from "react";
 import { AbsoluteFill, Easing, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_SCORERS,
+  PREROLL,
+  type ScoreBugElementId,
+  scoreBugTimeline,
+} from "./timeline";
 
 const { fontFamily: condensed } = loadFont("normal", {
   weights: ["500"],
@@ -79,6 +86,12 @@ export interface ScoreBugProps {
   delay?: number;
   theme?: "dark" | "light";
   speed?: number;
+  /**
+   * Moves, trims or stretches the entrance, single goals and the flash band,
+   * by the ids in `./timeline`. Frames on the scene timeline, after `delay`
+   * and `speed`.
+   */
+  timing?: Timing<ScoreBugElementId>;
 }
 
 // Beat sheet (internal clock = frame + 2, 30fps, speed 1, score 2):
@@ -91,14 +104,6 @@ export interface ScoreBugProps {
 //  60–82   the gradient "Shipped" band sweeps across; while it covers the
 //          panel the tab turns to "Full time" and the opponent dims
 //  82–     poster scoreline holds
-const GOAL_AT = 30;
-const GOAL_GAP = 18;
-const FLIP = 6;
-const BAND_DELAY = 12;
-const BAND_IN = 7;
-const BAND_HOLD = 9;
-const BAND_OUT = 7;
-
 const SLAM = Easing.bezier(0.22, 1, 0.36, 1);
 const FLIPEASE = Easing.bezier(0.7, 0, 0.25, 1);
 const EXIT = Easing.bezier(0.6, 0, 0.9, 0.4);
@@ -169,41 +174,49 @@ function ScaleLayer({
   );
 }
 
-export function ScoreBug({
-  away = "Old way",
-  score = 2,
-  awayScore = 0,
-  scorers = ["Install 12′", "Ship 47′"],
-  flash = "Shipped",
-  liveLabel = "Live · 2nd half",
-  finalLabel = "Full time",
-  accent = "#3B5BFD",
-  background,
-  fontFamily = condensed,
-  firstGoal = GOAL_AT,
-  goalGap = GOAL_GAP,
-  logo,
-  scale = 1,
-  delay = 0,
-  theme = "dark",
-  speed = 1,
-}: ScoreBugProps) {
+export function ScoreBug(props: ScoreBugProps) {
+  const {
+    away = "Old way",
+    score = 2,
+    awayScore = 0,
+    scorers = DEFAULT_SCORERS,
+    flash = "Shipped",
+    liveLabel = "Live · 2nd half",
+    finalLabel = "Full time",
+    accent = "#3B5BFD",
+    background,
+    fontFamily = condensed,
+    logo,
+    scale = 1,
+    delay = 0,
+    theme = "dark",
+    speed = 1,
+    timing,
+  } = props;
   const glide = useGlide();
   // Starts two frames in, so frame 0 already shows the core opening.
-  const t = Math.max(0, useSceneFrame() - delay) * speed + 2;
-  const { width: W, height: H } = useSceneConfig();
+  const t = Math.max(0, useSceneFrame() - delay) * speed + PREROLL;
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    scoreBugTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const c = THEMES[theme];
   const stage =
     background === "transparent" ? "transparent" : (background ?? c.stage);
   const u = Math.min(W / 1280, H / 720);
 
   const goals = Math.max(0, Math.floor(score));
-  const goalAt = Array.from(
-    { length: goals },
-    (_, i) => firstGoal + i * goalGap,
-  );
-  const bandAt = (goalAt[goals - 1] ?? firstGoal - goalGap) + BAND_DELAY;
-  const fullTimeAt = bandAt + BAND_IN + 4;
+  // The schedule counts scene frames; `t` runs `PREROLL` ahead of them.
+  const open = tl.get("open");
+  const openAt = open.start + PREROLL;
+  const goalEls = Array.from({ length: goals }, (_, i) => tl.get(`goal:${i}`));
+  const goalAt = goalEls.map((g) => g.start + PREROLL);
+  const band = tl.get("band");
+  const bandAt = band.start + PREROLL;
+  const fullTimeAt = bandAt + band.beat("final");
   const fullTime = t >= fullTimeAt;
 
   // ── Layout ────────────────────────────────────────────────────────────────
@@ -219,14 +232,23 @@ export function ScoreBug({
   const cellW = 140 * u;
 
   // ── Entrance ──────────────────────────────────────────────────────────────
-  const coreOpen = SLAM(ramp(t, 0, 6));
-  const blockOut = SLAM(ramp(t, 3, 10));
-  const nameIn = SLAM(ramp(t, 8, 9));
-  const digitIn = SLAM(ramp(t, 6, 8));
-  const tabUp = SLAM(ramp(t, 12, 8));
+  const coreOpen = SLAM(ramp(t, openAt, open.beat("core")));
+  const blockOut = SLAM(
+    ramp(t, openAt + open.beat("blocksAt"), open.beat("blocks")),
+  );
+  const nameIn = SLAM(
+    ramp(t, openAt + open.beat("namesAt"), open.beat("names")),
+  );
+  const digitIn = SLAM(
+    ramp(t, openAt + open.beat("digitsAt"), open.beat("digits")),
+  );
+  const tabUp = SLAM(ramp(t, openAt + open.beat("tabAt"), open.beat("tab")));
 
   // Every hit nudges the panel up in scale for a beat.
-  const hits = [5, ...goalAt.map((g) => g + 2)];
+  const hits = [
+    openAt + open.beat("kick"),
+    ...goalEls.map((g, i) => goalAt[i] + g.beat("kick")),
+  ];
   const bumpAt = (at: number) =>
     hits.reduce((a, h) => Math.max(a, kick(at - h)), 0);
   const panelScale = 1 + 0.022 * bumpAt(t);
@@ -242,18 +264,19 @@ export function ScoreBug({
   for (let i = 0; i < goals; i++) {
     if (t >= goalAt[i]) {
       home = i + 1;
-      flipP = FLIPEASE(ramp(t, goalAt[i], FLIP));
+      flipP = FLIPEASE(ramp(t, goalAt[i], goalEls[i].beat("flip")));
     }
   }
   const prev = home - 1;
 
-  const blockFlash = goalAt.reduce((a, g) => {
-    const d = t - g - 1;
-    if (d < 0 || d > 10) return a;
-    return Math.max(a, (1 - d / 10) ** 2);
+  const blockFlash = goalEls.reduce((a, g, i) => {
+    const d = t - goalAt[i] - g.beat("flashAt");
+    const len = g.beat("flash");
+    if (d < 0 || d > len) return a;
+    return Math.max(a, (1 - d / len) ** 2);
   }, 0);
 
-  const awayDimP = ramp(t, fullTimeAt, 6);
+  const awayDimP = ramp(t, fullTimeAt, band.beat("dim"));
   const awayBg = fullTime ? c.awayOff : c.away;
   const awayInk = awayDimP > 0 ? c.awayDim : c.awayInk;
 
@@ -276,11 +299,11 @@ export function ScoreBug({
     14 * u;
   const bandH = bandBottom - bandTop;
   const slant = 0.2 * bandH;
-  const bandIn = SLAM(ramp(t, bandAt, BAND_IN));
-  const bandOut = EXIT(ramp(t, bandAt + BAND_IN + BAND_HOLD, BAND_OUT));
+  const bandIn = SLAM(ramp(t, bandAt, band.beat("in")));
+  const bandOut = EXIT(ramp(t, bandAt + band.beat("outAt"), band.beat("out")));
   const span = W + 2 * slant;
   const bandX = -span * (1 - bandIn) + span * bandOut;
-  const hold = ramp(t, bandAt + BAND_IN, BAND_HOLD);
+  const hold = ramp(t, bandAt + band.beat("in"), band.beat("hold"));
   const textLag =
     -0.16 * W * (1 - bandIn) + 0.025 * W * hold + 0.22 * W * bandOut;
   const bandVisible = t >= bandAt && bandOut < 1;
@@ -517,7 +540,10 @@ export function ScoreBug({
 
           {/* Scorer lines under the home block. */}
           {scorers.slice(0, goals).map((line, i) => {
-            const p = SLAM(ramp(t, goalAt[i] + 4, 8));
+            const g = goalEls[i];
+            const p = SLAM(
+              ramp(t, goalAt[i] + g.beat("scorerAt"), g.beat("scorer")),
+            );
             return (
               <div
                 key={`${i}-${line}`}

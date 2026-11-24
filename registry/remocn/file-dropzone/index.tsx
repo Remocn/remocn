@@ -16,6 +16,12 @@ import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_FILES,
+  type FileDropzoneElementId,
+  fileDropzoneTimeline,
+} from "./timeline";
 
 const geist = loadGeist("normal", {
   weights: ["300", "400"],
@@ -64,13 +70,13 @@ export interface FileDropzoneProps {
   theme?: "light" | "dark";
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
+  /**
+   * Moves, trims or stretches the modal, the cursor's drop, each file's row
+   * and upload, the click and the close, by the ids in `./timeline`. Frames
+   * on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<FileDropzoneElementId>;
 }
-
-const DEFAULT_FILES: DropFile[] = [
-  { name: "Q3-board-deck.pdf", size: 4_200_000 },
-  { name: "hero-shot@2x.png", size: 1_800_000 },
-  { name: "customers-export.csv", size: 640_000 },
-];
 
 const BG_ROWS = [
   ["Brand guidelines 2026.pdf", "PDF", "2.1 MB", "Oct 21"],
@@ -103,14 +109,6 @@ const tween = (
   len: number,
   easing: (t: number) => number,
 ) => interpolate(f, [from, from + len], [0, 1], { ...CL, easing });
-
-const BEAT = {
-  window: 0,
-  modal: 6,
-  cursor: 10,
-  hover: 32,
-  drop: 46,
-};
 
 const HEADER_H = 76;
 const DZ_OPEN = 176;
@@ -401,28 +399,47 @@ function ScaleLayer({
   );
 }
 
-export function FileDropzone({
-  files = DEFAULT_FILES,
-  title = "Upload files",
-  destination = "Research",
-  image = staticFile("reel/reel-2.jpg"),
-  prompt = "Drop files here or",
-  releaseLabel = "Release to upload",
-  hint = "PDF, PNG or CSV, up to 50 MB",
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = geist.fontFamily,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "light",
-  ground,
-  groundParams,
-}: FileDropzoneProps) {
+export function FileDropzone(props: FileDropzoneProps) {
+  const {
+    files = DEFAULT_FILES,
+    title = "Upload files",
+    destination = "Research",
+    image = staticFile("reel/reel-2.jpg"),
+    prompt = "Drop files here or",
+    releaseLabel = "Release to upload",
+    hint = "PDF, PNG or CSV, up to 50 MB",
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = geist.fontFamily,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "light",
+    ground,
+    groundParams,
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width, height, fps } = useSceneConfig();
+  const { width, height, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    fileDropzoneTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const appEl = tl.get("app");
+  const modalEl = tl.get("modal");
+  const cameraEl = tl.get("camera");
+  const cursorEl = tl.get("cursor");
+  const hoverEl = tl.get("hover");
+  const dropEl = tl.get("drop");
+  const enableEl = tl.get("enable");
+  const clickEl = tl.get("click");
+  const closeEl = tl.get("close");
+  const tableEl = tl.get("table");
+  const toastEl = tl.get("toast");
   const tall = height > width;
   const SW = tall ? 600 : 1280;
   const SH = tall ? (600 * height) / width : 720;
@@ -448,43 +465,35 @@ export function FileDropzone({
   const modalLeft = (SW - MODAL_W) / 2;
   const centerY = tall ? 480 : SH / 2 - 4;
 
-  const rowAt = list.map((_, i) => BEAT.drop + 4 + i * 4);
+  const rowAt = list.map((_, i) => tl.get(`row:${i}`).start);
   const rowIn = rowAt.map((at) => sp(at, SPR.card));
-  const dur = list.map((f) =>
-    Math.round(Math.min(50, Math.max(24, 20 + (f.size / 1_000_000) * 7))),
-  );
-  const startAt = rowAt.map((at) => at + 4);
-  const doneAt = list.map((_, i) => startAt[i] + dur[i]);
-  const progress = list.map((_, i) =>
+  const uploads = list.map((_, i) => tl.get(`upload:${i}`));
+  const doneAt = uploads.map((e) => e.end);
+  const progress = uploads.map((e) =>
     interpolate(
       frame,
-      [
-        startAt[i],
-        startAt[i] + dur[i] * 0.42,
-        startAt[i] + dur[i] * 0.62,
-        doneAt[i],
-      ],
+      [e.start, e.start + e.length * 0.42, e.start + e.length * 0.62, e.end],
       [0, 0.47, 0.58, 1],
       { ...CL, easing: EASE.move },
     ),
   );
-  const allDone = Math.max(...doneAt, BEAT.drop + 10);
-  const ENABLE = allDone + 2;
-  const TO_BTN = allDone - 12;
-  const CLICK = ENABLE + 10;
-  const CLOSE = CLICK + 4;
-  const TABLE = CLOSE + 4;
-  const TOAST = CLOSE + 12;
+  const ENABLE = enableEl.start;
+  const TO_BTN = ENABLE + enableEl.beat("reach");
+  const CLICK = clickEl.start;
+  const CLOSE = closeEl.start;
+  const TABLE = tableEl.start;
+  const TOAST = toastEl.start;
 
+  const shutAt = dropEl.start + dropEl.beat("shut");
   const modalHAt = (f: number) =>
     HEADER_H +
     DZ_OPEN +
-    (DZ_SHUT - DZ_OPEN) * spAt(f, BEAT.drop + 2, SPR.morph) +
+    (DZ_SHUT - DZ_OPEN) * spAt(f, shutAt, SPR.morph) +
     12 +
     rowAt.reduce((a, at) => a + Math.min(1, spAt(f, at, SPR.card)), 0) * ROW_H +
     8 +
     FOOTER_H;
-  const shut = sp(BEAT.drop + 2, SPR.morph);
+  const shut = sp(shutAt, SPR.morph);
   const dzH = DZ_OPEN + (DZ_SHUT - DZ_OPEN) * shut;
   const listH = rowIn.reduce((a, b) => a + Math.min(1, b), 0) * ROW_H;
   const modalH = HEADER_H + dzH + 12 + listH + 8 + FOOTER_H;
@@ -503,10 +512,15 @@ export function FileDropzone({
   const zone = { x: SW / 2 + (tall ? 70 : 120), y: centerY - 76 };
   const aside = { x: zone.x + (tall ? 110 : 190), y: zone.y + 150 };
   const legs = [
-    { at: BEAT.cursor, from: start, to: zone, arc: -1 },
-    { at: BEAT.drop + 6, from: zone, to: aside, arc: 1 },
+    { at: cursorEl.start, from: start, to: zone, arc: -1 },
+    { at: dropEl.start + dropEl.beat("aside"), from: zone, to: aside, arc: 1 },
     { at: TO_BTN, from: aside, to: btn, arc: -1 },
-    { at: CLICK + 12, from: btn, to: { x: btn.x + 46, y: btn.y + 64 }, arc: 1 },
+    {
+      at: CLICK + clickEl.beat("leave"),
+      from: btn,
+      to: { x: btn.x + 46, y: btn.y + 64 },
+      arc: 1,
+    },
   ];
   const cursorAt = (f: number) => {
     let x = start.x;
@@ -528,30 +542,38 @@ export function FileDropzone({
   const near = (v: number) => (Math.abs(v) < 1e-3 ? 0 : v);
   const curDx = near(cur.x - curEnd.x);
   const curDy = near(cur.y - curEnd.y);
-  const held = cursorAt(Math.min(frame, BEAT.drop) - 2);
-  const press = clamp01(sp(CLICK - 2, SPR.chip) - sp(CLICK + 3, SPR.chip));
+  const held = cursorAt(Math.min(frame, dropEl.start) + dropEl.beat("held"));
+  const pressDown = CLICK + clickEl.beat("down");
+  const pressUp = CLICK + clickEl.beat("up");
+  const press = clamp01(sp(pressDown, SPR.chip) - sp(pressUp, SPR.chip));
 
-  const hot = clamp01(sp(BEAT.hover, SPR.card) - sp(BEAT.drop + 2, SPR.card));
-  const winIn = sp(BEAT.window, SPR.heavy);
-  const winOp = tween(frame, BEAT.window, 10, EASE.enter);
-  const modalOp = tween(frame, BEAT.modal, 8, EASE.enter);
-  const close = tween(frame, CLOSE, 8, EASE.exit);
+  const hot = clamp01(sp(hoverEl.start, SPR.card) - sp(shutAt, SPR.card));
+  const winIn = sp(appEl.start, SPR.heavy);
+  const winOp = tween(frame, appEl.start, appEl.length, EASE.enter);
+  const modalOp = tween(frame, modalEl.start, modalEl.beat("fade"), EASE.enter);
+  const close = tween(frame, CLOSE, closeEl.beat("out"), EASE.exit);
   const dim =
-    tween(frame, BEAT.modal, 12, EASE.soft) *
-    (1 - tween(frame, CLOSE, 12, EASE.soft));
-  const enabled = tween(frame, ENABLE, 6, EASE.enter);
+    tween(frame, modalEl.start, modalEl.beat("dim"), EASE.soft) *
+    (1 - tween(frame, CLOSE, closeEl.beat("dim"), EASE.soft));
+  const enabled = tween(frame, ENABLE, enableEl.beat("fade"), EASE.enter);
   const toastIn = sp(TOAST, SPR.card);
-  const toastOp = tween(frame, TOAST, 6, EASE.enter);
+  const toastOp = tween(frame, TOAST, toastEl.length, EASE.enter);
   const camAt = (f: number) =>
     1 +
-    0.035 * tween(f, 8, 54, EASE.camera) -
-    0.035 * tween(f, CLOSE - 2, 26, EASE.camera);
+    0.035 * tween(f, cameraEl.start, cameraEl.length, EASE.camera) -
+    0.035 *
+      tween(
+        f,
+        CLOSE + closeEl.beat("camera"),
+        closeEl.beat("cameraOut"),
+        EASE.camera,
+      );
   const cam = camAt(frame);
   // The camera carries the whole scene, so its tilt covers everything under
   // it; the movers below tilt themselves only while it holds still.
   const camMoving = stirs(camAt, 1e-6);
   const winMoving = stirs(
-    (f) => (1 - spAt(f, BEAT.window, SPR.heavy)) * 40,
+    (f) => (1 - spAt(f, appEl.start, SPR.heavy)) * 40,
     5e-4,
   );
   // The modal stays laid out at its final top; its recentring as the drop
@@ -559,25 +581,32 @@ export function FileDropzone({
   // rounds a box and a baseline to whole pixels.
   const modalYAt = (f: number) =>
     (finalH - modalHAt(f)) / 2 +
-    (1 - spAt(f, BEAT.modal, SPR.card)) * 18 +
-    tween(f, CLOSE, 8, EASE.exit) * 10;
+    (1 - spAt(f, modalEl.start, SPR.card)) * 18 +
+    tween(f, CLOSE, closeEl.beat("out"), EASE.exit) * 10;
   const modalSAt = (f: number) =>
-    (0.97 + 0.03 * spAt(f, BEAT.modal, SPR.card)) *
-    (1 - 0.03 * tween(f, CLOSE, 8, EASE.exit));
+    (0.97 + 0.03 * spAt(f, modalEl.start, SPR.card)) *
+    (1 - 0.03 * tween(f, CLOSE, closeEl.beat("out"), EASE.exit));
   const modalMoving =
     !camMoving && (stirs(modalYAt, 5e-4) || stirs(modalSAt, 1e-6));
   const toastMoving =
     !camMoving && stirs((f) => (1 - spAt(f, TOAST, SPR.card)) * 28, 1e-3);
   const pressAt = (f: number) =>
-    clamp01(spAt(f, CLICK - 2, SPR.chip) - spAt(f, CLICK + 3, SPR.chip));
+    clamp01(spAt(f, pressDown, SPR.chip) - spAt(f, pressUp, SPR.chip));
   const pressMoving = !camMoving && !modalMoving && stirs(pressAt, 1e-5);
+  const badgeAt = cursorEl.start + cursorEl.beat("badge");
   const badgeMoving =
     !camMoving &&
     (stirs((f) => cursorAt(f).y, 5e-4) ||
-      stirs((f) => spAt(f, BEAT.cursor + 4, SPR.chip), 1e-5));
-  const cursorOp = tween(frame, BEAT.cursor, 4, EASE.enter);
+      stirs((f) => spAt(f, badgeAt, SPR.chip), 1e-5));
+  const cursorOp = tween(
+    frame,
+    cursorEl.start,
+    cursorEl.beat("fade"),
+    EASE.enter,
+  );
   const badge =
-    sp(BEAT.cursor + 4, SPR.chip) * (1 - tween(frame, BEAT.drop, 5, EASE.exit));
+    sp(badgeAt, SPR.chip) *
+    (1 - tween(frame, dropEl.start, dropEl.beat("badgeOut"), EASE.exit));
   const total = list.reduce((a, f) => a + f.size, 0);
   const dzLive = hot > 0.5;
   // How far the zone's centred copy sits below where it ends up: half the
@@ -607,14 +636,23 @@ export function FileDropzone({
         { i: 2, w: 120 },
         { i: 3, w: 130 },
       ];
-  const tint = 1 - tween(frame, TABLE + 24, 40, EASE.soft);
+  const tint =
+    1 -
+    tween(
+      frame,
+      TABLE + tableEl.beat("tint"),
+      tableEl.beat("tintOut"),
+      EASE.soft,
+    );
   // The fresh rows open by height and push the rows below them. Every row is
   // laid out in the slot it ends up in and rides the gap still missing above
   // it as a transform: layout rounds a baseline to whole pixels, and the
   // spring's last wobble moved the rows below by a sixty-fourth of a pixel,
   // enough to step them. A row not open yet keeps its slot empty.
   const rowShort = (f: number, fresh: number) => {
-    const h = 54 * Math.min(1, spAt(f, TABLE + fresh * 4, SPR.card));
+    const h =
+      54 *
+      Math.min(1, spAt(f, TABLE + fresh * tableEl.beat("stagger"), SPR.card));
     return h <= 0.01 ? 55 : 54 - h;
   };
   const rowShiftAt = (f: number, row: number) =>
@@ -744,7 +782,9 @@ export function FileDropzone({
                   </div>
                   {table.map((r, row) => {
                     const fresh = r.fresh >= 0;
-                    const p = fresh ? sp(TABLE + r.fresh * 4, SPR.card) : 1;
+                    const p = fresh
+                      ? sp(TABLE + r.fresh * tableEl.beat("stagger"), SPR.card)
+                      : 1;
                     const hgt = 54 * Math.min(1, p);
                     if (fresh && hgt <= 0.01)
                       return <div key={r.cells[0]} style={{ height: 55 }} />;
@@ -952,11 +992,19 @@ export function FileDropzone({
                 {list.map((f, i) => {
                   const p = progress[i];
                   const done = frame >= doneAt[i];
-                  const tick = tween(frame, doneAt[i], 8, EASE.enter);
+                  const tick = tween(
+                    frame,
+                    doneAt[i],
+                    uploads[i].beat("tick"),
+                    EASE.enter,
+                  );
                   const before = rowIn
                     .slice(0, i)
                     .reduce((a, b) => a + Math.min(1, b), 0);
-                  const fly = sp(BEAT.drop + i * 3, SPR.card);
+                  const fly = sp(
+                    dropEl.start + i * dropEl.beat("stagger"),
+                    SPR.card,
+                  );
                   return (
                     <div
                       key={f.name}
@@ -1191,7 +1239,10 @@ export function FileDropzone({
 
             {list.map((f, i) => {
               const kk = i - (n - 1) / 2;
-              const appear = sp(BEAT.cursor + i * 2, SPR.card);
+              const appear = sp(
+                cursorEl.start + i * cursorEl.beat("stagger"),
+                SPR.card,
+              );
               const rest = {
                 x: held.x + 44 + kk * 20,
                 y: held.y + 62 + Math.abs(kk) * 6,
@@ -1200,7 +1251,10 @@ export function FileDropzone({
                 x: modalLeft + PAD + THUMB.w / 2,
                 y: rowsTop + i * ROW_H + ROW_H / 2,
               };
-              const fly = sp(BEAT.drop + i * 3, SPR.card);
+              const fly = sp(
+                dropEl.start + i * dropEl.beat("stagger"),
+                SPR.card,
+              );
               const x = rest.x + (target.x - rest.x) * fly;
               const y = rest.y + (target.y - rest.y) * fly;
               const s =

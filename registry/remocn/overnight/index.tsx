@@ -12,6 +12,8 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import { type OvernightElementId, overnightTimeline } from "./timeline";
 
 const afacad = loadFont("normal", {
   weights: ["400", "500"],
@@ -42,6 +44,12 @@ export interface OvernightProps {
   delay?: number;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches the evening text and the two panels, by the
+   * ids in `./timeline`. Frames on the scene timeline, after `delay` and
+   * `speed`.
+   */
+  timing?: Timing<OvernightElementId>;
 }
 
 const THEMES = {
@@ -157,24 +165,26 @@ function ScaleLayer({
   );
 }
 
-export function Overnight({
-  evening = DEFAULT_EVENING,
-  night = DEFAULT_NIGHT,
-  morning = DEFAULT_MORNING,
-  nightAt = 52,
-  morningAt = 118,
-  accent,
-  background,
-  fontFamily = afacad.fontFamily,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: OvernightProps) {
+export function Overnight(props: OvernightProps) {
+  const {
+    evening = DEFAULT_EVENING,
+    night = DEFAULT_NIGHT,
+    morning = DEFAULT_MORNING,
+    accent,
+    background,
+    fontFamily = afacad.fontFamily,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay);
   const t = frame * speed;
   const { width: W, height: H, durationInFrames: T } = useSceneConfig();
+  // The panels scale with the clip length, without `speed`.
+  const tl = useTimeline(overnightTimeline, props, T, timing);
   const c = THEMES[theme];
   const hi = accent ?? c.accent;
   const ground =
@@ -214,12 +224,13 @@ export function Overnight({
   }
   const S = Math.max(14, Math.min(F * 0.27, unit * 0.034));
 
-  const k = Math.min(1.6, Math.max(0.75, T / 180));
-  const at = (f: number) => f * k;
-  const duskA = at(nightAt);
-  const duskB = at(nightAt + 26);
-  const dawnA = at(morningAt);
-  const dawnB = at(morningAt + 22);
+  const eveningEl = tl.get("evening");
+  const dusk = tl.get("dusk");
+  const dawn = tl.get("dawn");
+  const duskA = dusk.start;
+  const duskB = dusk.end;
+  const dawnA = dawn.start;
+  const dawnB = dawn.end;
 
   const down = interpolate(t, [duskA, duskB], [0, 1], {
     ...CLAMP,
@@ -272,11 +283,15 @@ export function Overnight({
       easing: EASE_OUT,
     });
   const enter = [
-    rise(4, 22),
-    rise(nightCover + 3, 18),
-    rise(dawnCover + 3, 18),
+    rise(eveningEl.start + eveningEl.beat("lineAt"), eveningEl.beat("line")),
+    rise(nightCover + dusk.beat("lineLag"), dusk.beat("line")),
+    rise(dawnCover + dawn.beat("lineLag"), dawn.beat("line")),
   ];
-  const slugEnter = [rise(2, 16), rise(nightCover, 14), rise(dawnCover, 14)];
+  const slugEnter = [
+    rise(eveningEl.start, eveningEl.beat("slug")),
+    rise(nightCover, dusk.beat("slug")),
+    rise(dawnCover, dawn.beat("slug")),
+  ];
 
   const text = (i: number) => {
     if (tops[i] >= H || tops[i] + blockH(i) <= 0) return null;

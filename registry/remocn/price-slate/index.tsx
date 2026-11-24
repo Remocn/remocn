@@ -8,6 +8,16 @@ import { useId } from "react";
 import { AbsoluteFill, Easing, interpolate, interpolateColors } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import {
+  type ResolvedElement,
+  type Timing,
+  useTimeline,
+} from "@/lib/remocn/timeline";
+import {
+  isDigit,
+  type PriceSlateElementId,
+  priceSlateTimeline,
+} from "./timeline";
 
 const { fontFamily: sans } = loadFont("normal", {
   weights: ["300", "400"],
@@ -87,6 +97,12 @@ export interface PriceSlateProps {
   /** Playback multiplier. */
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches the brand, the lead-in, both prices' reels,
+   * the strike, the step aside, the halo and the copy, by the ids in
+   * `./timeline`. Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<PriceSlateElementId>;
 }
 
 // Hanken Grotesk 300 (fontTools, wght 300): tabular figures 0.56em, "$" 0.553,
@@ -103,7 +119,6 @@ const SERIF: Record<string, number> = {
   " ": 0.17,
 };
 
-const isDigit = (ch: string) => ch >= "0" && ch <= "9";
 const adv = (ch: string) => (isDigit(ch) ? DIGIT : (HANKEN[ch] ?? 0.58));
 
 function layoutPrice(s: string) {
@@ -134,11 +149,6 @@ const CLAMP = {
 //  47–73   the new price reels spin into the hero slot (digits 3 frames apart)
 //  69–91   the halo gradient sweeps across it as the last reel lands
 //  71–99   note and availability rise in; poster holds to the end
-const STRIKE_AT = 22;
-const MOVE_AT = 34;
-const MOVE_LEN = 18;
-const REEL_AT = 47;
-const REEL_LEN = 24;
 
 // gradients.sh "halo" (bg #030306): #fff4ec #ffb36b #e2457a #3d4dff.
 const THEMES = {
@@ -190,29 +200,42 @@ function ScaleLayer({
   );
 }
 
-export function PriceSlate({
-  price = "$0",
-  was = "$29",
-  lead = "From",
-  note = "per seat · billed yearly",
-  availability = "Available today",
-  product = "Pro",
-  name = "remocn",
-  logo,
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = sans,
-  reelLength = REEL_LEN,
-  turns = 13,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: PriceSlateProps) {
+export function PriceSlate(props: PriceSlateProps) {
+  const {
+    price = "$0",
+    was = "$29",
+    lead = "From",
+    note = "per seat · billed yearly",
+    availability = "Available today",
+    product = "Pro",
+    name = "remocn",
+    logo,
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = sans,
+    turns = 13,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H } = useSceneConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    priceSlateTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const leadEl = tl.get("lead");
+  const oldEl = tl.get("old");
+  const strikeEl = tl.get("strike");
+  const asideEl = tl.get("aside");
+  const newEl = tl.get("new");
+  const haloEl = tl.get("halo");
   const u = H / 720;
   const p = THEMES[theme];
   const fg = ink ?? p.fg;
@@ -242,29 +265,34 @@ export function PriceSlate({
   const oldX1 = leadX1 + (leadW + gapA) * S;
   const newX = oldX1 + (oldL.width + gapB) * S;
 
-  const m = EASE_IO(Math.max(0, Math.min(1, (t - MOVE_AT) / MOVE_LEN)));
+  const m = EASE_IO(
+    Math.max(0, Math.min(1, (t - asideEl.start) / asideEl.length)),
+  );
   const leadX = leadX0 + (leadX1 - leadX0) * m;
   const oldX = oldX0 + (oldX1 - oldX0) * m;
   const oldSize = P + (S - P) * m;
   const oldColor = interpolateColors(m, [0, 1], [fg, p.muted]);
 
-  const leadIn = interpolate(t, [-6, 12], [0, 1], {
+  const leadIn = interpolate(t, [leadEl.start, leadEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
-  const strike = interpolate(t, [STRIKE_AT, STRIKE_AT + 12], [0, 1], {
+  const strike = interpolate(t, [strikeEl.start, strikeEl.end], [0, 1], {
     ...CLAMP,
     easing: Easing.bezier(0.6, 0, 0.25, 1),
   });
   // the halo sweeps in as the last reel lands
-  const reels = newL.glyphs.filter((g) => isDigit(g.ch)).length;
-  const landAt = REEL_AT + Math.max(0, reels - 1) * 3 + reelLength + reels * 2;
-  const sweep = interpolate(t, [landAt - 4, landAt + 18], [0, 1], {
+  const sweep = interpolate(t, [haloEl.start, haloEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
-  const rise = (a: number) =>
-    interpolate(t, [a, a + 20], [0, 1], { ...CLAMP, easing: EASE_OUT });
+  const rise = (id: "brand" | "note" | "availability") => {
+    const e = tl.get(id);
+    return interpolate(t, [e.start, e.end], [0, 1], {
+      ...CLAMP,
+      easing: EASE_OUT,
+    });
+  };
   const drift = interpolate(t, [0, 130], [0, 1], CLAMP);
 
   /** Renders a price on reels; returns elements in user space. */
@@ -272,8 +300,7 @@ export function PriceSlate({
     L: ReturnType<typeof layoutPrice>,
     x0: number,
     size: number,
-    start: number,
-    len: number,
+    e: ResolvedElement<PriceSlateElementId>,
     turns: number,
     key: string,
     only: "digits" | "marks",
@@ -286,10 +313,12 @@ export function PriceSlate({
         if (only === "digits") return null;
         // the old price's marks are there from the first frame; the new
         // price's wait for the old one to clear the slot
-        const lag = key === "o" ? -8 : 0;
         const k = interpolate(
           t,
-          [start + lag + i * 2, start + lag + 12 + i * 2],
+          [
+            e.start + e.beat("lag") + i * e.beat("markStep"),
+            e.start + e.beat("lag") + e.beat("markIn") + i * e.beat("markStep"),
+          ],
           [0, 1],
           {
             ...CLAMP,
@@ -308,18 +337,23 @@ export function PriceSlate({
         );
       }
       const d = Number(g.ch);
-      const s0 = start + di * 3;
+      const s0 = e.start + di * e.beat("stagger");
       const extra = turns + di * 2;
       di++;
       if (only === "marks") return null;
-      const pos = reel(t, s0, len + di * 2, d, extra);
+      const len = e.beat("reel") + di * e.beat("spin");
+      const pos = reel(t, s0, len, d, extra);
       const v = Math.abs(
-        reel(t + 0.5, s0, len + di * 2, d, extra) -
-          reel(t - 0.5, s0, len + di * 2, d, extra),
+        reel(t + 0.5, s0, len, d, extra) - reel(t - 0.5, s0, len, d, extra),
       );
       const base = Math.floor(pos);
       const f = pos - base;
-      const show = interpolate(t, [s0 - 2, s0 + 6], [0, 1], CLAMP);
+      const show = interpolate(
+        t,
+        [s0 + e.beat("showAt"), s0 + e.beat("showEnd")],
+        [0, 1],
+        CLAMP,
+      );
       const sd = Math.min(0.06, v * 0.05) * size;
       const digit = (n: number) => ((n % 10) + 10) % 10;
       return (
@@ -357,35 +391,51 @@ export function PriceSlate({
   // size, mark lifts, reel offsets), mirroring renderPrice, so the tilt on the
   // <svg> stays on exactly while some glyph run still moves.
   const svgTravel = (tt: number) => {
-    const mm = EASE_IO(Math.max(0, Math.min(1, (tt - MOVE_AT) / MOVE_LEN)));
+    const mm = EASE_IO(
+      Math.max(0, Math.min(1, (tt - asideEl.start) / asideEl.length)),
+    );
     const size = P + (S - P) * mm;
-    const li = interpolate(tt, [-6, 12], [0, 1], {
+    const li = interpolate(tt, [leadEl.start, leadEl.end], [0, 1], {
       ...CLAMP,
       easing: EASE_OUT,
     });
     const out = [size, (1 - li) * 0.2 * S];
     const prices = [
-      { L: oldL, sz: size, start: 0, len: 20, n: 7, lag: -8 },
-      { L: newL, sz: P, start: REEL_AT, len: reelLength, n: turns, lag: 0 },
+      { L: oldL, sz: size, e: oldEl, n: 7 },
+      { L: newL, sz: P, e: newEl, n: turns },
     ];
-    for (const { L, sz, start, len, n, lag } of prices) {
+    for (const { L, sz, e, n } of prices) {
       const step = (CAP + 0.26) * sz;
       let di = 0;
       L.glyphs.forEach((g, i) => {
         if (!isDigit(g.ch)) {
           const k = interpolate(
             tt,
-            [start + lag + i * 2, start + lag + 12 + i * 2],
+            [
+              e.start + e.beat("lag") + i * e.beat("markStep"),
+              e.start +
+                e.beat("lag") +
+                e.beat("markIn") +
+                i * e.beat("markStep"),
+            ],
             [0, 1],
             { ...CLAMP, easing: EASE_OUT },
           );
           out.push((1 - k) * 0.35 * sz);
           return;
         }
-        const s0 = start + di * 3;
+        const s0 = e.start + di * e.beat("stagger");
         const extra = n + di * 2;
         di++;
-        out.push(reel(tt, s0, len + di * 2, Number(g.ch), extra) * step);
+        out.push(
+          reel(
+            tt,
+            s0,
+            e.beat("reel") + di * e.beat("spin"),
+            Number(g.ch),
+            extra,
+          ) * step,
+        );
       });
     }
     return out;
@@ -543,9 +593,9 @@ export function PriceSlate({
             style={{ fontVariantNumeric: "tabular-nums" }}
           >
             <g mask={`url(#${uid}winOld)`}>
-              {renderPrice(oldL, oldX, oldSize, 0, 20, 7, "o", "digits")}
+              {renderPrice(oldL, oldX, oldSize, oldEl, 7, "o", "digits")}
             </g>
-            {renderPrice(oldL, oldX, oldSize, 0, 20, 7, "o", "marks")}
+            {renderPrice(oldL, oldX, oldSize, oldEl, 7, "o", "marks")}
           </g>
           <line
             x1={strikeX0}
@@ -569,27 +619,9 @@ export function PriceSlate({
             mask={sweep > 0 ? `url(#${uid}ink)` : undefined}
           >
             <g mask={`url(#${uid}winNew)`}>
-              {renderPrice(
-                newL,
-                newX,
-                P,
-                REEL_AT,
-                reelLength,
-                turns,
-                "n",
-                "digits",
-              )}
+              {renderPrice(newL, newX, P, newEl, turns, "n", "digits")}
             </g>
-            {renderPrice(
-              newL,
-              newX,
-              P,
-              REEL_AT,
-              reelLength,
-              turns,
-              "n",
-              "marks",
-            )}
+            {renderPrice(newL, newX, P, newEl, turns, "n", "marks")}
           </g>
           <g
             mask={`url(#${uid}sweep)`}
@@ -624,8 +656,8 @@ export function PriceSlate({
             justifyContent: "center",
             alignItems: "baseline",
             gap: 12 * u,
-            opacity: rise(-8),
-            transform: `translateY(${(1 - rise(-8)) * 10 * u}px)${glide(midway(rise(-8)))}`,
+            opacity: rise("brand"),
+            transform: `translateY(${(1 - rise("brand")) * 10 * u}px)${glide(midway(rise("brand")))}`,
             lineHeight: 1,
           }}
         >
@@ -673,8 +705,8 @@ export function PriceSlate({
             fontSize: 30 * u,
             letterSpacing: "-0.01em",
             color: p.muted,
-            opacity: rise(landAt - 2),
-            transform: `translateY(${(1 - rise(landAt - 2)) * 12 * u}px)${glide(midway(rise(landAt - 2)))}`,
+            opacity: rise("note"),
+            transform: `translateY(${(1 - rise("note")) * 12 * u}px)${glide(midway(rise("note")))}`,
             lineHeight: 1,
           }}
         >
@@ -697,8 +729,8 @@ export function PriceSlate({
             fontSize: 24 * u,
             letterSpacing: "-0.005em",
             color: fg,
-            opacity: rise(landAt + 6),
-            transform: `translateY(${(1 - rise(landAt + 6)) * 12 * u}px)${glide(midway(rise(landAt + 6)))}`,
+            opacity: rise("availability"),
+            transform: `translateY(${(1 - rise("availability")) * 12 * u}px)${glide(midway(rise("availability")))}`,
             lineHeight: 1,
           }}
         >

@@ -12,6 +12,13 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_TITLES,
+  type SpineTurnElementId,
+  spineTurnTimeline,
+  titlesOf,
+} from "./timeline";
 
 const plex = loadPlexSans("normal", {
   weights: ["400", "500"],
@@ -34,6 +41,12 @@ export interface SpineTurnProps {
   delay?: number;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches the rule and single titles rising and turning,
+   * by the ids in `./timeline`. Frames on the scene timeline, after `delay`
+   * and `speed`.
+   */
+  timing?: Timing<SpineTurnElementId>;
 }
 
 const THEMES = {
@@ -55,10 +68,6 @@ const TRACK = -0.035;
 const SPINE_TRACK = -0.01;
 const BOX = 1.0;
 const BASE = 0.8;
-
-const ENTER = 16;
-const TURN = 26;
-const NEXT_LAG = 14;
 
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
 const EASE_TURN = Easing.bezier(0.7, 0, 0.2, 1);
@@ -124,27 +133,30 @@ function ScaleLayer({
   );
 }
 
-export function SpineTurn({
-  titles = ["Kickoff", "Deep dive", "Wrap-up"],
-  hold = 26,
-  turn: turnLen = TURN,
-  fontWeight = 500,
-  accent,
-  background,
-  fontFamily = plex.fontFamily,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: SpineTurnProps) {
+export function SpineTurn(props: SpineTurnProps) {
+  const {
+    titles = DEFAULT_TITLES,
+    fontWeight = 500,
+    accent,
+    background,
+    fontFamily = plex.fontFamily,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const t = Math.max(0, useSceneFrame() - delay) * speed;
   const glide = useGlide();
-  const { width: W, height: H } = useSceneConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    spineTurnTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const c = THEMES[theme];
-  const list = useMemo(() => {
-    const l = titles.filter((s) => s.trim().length > 0);
-    return l.length > 0 ? l : ["remocn"];
-  }, [titles]);
+  const list = useMemo(() => titlesOf(titles), [titles]);
   const widths = useWidths(list, `${fontWeight} 100px "${fontFamily}"`);
 
   const transparent = background === "transparent";
@@ -170,8 +182,6 @@ export function SpineTurn({
   const spineCol = S * BOX * 0.86;
   const spineGap = S * 0.3;
 
-  const turnAt = (k: number) => ENTER + hold + k * (turnLen + NEXT_LAG + hold);
-
   const heroOf = (k: number) => {
     const areaL = margin + k * (spineCol + spineGap) + (k > 0 ? S * 0.5 : 0);
     const areaW = W - margin - areaL;
@@ -194,22 +204,23 @@ export function SpineTurn({
   list.forEach((title, k) => {
     const isLast = k === n - 1;
     const hero = heroOf(k);
-    const enterAt = k === 0 ? 0 : turnAt(k - 1) + NEXT_LAG;
-    const enter = interpolate(t, [enterAt, enterAt + ENTER], [0, 1], {
+    const rise = tl.get(`title:${k}`);
+    const enter = interpolate(t, [rise.start, rise.end], [0, 1], {
       ...CLAMP,
       easing: EASE_OUT,
     });
     if (enter <= 0) return;
-    const turn = isLast
-      ? 0
-      : interpolate(t, [turnAt(k), turnAt(k) + turnLen], [0, 1], {
+    const turning = isLast ? null : tl.get(`turn:${k}`);
+    const turn = turning
+      ? interpolate(t, [turning.start, turning.end], [0, 1], {
           ...CLAMP,
           easing: EASE_TURN,
-        });
+        })
+      : 0;
     const spine = spineOf(k);
     const size = hero.F + (S - hero.F) * turn;
     const track = TRACK + (SPINE_TRACK - TRACK) * turn;
-    const turning = turn > 0 && turn < 1;
+    const midTurn = turn > 0 && turn < 1;
     const settled = !isLast && turn === 1;
     // Layout rounds a box and a baseline to whole pixels, so the title is laid
     // out once, where it finally rests (on its spine, or the last one as a
@@ -267,7 +278,7 @@ export function SpineTurn({
           // On its spine the title rests turned square, as it always did.
           transform: settled
             ? `rotate(${rot.toFixed(3)}deg)`
-            : `translate(${anchor.dx}px, ${anchor.dy}px) rotate(${rot.toFixed(3)}deg)${glide(turning)}`,
+            : `translate(${anchor.dx}px, ${anchor.dy}px) rotate(${rot.toFixed(3)}deg)${glide(midTurn)}`,
           transformOrigin: "0 0",
         }}
       >
@@ -302,7 +313,8 @@ export function SpineTurn({
     );
   });
 
-  const ruleP = interpolate(t, [0, ENTER + 6], [0, 1], {
+  const rule = tl.get("rule");
+  const ruleP = interpolate(t, [rule.start, rule.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });

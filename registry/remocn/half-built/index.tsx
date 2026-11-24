@@ -12,6 +12,15 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_PARTS,
+  goalOf,
+  type HalfBuiltElementId,
+  halfBuiltTimeline,
+  toUnits,
+  type Unit,
+} from "./timeline";
 
 const golos = loadFont("normal", {
   weights: ["400", "500"],
@@ -41,6 +50,11 @@ export interface HalfBuiltProps {
   delay?: number;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches single words, tags and fills, by the ids in
+   * `./timeline`. Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<HalfBuiltElementId>;
 }
 
 const THEMES = {
@@ -48,22 +62,8 @@ const THEMES = {
   light: { bg: "#FFF4EC", ink: "#1D2B53", accent: "#D9623B", hollow: 0.55 },
 } as const;
 
-const DEFAULT_PARTS: HalfBuiltPart[] = [
-  { text: "It cuts," },
-  { text: "captions,", when: "Spring" },
-  { text: "narrates", when: "Summer" },
-  { text: "and" },
-  { text: "translates", when: "Later" },
-  { text: "your launch film." },
-];
-
 const LH = 1.34;
 const TAG_EM = 0.22;
-const WORD_GAP = 3;
-const TAG_GAP = 5;
-const FILL_FULL = 30;
-const FILL_PAUSE = 12;
-const SETTLE = 10;
 
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
 const EASE_FILL = Easing.bezier(0.45, 0, 0.25, 1);
@@ -73,32 +73,6 @@ const CLAMP = {
 } as const;
 
 const moving = (p: number) => p > 0 && p < 1;
-
-interface Unit {
-  key: string;
-  text: string;
-  plan: number;
-  when?: string;
-}
-
-function toUnits(parts: HalfBuiltPart[]) {
-  const units: Unit[] = [];
-  let plan = 0;
-  parts.forEach((p, pi) => {
-    if (p.when !== undefined) {
-      units.push({ key: `p${pi}`, text: p.text.trim(), plan, when: p.when });
-      plan += 1;
-    } else {
-      p.text
-        .split(/\s+/)
-        .filter(Boolean)
-        .forEach((w, wi) => {
-          units.push({ key: `p${pi}-${wi}`, text: w, plan: -1 });
-        });
-    }
-  });
-  return { units, planned: plan };
-}
 
 /** The foreground at `scale`, around the frame's center; nothing extra at 1. */
 function ScaleLayer({
@@ -116,23 +90,27 @@ function ScaleLayer({
   );
 }
 
-export function HalfBuilt({
-  parts = DEFAULT_PARTS,
-  progress = 1.6,
-  accent,
-  ink,
-  background,
-  fontFamily = golos.fontFamily,
-  fontWeight = 500,
-  stagger = WORD_GAP,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: HalfBuiltProps) {
+export function HalfBuilt(props: HalfBuiltProps) {
+  const {
+    parts = DEFAULT_PARTS,
+    progress = 1.6,
+    accent,
+    ink,
+    background,
+    fontFamily = golos.fontFamily,
+    fontWeight = 500,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay);
   const { width: W, height: H, durationInFrames } = useSceneConfig();
+  // The pace that fits the schedule into the clip counts the clip without
+  // `speed`, so the schedule gets `durationInFrames`.
+  const tl = useTimeline(halfBuiltTimeline, props, durationInFrames, timing);
   const c = THEMES[theme];
   const hi = accent ?? c.accent;
   const fg = ink ?? c.ink;
@@ -140,23 +118,8 @@ export function HalfBuilt({
     background === "transparent" ? "transparent" : (background ?? c.bg);
 
   const { units, planned } = toUnits(parts);
-  const goal = Math.max(0, Math.min(planned, progress));
-  const wordsIn = 2 + units.length * stagger + 12;
-  const tagsAt = Math.max(16, wordsIn - 8);
-  const fillAt = tagsAt + planned * TAG_GAP + 14;
-  const segments: { start: number; end: number; amount: number }[] = [];
-  let cursor = fillAt;
-  for (let j = 0; j < Math.ceil(goal); j++) {
-    const amount = Math.min(1, goal - j);
-    const dur = Math.max(16, FILL_FULL * amount);
-    segments.push({ start: cursor, end: cursor + dur, amount });
-    cursor += dur + FILL_PAUSE + (amount >= 1 ? SETTLE : 0);
-  }
-  const naturalEnd = segments.length
-    ? segments[segments.length - 1].end + SETTLE
-    : fillAt;
-  const pace = Math.max(1, (naturalEnd + 30) / Math.max(1, durationInFrames));
-  const t = frame * speed * pace;
+  const goal = goalOf(planned, progress);
+  const t = frame * speed;
 
   const portrait = H > W * 1.1;
   const margin = W * (portrait ? 0.08 : 0.07);
@@ -206,29 +169,34 @@ export function HalfBuilt({
     }
   }, [size, handle]);
 
+  // How far each fill goes: whole words up to `progress`, then the rest.
+  const amountOf = (plan: number) => Math.min(1, goal - plan);
   const fillOf = (plan: number) => {
-    const seg = segments[plan];
-    if (!seg) return 0;
+    if (plan >= Math.ceil(goal)) return 0;
+    const seg = tl.get(`fill:${plan}`);
     return (
       interpolate(t, [seg.start, seg.end], [0, 1], {
         ...CLAMP,
         easing: EASE_FILL,
-      }) * seg.amount
+      }) * amountOf(plan)
     );
   };
   const doneOf = (plan: number) => {
-    const seg = segments[plan];
-    if (!seg || seg.amount < 1) return 0;
-    return interpolate(t, [seg.end + 2, seg.end + 2 + SETTLE], [0, 1], {
+    if (plan >= Math.ceil(goal) || amountOf(plan) < 1) return 0;
+    const seg = tl.get(`fill:${plan}`);
+    const at = seg.end + seg.beat("settleDelay");
+    return interpolate(t, [at, at + seg.beat("settle")], [0, 1], {
       ...CLAMP,
       easing: EASE_OUT,
     });
   };
-  const rise = (start: number, dur = 12) =>
-    interpolate(t, [start, start + dur], [0, 1], {
+  const rise = (id: HalfBuiltElementId) => {
+    const e = tl.get(id);
+    return interpolate(t, [e.start, e.end], [0, 1], {
       ...CLAMP,
       easing: EASE_OUT,
     });
+  };
 
   const font: React.CSSProperties = {
     fontFamily,
@@ -239,7 +207,7 @@ export function HalfBuilt({
   const stroke = `${Math.max(1, (size ?? 100) * 0.016).toFixed(2)}px`;
 
   const renderUnit = (u: Unit, i: number, live: boolean) => {
-    const p = live ? rise(2 + i * stagger) : 1;
+    const p = live ? rise(`word:${i}`) : 1;
     const style: React.CSSProperties = {
       position: "relative",
       display: "inline-block",
@@ -258,7 +226,7 @@ export function HalfBuilt({
     }
     const fill = live ? fillOf(u.plan) : 0;
     const done = live ? doneOf(u.plan) : 0;
-    const tagP = live ? rise(tagsAt + u.plan * TAG_GAP, 14) : 1;
+    const tagP = live ? rise(`tag:${u.plan}`) : 1;
     return (
       <span key={u.key} style={style}>
         <span

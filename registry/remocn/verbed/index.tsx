@@ -13,6 +13,21 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import {
+  type ResolvedElement,
+  type Timing,
+  useTimeline,
+} from "@/lib/remocn/timeline";
+import {
+  curly,
+  DEFAULT_EXAMPLE,
+  DEFAULT_INFLECTIONS,
+  DEFAULT_NOUN_SENSE,
+  DEFAULT_VERB_SENSE,
+  splitWords,
+  type VerbedElementId,
+  verbedTimeline,
+} from "./timeline";
 
 const roman = loadFont("normal", {
   weights: ["400", "500"],
@@ -45,6 +60,13 @@ export interface VerbedProps {
   delay?: number;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches the headword, the label, single words of each
+   * sense and the example, the turn, the inflections and the forms taking
+   * the accent, by the ids in `./timeline`. Frames on the scene timeline,
+   * after `delay` and `speed`.
+   */
+  timing?: Timing<VerbedElementId>;
 }
 
 const THEMES = {
@@ -62,7 +84,6 @@ const CLAMP = {
 const HEAD_TRACK = -0.035;
 const BODY_TRACK = -0.005;
 const LH = 1.32;
-const MOTION_END = 168;
 const DIM = 0.5;
 const BACK = 0.74;
 
@@ -168,18 +189,6 @@ function balanced(
   return best;
 }
 
-function splitWords(s: string) {
-  return s.trim().split(/\s+/).filter(Boolean);
-}
-
-function curly(s: string) {
-  const body = s
-    .trim()
-    .replace(/^["“”]+/, "")
-    .replace(/["“”]+$/, "");
-  return `“${body}”`;
-}
-
 /** The foreground at `scale`, around the frame's center; nothing extra at 1. */
 function ScaleLayer({
   scale,
@@ -196,29 +205,32 @@ function ScaleLayer({
   );
 }
 
-export function Verbed({
-  headword = "remocn",
-  pronunciation = "/rem-uh-kun/",
-  nounLabel = "noun",
-  verbLabel = "verb",
-  nounSense = "a set of video scenes you copy into your repo and edit like any other code.",
-  verbSense = "to make the launch film in the same pull request as the feature.",
-  inflections = ["remocns", "remocned", "remocning"],
-  example = "We remocned the changelog before lunch.",
-  turnAt = 84,
-  stagger = 2,
-  accent,
-  ink,
-  background,
-  fontFamily = roman.fontFamily,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: VerbedProps) {
+export function Verbed(props: VerbedProps) {
+  const {
+    headword = "remocn",
+    pronunciation = "/rem-uh-kun/",
+    nounLabel = "noun",
+    verbLabel = "verb",
+    nounSense = DEFAULT_NOUN_SENSE,
+    verbSense = DEFAULT_VERB_SENSE,
+    inflections = DEFAULT_INFLECTIONS,
+    example = DEFAULT_EXAMPLE,
+    accent,
+    ink,
+    background,
+    fontFamily = roman.fontFamily,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay) * speed;
   const { width: W, height: H, durationInFrames: T } = useSceneConfig();
+  // The entry is paced to the clip without `speed`, so the schedule gets
+  // the clip length as it is; it counts scene frames, pace included.
+  const tl = useTimeline(verbedTimeline, props, T, timing);
   const c = THEMES[theme];
   const hi = accent ?? c.accent;
   const fg = ink ?? c.ink;
@@ -233,9 +245,7 @@ export function Verbed({
     );
   }
 
-  const tail = Math.max(30, T * 0.16);
-  const pace = Math.min(1.5, Math.max(0.5, (T - tail) / MOTION_END));
-  const t = frame / pace;
+  const t = frame;
 
   const portrait = H > W * 1.1;
   const mx = W * (portrait ? 0.08 : 0.07);
@@ -341,7 +351,7 @@ export function Verbed({
   const rise = (start: number, dur = 16) => riseAt(t, start, dur);
   // The ease-out tail is long, so "moving" is judged on the travel in px
   // against the neighbouring frames, not on the progress.
-  const dt = 1 / pace;
+  const dt = 1;
   const stirs = (px: (x: number) => number) => {
     const now = px(t);
     return (
@@ -373,29 +383,34 @@ export function Verbed({
     </span>
   );
 
-  const TURN = turnAt;
+  const eHead = tl.get("headword");
+  const eTurn = tl.get("turn");
+  const eNumber = tl.get("number");
+  const eInfl = tl.get("inflections");
+  const eForms = tl.get("forms");
+  const nounEls = nounWords.map((_, i) => tl.get(`noun:${i}`));
+  const verbEls = verbWords.map((_, i) => tl.get(`verb:${i}`));
+  const exampleEls = exampleWords.map((_, i) => tl.get(`example:${i}`));
   const turnOf = (x: number) =>
-    interpolate(x, [TURN, TURN + 18], [0, 1], {
+    interpolate(x, [eTurn.start, eTurn.end], [0, 1], {
       ...CLAMP,
       easing: EASE_IO,
     });
   const turn = turnOf(t);
-  const verbIn = rise(TURN + 4, 18);
+  const verbIn = rise(eNumber.start, eNumber.length);
 
-  const headP = rise(0, 20);
-  const pronP = rise(8, 16);
-  const labelP = rise(12, 16);
+  const headP = rise(eHead.start, eHead.length);
+  const pronP = rise(
+    tl.get("pronunciation").start,
+    tl.get("pronunciation").length,
+  );
+  const labelP = rise(tl.get("label").start, tl.get("label").length);
 
   const headTop = my;
   const sensesTop = headTop + L.headH + L.gap;
   const verbTop = sensesTop + L.nounH * BACK + Fd * 0.6;
   const inflTop = verbTop + L.verbH;
   const exTop = inflTop + L.inflH + Fd * 0.2;
-
-  const nounStart = 20;
-  const verbStart = TURN + 12;
-  const inflStart = verbStart + verbWords.length * stagger + 10;
-  const exStart = inflStart + 14;
 
   const sideRow = (
     <>
@@ -449,7 +464,7 @@ export function Verbed({
     rows: string[][],
     top: number,
     left: number,
-    start: number,
+    els: ResolvedElement<VerbedElementId>[],
     keyBase: string,
     face: Face,
     colorOf?: (w: string) => string,
@@ -473,14 +488,15 @@ export function Verbed({
         }}
       >
         {row.map((w, wi) => {
-          const s = start + n++ * stagger;
-          const p = rise(s, 14);
+          const e = els[n++];
+          const p = rise(e.start, e.length);
           return word(
             wi < row.length - 1 ? `${w} ` : w,
             `${keyBase}${li}-${wi}`,
             p,
             Fd,
-            rising(s, 14, Fd * 0.4) && !(keyBase === "n" && nounMoving),
+            rising(e.start, e.length, Fd * 0.4) &&
+              !(keyBase === "n" && nounMoving),
             colorOf ? { color: colorOf(w) } : undefined,
           );
         })}
@@ -534,7 +550,7 @@ export function Verbed({
               letterSpacing: `${HEAD_TRACK}em`,
               whiteSpace: "pre",
               opacity: headP,
-              transform: `translateY(${((1 - headP) * Fh * 0.18).toFixed(2)}px)${glide(rising(0, 20, Fh * 0.18))}`,
+              transform: `translateY(${((1 - headP) * Fh * 0.18).toFixed(2)}px)${glide(rising(eHead.start, eHead.length, Fh * 0.18))}`,
             }}
           >
             {headword}
@@ -580,7 +596,7 @@ export function Verbed({
           >
             1.
           </div>
-          {lines(L.nounLines, 0, nounShift, nounStart, "n", "body")}
+          {lines(L.nounLines, 0, nounShift, nounEls, "n", "body")}
         </div>
 
         <div
@@ -589,12 +605,12 @@ export function Verbed({
             top: verbTop,
             color: hi,
             opacity: verbIn,
-            transform: `translateY(${((1 - verbIn) * Fd * 0.4).toFixed(2)}px)${glide(rising(TURN + 4, 18, Fd * 0.4))}`,
+            transform: `translateY(${((1 - verbIn) * Fd * 0.4).toFixed(2)}px)${glide(rising(eNumber.start, eNumber.length, Fd * 0.4))}`,
           }}
         >
           2.
         </div>
-        {lines(L.verbLines, verbTop, mx + L.numW, verbStart, "v", "body")}
+        {lines(L.verbLines, verbTop, mx + L.numW, verbEls, "v", "body")}
 
         {L.inflLines.map((row, li) => (
           <div
@@ -610,16 +626,24 @@ export function Verbed({
               fontSize: L.Fi,
               letterSpacing: `${BODY_TRACK}em`,
               whiteSpace: "pre",
-              opacity: rise(inflStart + li * 3, 16) * 0.62,
+              opacity:
+                rise(
+                  eInfl.start + li * eInfl.beat("stagger"),
+                  eInfl.beat("line"),
+                ) * 0.62,
             }}
           >
             {row.join(" ")}
           </div>
         ))}
 
-        {lines(L.exLines, exTop, mx + L.numW, exStart, "e", "italic", (w) =>
+        {lines(L.exLines, exTop, mx + L.numW, exampleEls, "e", "italic", (w) =>
           isForm(w)
-            ? interpolateColors(rise(exStart + 12, 16), [0, 1], [fg, hi])
+            ? interpolateColors(
+                rise(eForms.start, eForms.length),
+                [0, 1],
+                [fg, hi],
+              )
             : fg,
         )}
       </ScaleLayer>

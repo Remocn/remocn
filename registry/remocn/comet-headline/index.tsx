@@ -7,6 +7,12 @@ import { useId } from "react";
 import { AbsoluteFill, Easing, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  type CometHeadlineElementId,
+  cometHeadlineTimeline,
+  DEFAULT_HEADLINE,
+} from "./timeline";
 
 const sora = loadSora("normal", {
   weights: ["400", "500"],
@@ -39,6 +45,12 @@ export interface CometHeadlineProps {
   grain?: boolean;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches the eyebrow, single words' flights, the
+   * subhead and the trails cooling, by the ids in `./timeline`. Frames on
+   * the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<CometHeadlineElementId>;
 }
 
 const LIMB = ["#e9ecff", "#8a8bff", "#4b2bd6", "#160c3a"] as const;
@@ -246,27 +258,34 @@ function ScaleLayer({
   );
 }
 
-export function CometHeadline({
-  eyebrow = "New in remocn",
-  headline = "Every launch beat, already in orbit.",
-  highlight = "in orbit",
-  subhead = "Reveals, feature heads and stats as drop-in Remotion scenes.",
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = sora.fontFamily,
-  fontWeight = 500,
-  flight = 26,
-  scale = 1,
-  delay = 0,
-  grain = true,
-  speed = 1,
-  theme = "dark",
-}: CometHeadlineProps) {
+export function CometHeadline(props: CometHeadlineProps) {
+  const {
+    eyebrow = "New in remocn",
+    headline = DEFAULT_HEADLINE,
+    highlight = "in orbit",
+    subhead = "Reveals, feature heads and stats as drop-in Remotion scenes.",
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = sora.fontFamily,
+    fontWeight = 500,
+    scale = 1,
+    delay = 0,
+    grain = true,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const raw = Math.max(0, useSceneFrame() - delay);
   const frame = raw * speed;
   const { width, height, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    cometHeadlineTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const p = PALETTES[theme];
   const fg = ink ?? p.fg;
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
@@ -307,20 +326,19 @@ export function CometHeadline({
   const headTop = top + eyeH;
 
   const n = words.length;
-  const stagger = n > 1 ? Math.min(5, 34 / (n - 1)) : 0;
-  const FLIGHT = flight;
-  const launch = (i: number) => 6 + i * stagger;
-  const land = (i: number) => launch(i) + FLIGHT;
-  const lastLand = land(Math.max(0, n - 1));
-  const eyeT = interpolate(frame, [0, 16], [0, 1], {
+  const flightOf = (i: number) => tl.get(`word:${i}`);
+  const eEyebrow = tl.get("eyebrow");
+  const eSubhead = tl.get("subhead");
+  const eCool = tl.get("cool");
+  const eyeT = interpolate(frame, [eEyebrow.start, eEyebrow.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
-  const subT = interpolate(frame, [lastLand - 2, lastLand + 20], [0, 1], {
+  const subT = interpolate(frame, [eSubhead.start, eSubhead.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
-  const cool = interpolate(frame, [lastLand, lastLand + 24], [0, 1], {
+  const cool = interpolate(frame, [eCool.start, eCool.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
@@ -399,17 +417,13 @@ export function CometHeadline({
           </defs>
           {words.map((w) => {
             const { target, control } = orbit(w);
-            const raw01 = interpolate(
-              frame,
-              [launch(w.index), land(w.index)],
-              [0, 1],
-              CLAMP,
-            );
+            const fl = flightOf(w.index);
+            const raw01 = interpolate(frame, [fl.start, fl.end], [0, 1], CLAMP);
             if (raw01 <= 0) return null;
             const t = EASE_FLIGHT(raw01);
             const head = quad(origin, control, target, t);
             const tail = Math.max(0, t - 0.22);
-            const landed = frame - land(w.index);
+            const landed = frame - fl.end;
             const trailOp = interpolate(cool, [0, 1], [0.75, 0.42]);
             const headR = interpolate(landed, [-3, 5], [0.05, 0], CLAMP) * fs;
             const tailOp = interpolate(landed, [-2, 6], [1, 0], CLAMP);
@@ -436,12 +450,12 @@ export function CometHeadline({
                 {headR > 0.1 ? (
                   <circle cx={head.x} cy={head.y} r={headR} fill={p.head} />
                 ) : null}
-                {landed >= 0 && landed < 16 ? (
+                {landed >= 0 && landed < fl.beat("ring") ? (
                   <circle
                     cx={target.x}
                     cy={target.y}
                     r={
-                      interpolate(landed, [0, 16], [0.06, 0.62], {
+                      interpolate(landed, [0, fl.beat("ring")], [0.06, 0.62], {
                         ...CLAMP,
                         easing: EASE_OUT,
                       }) * fs
@@ -449,7 +463,12 @@ export function CometHeadline({
                     fill="none"
                     stroke={p.trail}
                     strokeWidth={trailW}
-                    opacity={interpolate(landed, [0, 16], [0.8, 0], CLAMP)}
+                    opacity={interpolate(
+                      landed,
+                      [0, fl.beat("ring")],
+                      [0.8, 0],
+                      CLAMP,
+                    )}
                   />
                 ) : null}
               </g>
@@ -496,9 +515,10 @@ export function CometHeadline({
         ) : null}
 
         {words.map((w) => {
+          const fl = flightOf(w.index);
           const k = interpolate(
             frame,
-            [land(w.index) - 2, land(w.index) + 12],
+            [fl.end - 2, fl.end + fl.beat("settle")],
             [0, 1],
             {
               ...CLAMP,

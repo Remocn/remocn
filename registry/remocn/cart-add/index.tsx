@@ -10,6 +10,8 @@ import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import { type CartAddElementId, cartAddTimeline } from "./timeline";
 
 const sans = loadSans("normal", { weights: ["400"], subsets: ["latin"] });
 const serif = loadSerif("normal", { weights: ["400"], subsets: ["latin"] });
@@ -62,6 +64,12 @@ export interface CartAddProps {
   speed?: number;
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
+  /**
+   * Moves, trims or stretches the window, the cursor's picks and clicks, the
+   * flight into the bag, the drawer and the checkout, by the ids in
+   * `./timeline`. Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<CartAddElementId>;
 }
 
 const DEFAULT_COLORS: CartColor[] = [
@@ -86,21 +94,6 @@ const CHIP = { mass: 0.5, damping: 12, stiffness: 200 };
 const MORPH = { damping: 200 };
 const GLIDE = { mass: 0.9, damping: 24, stiffness: 140 };
 const CL = { extrapolateLeft: "clamp", extrapolateRight: "clamp" } as const;
-
-const B = {
-  win: 0,
-  cursor: 6,
-  swatch: 34,
-  toSize: 40,
-  size: 60,
-  toBtn: 66,
-  add: 84,
-  fly: 92,
-  land: 114,
-  drawer: 120,
-  toCheckout: 142,
-  checkout: 166,
-};
 
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
 const clamp01 = (v: number) => Math.min(1, Math.max(0, v));
@@ -446,39 +439,69 @@ function layoutFor(portrait: boolean) {
   };
 }
 
-export function CartAdd({
-  brand = "fernway",
-  product = "Summit Bottle",
-  category = "Drinkware",
-  description = "Double-wall steel keeps drinks cold for 24 hours. Leak-proof cap, powder-coat finish that never sweats.",
-  rating = 4.8,
-  reviews = "2,184",
-  colors = DEFAULT_COLORS,
-  sizes = DEFAULT_SIZES,
-  startColor = 0,
-  pickColor = 1,
-  startSize = 1,
-  pickSize = 2,
-  images,
-  currency = "$",
-  freeShippingAt = 75,
-  addLabel = "Add to bag",
-  addedLabel = "Added to bag",
-  checkoutLabel = "Checkout",
-  theme = "light",
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = sans.fontFamily,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  ground,
-  groundParams,
-}: CartAddProps) {
+export function CartAdd(props: CartAddProps) {
+  const {
+    brand = "fernway",
+    product = "Summit Bottle",
+    category = "Drinkware",
+    description = "Double-wall steel keeps drinks cold for 24 hours. Leak-proof cap, powder-coat finish that never sweats.",
+    rating = 4.8,
+    reviews = "2,184",
+    colors = DEFAULT_COLORS,
+    sizes = DEFAULT_SIZES,
+    startColor = 0,
+    pickColor = 1,
+    startSize = 1,
+    pickSize = 2,
+    images,
+    currency = "$",
+    freeShippingAt = 75,
+    addLabel = "Add to bag",
+    addedLabel = "Added to bag",
+    checkoutLabel = "Checkout",
+    theme = "light",
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = sans.fontFamily,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    ground,
+    groundParams,
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H, fps } = useSceneConfig();
+  const { width: W, height: H, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    cartAddTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const app = tl.get("app");
+  const cursorEl = tl.get("cursor");
+  const colorEl = tl.get("color");
+  const sizeEl = tl.get("size");
+  const addEl = tl.get("add");
+  const flyEl = tl.get("fly");
+  const land = tl.get("land");
+  const drawer = tl.get("drawer");
+  const checkout = tl.get("checkout");
+  const B = {
+    win: app.start,
+    cursor: cursorEl.start,
+    swatch: colorEl.start,
+    toSize: colorEl.start + colorEl.beat("leave"),
+    size: sizeEl.start,
+    toBtn: sizeEl.start + sizeEl.beat("leave"),
+    add: addEl.start,
+    fly: flyEl.start,
+    land: land.start,
+    drawer: drawer.start,
+    toCheckout: checkout.start,
+  };
   const portrait = H > W;
   const L = layoutFor(portrait);
   const u = Math.min(W / L.stageW, H / L.stageH);
@@ -573,8 +596,7 @@ export function CartAdd({
   let cur = { x: L.stageW * 0.82, y: L.stageH * 1.04 };
   for (const sg of segs) {
     if (frame < sg.at) break;
-    const to =
-      sg.at === B.toBtn && frame > B.drawer ? winToScreen(btnPt) : sg.to;
+    const to = sg === segs[2] && frame > B.drawer ? winToScreen(btnPt) : sg.to;
     cur = arc(
       cur,
       to,
@@ -586,22 +608,48 @@ export function CartAdd({
     spring({ frame: frame - at + 3, fps, config: CHIP }) -
     spring({ frame: frame - at, fps, config: CHIP });
   const press = Math.max(0, click(B.swatch), click(B.size), click(B.add));
-  const cursorO = tw(frame, B.cursor, B.cursor + 8);
+  const cursorO = tw(frame, cursorEl.start, cursorEl.end);
 
   const winIn = sp(B.win, HEAVY);
-  const winO = tw(frame, B.win, B.win + 12);
-  const colorP = tw(frame, B.swatch + 1, B.swatch + 14, MOVE);
-  const ring = sp(B.swatch + 1, MORPH);
-  const sizeSel = sp(B.size + 1, MORPH);
-  const priceP = tw(frame, B.size + 2, B.size + 12, SOFT);
+  const winO = tw(frame, app.start, app.end);
+  const colorP = tw(
+    frame,
+    B.swatch + colorEl.beat("swap"),
+    B.swatch + colorEl.beat("swapEnd"),
+    MOVE,
+  );
+  const ring = sp(B.swatch + colorEl.beat("swap"), MORPH);
+  const sizeSel = sp(B.size + sizeEl.beat("select"), MORPH);
+  const priceP = tw(
+    frame,
+    B.size + sizeEl.beat("price"),
+    B.size + sizeEl.beat("priceEnd"),
+    SOFT,
+  );
   const btnPress = click(B.add);
-  const loadP = tw(frame, B.add + 2, B.add + 8);
-  const doneP = tw(frame, B.land - 6, B.land + 2, SOFT);
-  const checkDraw = tw(frame, B.land - 4, B.land + 6, SOFT);
+  const loadP = tw(
+    frame,
+    B.add + addEl.beat("load"),
+    B.add + addEl.beat("loadEnd"),
+  );
+  const doneP = tw(
+    frame,
+    B.land + land.beat("done"),
+    B.land + land.beat("doneEnd"),
+    SOFT,
+  );
+  const checkDraw = tw(
+    frame,
+    B.land + land.beat("check"),
+    B.land + land.beat("checkEnd"),
+    SOFT,
+  );
 
   const flyP = sp(B.fly, { mass: 0.9, damping: 22, stiffness: 120 });
   const flyO =
-    tw(frame, B.fly, B.fly + 4) * (1 - tw(frame, B.land - 3, B.land + 1, EXIT));
+    tw(frame, B.fly, B.fly + flyEl.beat("fadeIn")) *
+    (1 -
+      tw(frame, B.land + land.beat("out"), B.land + land.beat("outEnd"), EXIT));
   const fromPt = winAbs({
     x: L.photo.x + L.photo.w / 2,
     y: L.photo.y + L.photo.h / 2,
@@ -617,7 +665,7 @@ export function CartAdd({
     y: q(fromPt.y, ctrl.y, bagPt.y, clamp01(flyP)),
     s: lerp(1, 0.16, clamp01(flyP)),
   };
-  const bump = 1 + 0.16 * Math.max(0, click(B.land + 2));
+  const bump = 1 + 0.16 * Math.max(0, click(B.land + land.beat("bump")));
   const badgeAt = (f: number) =>
     spring({ frame: f - B.land, fps, config: CHIP });
   const badge = badgeAt(frame);
@@ -626,9 +674,25 @@ export function CartAdd({
     Math.abs(badge - badgeAt(frame - 1)) > 1e-4;
 
   const item = (k: number) =>
-    tw(frame, B.drawer + 6 + k * 3, B.drawer + 18 + k * 3);
-  const shipFill = tw(frame, B.drawer + 16, B.drawer + 40, MOVE);
-  const checkoutHover = tw(frame, B.checkout - 6, B.checkout, SOFT);
+    tw(
+      frame,
+      B.drawer + drawer.beat("item") + k * drawer.beat("stagger"),
+      B.drawer +
+        (drawer.beat("item") + drawer.beat("itemLen")) +
+        k * drawer.beat("stagger"),
+    );
+  const shipFill = tw(
+    frame,
+    B.drawer + drawer.beat("ship"),
+    B.drawer + drawer.beat("shipEnd"),
+    MOVE,
+  );
+  const checkoutHover = tw(
+    frame,
+    checkout.start + checkout.beat("hover"),
+    checkout.start + checkout.beat("hoverEnd"),
+    SOFT,
+  );
   const remaining = Math.max(0, freeShippingAt - s1.price);
   const shipRatio = Math.min(1, s1.price / freeShippingAt);
 
@@ -1091,7 +1155,7 @@ export function CartAdd({
               />
             </div>
 
-            {frame >= B.fly && frame < B.land + 2 ? (
+            {frame >= B.fly && frame < B.land + land.beat("bump") ? (
               <div
                 style={{
                   position: "absolute",

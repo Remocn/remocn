@@ -1,7 +1,16 @@
 "use client";
 
 import { Easing, interpolate } from "remotion";
-import { useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  ACCEL,
+  revealFrame,
+  SLIDE_FRAMES,
+  WORD_GAP,
+  type WordPushElementId,
+  wordPushTimeline,
+} from "./timeline";
 
 export interface WordPushProps {
   text: string;
@@ -12,23 +21,21 @@ export interface WordPushProps {
   accel?: number;
   speed?: number;
   className?: string;
+  /**
+   * Moves, trims or stretches single words, by the ids in `./timeline`.
+   * Frames on the scene timeline, after `speed`.
+   */
+  timing?: Timing<WordPushElementId>;
 }
 
-const REVEAL_FRAMES = 2;
-const SLIDE_FRAMES = 12;
 const OVERSHOOT_EM = 0.5;
 const CHAR_WIDTH_EM = 0.5;
 const SPACE_WIDTH_EM = 0.22;
 
-function revealFrame(index: number, wordGap: number, accel: number): number {
-  if (accel === 1) return index * wordGap;
-  return (wordGap * (1 - accel ** index)) / (1 - accel);
-}
-
 export function wordPushLength(
   text: string,
-  wordGap = 10,
-  accel = 0.8,
+  wordGap = WORD_GAP,
+  accel = ACCEL,
 ): number {
   const words = text.trim().split(/\s+/).filter(Boolean);
   if (words.length === 0) return 0;
@@ -40,23 +47,32 @@ export function wordPushLength(
 const pushEasing = Easing.out(Easing.cubic);
 const driveEasing = Easing.bezier(0.15, 0.7, 0.25, 1);
 
-export function WordPush({
-  text,
-  fontSize = 72,
-  color = "#171717",
-  fontWeight = 400,
-  wordGap = 10,
-  accel = 0.8,
-  speed = 1,
-  className,
-}: WordPushProps) {
+export function WordPush(props: WordPushProps) {
+  const {
+    text,
+    fontSize = 72,
+    color = "#171717",
+    fontWeight = 400,
+    speed = 1,
+    className,
+    timing,
+  } = props;
   const frame = useSceneFrame() * speed;
+  const { durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    wordPushTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
 
   const words = text.trim().split(/\s+/).filter(Boolean);
 
+  // The line drives in with the first word.
+  const first = tl.get("word:0");
   let lineX = interpolate(
     frame,
-    [0, SLIDE_FRAMES],
+    [first.start, first.end],
     [-OVERSHOOT_EM * fontSize, 0],
     {
       extrapolateLeft: "clamp",
@@ -67,17 +83,13 @@ export function WordPush({
   for (let j = 1; j < words.length; j++) {
     const wordWidth =
       (words[j].length * CHAR_WIDTH_EM + SPACE_WIDTH_EM) * fontSize;
-    const revealAt = revealFrame(j, wordGap, accel);
-    const pushed = interpolate(
-      frame,
-      [revealAt + 1, revealAt + 1 + SLIDE_FRAMES],
-      [0, 1],
-      {
-        extrapolateLeft: "clamp",
-        extrapolateRight: "clamp",
-        easing: pushEasing,
-      },
-    );
+    const word = tl.get(`word:${j}`);
+    const pushAt = word.start + word.beat("push");
+    const pushed = interpolate(frame, [pushAt, pushAt + word.length], [0, 1], {
+      extrapolateLeft: "clamp",
+      extrapolateRight: "clamp",
+      easing: pushEasing,
+    });
     lineX += (wordWidth / 2) * (1 - pushed);
   }
 
@@ -106,11 +118,11 @@ export function WordPush({
         }}
       >
         {words.map((word, j) => {
-          const revealAt = revealFrame(j, wordGap, accel);
+          const { start, end, beat } = tl.get(`word:${j}`);
 
           const opacity = interpolate(
             frame,
-            [revealAt, revealAt + REVEAL_FRAMES],
+            [start, start + beat("reveal")],
             [0, 1],
             {
               extrapolateLeft: "clamp",
@@ -121,16 +133,11 @@ export function WordPush({
           const driven =
             j === 0
               ? 1
-              : interpolate(
-                  frame,
-                  [revealAt, revealAt + SLIDE_FRAMES],
-                  [0, 1],
-                  {
-                    extrapolateLeft: "clamp",
-                    extrapolateRight: "clamp",
-                    easing: driveEasing,
-                  },
-                );
+              : interpolate(frame, [start, end], [0, 1], {
+                  extrapolateLeft: "clamp",
+                  extrapolateRight: "clamp",
+                  easing: driveEasing,
+                });
 
           return (
             <span

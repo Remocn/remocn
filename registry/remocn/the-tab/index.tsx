@@ -12,16 +12,23 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_ITEMS,
+  DEFAULT_TOTAL,
+  rowsOf,
+  type TabRow,
+  type TheTabElementId,
+  theTabTimeline,
+  totalWordsOf,
+} from "./timeline";
 
 const albert = loadFont("normal", {
   weights: ["400", "500"],
   subsets: ["latin"],
 });
 
-export interface TheTabItem {
-  item: string;
-  price?: string;
-}
+export type TheTabItem = TabRow;
 
 export interface TheTabProps {
   items?: TheTabItem[];
@@ -44,20 +51,18 @@ export interface TheTabProps {
   delay?: number;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches single rows, the rule, the total label and
+   * the total's words, by the ids in `./timeline`. Frames on the scene
+   * timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<TheTabElementId>;
 }
 
 const THEMES = {
   dark: { bg: "#141414", ink: "#FFFFFF", accent: "#3DD9FF" },
   light: { bg: "#FFFFFF", ink: "#000000", accent: "#0077B6" },
 } as const;
-
-const DEFAULT_ITEMS: TheTabItem[] = [
-  { item: "Every component" },
-  { item: "Every template" },
-  { item: "Every future update" },
-  { item: "Seats for the whole team" },
-  { item: "Renders on your own machine" },
-];
 
 const TRACK = -0.012;
 const TRACK_TOTAL = -0.025;
@@ -135,36 +140,43 @@ function ScaleLayer({
   );
 }
 
-export function TheTab({
-  items = DEFAULT_ITEMS,
-  price = "$0",
-  totalLabel = "Total",
-  total = "one Sunday morning.",
-  accent,
-  ink,
-  background,
-  fontFamily = albert.fontFamily,
-  stagger = 5,
-  leaders = true,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: TheTabProps) {
+export function TheTab(props: TheTabProps) {
+  const {
+    items = DEFAULT_ITEMS,
+    price = "$0",
+    totalLabel = "Total",
+    total = DEFAULT_TOTAL,
+    accent,
+    ink,
+    background,
+    fontFamily = albert.fontFamily,
+    leaders = true,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
   const { width: W, height: H, durationInFrames } = useSceneConfig();
-  const T = durationInFrames * speed;
+  const tl = useTimeline(
+    theTabTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const c = THEMES[theme];
   const hi = accent ?? c.accent;
   const fg = ink ?? c.ink;
   const stage =
     background === "transparent" ? "transparent" : (background ?? c.bg);
 
-  const rows = items
-    .filter((r) => r.item.trim().length > 0)
-    .map((r) => ({ item: r.item, price: r.price ?? price }));
-  const totalWords = total.split(/\s+/).filter(Boolean);
+  const rows = rowsOf(items).map((r) => ({
+    item: r.item,
+    price: r.price ?? price,
+  }));
+  const totalWords = totalWordsOf(total);
   const keys = [
     ...rows.map((r) => `400|${r.item}`),
     ...rows.map((r) => `400|${r.price}`),
@@ -213,31 +225,30 @@ export function TheTab({
   const blockH = n * rowH + ruleGap + totalH;
   const top = H / 2 - blockH / 2;
 
-  const first = 6;
-  const tail = 56;
-  const step =
-    n > 0
-      ? Math.max(6, Math.min(14, (T - first - tail - 34) / Math.max(1, n)))
-      : 0;
-  const rowAt = (i: number) => first + i * step;
-  const ruleAt = rowAt(Math.max(0, n - 1)) + 18;
-  const totalAt = ruleAt + 10;
+  const ruleEl = tl.get("rule");
+  const totalEl = tl.get("total");
 
   const dotR = Math.max(1.2, F * 0.045);
   const dotGap = F * 0.3;
 
   const rowNodes = rows.map((r, i) => {
-    const s = rowAt(i);
+    const row = tl.get(`row:${i}`);
+    const s = row.start;
     const base = top + i * rowH + F * 1.1;
-    const lIn = interpolate(t, [s, s + 14], [0, 1], {
+    const lIn = interpolate(t, [s, s + row.beat("item")], [0, 1], {
       ...CLAMP,
       easing: EASE_OUT,
     });
-    const lead = interpolate(t, [s + 4, s + 16], [0, 1], {
-      ...CLAMP,
-      easing: EASE_IO,
-    });
-    const pIn = interpolate(t, [s + 13, s + 25], [0, 1], {
+    const lead = interpolate(
+      t,
+      [s + row.beat("leadIn"), s + row.beat("leadOut")],
+      [0, 1],
+      {
+        ...CLAMP,
+        easing: EASE_IO,
+      },
+    );
+    const pIn = interpolate(t, [s + row.beat("priceIn"), row.end], [0, 1], {
       ...CLAMP,
       easing: EASE_OUT,
     });
@@ -290,11 +301,11 @@ export function TheTab({
   });
 
   const ruleY = top + n * rowH + ruleGap * 0.35;
-  const rule = interpolate(t, [ruleAt, ruleAt + 14], [0, 1], {
+  const rule = interpolate(t, [ruleEl.start, ruleEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
-  const tlIn = interpolate(t, [totalAt, totalAt + 14], [0, 1], {
+  const tlIn = interpolate(t, [totalEl.start, totalEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
@@ -309,15 +320,17 @@ export function TheTab({
   let cursor = 0;
   // The frame the last line lands: a row's price, the total or its last word.
   const settled = Math.max(
-    n > 0 ? rowAt(n - 1) + 25 : 0,
-    totalAt + 14,
-    totalAt + 8 + Math.max(0, totalWords.length - 1) * stagger + 14,
+    n > 0 ? tl.get(`row:${n - 1}`).end : 0,
+    totalEl.end,
+    totalWords.length > 0
+      ? tl.get(`value:${totalWords.length - 1}`).end
+      : totalEl.start + 8 + 14,
   );
   const valueNodes = totalWords.map((s, k) => {
     const x = valueX0 + cursor * Ft;
     cursor += wordWs[k] + space;
-    const at = totalAt + 8 + k * stagger;
-    const v = interpolate(t, [at, at + 14], [0, 1], {
+    const word = tl.get(`value:${k}`);
+    const v = interpolate(t, [word.start, word.end], [0, 1], {
       ...CLAMP,
       easing: EASE_OUT,
     });
@@ -348,7 +361,9 @@ export function TheTab({
           style={{
             position: "absolute",
             inset: 0,
-            transform: glide(t > rowAt(0) && t < settled),
+            transform: glide(
+              t > (n > 0 ? tl.get("row:0").start : 6) && t < settled,
+            ),
           }}
           fontFamily={fontFamily}
           aria-hidden

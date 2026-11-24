@@ -6,6 +6,13 @@ import { useId } from "react";
 import { AbsoluteFill, Easing, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_VALUES,
+  type SpringBarsElementId,
+  springBarsTimeline,
+  valuesOf,
+} from "./timeline";
 
 const { fontFamily: display } = loadFont("normal", {
   weights: ["400", "500"],
@@ -35,6 +42,12 @@ export interface SpringBarsProps {
   grain?: boolean;
   theme?: "dark" | "light";
   speed?: number;
+  /**
+   * Moves, trims or stretches the axis, the coils, each weight's drop and
+   * the morph into bars, by the ids in `./timeline`.
+   * Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<SpringBarsElementId>;
 }
 
 const EASE_IO = Easing.bezier(0.65, 0, 0.35, 1);
@@ -68,9 +81,6 @@ const THEMES = {
   },
 } as const;
 
-const SPAWN0 = 14;
-const STAGGER = 3;
-const FALL = 15;
 const ZETA = 0.28;
 const COILS = 11;
 
@@ -144,29 +154,36 @@ function ScaleLayer({
   );
 }
 
-export function SpringBars({
-  values = [0.58, 0.72, 0.52, 0.66, 0.97, 0.62, 0.7],
-  accentIndex = 4,
-  value = "3.4×",
-  caption = "Least sag under the same load",
-  stagger = STAGGER,
-  coils = COILS,
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = display,
-  scale = 1,
-  delay = 0,
-  grain = true,
-  theme = "dark",
-  speed = 1,
-}: SpringBarsProps) {
+export function SpringBars(props: SpringBarsProps) {
+  const {
+    values = DEFAULT_VALUES,
+    accentIndex = 4,
+    value = "3.4×",
+    caption = "Least sag under the same load",
+    coils = COILS,
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = display,
+    scale = 1,
+    delay = 0,
+    grain = true,
+    theme = "dark",
+    speed = 1,
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width, height } = useSceneConfig();
+  const { width, height, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    springBarsTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const u = Math.min(width / 1280, height / 720);
   const p = THEMES[theme];
-  const vals = values.slice(0, 10).map((v) => Math.max(0.3, Math.min(1, v)));
+  const vals = valuesOf(values);
   const n = Math.max(1, vals.length);
   const ai = Math.max(0, Math.min(n - 1, Math.round(accentIndex)));
 
@@ -188,25 +205,42 @@ export function SpringBars({
       0.26,
       Math.min(0.46, 0.3 * Math.sqrt((150 * u) / Math.max(comp, 1))),
     );
-    const spawn = SPAWN0 + i * stagger;
-    return { i, rest, comp, omega, spawn, contact: spawn + FALL };
+    const e = tl.get(`spring:${i}`);
+    return {
+      i,
+      rest,
+      comp,
+      omega,
+      spawn: e.start,
+      fall: e.length,
+      contact: e.end,
+    };
   });
-  const lastContact = Math.max(...springs.map((s) => s.contact));
-  const MORPH = lastContact + 44;
+  const axisEl = tl.get("axis");
+  const coilsEl = tl.get("coils");
+  const morphEl = tl.get("morph");
+  const MORPH = morphEl.start;
 
-  const enter = interpolate(t, [0, 14], [0, 1], { ...CLAMP, easing: EASE_IO });
-  const morph = interpolate(t, [MORPH, MORPH + 20], [0, 1], {
+  const enter = interpolate(t, [axisEl.start, axisEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
-  const labelIn = interpolate(t, [MORPH + 10, MORPH + 30], [0, 1], {
+  const morph = interpolate(t, [morphEl.start, morphEl.end], [0, 1], {
     ...CLAMP,
-    easing: EASE_OUT,
+    easing: EASE_IO,
   });
-  const capIn = interpolate(t, [MORPH + 18, MORPH + 36], [0, 1], {
-    ...CLAMP,
-    easing: EASE_OUT,
-  });
+  const labelIn = interpolate(
+    t,
+    [MORPH + morphEl.beat("label"), MORPH + morphEl.beat("labelEnd")],
+    [0, 1],
+    { ...CLAMP, easing: EASE_OUT },
+  );
+  const capIn = interpolate(
+    t,
+    [MORPH + morphEl.beat("caption"), MORPH + morphEl.beat("captionEnd")],
+    [0, 1],
+    { ...CLAMP, easing: EASE_OUT },
+  );
 
   const lengthAt = (s: (typeof springs)[number]) => {
     const lt = t - s.contact;
@@ -273,18 +307,19 @@ export function SpringBars({
             const cx = left + pitch * (s.i + 0.5);
             const isA = s.i === ai;
             const len = lengthAt(s);
+            const appearAt = coilsEl.start + s.i * coilsEl.beat("step");
             const appear = interpolate(
               t,
-              [2 + s.i * 1.5, 14 + s.i * 1.5],
+              [appearAt, appearAt + coilsEl.beat("appear")],
               [0, 1],
               { ...CLAMP, easing: EASE_OUT },
             );
             const lt = t - s.spawn;
             const startY = -plateH - 24 * u;
             const contactY = groundY - L0 - plateH;
-            const k = Math.min(1, Math.max(0, lt / FALL));
+            const k = Math.min(1, Math.max(0, lt / s.fall));
             const plateY =
-              lt < FALL
+              lt < s.fall
                 ? startY + (contactY - startY) * k * k
                 : groundY - len - plateH;
             const barH = (groundY - plateY) * morph;

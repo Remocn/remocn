@@ -1,7 +1,18 @@
 "use client";
 
 import { Easing, interpolate } from "remotion";
-import { useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  type CaretSwapElementId,
+  COLLAPSE_FRAMES,
+  caretSwapTimeline,
+  EXPAND_FRAMES,
+  IDLE_FRAMES,
+  SWAP_AT,
+  TYPE_SPEED,
+  typeElapsed,
+} from "./timeline";
 
 export interface CaretSwapProps {
   fromText: string;
@@ -15,27 +26,22 @@ export interface CaretSwapProps {
   typeSpeed?: number;
   speed?: number;
   className?: string;
+  /**
+   * Moves, trims or stretches the caret's phases and the typing, by the ids
+   * in `./timeline`. Frames on the scene timeline, after `speed`.
+   */
+  timing?: Timing<CaretSwapElementId>;
 }
 
-const CARET_LEAD = 7;
-const EXPAND_FRAMES = 6;
-const COLLAPSE_FRAMES = 7;
-const IDLE_FRAMES = 7;
-const BLINK_FRAMES = 8;
 const CARET_WIDTH_EM = 0.08;
 const CARET_HEIGHT_EM = 1.1;
 const CARET_GAP_EM = 0.06;
 const CHAR_WIDTH_EM = 0.52;
-const TYPE_ACCEL = 0.96;
-
-function typeElapsed(count: number, typeSpeed: number): number {
-  return (typeSpeed * (1 - TYPE_ACCEL ** count)) / (1 - TYPE_ACCEL);
-}
 
 export function caretSwapLength(
   toText: string,
-  swapAt = 20,
-  typeSpeed = 1,
+  swapAt = SWAP_AT,
+  typeSpeed = TYPE_SPEED,
 ): number {
   return Math.ceil(
     swapAt +
@@ -49,48 +55,64 @@ export function caretSwapLength(
 const expandEasing = Easing.bezier(0.6, 0, 0.8, 0.4);
 const collapseEasing = Easing.bezier(0.2, 0.7, 0.3, 1);
 
-export function CaretSwap({
-  fromText,
-  toText,
-  fontSize = 72,
-  color = "#171717",
-  fontWeight = 400,
-  caretColor = "#FF4DAA",
-  caretColorEnd = "#8A5CF6",
-  swapAt = 20,
-  typeSpeed = 1,
-  speed = 1,
-  className,
-}: CaretSwapProps) {
+export function CaretSwap(props: CaretSwapProps) {
+  const {
+    fromText,
+    toText,
+    fontSize = 72,
+    color = "#171717",
+    fontWeight = 400,
+    caretColor = "#FF4DAA",
+    caretColorEnd = "#8A5CF6",
+    speed = 1,
+    className,
+    timing,
+  } = props;
   const frame = useSceneFrame() * speed;
+  const { durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    caretSwapTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const caret = tl.get("caret");
+  const expandEl = tl.get("expand");
+  const collapseEl = tl.get("collapse");
+  const type = tl.get("type");
+  const blink = tl.get("blink");
 
   const toChars = Array.from(toText);
   const caretWidth = CARET_WIDTH_EM * fontSize;
   const caretHeight = CARET_HEIGHT_EM * fontSize;
 
-  const caretVisibleAt = Math.max(swapAt - CARET_LEAD, 0);
-  const expandEnd = swapAt + EXPAND_FRAMES;
-  const collapseEnd = expandEnd + COLLAPSE_FRAMES;
-  const typeStart = collapseEnd + IDLE_FRAMES;
-  const typeEnd = typeStart + typeElapsed(toChars.length, typeSpeed);
+  const caretVisibleAt = caret.start;
+  const swapAt = expandEl.start;
+  const expandEnd = expandEl.end;
+  const typeStart = type.start;
 
   const expand = interpolate(frame, [swapAt, expandEnd], [0, 1], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
     easing: expandEasing,
   });
-  const collapse = interpolate(frame, [expandEnd, collapseEnd], [0, 1], {
-    extrapolateLeft: "clamp",
-    extrapolateRight: "clamp",
-    easing: collapseEasing,
-  });
+  const collapse = interpolate(
+    frame,
+    [collapseEl.start, collapseEl.end],
+    [0, 1],
+    {
+      extrapolateLeft: "clamp",
+      extrapolateRight: "clamp",
+      easing: collapseEasing,
+    },
+  );
 
   const typing = frame >= typeStart;
   let typedCount = 0;
   if (typing) {
     while (
       typedCount < toChars.length &&
-      typeElapsed(typedCount, typeSpeed) <= frame - typeStart
+      typeElapsed(typedCount, type.beat("pace")) <= frame - typeStart
     ) {
       typedCount++;
     }
@@ -103,9 +125,10 @@ export function CaretSwap({
   const typeProgress = toChars.length > 0 ? typedCount / toChars.length : 0;
   const typedShift = targetShiftEm * typeProgress * fontSize;
 
+  const blinkPeriod = blink.beat("period");
   const blinkOff =
-    frame >= typeEnd + BLINK_FRAMES &&
-    Math.floor((frame - typeEnd) / BLINK_FRAMES) % 2 === 1;
+    frame >= blink.start + blinkPeriod &&
+    Math.floor((frame - blink.start) / blinkPeriod) % 2 === 1;
 
   const caretStyle = {
     background: `linear-gradient(180deg, ${caretColor}, ${caretColorEnd})`,

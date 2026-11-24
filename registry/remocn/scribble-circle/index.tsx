@@ -6,8 +6,13 @@ import {
   brushReach,
   brushRibbon,
 } from "@/components/remocn/brush";
-import { useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { DEFAULT_STEP, hashRange, steppedRamp } from "@/lib/remocn/stop-motion";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  type ScribbleCircleElementId,
+  scribbleCircleTimeline,
+} from "./timeline";
 
 const SAMPLES_PER_LAP = 48;
 const NOISE = 0.035;
@@ -110,28 +115,37 @@ export interface ScribbleCircleProps {
   laps?: number;
   seed?: string;
   step?: number;
+  /**
+   * Moves, trims or stretches the stroke, by the ids in `./timeline`.
+   * Frames on the scene timeline.
+   */
+  timing?: Timing<ScribbleCircleElementId>;
 }
 
-export function ScribbleCircle({
-  width,
-  height,
-  color = "#6f7f35",
-  strokeWidth = 14,
-  pressure = 0.2,
-  release = 1,
-  grain = 1,
-  delay = 0,
-  durationSteps = 10,
-  laps = 1.15,
-  seed = "scribble",
-  step = DEFAULT_STEP,
-}: ScribbleCircleProps) {
+export function ScribbleCircle(props: ScribbleCircleProps) {
+  const {
+    width,
+    height,
+    color = "#6f7f35",
+    strokeWidth = 14,
+    pressure = 0.2,
+    release = 1,
+    grain = 1,
+    laps = 1.15,
+    seed = "scribble",
+    step = DEFAULT_STEP,
+    timing,
+  } = props;
   const frame = useSceneFrame();
-  const progress = scribbleCircleProgress(frame, {
-    delay,
-    durationSteps,
-    step,
-  });
+  const { durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    scribbleCircleTimeline,
+    props,
+    durationInFrames,
+    timing,
+  );
+  const draw = tl.get("draw");
+  const progress = steppedRamp(frame, draw.start, draw.end, { step });
   const { d, viewBox, marginX, marginY } = scribbleCirclePath({
     width,
     height,

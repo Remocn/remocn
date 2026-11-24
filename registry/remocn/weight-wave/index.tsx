@@ -12,6 +12,12 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_TEXT,
+  type WeightWaveElementId,
+  weightWaveTimeline,
+} from "./timeline";
 
 const { fontFamily: sans } = loadVariableFont("normal", {
   subsets: ["latin"],
@@ -41,6 +47,12 @@ export interface WeightWaveProps {
   grain?: boolean;
   theme?: "dark" | "light";
   speed?: number;
+  /**
+   * Moves, trims or stretches the fade-in, single waves, the haze and the
+   * settle, by the ids in `./timeline`. Frames on the scene timeline, after
+   * `delay` and `speed`.
+   */
+  timing?: Timing<WeightWaveElementId>;
 }
 
 /** Geist 500 advance widths (per 1000 em) for ASCII 32–126 (widest weight used). */
@@ -57,12 +69,6 @@ const GEIST_500 = [
 const WGHT_MIN = 100;
 const WGHT_MAX = 500;
 const TRACK = -0.035;
-
-const ENTER = 4;
-const WAVE_START = 16;
-const WAVE_LEN = 46;
-const WAVE_GAP = 24;
-const SETTLE_STAGGER = 2.4;
 
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
 const EASE_TRAVEL = Easing.bezier(0.42, 0, 0.58, 1);
@@ -144,28 +150,33 @@ function ScaleLayer({
   );
 }
 
-export function WeightWave({
-  text = "Made to move.",
-  highlight,
-  from = 100,
-  peak = 500,
-  settle = 460,
-  waves = 2,
-  waveLength = WAVE_LEN,
-  stagger = SETTLE_STAGGER,
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = sans,
-  scale = 1,
-  delay = 0,
-  grain = true,
-  theme = "dark",
-  speed = 1,
-}: WeightWaveProps) {
+export function WeightWave(props: WeightWaveProps) {
+  const {
+    text = DEFAULT_TEXT,
+    highlight,
+    from = 100,
+    peak = 500,
+    settle = 460,
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = sans,
+    scale = 1,
+    delay = 0,
+    grain = true,
+    theme = "dark",
+    speed = 1,
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H, fps } = useSceneConfig();
+  const { width: W, height: H, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    weightWaveTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const c = THEMES[theme];
   const stage =
     background === "transparent" ? "transparent" : (background ?? c.bg);
@@ -190,19 +201,33 @@ export function WeightWave({
   const hi = clampW(peak);
   const rest = clampW(settle);
 
-  const settleStart = WAVE_START + (waves - 1) * WAVE_GAP + waveLength - 8;
+  const settling = tl.get("settle");
+  const settleStart = settling.start;
+  const waveEls = tl.lane("Waves");
+  const enter = tl.get("enter");
+  const haze = tl.get("haze");
   const sigma = 0.12;
-  const push = interpolate(t, [0, settleStart + 70], [0, 1], CLAMP);
+  const push = interpolate(
+    t,
+    [0, settleStart + settling.beat("push")],
+    [0, 1],
+    CLAMP,
+  );
 
-  const tintAt = settleStart + 12;
-  const sheen = interpolate(t, [tintAt, tintAt + 80], [0, 1], CLAMP);
+  const tintAt = settleStart + settling.beat("sheen");
+  const sheen = interpolate(
+    t,
+    [tintAt, tintAt + settling.beat("sheenLen")],
+    [0, 1],
+    CLAMP,
+  );
   // The deep end of the beam is the brand accent (dark), or its first stop (light).
   const beam =
     theme === "light"
       ? [accent, c.beam[1], c.beam[2]]
       : [c.beam[0], c.beam[1], accent];
   const beamFill = `linear-gradient(${96 + sheen * 10}deg, ${beam[0]} ${-10 + sheen * 8}%, ${beam[1]} ${44 + sheen * 6}%, ${beam[2]} 100%)`;
-  const hazeIn = interpolate(t, [WAVE_START, settleStart + 40], [0.35, 1], {
+  const hazeIn = interpolate(t, [haze.start, haze.end], [0.35, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
@@ -265,8 +290,9 @@ export function WeightWave({
               chars.map((ch, i) => {
                 const p = n > 1 ? i / (n - 1) : 0.5;
                 let bump = 0;
-                for (let k = 0; k < waves; k++) {
-                  const s = WAVE_START + k * WAVE_GAP;
+                for (const w of waveEls) {
+                  const s = w.start;
+                  const waveLength = w.length;
                   const crest = interpolate(
                     t,
                     [s, s + waveLength],
@@ -284,7 +310,7 @@ export function WeightWave({
                 }
                 const wave = lo + (hi - lo) * bump;
                 const sp = spring({
-                  frame: t - settleStart - i * stagger,
+                  frame: t - settleStart - i * settling.beat("stagger"),
                   fps,
                   config: { damping: 15, stiffness: 120, mass: 0.9 },
                 });
@@ -294,17 +320,27 @@ export function WeightWave({
                   ? interpolate(
                       t,
                       [
-                        settleStart + 14 + (i - accentRange[0]) * 2,
-                        settleStart + 30 + (i - accentRange[0]) * 2,
+                        settleStart +
+                          settling.beat("tint") +
+                          (i - accentRange[0]) * settling.beat("tintStagger"),
+                        settleStart +
+                          (settling.beat("tint") + settling.beat("tintLen")) +
+                          (i - accentRange[0]) * settling.beat("tintStagger"),
                       ],
                       [0, 1],
                       CLAMP,
                     )
                   : 0;
-                const o = interpolate(t, [ENTER + i, ENTER + i + 12], [0, 1], {
-                  ...CLAMP,
-                  easing: EASE_OUT,
-                });
+                const fadeAt = enter.start + i * enter.beat("stagger");
+                const o = interpolate(
+                  t,
+                  [fadeAt, fadeAt + enter.beat("letter")],
+                  [0, 1],
+                  {
+                    ...CLAMP,
+                    easing: EASE_OUT,
+                  },
+                );
                 return (
                   <span
                     key={`${i}-${ch}`}

@@ -32,6 +32,7 @@
       "@/lib/remocn/gsh/*": ["./registry/remocn/gsh/*"],
       "@/lib/remocn/glide": ["./registry/remocn/glide/index.ts"],
       "@/lib/remocn/frame-rate": ["./registry/remocn/frame-rate/index.ts"],
+      "@/lib/remocn/timeline": ["./registry/remocn/timeline/index.ts"],
       "@/lib/remocn/stop-motion": ["./registry/remocn/stop-motion/index.ts"],
       "@/lib/remocn/scene-motion": ["./registry/remocn/scene-motion/index.ts"],
       "@/lib/remocn/canvas-presentation": [

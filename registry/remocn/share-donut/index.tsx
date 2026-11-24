@@ -8,6 +8,12 @@ import { useId } from "react";
 import { AbsoluteFill, Easing, interpolate, spring } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_SEGMENTS,
+  type ShareDonutElementId,
+  shareDonutTimeline,
+} from "./timeline";
 
 const { fontFamily: sans } = loadFont("normal", {
   weights: ["400", "500"],
@@ -84,15 +90,13 @@ export interface ShareDonutProps {
   delay?: number;
   theme?: "dark" | "light";
   speed?: number;
+  /**
+   * Moves, trims or stretches the stage, the camera, each slice, the detach,
+   * the centre figure and its label, by the ids in `./timeline`. Frames on
+   * the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<ShareDonutElementId>;
 }
-
-const DEFAULT_SEGMENTS: DonutSegment[] = [
-  { label: "remocn", value: 38 },
-  { label: "Kitebase", value: 24 },
-  { label: "Lumen", value: 17 },
-  { label: "Fernway", value: 12 },
-  { label: "Other", value: 9 },
-];
 
 const EASE_IO = Easing.bezier(0.65, 0, 0.35, 1);
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
@@ -128,8 +132,6 @@ const THEMES = {
   },
 } as const;
 
-const DRAW_START = 6;
-const DRAW_LEN = 52;
 const TAU = Math.PI * 2;
 
 function pt(cx: number, cy: number, r: number, a: number) {
@@ -183,25 +185,38 @@ function ScaleLayer({
   );
 }
 
-export function ShareDonut({
-  segments = DEFAULT_SEGMENTS,
-  highlight = 0,
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = sans,
-  drawLength = DRAW_LEN,
-  thickness = 12,
-  logo,
-  grain = true,
-  scale: size = 1,
-  delay = 0,
-  theme = "dark",
-  speed = 1,
-}: ShareDonutProps) {
+export function ShareDonut(props: ShareDonutProps) {
+  const {
+    segments = DEFAULT_SEGMENTS,
+    highlight = 0,
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = sans,
+    thickness = 12,
+    logo,
+    grain = true,
+    scale: size = 1,
+    delay = 0,
+    theme = "dark",
+    speed = 1,
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width, height, fps } = useSceneConfig();
+  const { width, height, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    shareDonutTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const stageEl = tl.get("stage");
+  const spinEl = tl.get("spin");
+  const pushEl = tl.get("push");
+  const detachEl = tl.get("detach");
+  const totalEl = tl.get("total");
+  const labelEl = tl.get("label");
   const u = Math.min(width / 1280, height / 720);
   const p = THEMES[theme];
   const fg = ink ?? p.fg;
@@ -219,15 +234,12 @@ export function ShareDonut({
 
   let acc = 0;
   let grayIdx = 0;
-  let clock = DRAW_START;
   const segs = list.map((s, i) => {
     const frac = Math.max(0, s.value) / total;
     const a0 = acc * TAU;
     acc += frac;
     const a1 = acc * TAU;
-    const dur = Math.max(9, drawLength * frac);
-    const start = clock;
-    clock += dur - 2;
+    const e = tl.get(`segment:${i}`);
     const color = i === hl ? accent : p.grays[Math.min(grayIdx++, 3)];
     return {
       ...s,
@@ -236,42 +248,45 @@ export function ShareDonut({
       a0: a0 + gapA / 2,
       a1: a1 - gapA / 2,
       mid: (a0 + a1) / 2,
-      start,
-      end: start + dur,
+      start: e.start,
+      end: e.end,
+      el: e,
       color,
       pct: Math.round(frac * 100),
     };
   });
-  const drawEnd = segs.length ? segs[segs.length - 1].end : DRAW_START;
-  const HIT = drawEnd + 8;
-
   const detach = spring({
-    frame: t - HIT,
+    frame: t - detachEl.start,
     fps,
     config: { damping: 15, stiffness: 150, mass: 0.7 },
   });
-  const dim = interpolate(t, [HIT, HIT + 16], [0, 1], {
+  const dim = interpolate(t, [detachEl.start, detachEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
-  const land = interpolate(t, [HIT + 4, HIT + 24], [0, 1], {
-    ...CLAMP,
-    easing: EASE_OUT,
-  });
-  const count = interpolate(t, [HIT + 4, HIT + 30], [0.55, 1], {
+  const land = interpolate(
+    t,
+    [totalEl.start, totalEl.start + totalEl.beat("land")],
+    [0, 1],
+    {
+      ...CLAMP,
+      easing: EASE_OUT,
+    },
+  );
+  const count = interpolate(t, [totalEl.start, totalEl.end], [0.55, 1], {
     ...CLAMP,
     easing: Easing.bezier(0.22, 1, 0.36, 1),
   });
-  const labIn = interpolate(t, [HIT + 12, HIT + 30], [0, 1], {
+  const labIn = interpolate(t, [labelEl.start, labelEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
-  const stage = interpolate(t, [0, 10], [0.4, 1], CLAMP);
-  const spin = interpolate(t, [0, HIT + 10], [-14, 0], {
+  const stage = interpolate(t, [stageEl.start, stageEl.end], [0.4, 1], CLAMP);
+  const spin = interpolate(t, [spinEl.start, spinEl.end], [-14, 0], {
     ...CLAMP,
     easing: EASE_IO,
   });
-  const push = interpolate(t, [0, HIT + 60], [0, 1], {
+  const push = interpolate(t, [pushEl.start, pushEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
@@ -355,10 +370,15 @@ export function ShareDonut({
                 );
               })}
               {segs.map((s) => {
-                const a = interpolate(t, [s.end - 6, s.end + 8], [0, 1], {
-                  ...CLAMP,
-                  easing: EASE_OUT,
-                });
+                const a = interpolate(
+                  t,
+                  [s.end + s.el.beat("tickAt"), s.end + s.el.beat("tick")],
+                  [0, 1],
+                  {
+                    ...CLAMP,
+                    easing: EASE_OUT,
+                  },
+                );
                 const p0 = pt(cx, cy, R + sw / 2 + 8 * u, s.mid);
                 const p1 = pt(cx, cy, R + sw / 2 + 8 * u + 14 * u * a, s.mid);
                 const fade = s.i === hl ? 1 - dim : 1 - 0.55 * dim;
@@ -379,10 +399,15 @@ export function ShareDonut({
           </svg>
 
           {segs.map((s) => {
-            const a = interpolate(t, [s.end - 4, s.end + 12], [0, 1], {
-              ...CLAMP,
-              easing: EASE_OUT,
-            });
+            const a = interpolate(
+              t,
+              [s.end + s.el.beat("labelAt"), s.end + s.el.beat("label")],
+              [0, 1],
+              {
+                ...CLAMP,
+                easing: EASE_OUT,
+              },
+            );
             const ang = s.mid + (spin * Math.PI) / 180;
             const q = pt(cx, cy, R + sw / 2 + 38 * u + (1 - a) * -8 * u, ang);
             // Placed by `left`/`top`, a label clicked along its orbit pixel by

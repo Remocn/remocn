@@ -6,6 +6,13 @@ import type React from "react";
 import { AbsoluteFill, Easing, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_KILLS,
+  type KillFeedElementId,
+  killFeedTimeline,
+  PREROLL,
+} from "./timeline";
 
 const { fontFamily: chakra } = loadFont("normal", {
   weights: ["500"],
@@ -78,6 +85,12 @@ export interface KillFeedProps {
   delay?: number;
   theme?: "dark" | "light";
   speed?: number;
+  /**
+   * Moves, trims or stretches single kills, the band and the caption, by
+   * the ids in `./timeline`. Frames on the scene timeline, after `delay` and
+   * `speed`.
+   */
+  timing?: Timing<KillFeedElementId>;
 }
 
 // Beat sheet (internal clock = frame + 3, 30fps, speed 1, five kills):
@@ -89,10 +102,6 @@ export interface KillFeedProps {
 //  52–59   the fifth kill fires the "halo" band: it slams across the middle,
 //          the frame kicks, the feed sinks back (lines under the band go)
 //  63–74   logo and caption rise under the band; poster holds
-const FIRST_KILL = 2;
-const KILL_GAPS = [14, 12, 10, 8];
-const BANNER_DELAY = 4;
-const BAND_IN = 7;
 
 const SLAM = Easing.bezier(0.12, 0.9, 0.25, 1);
 const OUT = Easing.bezier(0.22, 1, 0.36, 1);
@@ -193,50 +202,46 @@ function ScaleLayer({
   );
 }
 
-export function KillFeed({
-  kills = [
-    "Manual keyframes",
-    "Render queue",
-    "Agency invoice",
-    "Stock templates",
-    "Export presets",
-  ],
-  callouts = ["First blood", "Double kill", "Triple kill", "Quadra kill"],
-  banner = "Penta ship",
-  caption = "5 / 5 eliminated",
-  streakLabel = "Streak",
-  logo,
-  shake = 1,
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = chakra,
-  scale = 1,
-  delay = 0,
-  theme = "dark",
-  speed = 1,
-}: KillFeedProps) {
+export function KillFeed(props: KillFeedProps) {
+  const {
+    kills = DEFAULT_KILLS,
+    callouts = ["First blood", "Double kill", "Triple kill", "Quadra kill"],
+    banner = "Penta ship",
+    caption = "5 / 5 eliminated",
+    streakLabel = "Streak",
+    logo,
+    shake = 1,
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = chakra,
+    scale = 1,
+    delay = 0,
+    theme = "dark",
+    speed = 1,
+    timing,
+  } = props;
   const glide = useGlide();
   // Starts three frames in, so frame 0 already has the first line on its way.
-  const t = Math.max(0, useSceneFrame() - delay) * speed + 3;
-  const { width: W, height: H } = useSceneConfig();
+  const t = Math.max(0, useSceneFrame() - delay) * speed + PREROLL;
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    killFeedTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const c = THEMES[theme];
   const fg = ink ?? c.ink;
   const stage =
     background === "transparent" ? "transparent" : (background ?? c.stage);
   const u = Math.min(W / 1280, H / 720);
 
-  const killAt: number[] = [];
-  kills.forEach((_, i) => {
-    killAt.push(
-      i === 0
-        ? FIRST_KILL
-        : killAt[i - 1] + (KILL_GAPS[i - 1] ?? KILL_GAPS[KILL_GAPS.length - 1]),
-    );
-  });
-  const lastKill = killAt[killAt.length - 1] ?? FIRST_KILL;
-  const bandAt = lastKill + BANNER_DELAY;
-  const landAt = bandAt + BAND_IN;
+  // The schedule counts scene frames; `t` runs `PREROLL` ahead of them.
+  const killAt = kills.map((_, i) => tl.get(`kill:${i}`).start + PREROLL);
+  const band = tl.get("band");
+  const bandAt = band.start + PREROLL;
+  const landAt = bandAt + band.length;
 
   // ── Camera kick on every kill and on the band landing ─────────────────────
   const killKick = killAt.reduce((a, k) => Math.max(a, kick(t - k - 2, 6)), 0);
@@ -267,12 +272,13 @@ export function KillFeed({
   const bandH = 256 * u;
   const bandY = H / 2 - bandH / 2 + 14 * u;
   const slant = 0.24 * bandH;
-  const bandIn = SLAM(ramp(t, bandAt, BAND_IN));
+  const bandIn = SLAM(ramp(t, bandAt, band.length));
   const bandX = -(W + 2 * slant) * (1 - bandIn);
-  const textIn = OUT(ramp(t, bandAt + 1, 14));
+  const textIn = OUT(ramp(t, bandAt + band.beat("textAt"), band.beat("text")));
   const textX = -0.22 * W * (1 - textIn);
   const textScale = 1 + 0.1 * (1 - textIn);
-  const capIn = OUT(ramp(t, landAt + 4, 11));
+  const captionEl = tl.get("caption");
+  const capIn = OUT(ramp(t, captionEl.start + PREROLL, captionEl.length));
   const flash = kick(t - landAt + 1, 5);
 
   return (

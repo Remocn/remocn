@@ -7,6 +7,12 @@ import { useId } from "react";
 import { AbsoluteFill, Easing, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  type BracketWinElementId,
+  bracketWinTimeline,
+  PREROLL,
+} from "./timeline";
 
 const { fontFamily: tektur } = loadFont("normal", {
   weights: ["400", "500"],
@@ -77,6 +83,12 @@ export interface BracketWinProps {
   delay?: number;
   theme?: "dark" | "light";
   speed?: number;
+  /**
+   * Moves, trims or stretches the bracket's entrance, single rounds, the
+   * burst and the caption, by the ids in `./timeline`. Frames on the scene
+   * timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<BracketWinElementId>;
 }
 
 // Beat sheet (30fps, speed 1):
@@ -89,11 +101,6 @@ export interface BracketWinProps {
 //  68–82  the final node bursts: a gradient plate grows out of it with a ring,
 //          the bracket sinks back, "CHAMPION" slams in with the logo
 //  86–    poster hold
-const ROUND_AT = [20, 40, 60] as const;
-const DIM_DELAY = 4;
-const LINE_LEN = 9;
-const BURST_AT = 68;
-
 const SLAM = Easing.bezier(0.12, 0.9, 0.25, 1);
 const OUT = Easing.bezier(0.22, 1, 0.36, 1);
 const INOUT = Easing.bezier(0.65, 0, 0.35, 1);
@@ -164,6 +171,8 @@ interface Slot {
   side: "a" | "b";
   /** Frame the team's name appears in the slot. */
   arrive: number;
+  /** Frames the name takes to roll in. */
+  nameIn: number;
 }
 
 interface Link {
@@ -171,6 +180,8 @@ interface Link {
   len: number;
   team: number;
   at: number;
+  /** Frames the winner's line takes to draw. */
+  draw: number;
 }
 
 /** The foreground at `scale`, around the frame's center; nothing extra at 1. */
@@ -189,40 +200,52 @@ function ScaleLayer({
   );
 }
 
-export function BracketWin({
-  opponents = [
-    "Keyframes",
-    "Stock clips",
-    "Agency",
-    "Screen rec",
-    "Slide decks",
-    "Templates",
-    "Freelance",
-  ],
-  title = "Champion",
-  caption = "Playoffs 2026 · 8 teams · 0 maps dropped",
-  rounds = ["Quarterfinal", "Semifinal", "Grand final"],
-  roundLength = 20,
-  logo,
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = tektur,
-  scale = 1,
-  delay = 0,
-  theme = "dark",
-  speed = 1,
-}: BracketWinProps) {
+export function BracketWin(props: BracketWinProps) {
+  const {
+    opponents = [
+      "Keyframes",
+      "Stock clips",
+      "Agency",
+      "Screen rec",
+      "Slide decks",
+      "Templates",
+      "Freelance",
+    ],
+    title = "Champion",
+    caption = "Playoffs 2026 · 8 teams · 0 maps dropped",
+    rounds = ["Quarterfinal", "Semifinal", "Grand final"],
+    logo,
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = tektur,
+    scale = 1,
+    delay = 0,
+    theme = "dark",
+    speed = 1,
+    timing,
+  } = props;
   const glide = useGlide();
-  const t = Math.max(0, useSceneFrame() - delay) * speed + 1;
-  const { width: W, height: H } = useSceneConfig();
+  const t = Math.max(0, useSceneFrame() - delay) * speed + PREROLL;
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    bracketWinTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const c = THEMES[theme];
   const fg = ink ?? c.ink;
   const stage =
     background === "transparent" ? "transparent" : (background ?? c.stage);
-  const extra = roundLength - 20;
-  const roundAt = ROUND_AT.map((r, k) => r + k * extra);
-  const burstAt = BURST_AT + 2 * extra;
+  // The schedule counts scene frames; `t` runs `PREROLL` ahead of them.
+  const intro = tl.get("bracket");
+  const introAt = intro.start + PREROLL;
+  const roundEls = [0, 1, 2].map((k) => tl.get(`round:${k}`));
+  const roundAt = roundEls.map((e) => e.start + PREROLL);
+  const burstEl = tl.get("burst");
+  const burstAt = burstEl.start + PREROLL;
+  const captionEl = tl.get("caption");
   const u = Math.min(W / 1280, H / 720);
   const id = useId().replace(/[^a-zA-Z0-9_-]/g, "");
   const names = ["remocn", ...opponents];
@@ -244,7 +267,13 @@ export function BracketWin({
   // Every slot in the bracket.
   const slots: Slot[] = [];
   const links: Link[] = [];
-  const addPair = (m: number, x: number, mcy: number, arrive: number): void => {
+  const addPair = (
+    m: number,
+    x: number,
+    mcy: number,
+    arrive: number,
+    nameIn: number,
+  ): void => {
     slots.push({
       x,
       y: pairTop(mcy),
@@ -252,6 +281,7 @@ export function BracketWin({
       match: m,
       side: "a",
       arrive,
+      nameIn,
     });
     slots.push({
       x,
@@ -260,18 +290,21 @@ export function BracketWin({
       match: m,
       side: "b",
       arrive,
+      nameIn,
     });
   };
-  const winAt = (round: number) => roundAt[round] + DIM_DELAY;
-  const landAt = (round: number) => winAt(round) + LINE_LEN - 1;
+  const winAt = (round: number) => roundAt[round] + roundEls[round].beat("dim");
+  const landAt = (round: number) =>
+    winAt(round) + roundEls[round].beat("line") - 1;
+  const nameIn = (round: number) => roundEls[round].beat("name");
 
-  addPair(0, qfX[0], qfCy[0], 0);
-  addPair(1, qfX[0], qfCy[1], 0);
-  addPair(2, qfX[1], qfCy[0], 0);
-  addPair(3, qfX[1], qfCy[1], 0);
-  addPair(4, sfX[0], cy, landAt(0));
-  addPair(5, sfX[1], cy, landAt(0));
-  addPair(6, fX, cy, landAt(1));
+  addPair(0, qfX[0], qfCy[0], 0, 0);
+  addPair(1, qfX[0], qfCy[1], 0, 0);
+  addPair(2, qfX[1], qfCy[0], 0, 0);
+  addPair(3, qfX[1], qfCy[1], 0, 0);
+  addPair(4, sfX[0], cy, landAt(0), nameIn(0));
+  addPair(5, sfX[1], cy, landAt(0), nameIn(0));
+  addPair(6, fX, cy, landAt(1), nameIn(1));
 
   const elbow = (x0: number, y0: number, x1: number, y1: number) => {
     const xm = (x0 + x1) / 2;
@@ -290,7 +323,12 @@ export function BracketWin({
       sfX[0],
       slotMid(k === 0 ? pairTop(cy) : pairBot(cy)),
     );
-    links.push({ ...toL, team: mL.win, at: winAt(0) });
+    links.push({
+      ...toL,
+      team: mL.win,
+      at: winAt(0),
+      draw: roundEls[0].beat("line"),
+    });
     const mR = MATCHES[2 + k];
     const toR = elbow(
       qfX[1],
@@ -298,31 +336,54 @@ export function BracketWin({
       sfX[1] + slotW,
       slotMid(k === 0 ? pairTop(cy) : pairBot(cy)),
     );
-    links.push({ ...toR, team: mR.win, at: winAt(0) });
+    links.push({
+      ...toR,
+      team: mR.win,
+      at: winAt(0),
+      draw: roundEls[0].beat("line"),
+    });
   }
   // Semifinal → final.
   const toFL = elbow(sfX[0] + slotW, cy, fX, slotMid(pairTop(cy)));
-  links.push({ ...toFL, team: MATCHES[4].win, at: winAt(1) });
+  links.push({
+    ...toFL,
+    team: MATCHES[4].win,
+    at: winAt(1),
+    draw: roundEls[1].beat("line"),
+  });
   const toFR = elbow(sfX[1], cy, fX + finalW, slotMid(pairBot(cy)));
-  links.push({ ...toFR, team: MATCHES[5].win, at: winAt(1) });
+  links.push({
+    ...toFR,
+    team: MATCHES[5].win,
+    at: winAt(1),
+    draw: roundEls[1].beat("line"),
+  });
 
   // ── Global beats ──────────────────────────────────────────────────────────
-  const baseDraw = OUT(ramp(t, 4, 12));
-  const labelsIn = OUT(ramp(t, 6, 10));
-  const burst = SLAM(ramp(t, burstAt, 10));
-  const sinkP = OUT(ramp(t, burstAt, 12));
-  const titleIn = SLAM(ramp(t, burstAt + 2, 8));
-  const logoIn = OUT(ramp(t, burstAt + 5, 10));
-  const capIn = OUT(ramp(t, burstAt + 12, 10));
+  const baseDraw = OUT(
+    ramp(t, introAt + intro.beat("baseAt"), intro.beat("base")),
+  );
+  const labelsIn = OUT(
+    ramp(t, introAt + intro.beat("labelsAt"), intro.beat("labels")),
+  );
+  const burst = SLAM(ramp(t, burstAt, burstEl.length));
+  const sinkP = OUT(ramp(t, burstAt, burstEl.beat("sink")));
+  const titleIn = SLAM(
+    ramp(t, burstAt + burstEl.beat("titleAt"), burstEl.beat("title")),
+  );
+  const logoIn = OUT(
+    ramp(t, burstAt + burstEl.beat("logoAt"), burstEl.beat("logo")),
+  );
+  const capIn = OUT(ramp(t, captionEl.start + PREROLL, captionEl.length));
   // The camera: a slow push with a kick on every round. The kicks overlap the
   // push, so whether it moves is read off the neighbouring frames.
   const camAt = (f: number) =>
-    (1 + 0.035 * INOUT(ramp(f, 0, burstAt + 20))) *
+    (1 + 0.035 * INOUT(ramp(f, 0, burstAt + burstEl.beat("push")))) *
     (1 +
       0.01 *
         Math.max(
-          ...roundAt.map((r) => kick(f - r, 7) * 0.6),
-          kick(f - burstAt - 4, 10),
+          ...roundAt.map((r, k) => kick(f - r, roundEls[k].beat("kick")) * 0.6),
+          kick(f - burstAt - burstEl.beat("kickAt"), burstEl.beat("kick")),
         ));
   const cam = camAt(t);
   const camMoving =
@@ -343,24 +404,43 @@ export function BracketWin({
   const slotEl = (s: Slot, i: number) => {
     const m = MATCHES[s.match];
     const resolveAt = roundAt[m.round];
+    const round = roundEls[m.round];
     const isFinal = m.round === 2;
     const w = isFinal ? finalW : slotW;
     const enter =
       m.round === 0
-        ? SLAM(ramp(t, (i % 4) - 1, 9))
-        : OUT(ramp(t, 3 + m.round * 2, 10));
+        ? SLAM(ramp(t, introAt + (i % 4), intro.beat("slotIn")))
+        : OUT(
+            ramp(
+              t,
+              introAt +
+                intro.beat("laterAt") +
+                m.round * intro.beat("laterStep"),
+              intro.beat("laterIn"),
+            ),
+          );
     const fromLeft = s.x < cx - (isFinal ? w : 0);
     const named = t >= s.arrive;
-    const nameP = s.arrive === 0 ? 1 : SLAM(ramp(t, s.arrive, 6));
+    const nameP = s.arrive === 0 ? 1 : SLAM(ramp(t, s.arrive, s.nameIn));
     const resolved = t >= resolveAt;
     const sc = s.side === "a" ? m.score[0] : m.score[1];
-    const scoreP = SLAM(ramp(t, resolveAt + (s.match % 4) * 1, 5));
+    const scoreP = SLAM(
+      ramp(
+        t,
+        resolveAt + (s.match % 4) * round.beat("scoreStep"),
+        round.beat("score"),
+      ),
+    );
     const won = m.win === s.team;
     const lost = !won;
-    const dimP = lost ? OUT(ramp(t, resolveAt + DIM_DELAY, 6)) : 0;
+    const dimP = lost
+      ? OUT(ramp(t, resolveAt + round.beat("dim"), round.beat("dimIn")))
+      : 0;
     const isRemocn = s.team === 0;
     const lit = isRemocn && named;
-    const winFlash = won ? kick(t - resolveAt - DIM_DELAY, 9) : 0;
+    const winFlash = won
+      ? kick(t - resolveAt - round.beat("dim"), round.beat("flash"))
+      : 0;
     const hideInBurst = isFinal && t >= burstAt;
     if (hideInBurst) return null;
     return (
@@ -554,7 +634,7 @@ export function BracketWin({
                 />
               ))}
               {links.map((l, i) => {
-                const p = SLAM(ramp(t, l.at, LINE_LEN));
+                const p = SLAM(ramp(t, l.at, l.draw));
                 if (p <= 0) return null;
                 const mine = l.team === 0;
                 return (
@@ -597,8 +677,8 @@ export function BracketWin({
 
           {/* Burst: two crisp rings racing out of the final node. */}
           {t >= burstAt
-            ? [0, 4].map((delay) => {
-                const p = OUT(ramp(t, burstAt + delay, 26));
+            ? [0, burstEl.beat("echo")].map((delay) => {
+                const p = OUT(ramp(t, burstAt + delay, burstEl.beat("ring")));
                 const r = (120 + 560 * p) * u;
                 return (
                   <div
@@ -670,7 +750,12 @@ export function BracketWin({
                   position: "absolute",
                   inset: 0,
                   background: "#FFFFFF",
-                  opacity: 0.3 * kick(t - burstAt - 1, 7),
+                  opacity:
+                    0.3 *
+                    kick(
+                      t - burstAt - burstEl.beat("flashAt"),
+                      burstEl.beat("flash"),
+                    ),
                 }}
               />
             </div>

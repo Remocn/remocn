@@ -1,8 +1,10 @@
 "use client";
 
 import { Easing, interpolate } from "remotion";
-import { useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import { type SpringScaleInElementId, springScaleInTimeline } from "./timeline";
 
 export interface SpringScaleInProps {
   text: string;
@@ -13,23 +15,35 @@ export interface SpringScaleInProps {
   fontWeight?: number;
   speed?: number;
   className?: string;
+  /**
+   * Moves, trims or stretches single words, by the ids in `./timeline`.
+   * Frames on the scene timeline, after `speed`.
+   */
+  timing?: Timing<SpringScaleInElementId>;
 }
 
-export function SpringScaleIn({
-  text,
-  staggerDelay = 3,
-  scaleFrom = 0.7,
-  fontSize = 72,
-  color = "#171717",
-  fontWeight = 600,
-  speed = 1,
-  className,
-}: SpringScaleInProps) {
+export function SpringScaleIn(props: SpringScaleInProps) {
+  const {
+    text,
+    scaleFrom = 0.7,
+    fontSize = 72,
+    color = "#171717",
+    fontWeight = 600,
+    speed = 1,
+    className,
+    timing,
+  } = props;
   const frame = useSceneFrame() * speed;
+  const { durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    springScaleInTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const glide = useGlide();
 
   const words = text.split(" ");
-  const wordDurationFrames = 11;
   const easing = Easing.bezier(0.34, 1.56, 0.64, 1);
 
   return (
@@ -55,7 +69,9 @@ export function SpringScaleIn({
         }}
       >
         {words.map((word, i) => {
-          const local = frame - i * staggerDelay;
+          const item = tl.get(`word:${i}`);
+          const local = frame - item.start;
+          const wordDurationFrames = item.length;
           const opacity = interpolate(local, [0, wordDurationFrames], [0, 1], {
             extrapolateLeft: "clamp",
             extrapolateRight: "clamp",

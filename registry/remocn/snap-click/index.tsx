@@ -5,6 +5,13 @@ import type React from "react";
 import { useId, useMemo } from "react";
 import { AbsoluteFill, Easing, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_LABEL,
+  type SnapClickElementId,
+  snapClickTimeline,
+  TYPE_RATE,
+} from "./timeline";
 
 const { fontFamily: mono } = loadMono("normal", {
   weights: ["400"],
@@ -33,6 +40,12 @@ export interface SnapClickProps {
   grain?: boolean;
   theme?: "dark" | "light";
   speed?: number;
+  /**
+   * Moves, trims or stretches the slam, the click and the typed label, by
+   * the ids in `./timeline`. Frames on the scene timeline, after `delay` and
+   * `speed`.
+   */
+  timing?: Timing<SnapClickElementId>;
 }
 
 type Glyph = readonly [number, number, number, number, number, string];
@@ -356,22 +369,32 @@ function ScaleLayer({
   );
 }
 
-export function SnapClick({
-  text = "emocn",
-  seam,
-  label = "Animations for Remotion",
-  accent = "#3B5BFD",
-  ink,
-  background,
-  click = 13,
-  scale = 1,
-  delay = 0,
-  grain = true,
-  theme = "dark",
-  speed = 1,
-}: SnapClickProps) {
+export function SnapClick(props: SnapClickProps) {
+  const {
+    text = "emocn",
+    seam,
+    label = DEFAULT_LABEL,
+    accent = "#3B5BFD",
+    ink,
+    background,
+    scale = 1,
+    delay = 0,
+    grain = true,
+    theme = "dark",
+    speed = 1,
+    timing,
+  } = props;
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H } = useSceneConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    snapClickTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const slamEl = tl.get("slam");
+  const clickEl = tl.get("click");
+  const typeEl = tl.get("type");
   const c = THEMES[theme];
   const u = W / 1280;
   const id = `sc${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
@@ -394,39 +417,52 @@ export function SnapClick({
   const baseline = H * 0.47 + (R_HEIGHT / 2) * k;
 
   // Beats: halves slam in (0 → CLICK), snap, shake, label types from TYPE.
-  const CLICK = click;
-  const TYPE = click + 11;
+  const CLICK = clickEl.start;
+  const TYPE = typeEl.start;
   const seamScreen = ox + seamX * k;
   // Both halves open the shot whole, pushed out to the frame margins, so the
   // first frame is already a composed picture: two pieces and a gap.
   const margin = W * 0.045;
   const startL = margin - ox;
   const startR = W - margin - (ox + set.ink * k);
-  const slam = EASE_SLAM(interpolate(t, [0, CLICK], [0, 1], CLAMP));
+  const slam = EASE_SLAM(
+    interpolate(t, [slamEl.start, slamEl.end], [0, 1], CLAMP),
+  );
   // 1-frame overshoot into each other, 1 frame of rebound, then locked.
-  const snap = t < CLICK ? 0 : t < CLICK + 1 ? 5 : t < CLICK + 2 ? -1.5 : 0;
+  const snap =
+    t < CLICK
+      ? 0
+      : t < CLICK + clickEl.beat("overshoot")
+        ? 5
+        : t < CLICK + clickEl.beat("rebound")
+          ? -1.5
+          : 0;
   const dxL = startL * (1 - slam) + snap * u;
   const dxR = startR * (1 - slam) - snap * u;
-  const shakeIdx = Math.floor(t) - (CLICK + 1);
+  const shakeIdx = Math.floor(t) - (CLICK + clickEl.beat("shake"));
   const shake =
     shakeIdx >= 0 && shakeIdx < SHAKE.length ? SHAKE[shakeIdx] * u : 0;
 
-  const flash = interpolate(t, [CLICK, CLICK + 9], [1, 0], {
+  const flash = interpolate(t, [CLICK, clickEl.end], [1, 0], {
     ...CLAMP,
     easing: EASE_OUT,
   });
-  const flashLen = interpolate(t, [CLICK, CLICK + 9], [0.9, 1.25], {
+  const flashLen = interpolate(t, [CLICK, clickEl.end], [0.9, 1.25], {
     ...CLAMP,
     easing: EASE_OUT,
   });
 
   const typed = Math.max(
     0,
-    Math.min(label.length, Math.floor((t - TYPE) * 1.1)),
+    Math.min(
+      label.length,
+      Math.floor((t - TYPE) * (TYPE_RATE / typeEl.beat("stream"))),
+    ),
   );
-  const typing = t >= TYPE - 4;
+  const typing = t >= TYPE + typeEl.beat("caret");
   const done = typed >= label.length;
-  const caretOn = !done || Math.floor((t - TYPE) / 9) % 2 === 0;
+  const caretOn =
+    !done || Math.floor((t - TYPE) / typeEl.beat("blink")) % 2 === 0;
 
   const drift = Math.min(t, 105) * 0.04;
   const ground = [

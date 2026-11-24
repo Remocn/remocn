@@ -7,6 +7,17 @@ import { Fragment, useId } from "react";
 import { AbsoluteFill, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import {
+  type ResolvedElement,
+  type Timing,
+  useTimeline,
+} from "@/lib/remocn/timeline";
+import {
+  DEFAULT_ITEMS,
+  type FlickSwapElementId,
+  flickSwapTimeline,
+  itemsOf,
+} from "./timeline";
 
 const bricolage = loadBricolage("normal", {
   weights: ["400", "500"],
@@ -39,25 +50,12 @@ export interface FlickSwapProps {
   delay?: number;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches single headlines and the rail, by the ids in
+   * `./timeline`. Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<FlickSwapElementId>;
 }
-
-const DEFAULT_ITEMS: FlickSwapItem[] = [
-  {
-    label: "Captions",
-    headline: "Every word lands on the beat.",
-    highlight: "on the beat",
-  },
-  {
-    label: "Transitions",
-    headline: "Cuts that feel expensive.",
-    highlight: "expensive",
-  },
-  {
-    label: "Backgrounds",
-    headline: "Grounds that never sit still.",
-    highlight: "never sit still",
-  },
-];
 
 const HALO = ["#fff4ec", "#ffb36b", "#e2457a", "#3d4dff"] as const;
 
@@ -97,20 +95,23 @@ function springOffset(t: number, x0: number, v0: number) {
   );
 }
 
-const DRAG = 7;
 const DRAG_AMT = 0.07;
-const SETTLE = 22;
 
-function scrollAt(f: number, n: number, period: number) {
-  if (f < 0) return -0.48;
-  let k = Math.min(n - 1, Math.floor(f / period));
-  const nextRelease = (k + 1) * period;
-  if (k < n - 1 && f >= nextRelease - DRAG) {
-    const t = (f - (nextRelease - DRAG)) / DRAG;
-    return k + DRAG_AMT * t * t;
+/** Scroll position at frame `f`, in headlines, from the item elements. */
+function scrollAt(f: number, items: ResolvedElement[]) {
+  const n = items.length;
+  if (f < items[0].start) return -0.48;
+  let k = 0;
+  while (k < n - 1 && f >= items[k + 1].start) k++;
+  if (k < n - 1) {
+    const nextRelease = items[k + 1].start;
+    const drag = -items[k + 1].beat("drag");
+    if (f >= nextRelease - drag) {
+      const t = (f - (nextRelease - drag)) / drag;
+      return k + DRAG_AMT * t * t;
+    }
   }
-  k = Math.max(0, k);
-  const t = f - k * period;
+  const t = f - items[k].start;
   if (k === 0) return springOffset(t, -0.48, 0.06);
   return k + springOffset(t, DRAG_AMT - 1, 0.085);
 }
@@ -189,28 +190,36 @@ function ScaleLayer({
   );
 }
 
-export function FlickSwap({
-  items = DEFAULT_ITEMS,
-  dwell = 28,
-  fontWeight = 500,
-  blur: blurAmount = 1,
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = bricolage.fontFamily,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: FlickSwapProps) {
+export function FlickSwap(props: FlickSwapProps) {
+  const {
+    items = DEFAULT_ITEMS,
+    fontWeight = 500,
+    blur: blurAmount = 1,
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = bricolage.fontFamily,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width, height } = useSceneConfig();
+  const { width, height, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    flickSwapTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const p = PALETTES[theme];
   const fg = ink ?? p.fg;
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
   const transparent = background === "transparent";
-  const list = items.length > 0 ? items : DEFAULT_ITEMS;
+  const list: FlickSwapItem[] = itemsOf(items);
+  const flicks = tl.lane("Items");
   const n = list.length;
 
   const portrait = height > width * 1.1;
@@ -220,15 +229,13 @@ export function FlickSwap({
   const padX = width * (portrait ? 0.08 : 0.09);
   const maxW = portrait ? width - padX * 2 : width * 0.76;
 
-  const period = SETTLE + dwell;
-  const y = scrollAt(frame, n, period);
+  const y = scrollAt(frame, flicks);
   const v =
-    (scrollAt(frame + 0.5, n, period) - scrollAt(frame - 0.5, n, period)) *
-    height;
+    (scrollAt(frame + 0.5, flicks) - scrollAt(frame - 0.5, flicks)) * height;
   const speedPx = Math.abs(v);
   // The scroll is a damped spring with no clean progress, and the words trail
   // it by up to two frames, so look at the neighbouring frames instead.
-  const yAt = (f: number) => scrollAt(f, n, period) * height;
+  const yAt = (f: number) => scrollAt(f, flicks) * height;
   let scrolling = false;
   for (let d = -2; d < 1 && !scrolling; d++) {
     scrolling = Math.abs(yAt(frame + d + 1) - yAt(frame + d)) > 1e-3;
@@ -257,7 +264,8 @@ export function FlickSwap({
   const railX = width - padX * (portrait ? 0.55 : 0.42);
   const railTop = height / 2 - railH / 2;
   const railShift = Math.max(-0.3, Math.min(n - 0.7, y)) * railGap;
-  const railIn = interpolate(frame, [4, 16], [0, 1], CLAMP);
+  const rail = tl.get("rail");
+  const railIn = interpolate(frame, [rail.start, rail.end], [0, 1], CLAMP);
 
   return (
     <AbsoluteFill
@@ -351,7 +359,7 @@ export function FlickSwap({
                     const lag =
                       (0.5 + Math.min(1.1, k * 0.13)) / Math.max(0.25, speed);
                     const rel =
-                      (y - scrollAt(frame - lag * speed, n, period)) * height;
+                      (y - scrollAt(frame - lag * speed, flicks)) * height;
                     return (
                       <Fragment key={w.index}>
                         {k > 0 ? " " : null}

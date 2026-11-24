@@ -12,6 +12,12 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_STOPS,
+  type LayoverElementId,
+  layoverTimeline,
+} from "./timeline";
 
 const redHat = loadFont("normal", {
   weights: ["400", "500"],
@@ -39,6 +45,12 @@ export interface LayoverProps {
   delay?: number;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches the first line's words, the hops, the pieces
+   * boarding at each stop, the second line and the landing, by the ids in
+   * `./timeline`. Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<LayoverElementId>;
 }
 
 const THEMES = {
@@ -60,14 +72,6 @@ const CLAMP = {
 // Every tween here is a clamped interpolate, exact at both ends; words rise
 // a whole line height, so even its last 1e-4 is a visible step.
 const midway = (p: number) => p > 0 && p < 1;
-
-const A_IN = 0;
-const WORD_STAGGER = 3;
-const LIFT = 26;
-const LEG = 22;
-const BOARD = 11;
-const HOLD = 20;
-const SETTLE = 10;
 
 interface Metrics {
   w: Record<string, number>;
@@ -135,25 +139,31 @@ function ScaleLayer({
   );
 }
 
-export function Layover({
-  from = "Write it",
-  word = "here.",
-  stops = ["w", "every"],
-  to = "Plays",
-  leg = LEG,
-  hold = HOLD,
-  accent,
-  ink,
-  background,
-  fontFamily = redHat.fontFamily,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: LayoverProps) {
+export function Layover(props: LayoverProps) {
+  const {
+    from = "Write it",
+    word = "here.",
+    stops = DEFAULT_STOPS,
+    to = "Plays",
+    accent,
+    ink,
+    background,
+    fontFamily = redHat.fontFamily,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H } = useSceneConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    layoverTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const c = THEMES[theme];
   const hi = accent ?? c.accent;
   const fg = ink ?? c.ink;
@@ -202,9 +212,9 @@ export function Layover({
   const leftB = rx3 - m.w[lineB] * F;
 
   const n = stops.length;
-  const legStart = (k: number) => LIFT + k * (leg + hold);
-  const arriveAt = (k: number) => legStart(k) + leg;
-  const landAt = arriveAt(n);
+  const legs = Array.from({ length: n + 1 }, (_, k) => tl.get(`leg:${k}`));
+  const liftEl = tl.get("lift");
+  const land = tl.get("land");
   const fracs = Array.from({ length: n + 2 }, (_, k) => k / (n + 1));
 
   // Where the travelling word stands at time `tt`: its right edge and the
@@ -212,21 +222,22 @@ export function Layover({
   const carry = (tt: number) => {
     let progress = 0;
     for (let k = 0; k <= n; k++) {
-      const p = interpolate(tt, [legStart(k), arriveAt(k)], [0, 1], {
+      const p = interpolate(tt, [legs[k].start, legs[k].end], [0, 1], {
         ...CLAMP,
         easing: EASE_LEG,
       });
       progress = p > 0 ? fracs[k] + p * (fracs[k + 1] - fracs[k]) : progress;
     }
     const lift =
-      interpolate(tt, [LIFT - 6, LIFT + 4], [0, 1], CLAMP) *
-      (1 - interpolate(tt, [landAt - 8, landAt], [0, 1], CLAMP));
+      interpolate(tt, [liftEl.start, liftEl.end], [0, 1], CLAMP) *
+      (1 - interpolate(tt, [land.start, land.end], [0, 1], CLAMP));
+    const settle = land.beat("settle");
     const touch =
-      tt > landAt
-        ? Math.sin(Math.min(1, (tt - landAt) / SETTLE) * Math.PI) *
+      tt > land.end
+        ? Math.sin(Math.min(1, (tt - land.end) / settle) * Math.PI) *
           F *
           0.025 *
-          (1 - Math.min(1, (tt - landAt) / SETTLE))
+          (1 - Math.min(1, (tt - land.end) / settle))
         : 0;
     return {
       x: rx0 + (rx3 - rx0) * progress,
@@ -245,8 +256,8 @@ export function Layover({
     letterSpacing: `${TRACK}em`,
   });
 
-  const rise = (start: number) =>
-    interpolate(t, [start, start + 16], [0, 1], { ...CLAMP, easing: EASE_OUT });
+  const rise = (e: { start: number; end: number }) =>
+    interpolate(t, [e.start, e.end], [0, 1], { ...CLAMP, easing: EASE_OUT });
 
   const nodes: React.ReactNode[] = [];
 
@@ -258,7 +269,7 @@ export function Layover({
         : i < fromWords.length
           ? m.w[`${fromWords.slice(0, i).join(" ")} `] * F
           : m.w[`${fromWords.join(" ")} `] * F;
-    const p = rise(A_IN + i * WORD_STAGGER);
+    const p = rise(tl.get(`word:${i}`));
     nodes.push(
       <div
         key={`a${i}`}
@@ -285,7 +296,7 @@ export function Layover({
     );
   });
 
-  const toIn = rise(legStart(n) - 4);
+  const toIn = rise(tl.get("to"));
   nodes.push(
     <div
       key="to"
@@ -311,7 +322,7 @@ export function Layover({
     </div>,
   );
 
-  if (t >= LIFT - 6) {
+  if (t >= liftEl.start) {
     // Layout rounds a box and a baseline to whole pixels, so a word carried
     // by `left`/`top` clicks along pixel by pixel, and jumps where layout
     // takes over from a transform. Each part is laid out once, where the
@@ -329,12 +340,11 @@ export function Layover({
     ];
     stops.forEach((s, k) => {
       xRight -= m.w[s] * F;
-      const p = interpolate(
-        t,
-        [arriveAt(k) + 2, arriveAt(k) + 2 + BOARD],
-        [0, 1],
-        { ...CLAMP, easing: EASE_OUT },
-      );
+      const board = tl.get(`stop:${k}`);
+      const p = interpolate(t, [board.start, board.end], [0, 1], {
+        ...CLAMP,
+        easing: EASE_OUT,
+      });
       parts.push({ s, x: xRight, p });
     });
     for (let i = parts.length - 1; i >= 0; i--) {

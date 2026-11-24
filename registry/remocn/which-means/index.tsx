@@ -13,6 +13,16 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_LABEL,
+  DEFAULT_NAME,
+  DEFAULT_STEPS,
+  splitWords,
+  stepsOf,
+  type WhichMeansElementId,
+  whichMeansTimeline,
+} from "./timeline";
 
 const geologica = loadFont("normal", {
   weights: ["400", "500"],
@@ -40,18 +50,17 @@ export interface WhichMeansProps {
   delay?: number;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches the name, the label and each step, by the ids
+   * in `./timeline`. Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<WhichMeansElementId>;
 }
 
 const THEMES = {
   dark: { bg: "#0E3B43", ink: "#FFFFFF", accent: "#4FE3D0" },
   light: { bg: "#E8F6F5", ink: "#0B3138", accent: "#0F8C7E" },
 } as const;
-
-const DEFAULT_STEPS = [
-  "Every edit shows up as you type,",
-  "you catch the typo before you render,",
-  "the first render is the one you ship.",
-];
 
 const FONT_PX = 200;
 const NAME_W = 500;
@@ -70,17 +79,7 @@ const CLAMP = {
   extrapolateRight: "clamp",
 } as const;
 
-const NAME_AT = 0;
-const FIRST_AT = 12;
-const FIRST_READ = 36;
-const WORD_STAGGER = 2;
-const WORD_IN = 12;
-const CENTER_TO_SLOT = 14;
-const EXIT = 11;
-const RISE = 18;
-const WRITE_AFTER_RISE = 13;
 const DIM = 0.5;
-const TAIL = 76;
 
 type Metrics = Record<string, number>;
 const key = (w: number, s: string) => `${w}\u0002${s}`;
@@ -128,8 +127,6 @@ function useMetrics(texts: string[], fontFamily: string) {
   }, [id, handle, fontFamily]);
   return state && state.id === id ? state.m : null;
 }
-
-const splitWords = (s: string) => s.split(/\s+/).filter(Boolean);
 
 function greedy(
   words: string[],
@@ -183,8 +180,6 @@ function partitions(words: string[], parts: number): string[][][] {
   return out;
 }
 
-const stripEnd = (s: string) => s.replace(/[\s,.;:…]+$/u, "");
-
 /** The foreground at `scale`, around the frame's center; nothing extra at 1. */
 function ScaleLayer({
   scale,
@@ -206,32 +201,39 @@ interface Clause {
   h: number;
 }
 
-export function WhichMeans({
-  name = "Live preview",
-  label = "New",
-  steps = DEFAULT_STEPS,
-  hinge = "which means",
-  accent,
-  ink,
-  background,
-  fontFamily = geologica.fontFamily,
-  stagger = WORD_STAGGER,
-  hold = TAIL,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: WhichMeansProps) {
+export function WhichMeans(props: WhichMeansProps) {
+  const {
+    name = DEFAULT_NAME,
+    label = DEFAULT_LABEL,
+    steps = DEFAULT_STEPS,
+    hinge = "which means",
+    accent,
+    ink,
+    background,
+    fontFamily = geologica.fontFamily,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
   const { width: W, height: H, durationInFrames } = useSceneConfig();
+  // The steps spread over the clip after `delay`, as before.
+  const tl = useTimeline(
+    whichMeansTimeline,
+    props,
+    Math.max(0, durationInFrames - delay) * speed,
+    timing,
+  );
   const c = THEMES[theme];
   const hi = accent ?? c.accent;
   const fg = ink ?? c.ink;
   const stage =
     background === "transparent" ? "transparent" : (background ?? c.bg);
 
-  const list = (steps.length > 0 ? steps : DEFAULT_STEPS).map(stripEnd);
+  const list = stepsOf(steps);
   const nameWords = splitWords(name);
   const m = useMetrics(
     [" ", "…", ...nameWords, ...list.flatMap(splitWords), hinge, label],
@@ -295,14 +297,7 @@ export function WhichMeans({
     F *= 0.95;
   }
 
-  const span = Math.max(0, durationInFrames - delay) * speed;
-  const fixed = FIRST_AT + FIRST_READ + hold;
-  const period =
-    n > 2
-      ? Math.min(72, Math.max(44, (span - fixed - 10) / (n - 2)))
-      : Math.max(44, span - fixed);
-  const stepAt = (k: number) =>
-    k <= 0 ? FIRST_AT : FIRST_AT + FIRST_READ + (k - 1) * period;
+  const stepEls = list.map((_, k) => tl.get(`step:${k}`));
 
   const easeAt = (tt: number, from: number, dur: number, curve = EASE_OUT) =>
     interpolate(tt, [from, from + dur], [0, 1], { ...CLAMP, easing: curve });
@@ -332,8 +327,9 @@ export function WhichMeans({
 
   const nodes: React.ReactNode[] = [];
 
-  const labelIn = ease(NAME_AT + 4, 14);
   if (label) {
+    const labelEl = tl.get("label");
+    const labelIn = ease(labelEl.start, labelEl.length);
     nodes.push(
       <div
         key="label"
@@ -348,7 +344,9 @@ export function WhichMeans({
           color: hi,
           opacity: labelIn,
           transform: `translateY(${((1 - labelIn) * labelF * 0.6).toFixed(2)}px)${glide(
-            stirs((tt) => easeAt(tt, NAME_AT + 4, 14) * labelF * 0.6),
+            stirs(
+              (tt) => easeAt(tt, labelEl.start, labelEl.length) * labelF * 0.6,
+            ),
           )}`,
           whiteSpace: "pre",
         }}
@@ -358,6 +356,7 @@ export function WhichMeans({
     );
   }
 
+  const nameEl = tl.get("name");
   nameLines.forEach((line, li) => {
     nodes.push(
       <div
@@ -380,15 +379,17 @@ export function WhichMeans({
         }}
       >
         {line.map((w, wi) => {
-          const at = NAME_AT + (li * 2 + wi) * 3;
-          const e = ease(at, 16);
+          const at = nameEl.start + (li * 2 + wi) * nameEl.beat("step");
+          const e = ease(at, nameEl.beat("rise"));
           return (
             <span
               key={w}
               style={{
                 display: "inline-block",
                 transform: `translateY(${((1 - e) * nameF * 1.1).toFixed(2)}px)${glide(
-                  stirs((tt) => easeAt(tt, at, 16) * nameF * 1.1),
+                  stirs(
+                    (tt) => easeAt(tt, at, nameEl.beat("rise")) * nameF * 1.1,
+                  ),
                 )}`,
               }}
             >
@@ -411,6 +412,9 @@ export function WhichMeans({
     ellipsis: number,
   ) => {
     const cl = clauses[k];
+    const stepEl = stepEls[k];
+    const wordStep = stepEl.beat("stagger");
+    const wordIn = stepEl.beat("wordIn");
     const last = k === n - 1;
     let wordIndex = 0;
     const dy = lift(t);
@@ -449,8 +453,8 @@ export function WhichMeans({
         {cl.lines.map((line, li) => (
           <div key={line.join(" ")}>
             {line.map((w, wi) => {
-              const at = writeAt + wordIndex++ * stagger;
-              const e = ease(at, WORD_IN);
+              const at = writeAt + wordIndex++ * wordStep;
+              const e = ease(at, wordIn);
               const isEnd =
                 li === cl.lines.length - 1 && wi === line.length - 1;
               return (
@@ -461,7 +465,7 @@ export function WhichMeans({
                     opacity: e,
                     transform: `translateY(${((1 - e) * F * 0.45).toFixed(2)}px)${glide(
                       !moving &&
-                        stirs((tt) => easeAt(tt, at, WORD_IN) * F * 0.45),
+                        stirs((tt) => easeAt(tt, at, wordIn) * F * 0.45),
                     )}`,
                   }}
                 >
@@ -492,15 +496,17 @@ export function WhichMeans({
     );
   };
 
-  const s1 = stepAt(1);
+  const step1 = n > 1 ? stepEls[1] : null;
+  // A lone step still dims where the second would have come.
+  const s1 = step1 ? step1.start : stepEls[0].start + stepEls[0].beat("read");
+  const dimmer = step1 ?? stepEls[0];
   const c0SlotAt = (tt: number) =>
-    n > 1 ? easeAt(tt, s1, CENTER_TO_SLOT, EASE_MOVE) : 0;
+    step1 ? easeAt(tt, s1, step1.beat("slot"), EASE_MOVE) : 0;
 
   for (let k = 0; k < n; k++) {
-    const enter = stepAt(k);
+    const stepEl = stepEls[k];
+    const enter = stepEl.start;
     if (t < enter - 1) continue;
-    const promoteAt = stepAt(k + 1);
-    const leaveAt = stepAt(k + 2);
     const promoting = k >= 1 && k + 1 < n;
     const isLast = k === n - 1;
 
@@ -521,35 +527,52 @@ export function WhichMeans({
       const slotted = causeTop(0);
       top = n > 1 ? slotted : centred;
       if (n > 1) from = (tt) => (centred - slotted) * (1 - c0SlotAt(tt));
-      opacity = 1 - (1 - DIM) * ease(s1 + 2, 14);
-      endDot = n > 1 ? 1 - ease(s1, 10) : 1;
+      opacity =
+        1 - (1 - DIM) * ease(s1 + dimmer.beat("dimAt"), dimmer.beat("dim"));
+      endDot = step1
+        ? 1 - ease(s1 + step1.beat("dotAt"), step1.beat("dotOut"))
+        : 1;
     } else {
-      writeAt = k === 1 ? enter + 4 : enter + WRITE_AFTER_RISE;
+      writeAt = enter + stepEl.beat("write");
       top = effectTop;
       if (promoting) {
-        const riseAt = (tt: number) => easeAt(tt, promoteAt, RISE, EASE_MOVE);
+        const next = stepEls[k + 1];
+        const promoteAt = next.start;
+        const push = next.beat("push");
+        const riseAt = (tt: number) => easeAt(tt, promoteAt, push, EASE_MOVE);
         const slotted = causeTop(k);
         top = slotted;
         from = (tt) => (effectTop - slotted) * (1 - riseAt(tt));
-        opacity = 1 - (1 - DIM) * ease(promoteAt + 4, 14);
-        endDot = 1 - ease(promoteAt + 4, 10);
-        ellipsis = ease(promoteAt + RISE - 4, 10);
+        opacity =
+          1 -
+          (1 - DIM) * ease(promoteAt + next.beat("dimAt"), next.beat("dim"));
+        endDot = 1 - ease(promoteAt + next.beat("dotAt"), next.beat("dotOut"));
+        ellipsis = ease(
+          promoteAt + push + next.beat("ellipsisAt"),
+          next.beat("ellipsisIn"),
+        );
       }
     }
 
     let lift = from;
     if (k + 2 < n) {
-      const exit = ease(leaveAt, EXIT, EASE_MOVE);
+      const leave = stepEls[k + 2];
+      const leaveAt = leave.start;
+      const exitLen = leave.beat("exit");
+      const exit = ease(leaveAt, exitLen, EASE_MOVE);
       if (exit >= 1) continue;
       const travel = from;
       lift = (tt) =>
-        travel(tt) - easeAt(tt, leaveAt, EXIT, EASE_MOVE) * F * 0.9;
+        travel(tt) - easeAt(tt, leaveAt, exitLen, EASE_MOVE) * F * 0.9;
       opacity *= 1 - exit;
     }
 
     const color = isLast
       ? interpolateColors(
-          ease(enter + WRITE_AFTER_RISE + 8, 16),
+          ease(
+            enter + stepEl.beat("glowAt") + stepEl.beat("glow"),
+            stepEl.beat("glowIn"),
+          ),
           [0, 1],
           [fg, hi],
         )
@@ -560,14 +583,22 @@ export function WhichMeans({
     );
   }
 
-  if (n > 1) {
-    const hingeIn = ease(s1, 12);
+  if (step1) {
+    const hingeIn = ease(s1, step1.beat("hingeIn"));
     let hingeOp = hingeIn;
     for (let k = 2; k < n; k++) {
-      const p = stepAt(k);
+      const e = stepEls[k];
+      const p = e.start;
+      const push = e.beat("push");
       const dip =
-        interpolate(t, [p, p + 5], [0, 1], CLAMP) *
-        (1 - interpolate(t, [p + RISE - 4, p + RISE + 6], [0, 1], CLAMP));
+        interpolate(t, [p, p + e.beat("dip")], [0, 1], CLAMP) *
+        (1 -
+          interpolate(
+            t,
+            [p + push + e.beat("hingeBack"), p + push + e.beat("hingeBackEnd")],
+            [0, 1],
+            CLAMP,
+          ));
       hingeOp *= 1 - dip;
     }
     nodes.push(

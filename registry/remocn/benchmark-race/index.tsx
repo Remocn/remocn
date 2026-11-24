@@ -6,6 +6,16 @@ import { type ReactNode, useId } from "react";
 import { AbsoluteFill, Easing, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import {
+  type ResolvedElement,
+  type Timing,
+  useTimeline,
+} from "@/lib/remocn/timeline";
+import {
+  type BenchmarkRaceElementId,
+  benchmarkRaceTimeline,
+  DEFAULT_LANES,
+} from "./timeline";
 
 const { fontFamily: sans } = loadFont("normal", {
   weights: ["300", "400", "500"],
@@ -67,13 +77,15 @@ export interface BenchmarkRaceProps {
   /** Playback multiplier. */
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches the caption, each lane's arrival, the race,
+   * the finish and the statement, by the ids in `./timeline`. Frames on the
+   * scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<BenchmarkRaceElementId>;
 }
 
-const DEFAULT_LANES: BenchmarkLane[] = [
-  { label: "remocn", seconds: 0.42, highlight: true },
-  { label: "Kitebase", seconds: 2.38 },
-  { label: "Before", seconds: 5.06 },
-];
+type RaceElement = ResolvedElement<BenchmarkRaceElementId>;
 
 const EASE_IO = Easing.bezier(0.65, 0, 0.35, 1);
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
@@ -81,9 +93,6 @@ const CLAMP = {
   extrapolateLeft: "clamp",
   extrapolateRight: "clamp",
 } as const;
-
-const START = 22;
-const WIN_FRAMES = 42;
 
 /**
  * gradients.sh "mesh" palette: [#ecdcf2, #8796ee, #2e45b7, #0e1645]. It runs
@@ -355,7 +364,9 @@ function Lane({
   unit,
   accent,
   th,
-  hit,
+  el,
+  raceEl,
+  hitEl,
   fg,
   cut,
   fontFamily,
@@ -375,21 +386,31 @@ function Lane({
   unit: string;
   accent: string;
   th: Theme;
-  hit: number;
+  /** This lane's arrival. */
+  el: RaceElement;
+  raceEl: RaceElement;
+  hitEl: RaceElement;
   fg: string;
   cut: string;
   fontFamily: string;
   logo: ReactNode;
 }) {
   const gid = `run${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
-  const enter = interpolate(t, [index * 4, index * 4 + 20], [0, 1], {
+  const START = raceEl.start;
+  const hit = hitEl.start;
+  const enter = interpolate(t, [el.start, el.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
-  const draw = interpolate(t, [4 + index * 4, 26 + index * 4], [0, 1], {
-    ...CLAMP,
-    easing: EASE_IO,
-  });
+  const draw = interpolate(
+    t,
+    [el.start + el.beat("drawAt"), el.start + el.beat("drawEnd")],
+    [0, 1],
+    {
+      ...CLAMP,
+      easing: EASE_IO,
+    },
+  );
   const dur = lane.seconds / secPerFrame;
   const progAt = (frame: number) =>
     laneCurve((frame - START) / dur, winner, index);
@@ -401,10 +422,15 @@ function Lane({
   // losers dim once the winner lands, but keep moving
   const dim = winner
     ? 1
-    : interpolate(t, [hit - 2, hit + 16], [1, 0.42], {
-        ...CLAMP,
-        easing: EASE_OUT,
-      });
+    : interpolate(
+        t,
+        [hit + hitEl.beat("dimAt"), hit + hitEl.beat("settle")],
+        [1, 0.42],
+        {
+          ...CLAMP,
+          easing: EASE_OUT,
+        },
+      );
   const color = winner ? `url(#${gid})` : th.slow;
   const headFill = winner ? th.head : th.slow;
   const headX = x0 + p * trackW;
@@ -412,13 +438,18 @@ function Lane({
 
   // the hit
   const hitP = winner
-    ? interpolate(t, [hit, hit + 20], [0, 1], { ...CLAMP, easing: EASE_OUT })
+    ? interpolate(t, [hit, hitEl.end], [0, 1], { ...CLAMP, easing: EASE_OUT })
     : 0;
   const pulse = winner
-    ? interpolate(t, [hit, hit + 5, hit + 16], [1, 1.12, 1], {
-        ...CLAMP,
-        easing: EASE_OUT,
-      })
+    ? interpolate(
+        t,
+        [hit, hit + hitEl.beat("pulse"), hit + hitEl.beat("settle")],
+        [1, 1.12, 1],
+        {
+          ...CLAMP,
+          easing: EASE_OUT,
+        },
+      )
     : 1;
 
   // fake motion blur: ghost heads at the previous few frames
@@ -578,7 +609,12 @@ function Lane({
           color: winner ? (finished ? accent : fg) : th.muted,
           transform: `scale(${pulse})`,
           transformOrigin: "100% 50%",
-          opacity: interpolate(t, [START - 8, START], [0.35, 1], CLAMP),
+          opacity: interpolate(
+            t,
+            [START + raceEl.beat("clockAt"), START],
+            [0.35, 1],
+            CLAMP,
+          ),
         }}
       >
         {elapsed.toFixed(decimals)}
@@ -590,28 +626,38 @@ function Lane({
   );
 }
 
-export function BenchmarkRace({
-  lanes = DEFAULT_LANES,
-  unit = "s",
-  statement = "12× faster",
-  title = "Cold render, 1080p · median of 50 runs",
-  decimals = 2,
-  note = "lower is better",
-  race = WIN_FRAMES,
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = sans,
-  logo,
-  scale = 1,
-  delay = 0,
-  grain = true,
-  speed = 1,
-  theme = "dark",
-}: BenchmarkRaceProps) {
+export function BenchmarkRace(props: BenchmarkRaceProps) {
+  const {
+    lanes = DEFAULT_LANES,
+    unit = "s",
+    statement = "12× faster",
+    title = "Cold render, 1080p · median of 50 runs",
+    decimals = 2,
+    note = "lower is better",
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = sans,
+    logo,
+    scale = 1,
+    delay = 0,
+    grain = true,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const tilt = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width, height } = useSceneConfig();
+  const { width, height, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    benchmarkRaceTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const raceEl = tl.get("race");
+  const hitEl = tl.get("hit");
+  const race = raceEl.length;
   const u = height / 720;
   const th: Theme = THEMES[theme];
   const fg = ink ?? th.fg;
@@ -620,7 +666,7 @@ export function BenchmarkRace({
     background === undefined || background === "transparent"
       ? th.bg
       : background;
-  const hit = START + race;
+  const hit = hitEl.start;
 
   const hasHighlight = lanes.some((l) => l.highlight);
   const fastest = lanes.reduce(
@@ -642,10 +688,15 @@ export function BenchmarkRace({
 
   // camera: lanes start centered, glide down to make room for the statement
   const glideAt = (f: number) =>
-    interpolate(f, [hit - 4, hit + 38], [0, 1], {
-      ...CLAMP,
-      easing: EASE_IO,
-    });
+    interpolate(
+      f,
+      [hit + hitEl.beat("glideAt"), hit + hitEl.beat("glideEnd")],
+      [0, 1],
+      {
+        ...CLAMP,
+        easing: EASE_IO,
+      },
+    );
   const glide = glideAt(t);
   const topStart = (height - groupH) / 2;
   const topEnd = height - 104 * u - groupH;
@@ -654,19 +705,24 @@ export function BenchmarkRace({
   // pixels, so a group eased by `top` clicks down pixel by pixel.
   const lift = (topStart - topEnd) * (1 - glide);
   const groupScale = 1.04 - 0.04 * glide;
-  const lanesSettle = (lanes.length - 1) * 4 + 20;
+  const lanesSettle = tl.get(`lane:${lanes.length - 1}`).end;
   // The in-out ease starts so flat that a progress test misses its first
   // frames, so ask whether the glide moves at all.
   const glideMoving = glideAt(t + 1) !== glide || glide !== glideAt(t - 1);
   const lanesMoving = glideMoving || (t > 0 && t < lanesSettle);
 
-  const st = t - (hit + 2);
+  const statementEl = tl.get("statement");
+  const st = t - statementEl.start;
   const statementMoving =
     glideMoving || (st > 0 && st < statementSettle(statement));
-  const stP = interpolate(st, [0, 28], [0, 1], { ...CLAMP, easing: EASE_OUT });
+  const stP = interpolate(st, [0, statementEl.length], [0, 1], {
+    ...CLAMP,
+    easing: EASE_OUT,
+  });
   const statementSize = Math.min(150 * u, width * 0.118);
 
-  const headerP = interpolate(t, [0, 18], [0, 1], {
+  const headerEl = tl.get("header");
+  const headerP = interpolate(t, [headerEl.start, headerEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
@@ -771,7 +827,9 @@ export function BenchmarkRace({
                 unit={unit}
                 accent={accent}
                 th={th}
-                hit={hit}
+                el={tl.get(`lane:${i}`)}
+                raceEl={raceEl}
+                hitEl={hitEl}
                 fg={fg}
                 cut={cut}
                 fontFamily={fontFamily}

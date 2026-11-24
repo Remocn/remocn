@@ -12,6 +12,13 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_LABEL,
+  labelWordsOf,
+  type StripeCountElementId,
+  stripeCountTimeline,
+} from "./timeline";
 
 const familjen = loadFamiljen("normal", {
   weights: ["400", "500"],
@@ -41,6 +48,12 @@ export interface StripeCountProps {
   delay?: number;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches the rise, the paint and each label word, by
+   * the ids in `./timeline`.
+   * Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<StripeCountElementId>;
 }
 
 const ORANGE = "#FF4F00";
@@ -51,11 +64,6 @@ const THEMES = {
 } as const;
 
 const TRACK = -0.03;
-const RISE_AT = 0;
-const RISE_LEN = 16;
-const PAINT_AT = 16;
-const PAINT_END = 76;
-const LABEL_AT = 66;
 
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
 const EASE_IN_OUT = Easing.bezier(0.65, 0, 0.35, 1);
@@ -149,27 +157,33 @@ function ScaleLayer({
   );
 }
 
-export function StripeCount({
-  value = 184,
-  from = 0,
-  prefix = "",
-  suffix = "",
-  label = "scenes that take your brand colour from one prop",
-  stripes = 12,
-  accent,
-  ink,
-  background,
-  fontFamily = familjen.fontFamily,
-  paintDuration = PAINT_END - PAINT_AT,
-  stagger = 2,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: StripeCountProps) {
+export function StripeCount(props: StripeCountProps) {
+  const {
+    value = 184,
+    from = 0,
+    prefix = "",
+    suffix = "",
+    label = DEFAULT_LABEL,
+    stripes = 12,
+    accent,
+    ink,
+    background,
+    fontFamily = familjen.fontFamily,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H } = useSceneConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    stripeCountTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const c = THEMES[theme];
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
   const m = useMetrics(label, fontFamily);
@@ -194,8 +208,10 @@ export function StripeCount({
   const s = portrait ? W / 1080 : Math.min(W / 1280, H / 720);
   const pad = Math.min(W, H) * 0.075;
 
+  const paintEl = tl.get("paint");
+  const riseEl = tl.get("rise");
   const paint = (time: number) =>
-    interpolate(time, [PAINT_AT, PAINT_AT + paintDuration], [0, 1], {
+    interpolate(time, [paintEl.start, paintEl.end], [0, 1], {
       ...CLAMP,
       easing: EASE_IN_OUT,
     });
@@ -221,7 +237,7 @@ export function StripeCount({
   const bandClipH = bottom - top;
   const dyAt = (f: number) =>
     (1 -
-      interpolate(f, [RISE_AT, RISE_AT + RISE_LEN], [0, 1], {
+      interpolate(f, [riseEl.start, riseEl.end], [0, 1], {
         ...CLAMP,
         easing: EASE_OUT,
       })) *
@@ -239,9 +255,7 @@ export function StripeCount({
   const outline = 1 - interpolate(p, [0.78, 1], [0, 1], CLAMP);
   const strokeW = Math.max(1.2, F * 0.0065);
   const figInk = ink ?? (transparent ? c.ink : c.inkOnAccent);
-  const labelAt = PAINT_AT + paintDuration - (PAINT_END - LABEL_AT);
-
-  const labelWords = label ? label.split(" ") : [];
+  const labelWords = labelWordsOf(label);
 
   const textProps = {
     x: right,
@@ -353,12 +367,11 @@ export function StripeCount({
             }}
           >
             {labelWords.map((w, k) => {
-              const q = interpolate(
-                t,
-                [labelAt + k * stagger, labelAt + k * stagger + 16],
-                [0, 1],
-                { ...CLAMP, easing: EASE_OUT },
-              );
+              const e = tl.get(`word:${k}`);
+              const q = interpolate(t, [e.start, e.end], [0, 1], {
+                ...CLAMP,
+                easing: EASE_OUT,
+              });
               return (
                 <span
                   key={`${w}-${k}`}

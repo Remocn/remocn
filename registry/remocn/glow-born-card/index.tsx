@@ -9,6 +9,19 @@ import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
+import {
+  type ResolvedElement,
+  type Timing,
+  useTimeline,
+} from "@/lib/remocn/timeline";
+import {
+  CARD_END,
+  DEFAULT_AFTER,
+  DEFAULT_BEFORE,
+  DEFAULT_VALUE,
+  type GlowBornCardElementId,
+  glowBornCardTimeline,
+} from "./timeline";
 
 const geist = loadGeist("normal", {
   weights: ["300", "400"],
@@ -27,21 +40,7 @@ const SWAY = Easing.bezier(0.45, 0, 0.55, 1);
 const MORPH = { damping: 200 };
 const CHIP = { mass: 0.5, damping: 12, stiffness: 200 };
 
-const B = {
-  words: -8,
-  part: 18,
-  ignite: 20,
-  fill: 26,
-  card: 32,
-  recede: 34,
-  recedeLen: 16,
-  type: 60,
-  press: 90,
-  done: 96,
-  end: 136,
-};
-
-export const GLOW_BORN_CARD_DURATION = B.end;
+export const GLOW_BORN_CARD_DURATION = CARD_END;
 
 const ramp = (f: number, start: number, dur: number, easing = ENTER) =>
   interpolate(f, [start, start + dur], [0, 1], {
@@ -82,6 +81,12 @@ export interface GlowBornCardProps {
   /** Frames to hold the first frame before anything moves. */
   delay?: number;
   speed?: number;
+  /**
+   * Moves, trims or stretches the headline, the glow, the card's beats and
+   * the camera, by the ids in `./timeline`.
+   * Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<GlowBornCardElementId>;
 }
 
 const LIGHT_GROUND: Partial<GradientParams> = {
@@ -92,13 +97,13 @@ const LIGHT_GROUND: Partial<GradientParams> = {
 function Words({
   text,
   frame,
-  start,
+  el,
   size,
   color,
 }: {
   text: string;
   frame: number;
-  start: number;
+  el: ResolvedElement<GlowBornCardElementId>;
   size: number;
   color: string;
 }) {
@@ -106,7 +111,11 @@ function Words({
   return (
     <div style={{ display: "flex", whiteSpace: "nowrap" }}>
       {words.map((w, i) => {
-        const p = ramp(frame, start + i * 2, 14);
+        const p = ramp(
+          frame,
+          el.start + i * el.beat("stagger"),
+          el.beat("word"),
+        );
         return (
           <span
             key={`${w}-${i.toString()}`}
@@ -170,32 +179,47 @@ function ScaleLayer({
   );
 }
 
-export function GlowBornCard({
-  theme = "dark",
-  accent = "#45f0d6",
-  primary = "#3B5BFD",
-  before = "Or import a scene from",
-  after = "your repo",
-  title = "Import from repository",
-  label = "Repository",
-  value = "lumen-labs/launch",
-  hint = "Public or private, any branch",
-  branch = "main · 214 commits · 3h ago",
-  ground,
-  groundParams,
-  actionLabel = "Import",
-  doneLabel = "Imported",
-  cancelLabel = "Cancel",
-  ink: inkProp,
-  background,
-  fontFamily = geist.fontFamily,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-}: GlowBornCardProps) {
+export function GlowBornCard(props: GlowBornCardProps) {
+  const {
+    theme = "dark",
+    accent = "#45f0d6",
+    primary = "#3B5BFD",
+    before = DEFAULT_BEFORE,
+    after = DEFAULT_AFTER,
+    title = "Import from repository",
+    label = "Repository",
+    value = DEFAULT_VALUE,
+    hint = "Public or private, any branch",
+    branch = "main · 214 commits · 3h ago",
+    ground,
+    groundParams,
+    actionLabel = "Import",
+    doneLabel = "Imported",
+    cancelLabel = "Cancel",
+    ink: inkProp,
+    background,
+    fontFamily = geist.fontFamily,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width, height, fps } = useSceneConfig();
+  const { width, height, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    glowBornCardTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const partEl = tl.get("part");
+  const pushEl = tl.get("push");
+  const glow = tl.get("glow");
+  const recedeEl = tl.get("recede");
+  const typing = tl.get("typing");
+  const pressEl = tl.get("press");
+  const doneEl = tl.get("done");
   const dark = theme === "dark";
   const portrait = height > width * 1.2;
   const stageW = portrait ? 1080 : 1280;
@@ -218,10 +242,10 @@ export function GlowBornCard({
   const margin = portrait ? 34 : 22;
 
   const part = spring({
-    frame: frame - B.part,
+    frame: frame - partEl.start,
     fps,
     config: MORPH,
-    durationInFrames: 18,
+    durationInFrames: partEl.length,
   });
   const gap = mix(
     portrait ? 0 : fontSize * 0.26,
@@ -229,14 +253,41 @@ export function GlowBornCard({
     part,
   );
 
-  const ignite = ramp(frame, B.ignite, 10, LIGHT);
-  const fill = ramp(frame, B.fill, 12, LIGHT);
-  const recede = ramp(frame, B.recede, B.recedeLen, MOVE);
-  const glowFade = 1 - ramp(frame, B.recede + 8, 16, EXIT);
-  const cardOn = ramp(frame, B.card, 4);
+  const ignite = ramp(frame, glow.start, glow.beat("ignite"), LIGHT);
+  const fill = ramp(
+    frame,
+    glow.start + glow.beat("fillAt"),
+    glow.beat("fill"),
+    LIGHT,
+  );
+  const recede = ramp(frame, recedeEl.start, recedeEl.length, MOVE);
+  const glowFade =
+    1 -
+    ramp(
+      frame,
+      recedeEl.start + recedeEl.beat("fadeAt"),
+      recedeEl.beat("fade"),
+      EXIT,
+    );
+  const cardOn = ramp(
+    frame,
+    glow.start + glow.beat("cardAt"),
+    glow.beat("card"),
+  );
   const halo =
-    ramp(frame, B.recede + 4, 12, LIGHT) *
-    (1 - ramp(frame, B.recede + 16, 20, EXIT));
+    ramp(
+      frame,
+      recedeEl.start + recedeEl.beat("haloAt"),
+      recedeEl.beat("halo"),
+      LIGHT,
+    ) *
+    (1 -
+      ramp(
+        frame,
+        recedeEl.start + recedeEl.beat("haloOutAt"),
+        recedeEl.beat("haloOut"),
+        EXIT,
+      ));
 
   const blobW =
     mix(36 * u, mix(cardW * 0.4, cardW * 1.04, fill), ignite) *
@@ -248,43 +299,57 @@ export function GlowBornCard({
   const edge = mix(4, 120, recede);
 
   const typed = Math.round(
-    interpolate(
-      frame,
-      [B.type, B.type + value.length * 1.5],
-      [0, value.length],
-      {
-        extrapolateLeft: "clamp",
-        extrapolateRight: "clamp",
-      },
-    ),
+    interpolate(frame, [typing.start, typing.end], [0, value.length], {
+      extrapolateLeft: "clamp",
+      extrapolateRight: "clamp",
+    }),
   );
   const shown = value.slice(0, typed);
   const caret =
-    frame >= B.recede + 10 &&
-    frame < B.press &&
+    frame >= recedeEl.start + recedeEl.beat("caretAt") &&
+    frame < pressEl.start &&
     (typed < value.length || Math.floor(frame / 8) % 2 === 0);
   const focus =
-    ramp(frame, B.type - 6, 8) * (1 - ramp(frame, B.press + 4, 10, EXIT));
+    ramp(frame, typing.start + typing.beat("focusAt"), typing.beat("focus")) *
+    (1 -
+      ramp(
+        frame,
+        pressEl.start + pressEl.beat("blurAt"),
+        pressEl.beat("blur"),
+        EXIT,
+      ));
   const press = Math.max(
     0,
-    spring({ frame: frame - B.press, fps, config: CHIP }) -
-      spring({ frame: frame - B.press - 3, fps, config: CHIP }),
+    spring({ frame: frame - pressEl.start, fps, config: CHIP }) -
+      spring({
+        frame: frame - pressEl.start - pressEl.beat("release"),
+        fps,
+        config: CHIP,
+      }),
   );
-  const done = spring({ frame: frame - B.done, fps, config: CHIP });
-  const doneIn = ramp(frame, B.done, 5);
-  const metaIn = ramp(frame, B.type + value.length * 1.5 + 2, 10, LIGHT);
+  const done = spring({ frame: frame - doneEl.start, fps, config: CHIP });
+  const doneIn = ramp(frame, doneEl.start, doneEl.length);
+  const metaIn = ramp(
+    frame,
+    typing.end + typing.beat("metaGap"),
+    typing.beat("meta"),
+    LIGHT,
+  );
 
+  const landAt = pushEl.start + pushEl.beat("land");
   const pushAt = (f: number) =>
     1 +
-    (portrait ? 0.05 : 0.03) * ramp(f, B.part, B.done - B.part, SWAY) +
-    0.02 * ramp(f, B.done, B.end - B.done, SWAY);
+    (portrait ? 0.05 : 0.03) *
+      ramp(f, pushEl.start, pushEl.beat("land"), SWAY) +
+    0.02 * ramp(f, landAt, pushEl.length - pushEl.beat("land"), SWAY);
   const push = pushAt(frame);
-  // Two in-out pushes meet at B.done, so "moving" is read off the step
+  // Two in-out pushes meet at the push's `land`, so "moving" is read off the step
   // against either neighbouring frame, weighed at the stage's edge.
   const pushing =
     Math.abs(pushAt(frame + speed) - push) * stageW * 0.5 > 1e-3 ||
     Math.abs(push - pushAt(frame - speed)) * stageW * 0.5 > 1e-3;
-  const settle = ramp(frame, -6, 30, MOVE);
+  const settleEl = tl.get("settle");
+  const settle = ramp(frame, settleEl.start, settleEl.length, MOVE);
   const tilt = mix(8, 0, settle);
 
   const resolvedGround: GshPresetId =
@@ -459,7 +524,15 @@ export function GlowBornCard({
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   strokeDasharray={22}
-                  strokeDashoffset={22 * (1 - ramp(frame, B.done + 1, 8))}
+                  strokeDashoffset={
+                    22 *
+                    (1 -
+                      ramp(
+                        frame,
+                        doneEl.start + doneEl.beat("checkAt"),
+                        doneEl.beat("check"),
+                      ))
+                  }
                 />
               </svg>
             </div>
@@ -579,7 +652,7 @@ export function GlowBornCard({
             <Words
               text={before}
               frame={frame}
-              start={B.words}
+              el={tl.get("before")}
               size={fontSize}
               color={ink}
             />
@@ -591,12 +664,12 @@ export function GlowBornCard({
                 flexShrink: 0,
               }}
             >
-              {frame >= B.ignite ? card : null}
+              {frame >= glow.start ? card : null}
             </div>
             <Words
               text={after}
               frame={frame}
-              start={B.words + 10}
+              el={tl.get("after")}
               size={fontSize}
               color={ink}
             />

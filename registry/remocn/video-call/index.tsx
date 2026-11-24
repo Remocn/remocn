@@ -9,6 +9,15 @@ import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_PARTICIPANTS,
+  FLOATS,
+  SPEAKERS,
+  speakerOf,
+  type VideoCallElementId,
+  videoCallTimeline,
+} from "./timeline";
 
 const { fontFamily: onest } = loadFont("normal", {
   weights: ["300", "400"],
@@ -57,20 +66,14 @@ export interface VideoCallProps {
   speed?: number;
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
+  /**
+   * Moves, trims or stretches the joins, the speakers, the screen share and
+   * the reactions, by the ids in `./timeline`. Frames on the scene timeline,
+   * after `delay` and `speed`.
+   */
+  timing?: Timing<VideoCallElementId>;
 }
 
-const DEFAULT_PARTICIPANTS: CallParticipant[] = [
-  { name: "You", color: "#5B7A99", camera: true },
-  { name: "Maya Chen", color: "#C98A55", camera: true },
-  { name: "Leo Park", color: "#12A594", camera: false, muted: true },
-  { name: "Priya Raman", color: "#8E6CC9", camera: true },
-  { name: "Sam Okafor", color: "#D9644A", camera: false },
-  { name: "Noor Haddad", color: "#4F8FD6", camera: true, muted: true },
-];
-
-const JOINS = [-30, 22, 46, 54, 80, 88];
-const PRESENT_AT = 150;
-const TRAY_AT = 196;
 const INK = "#F1F1F4";
 
 const ENTER_SOFT = Easing.bezier(0.22, 1, 0.36, 1);
@@ -505,17 +508,20 @@ function Person({
 
 function ScreenMock({
   frame,
+  draw: drawLength,
   accent,
   title,
   fontFamily,
 }: {
   frame: number;
+  /** Frames the chart takes to draw. */
+  draw: number;
   accent: string;
   title: string;
   fontFamily: string;
 }) {
   const clipId = `vc-c${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
-  const draw = 0.62 + 0.38 * MOVE(clamp(frame / 26));
+  const draw = 0.62 + 0.38 * MOVE(clamp(frame / drawLength));
   const daily = [900, 1120, 1040, 1480, 1390, 1880, 2380, 2290];
   const days = ["Oct 14", "15", "16", "17", "18", "19", "20", "21"];
   const LX = 44;
@@ -1073,20 +1079,12 @@ const TRAY: { icon: string; color: string }[] = [
   { icon: "hand", color: "#E3A13A" },
   { icon: "check", color: "#3FA877" },
 ];
-const FLOATS = [
-  { at: 0, k: 2, who: 2, x: 0.04 },
-  { at: 7, k: 1, who: 4, x: 0.3 },
-  { at: 12, k: 0, who: 0, x: 0.56 },
-  { at: 20, k: 2, who: 3, x: 0.16 },
-  { at: 27, k: 1, who: 5, x: 0.44 },
-  { at: 33, k: 3, who: 0, x: 0.02 },
-  { at: 40, k: 4, who: 2, x: 0.62 },
-  { at: 48, k: 2, who: 4, x: 0.24 },
-  { at: 56, k: 0, who: 3, x: 0.5 },
-];
 
 function FloatingReaction({
   local,
+  life,
+  fadeIn,
+  fadeAt,
   k,
   name,
   x,
@@ -1097,6 +1095,10 @@ function FloatingReaction({
   carried,
 }: {
   local: number;
+  /** Frames the reaction lives; it fades in over `fadeIn` and out from `fadeAt`. */
+  life: number;
+  fadeIn: number;
+  fadeAt: number;
   k: number;
   name: string;
   x: number;
@@ -1108,12 +1110,12 @@ function FloatingReaction({
   carried: boolean;
 }) {
   const glide = useGlide();
-  if (local < 0 || local > 84) return null;
-  const t = ENTER_SOFT(clamp(local / 84));
+  if (local < 0 || local > life) return null;
+  const t = ENTER_SOFT(clamp(local / life));
   const pop = spring({ frame: local, fps, config: CHIP });
   const fade =
-    interpolate(local, [0, 4], [0, 1], { extrapolateRight: "clamp" }) *
-    (1 - interpolate(local, [64, 84], [0, 1], { ...CL, easing: EXIT }));
+    interpolate(local, [0, fadeIn], [0, 1], { extrapolateRight: "clamp" }) *
+    (1 - interpolate(local, [fadeAt, life], [0, 1], { ...CL, easing: EXIT }));
   const sway = Math.sin(local * 0.11 + seed * 1.7) * 14 * t;
   const r = TRAY[k % TRAY.length];
   return (
@@ -1174,31 +1176,39 @@ function ScaleLayer({
   );
 }
 
-export function VideoCall({
-  participants = DEFAULT_PARTICIPANTS,
-  meetingCode = "kqv-mnrt-zpa",
-  time = "10:42 AM",
-  presenter = 1,
-  present = true,
-  src,
-  children,
-  callTitle = "Launch sync",
-  screenTitle = "Launch week",
-  leaveLabel = "Leave",
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = onest,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  ground,
-  groundParams,
-}: VideoCallProps) {
+export function VideoCall(props: VideoCallProps) {
+  const {
+    participants = DEFAULT_PARTICIPANTS,
+    meetingCode = "kqv-mnrt-zpa",
+    time = "10:42 AM",
+    presenter = 1,
+    present = true,
+    src,
+    children,
+    callTitle = "Launch sync",
+    screenTitle = "Launch week",
+    leaveLabel = "Leave",
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = onest,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    ground,
+    groundParams,
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay) * speed;
   const fg = ink ?? INK;
   const { width, height, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    videoCallTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const tall = height > width * 1.2;
   const u = tall ? width / 640 : Math.min(width / 1280, height / 720);
   const dw = width / u;
@@ -1222,18 +1232,30 @@ export function VideoCall({
   };
   const ctrlY = tall ? area.y + area.h + 40 : area.y + area.h + 28;
 
-  const reflow = JOINS.slice(0, n).map((at) =>
-    spring({ frame: frame - at, fps, config: CARD }),
+  const joins = people.map((_, i) => tl.get(`join:${i}`));
+  const shareEl = present ? tl.get("present") : undefined;
+  const trayEl = tl.get("tray");
+  const reacts = FLOATS.map((_, k) => tl.get(`react:${k}`));
+  const reflow = joins.map((e) =>
+    spring({ frame: frame - e.start, fps, config: CARD }),
   );
-  const appear = JOINS.slice(0, n).map((at) =>
-    spring({ frame: frame - at - 4, fps, config: CARD }),
+  const appear = joins.map((e) =>
+    spring({ frame: frame - e.start - e.beat("appear"), fps, config: CARD }),
   );
   const pres = people.map((_, i) =>
-    present
-      ? interpolate(frame, [PRESENT_AT + i, PRESENT_AT + i + 10], [0, 1], {
-          ...CL,
-          easing: MOVE,
-        })
+    shareEl
+      ? interpolate(
+          frame,
+          [
+            shareEl.start + i * shareEl.beat("stagger"),
+            shareEl.start + i * shareEl.beat("stagger") + shareEl.beat("swap"),
+          ],
+          [0, 1],
+          {
+            ...CL,
+            easing: MOVE,
+          },
+        )
       : 0,
   );
   const vis = pres.map((t) => (t < 0.5 ? 1 - t * 2 : t * 2 - 1));
@@ -1250,37 +1272,64 @@ export function VideoCall({
     return pres[i] < 0.5 ? r : stripRect(S, n, i);
   });
 
-  const sched = [
-    { at: 30, i: 1 },
-    { at: 66, i: 0 },
-    { at: 100, i: 3 },
-    { at: 126, i: 4 },
-    { at: PRESENT_AT + 6, i: pi },
-  ].filter((s) => s.i < n);
+  const sched = Array.from({ length: SPEAKERS.length + 1 }, (_, k) => ({
+    k,
+    i: speakerOf(k, presenter, n),
+  }))
+    .filter((s) => s.i < n)
+    .map((s) => ({ ...s, e: tl.get(`speak:${s.k}`) }));
   const levels = people.map((_, i) =>
     sched.reduce((acc, s, k) => {
       if (s.i !== i) return acc;
-      const end = sched[k + 1]?.at ?? 1e6;
+      // The last speaker keeps talking past the end of the clip.
+      const end = k + 1 < sched.length ? s.e.end : 1e6;
       return Math.max(
         acc,
-        interpolate(frame, [s.at, s.at + 5, end - 4, end], [0, 1, 1, 0], CL),
+        interpolate(
+          frame,
+          [
+            s.e.start,
+            s.e.start + s.e.beat("rise"),
+            end - s.e.beat("fall"),
+            end,
+          ],
+          [0, 1, 1, 0],
+          CL,
+        ),
       );
     }, 0),
   );
-  const screenIn = present
-    ? spring({ frame: frame - PRESENT_AT - 3, fps, config: HEAVY })
+  const screenIn = shareEl
+    ? spring({
+        frame: frame - shareEl.start - shareEl.beat("screen"),
+        fps,
+        config: HEAVY,
+      })
     : 0;
-  const trayIn = spring({ frame: frame - TRAY_AT, fps, config: CHIP });
-  const trayOut = interpolate(frame, [TRAY_AT + 52, TRAY_AT + 60], [0, 1], {
-    ...CL,
-    easing: EXIT,
-  });
-  const joined = JOINS.slice(0, n).filter((at) => frame >= at + 6).length;
-  const lastJoin = Math.max(
-    ...JOINS.slice(0, n).filter((at) => frame >= at + 6),
+  const trayIn = spring({ frame: frame - trayEl.start, fps, config: CHIP });
+  const trayOut = interpolate(
+    frame,
+    [trayEl.start + trayEl.beat("out"), trayEl.end],
+    [0, 1],
+    {
+      ...CL,
+      easing: EXIT,
+    },
   );
-  const badgePop = spring({ frame: frame - lastJoin - 6, fps, config: CHIP });
-  const ui = spring({ frame: frame - 6, fps, config: HEAVY });
+  const joinedEls = joins.filter((e) => frame >= e.start + e.beat("count"));
+  const joined = joinedEls.length;
+  const lastJoin = joinedEls.reduce<(typeof joins)[number] | undefined>(
+    (last, e) => (!last || e.start > last.start ? e : last),
+    undefined,
+  );
+  const badgePop = spring({
+    frame: lastJoin
+      ? frame - lastJoin.start - lastJoin.beat("count")
+      : Number.POSITIVE_INFINITY,
+    fps,
+    config: CHIP,
+  });
+  const ui = spring({ frame: frame - tl.get("ui").start, fps, config: HEAVY });
   const push = interpolate(frame, [0, durationInFrames], [1, 1.03], CL);
   const pushing = midway(interpolate(frame, [0, durationInFrames], [0, 1], CL));
   // Where each tile settles: its cell once everyone has joined, then its slot
@@ -1439,7 +1488,12 @@ export function VideoCall({
                       }}
                     >
                       <ScreenMock
-                        frame={frame - PRESENT_AT - 8}
+                        frame={
+                          frame -
+                          (shareEl?.start ?? 0) -
+                          (shareEl?.beat("chart") ?? 0)
+                        }
+                        draw={shareEl?.beat("draw") ?? 1}
                         accent={accent}
                         title={screenTitle}
                         fontFamily={fontFamily}
@@ -1482,7 +1536,10 @@ export function VideoCall({
             {FLOATS.map((r, k) => (
               <FloatingReaction
                 key={`${r.at}-${r.who}`}
-                local={frame - TRAY_AT - 6 - r.at}
+                local={frame - reacts[k].start}
+                life={reacts[k].length}
+                fadeIn={reacts[k].beat("fadeIn")}
+                fadeAt={reacts[k].beat("fade")}
                 k={r.k}
                 name={people[r.who % n]?.name.split(" ")[0] ?? ""}
                 x={floatLeft + r.x * (tall ? area.w : M.w)}
@@ -1514,13 +1571,15 @@ export function VideoCall({
               }}
             >
               {TRAY.map((t, k) => {
-                const sent = FLOATS.find(
-                  (f) =>
-                    f.who === 0 && f.k === k && frame >= TRAY_AT + 6 + f.at,
+                const sent = reacts.find(
+                  (e, j) =>
+                    FLOATS[j].who === 0 &&
+                    FLOATS[j].k === k &&
+                    frame >= e.start,
                 );
                 const b = sent
                   ? spring({
-                      frame: frame - (TRAY_AT + 6 + sent.at),
+                      frame: frame - sent.start,
                       fps,
                       config: CHIP,
                     })

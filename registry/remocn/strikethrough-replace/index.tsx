@@ -3,6 +3,11 @@
 import { interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  type StrikethroughReplaceElementId,
+  strikethroughReplaceTimeline,
+} from "./timeline";
 
 export interface StrikethroughReplaceProps {
   from: string;
@@ -13,31 +18,46 @@ export interface StrikethroughReplaceProps {
   fontWeight?: number;
   speed?: number;
   className?: string;
+  /**
+   * Moves, trims or stretches the strike and the swap, by the ids in
+   * `./timeline`. Frames on the scene timeline, after `speed`.
+   */
+  timing?: Timing<StrikethroughReplaceElementId>;
 }
 
-export function StrikethroughReplace({
-  from,
-  to,
-  lineColor = "#ff5e3a",
-  fontSize = 48,
-  color = "#171717",
-  fontWeight = 600,
-  speed = 1,
-  className,
-}: StrikethroughReplaceProps) {
+export function StrikethroughReplace(props: StrikethroughReplaceProps) {
+  const {
+    from,
+    to,
+    lineColor = "#ff5e3a",
+    fontSize = 48,
+    color = "#171717",
+    fontWeight = 600,
+    speed = 1,
+    className,
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = useSceneFrame() * speed;
   const { durationInFrames } = useSceneConfig();
+  // The phases are shares of the composition length without `speed`.
+  const tl = useTimeline(
+    strikethroughReplaceTimeline,
+    props,
+    durationInFrames,
+    timing,
+  );
+  const strike = tl.get("strike");
+  const swap = tl.get("swap");
 
   // Phases:
   // 0 .. 40% -> draw strikethrough across `from`
   // 40% .. 60% -> fade out `from`, fade in `to`
   // 60% .. 100% -> hold
-  const strikeEnd = durationInFrames * 0.4;
-  const fadeStart = durationInFrames * 0.4;
-  const fadeEnd = durationInFrames * 0.6;
+  const fadeStart = swap.start;
+  const fadeEnd = swap.end;
 
-  const linePct = interpolate(frame, [0, strikeEnd], [0, 100], {
+  const linePct = interpolate(frame, [strike.start, strike.end], [0, 100], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
   });

@@ -3,6 +3,12 @@
 import { type ReactNode, useId } from "react";
 import { AbsoluteFill, Easing, interpolate, spring } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  type LongShadowElementId,
+  longShadowTimeline,
+  SHADOW_LENGTH,
+} from "./timeline";
 
 export type LongShadowProps = {
   /** Flat icon or mark that casts the shadow. Defaults to a red check badge. */
@@ -19,6 +25,12 @@ export type LongShadowProps = {
   iconColor?: string;
   checkColor?: string;
   speed?: number;
+  /**
+   * Moves, trims or stretches the pop, the shadow's growth and the light's
+   * swing, by the ids in `./timeline`. Frames on the scene timeline, after
+   * `speed`.
+   */
+  timing?: Timing<LongShadowElementId>;
 };
 
 export const longShadowDefaults = {
@@ -32,7 +44,7 @@ export const longShadowDefaults = {
   speed: 1,
 };
 
-export const longShadowLength = 48;
+export const longShadowLength = SHADOW_LENGTH;
 
 // Log-doubling extrusion: each pass unions the silhouette with itself shifted by
 // twice the previous distance, so 10 passes stack 1024 copies.
@@ -68,34 +80,45 @@ function Badge({
   );
 }
 
-export function LongShadow({
-  children,
-  angleFrom = longShadowDefaults.angleFrom,
-  angleTo = longShadowDefaults.angleTo,
-  shadowColor = longShadowDefaults.shadowColor,
-  background = longShadowDefaults.background,
-  fade = longShadowDefaults.fade,
-  iconColor = longShadowDefaults.iconColor,
-  checkColor = longShadowDefaults.checkColor,
-  speed = longShadowDefaults.speed,
-}: LongShadowProps) {
+export function LongShadow(props: LongShadowProps) {
+  const {
+    children,
+    angleFrom = longShadowDefaults.angleFrom,
+    angleTo = longShadowDefaults.angleTo,
+    shadowColor = longShadowDefaults.shadowColor,
+    background = longShadowDefaults.background,
+    fade = longShadowDefaults.fade,
+    iconColor = longShadowDefaults.iconColor,
+    checkColor = longShadowDefaults.checkColor,
+    speed = longShadowDefaults.speed,
+    timing,
+  } = props;
   const frame = useSceneFrame();
-  const { width, height, fps } = useSceneConfig();
+  const { width, height, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    longShadowTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const popEl = tl.get("pop");
+  const growEl = tl.get("grow");
+  const swingEl = tl.get("swing");
   const id = useId().replace(/[^a-zA-Z0-9_-]/g, "");
   const t = (frame / fps) * 30 * speed;
   const unit = Math.min(width, height) / 720;
 
   const pop = spring({
-    frame: t,
+    frame: t - popEl.start,
     fps: 30,
     config: { damping: 13, stiffness: 170, mass: 0.8 },
   });
-  const grow = interpolate(t, [7, 22], [0, 1], {
+  const grow = interpolate(t, [growEl.start, growEl.end], [0, 1], {
     ...clamp,
     easing: Easing.out(Easing.cubic),
   });
   const swing = spring({
-    frame: t - 24,
+    frame: t - swingEl.start,
     fps: 30,
     config: { damping: 11, stiffness: 70, mass: 0.9 },
   });

@@ -14,6 +14,8 @@ import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import { type RideTrackingElementId, rideTrackingTimeline } from "./timeline";
 
 const onest = loadFont("normal", {
   weights: ["300", "400"],
@@ -56,6 +58,12 @@ export interface RideTrackingProps {
   lines?: [string, string, string];
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
+  /**
+   * Moves, trims or stretches the phone, the route, the drive, the arrival
+   * and the copy lines, by the ids in `./timeline`. Frames on the scene
+   * timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<RideTrackingElementId>;
 }
 
 const DEFAULT_DRIVER: RideDriver = {
@@ -74,11 +82,6 @@ const BW = SW + BEZEL * 2;
 const BH = SH + BEZEL * 2;
 const SHEET_Y = 556;
 const FOCUS = { x: SW / 2, y: 300 };
-
-const DRAW_AT = 14;
-const DRAW_END = 42;
-const DRIVE_AT = 52;
-const DRIVE_END = 214;
 
 const clamp = { extrapolateLeft: "clamp", extrapolateRight: "clamp" } as const;
 const ENTER = Easing.bezier(0.32, 0.72, 0, 1);
@@ -733,36 +736,51 @@ function ScaleLayer({
   );
 }
 
-export function RideTracking({
-  driver = DEFAULT_DRIVER,
-  eta = 4,
-  pickup = "214 Linden St",
-  arrivedTitle = "Your driver has arrived",
-  drive = DRIVE_END - DRIVE_AT,
-  accent = "#276EF1",
-  ink,
-  background,
-  fontFamily = onest.fontFamily,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "light",
-  lines = [
-    "Book it in one tap.",
-    "Watch it come to you.",
-    "Your ride is here.",
-  ],
-  ground,
-  groundParams,
-}: RideTrackingProps) {
+export function RideTracking(props: RideTrackingProps) {
+  const {
+    driver = DEFAULT_DRIVER,
+    eta = 4,
+    pickup = "214 Linden St",
+    arrivedTitle = "Your driver has arrived",
+    accent = "#276EF1",
+    ink,
+    background,
+    fontFamily = onest.fontFamily,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "light",
+    lines = [
+      "Book it in one tap.",
+      "Watch it come to you.",
+      "Your ride is here.",
+    ],
+    ground,
+    groundParams,
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay);
-  const { fps, width, height } = useSceneConfig();
+  const { fps, width, height, durationInFrames } = useSceneConfig();
   const f = frame * speed;
   const dark = theme === "dark";
   const c = dark ? DARK : LIGHT;
   const fg = ink ?? c.copy;
-  const driveEnd = DRIVE_AT + drive;
+  const tl = useTimeline(
+    rideTrackingTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const phone = tl.get("phone");
+  const camera = tl.get("camera");
+  const sheet = tl.get("sheet");
+  const route = tl.get("route");
+  const driveEl = tl.get("drive");
+  const arriveEl = tl.get("arrive");
+  const copy = [0, 1, 2].map((i) => tl.get(`line:${i}`));
+  const arriveAt = arriveEl.start;
+  const pinAt = route.start + route.beat("pin");
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
 
   const tall = height > width;
@@ -781,18 +799,21 @@ export function RideTracking({
   // neighbouring frames rather than off a progress value.
   const moved = (at: (t: number) => number) =>
     Math.abs(at(f + 1) - at(f)) > 1e-5 || Math.abs(at(f) - at(f - 1)) > 1e-5;
-  const rise = sp(0, HEAVY);
-  const camP = interpolate(f, [0, 270], [0, 1], clamp);
+  const rise = sp(phone.start, HEAVY);
+  const camP = interpolate(f, [camera.start, camera.end], [0, 1], clamp);
   const camS = 1 + 0.03 * camP;
 
   const prog = (t: number) =>
-    interpolate(t, [DRIVE_AT, driveEnd], [0, 1], { ...clamp, easing: MOVE });
+    interpolate(t, [driveEl.start, driveEl.end], [0, 1], {
+      ...clamp,
+      easing: MOVE,
+    });
   const d = prog(f);
   const s = d * ROUTE_LEN;
   const car = routePoint(s);
   const tan = routeTangent(s);
   const angle = (Math.atan2(tan.y, tan.x) * 180) / Math.PI + 90;
-  const draw = interpolate(f, [DRAW_AT, DRAW_END], [0, 1], {
+  const draw = interpolate(f, [route.start, route.end], [0, 1], {
     ...clamp,
     easing: MOVE,
   });
@@ -809,15 +830,20 @@ export function RideTracking({
     x: follow.x + (PICKUP.x - follow.x) * 0.22,
     y: follow.y + (PICKUP.y - follow.y) * 0.22,
   };
-  const m = interpolate(f, [DRAW_END - 6, DRIVE_AT + 30], [0, 1], {
-    ...clamp,
-    easing: CAMERA,
-  });
+  const m = interpolate(
+    f,
+    [pinAt, driveEl.start + driveEl.beat("zoomEnd")],
+    [0, 1],
+    {
+      ...clamp,
+      easing: CAMERA,
+    },
+  );
   const arrive = spring({
-    frame: f - driveEnd,
+    frame: f - arriveAt,
     fps,
     config: { damping: 200 },
-    durationInFrames: 30,
+    durationInFrames: arriveEl.length,
   });
   const camX = overview.x + (target.x - overview.x) * m;
   const camY = overview.y + (target.y - overview.y) * m;
@@ -828,24 +854,25 @@ export function RideTracking({
   const phoneTilt = midway(camP) || midway(rise);
 
   const stepAt = (n: number) => {
-    for (let t = DRIVE_AT; t <= driveEnd; t++) if (prog(t) >= n / eta) return t;
-    return driveEnd;
+    for (let t = driveEl.start; t <= driveEl.end; t++)
+      if (prog(t) >= n / eta) return t;
+    return driveEl.end;
   };
   const steps = Array.from({ length: eta - 1 }, (_, i) => stepAt(i + 1));
   const rollAt = (t: number) =>
     steps.reduce((a, at) => a + spAt(t, at, CARD), 0);
   const roll = rollAt(f);
   const etaLabels = Array.from({ length: eta - 1 }, (_, i) => `${eta - i}`);
-  const arrived = f >= driveEnd;
-  const arrivedIn = sp(driveEnd, CHIP);
-  const swap = Math.min(1, sp(driveEnd, { damping: 200 }));
-  const sheetIn = sp(10, CARD);
-  const pinIn = sp(DRAW_END - 6, CHIP);
+  const arrived = f >= arriveAt;
+  const arrivedIn = sp(arriveAt, CHIP);
+  const swap = Math.min(1, sp(arriveAt, { damping: 200 }));
+  const sheetIn = sp(sheet.start, CARD);
+  const pinIn = sp(pinAt, CHIP);
 
   const dash = `${Math.max(0.001, ROUTE_LEN * draw - s)} ${ROUTE_LEN * 3}`;
   const pulses = [0, 22, 44].map((off) => {
-    const t = (((f - driveEnd - off) % 66) + 66) % 66;
-    return f - driveEnd - off < 0 ? null : t / 66;
+    const t = (((f - arriveAt - off) % 66) + 66) % 66;
+    return f - arriveAt - off < 0 ? null : t / 66;
   });
 
   const row: React.CSSProperties = { display: "flex", alignItems: "center" };
@@ -868,21 +895,26 @@ export function RideTracking({
     };
   };
 
-  const beats = [0, DRIVE_AT - 4, driveEnd];
   const copyLine = (i: number) => {
-    const inAt = beats[i] + (i === 0 ? 8 : 0);
-    const outAt = beats[i + 1];
-    const pin = interpolate(f, [inAt, inAt + 14], [0, 1], {
+    const line = copy[i];
+    const next = copy[i + 1];
+    const inAt = line.start;
+    const pin = interpolate(f, [inAt, inAt + line.beat("in")], [0, 1], {
       ...clamp,
       easing: ENTER,
     });
     const pout =
-      outAt === undefined
+      next === undefined
         ? 0
-        : interpolate(f, [outAt - 2, outAt + 6], [0, 1], {
-            ...clamp,
-            easing: EXIT,
-          });
+        : interpolate(
+            f,
+            [next.start + line.beat("out"), next.start + line.beat("outEnd")],
+            [0, 1],
+            {
+              ...clamp,
+              easing: EXIT,
+            },
+          );
     if (pin <= 0 || pout >= 1) return null;
     return (
       <div
@@ -959,7 +991,7 @@ export function RideTracking({
               fontWeight: 400,
               color: c.copyMuted,
               fontVariantNumeric: "tabular-nums",
-              ...rise8(20),
+              ...rise8(sheet.start + sheet.beat("caption")),
             }}
           >
             {arrived
@@ -1123,7 +1155,7 @@ export function RideTracking({
                   position: "absolute",
                   left: pillRest.x,
                   top: pillRest.y,
-                  transform: `translate(${pillX - pillRest.x}px, ${pillY - pillRest.y}px) translateX(-50%) scale(${pinIn})${glide(mapMoving || moved((t) => spAt(t, DRAW_END - 6, CHIP)))}`,
+                  transform: `translate(${pillX - pillRest.x}px, ${pillY - pillRest.y}px) translateX(-50%) scale(${pinIn})${glide(mapMoving || moved((t) => spAt(t, pinAt, CHIP)))}`,
                   transformOrigin: "50% 100%",
                   opacity: interpolate(
                     Math.min(pillX, SW - pillX),
@@ -1198,7 +1230,7 @@ export function RideTracking({
                   boxShadow: dark
                     ? "0 0 0 1px rgba(255,255,255,0.07)"
                     : "0 -1px 0 rgba(0,0,0,0.04), 0 -12px 32px -8px rgba(0,0,0,0.14)",
-                  transform: `translateY(${(1 - sheetIn) * 340}px)${glide(moved((t) => spAt(t, 10, CARD)))}`,
+                  transform: `translateY(${(1 - sheetIn) * 340}px)${glide(moved((t) => spAt(t, sheet.start, CARD)))}`,
                   padding: "8px 20px 0",
                   boxSizing: "border-box",
                   color: c.text,
@@ -1349,7 +1381,13 @@ export function RideTracking({
                     margin: "20px -20px 16px",
                   }}
                 />
-                <div style={{ ...row, gap: 12, ...rise8(18) }}>
+                <div
+                  style={{
+                    ...row,
+                    gap: 12,
+                    ...rise8(sheet.start + sheet.beat("driver")),
+                  }}
+                >
                   <div style={{ flexShrink: 0 }}>
                     <Portrait uid={uid} />
                   </div>
@@ -1407,7 +1445,14 @@ export function RideTracking({
                     </div>
                   </div>
                 </div>
-                <div style={{ ...row, gap: 10, marginTop: 22, ...rise8(22) }}>
+                <div
+                  style={{
+                    ...row,
+                    gap: 10,
+                    marginTop: 22,
+                    ...rise8(sheet.start + sheet.beat("actions")),
+                  }}
+                >
                   <div
                     style={{
                       flex: 1,

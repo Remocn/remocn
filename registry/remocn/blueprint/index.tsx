@@ -3,6 +3,8 @@
 import { type ReactNode, useId } from "react";
 import { AbsoluteFill, Easing, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import { type BlueprintElementId, blueprintTimeline } from "./timeline";
 
 export type BlueprintLabels = {
   width: string;
@@ -26,6 +28,12 @@ export type BlueprintProps = {
   productColor?: string;
   labels?: Partial<BlueprintLabels>;
   speed?: number;
+  /**
+   * Moves, trims or stretches the wipe, the drawing, the dimensions and the
+   * callout, by the ids in `./timeline`. Frames on the scene timeline, after
+   * `speed`.
+   */
+  timing?: Timing<BlueprintElementId>;
 };
 
 export const blueprintDefaults = {
@@ -58,20 +66,32 @@ const ease = (t: number, from: number, to: number) =>
     easing: Easing.inOut(Easing.cubic),
   });
 
-export function Blueprint({
-  children,
-  box = blueprintDefaults.box,
-  calloutAt = blueprintDefaults.calloutAt,
-  blueprintColor = blueprintDefaults.blueprintColor,
-  lineColor = blueprintDefaults.lineColor,
-  calloutColor = blueprintDefaults.calloutColor,
-  background = blueprintDefaults.background,
-  productColor = blueprintDefaults.productColor,
-  labels,
-  speed = blueprintDefaults.speed,
-}: BlueprintProps) {
+export function Blueprint(props: BlueprintProps) {
+  const {
+    children,
+    box = blueprintDefaults.box,
+    calloutAt = blueprintDefaults.calloutAt,
+    blueprintColor = blueprintDefaults.blueprintColor,
+    lineColor = blueprintDefaults.lineColor,
+    calloutColor = blueprintDefaults.calloutColor,
+    background = blueprintDefaults.background,
+    productColor = blueprintDefaults.productColor,
+    labels,
+    speed = blueprintDefaults.speed,
+    timing,
+  } = props;
   const frame = useSceneFrame();
-  const { width, height, fps } = useSceneConfig();
+  const { width, height, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    blueprintTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const span = (id: BlueprintElementId) => {
+    const e = tl.get(id);
+    return [e.start, e.end] as const;
+  };
   const id = useId().replace(/[^a-zA-Z0-9_-]/g, "");
   const text = { ...blueprintDefaults.labels, ...labels };
   const t = (frame / fps) * 30 * speed;
@@ -88,21 +108,21 @@ export function Blueprint({
   const radius = Math.min(bw, bh) * 0.16;
   const dot = { x: x0 + calloutAt[0] * bw, y: y0 + calloutAt[1] * bh };
 
-  const wipe = interpolate(t, [6, 24], [-0.04, 1.04], {
+  const wipe = interpolate(t, span("wipe"), [-0.04, 1.04], {
     ...clamp,
     easing: Easing.inOut(Easing.cubic),
   });
   const wipeX = wipe * width;
-  const outline = ease(t, 8, 28);
-  const extension = ease(t, 22, 28);
-  const dims = ease(t, 24, 32);
-  const label = ease(t, 30, 36);
-  const leader = ease(t, 32, 40);
-  const bubble = interpolate(t, [36, 42], [0, 1], {
+  const outline = ease(t, ...span("outline"));
+  const extension = ease(t, ...span("extensions"));
+  const dims = ease(t, ...span("dimensions"));
+  const label = ease(t, ...span("labels"));
+  const leader = ease(t, ...span("leader"));
+  const bubble = interpolate(t, span("bubble"), [0, 1], {
     ...clamp,
     easing: Easing.out(Easing.back(2)),
   });
-  const calloutText = ease(t, 38, 44);
+  const calloutText = ease(t, ...span("callout"));
 
   const stroke = 2.4 * u;
   const thin = 1.2 * u;

@@ -3,6 +3,19 @@
 import { useMemo } from "react";
 import { Easing, random } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  clamp,
+  countOf,
+  finite,
+  jitterOf,
+  TRIM_LAG,
+  TRIM_LIFE,
+  type TrimBurstElementId,
+  trimBurstPlan,
+  trimBurstTimeline,
+  within,
+} from "./timeline";
 
 export type TrimBurstCap = "round" | "butt";
 
@@ -24,9 +37,14 @@ export interface TrimBurstProps {
   delay?: number;
   speed?: number;
   className?: string;
+  /**
+   * Moves, trims or stretches single rays, in launch order, by the ids in
+   * `./timeline`. Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<TrimBurstElementId>;
 }
 
-type Paint = "color" | "className";
+type Paint = "color" | "className" | "timing";
 
 export interface TrimBurstOptions extends Omit<TrimBurstProps, Paint> {
   width?: number;
@@ -39,6 +57,8 @@ export interface TrimBurstStroke {
   angle: number;
   scale: number;
   launch: number;
+  /** Place in the launch order: the stroke fires as ray `rank`. */
+  rank: number;
 }
 
 export interface TrimBurstTrim {
@@ -63,7 +83,9 @@ export interface TrimBurstDot {
   r: number;
 }
 
-export const trimBurstDefaults: Required<Omit<TrimBurstProps, "className">> = {
+export const trimBurstDefaults: Required<
+  Omit<TrimBurstProps, "className" | "timing">
+> = {
   x: 0.5,
   y: 0.5,
   count: 8,
@@ -82,9 +104,8 @@ export const trimBurstDefaults: Required<Omit<TrimBurstProps, "className">> = {
   speed: 1,
 };
 
-const LIFE = 15;
-const LAG = 3;
-const STAGGER = 6;
+const LIFE = TRIM_LIFE;
+const LAG = TRIM_LAG;
 const HOLD = 24;
 const LEASH = 6;
 const WOBBLE = 0.25;
@@ -95,7 +116,6 @@ const DOT_POP = 4;
 const DOT_BACK = 1.4;
 const DOT_RADIUS = 1.25;
 const DOT_GAP = 2;
-const MAX_COUNT = 32;
 const MAX_SIZE = 2000;
 const MIN_STROKE = 1;
 const MIN_WEIGHT = 0.25;
@@ -104,34 +124,18 @@ const VISIBLE = 0.001;
 const END_EASE = Easing.bezier(0.16, 1, 0.3, 1);
 const START_EASE = Easing.bezier(0.45, 0, 0.55, 1);
 
-const finite = (value: number | undefined, fallback: number) =>
-  typeof value === "number" && Number.isFinite(value) ? value : fallback;
-const clamp = (value: number, min: number, max: number) =>
-  Math.min(max, Math.max(min, value));
-const within = (
-  value: number | undefined,
-  fallback: number,
-  min: number,
-  max: number,
-) => clamp(finite(value, fallback), min, max);
 const round = (value: number) => Math.round(value * 1000) / 1000;
 const rateOf = (speed: number | undefined) =>
   Math.max(0, finite(speed, trimBurstDefaults.speed));
 const delayOf = (delay: number | undefined) =>
   Math.max(0, finite(delay, trimBurstDefaults.delay));
-const countOf = (count: number | undefined) =>
-  Math.round(within(count, trimBurstDefaults.count, 1, MAX_COUNT));
-const jitterOf = (jitter: number | undefined) =>
-  within(jitter, trimBurstDefaults.jitter, 0, 1);
 const capOf = (cap: string | undefined): TrimBurstCap =>
   cap === "butt" ? cap : "round";
 
 export function getTrimBurstTimeline(
   options: Pick<TrimBurstOptions, "count" | "jitter"> = {},
 ) {
-  const count = countOf(options.count);
-  const stagger = count > 1 ? STAGGER * jitterOf(options.jitter) : 0;
-  return { life: LIFE, lag: LAG, stagger, length: LIFE + stagger };
+  return trimBurstPlan(options);
 }
 
 export type TrimBurstTimeline = ReturnType<typeof getTrimBurstTimeline>;
@@ -225,6 +229,7 @@ export function getTrimBurstStrokes(
       angle: first + index * step + turn * wobble,
       scale: 1 - SHRINK * jitter * shrink,
       launch: count > 1 ? (stagger * ranks[index]) / (count - 1) : 0,
+      rank: ranks[index],
     };
   });
 }
@@ -233,6 +238,11 @@ export function getTrimBurstState(
   frame: number,
   options: TrimBurstOptions = {},
   strokes: TrimBurstStroke[] = getTrimBurstStrokes(options),
+  /**
+   * Each ray's span by launch rank, from the component's timeline; without
+   * it a stroke fires at its `launch` and lives the default life.
+   */
+  rays?: readonly { start: number; length: number }[],
 ) {
   const fallback = trimBurstDefaults;
   const width = Math.max(1, finite(options.width, 1280));
@@ -257,7 +267,16 @@ export function getTrimBurstState(
   const lines: TrimBurstLine[] = [];
   const dots: TrimBurstDot[] = [];
   for (const stroke of strokes) {
-    const local = time - stroke.launch;
+    const ray = rays?.[stroke.rank];
+    // A resized ray plays its whole life over its new length; the factor is
+    // exactly 1 without `timing`.
+    const local = !ray
+      ? time - stroke.launch
+      : ray.length > 0
+        ? (time - ray.start) * (LIFE / ray.length)
+        : time >= ray.start
+          ? LIFE
+          : 0;
     const trim = getTrimBurstTrim(
       local,
       reach * unit * stroke.scale,
@@ -309,27 +328,36 @@ export function getTrimBurstState(
 
 export type TrimBurstState = ReturnType<typeof getTrimBurstState>;
 
-export function TrimBurst({
-  x = trimBurstDefaults.x,
-  y = trimBurstDefaults.y,
-  count = trimBurstDefaults.count,
-  innerRadius = trimBurstDefaults.innerRadius,
-  reach = trimBurstDefaults.reach,
-  strokeLength = trimBurstDefaults.strokeLength,
-  weight = trimBurstDefaults.weight,
-  rotation = trimBurstDefaults.rotation,
-  spread = trimBurstDefaults.spread,
-  jitter = trimBurstDefaults.jitter,
-  dots = trimBurstDefaults.dots,
-  cap = trimBurstDefaults.cap,
-  color = trimBurstDefaults.color,
-  seed = trimBurstDefaults.seed,
-  delay = trimBurstDefaults.delay,
-  speed = trimBurstDefaults.speed,
-  className,
-}: TrimBurstProps) {
+export function TrimBurst(props: TrimBurstProps) {
+  const {
+    x = trimBurstDefaults.x,
+    y = trimBurstDefaults.y,
+    count = trimBurstDefaults.count,
+    innerRadius = trimBurstDefaults.innerRadius,
+    reach = trimBurstDefaults.reach,
+    strokeLength = trimBurstDefaults.strokeLength,
+    weight = trimBurstDefaults.weight,
+    rotation = trimBurstDefaults.rotation,
+    spread = trimBurstDefaults.spread,
+    jitter = trimBurstDefaults.jitter,
+    dots = trimBurstDefaults.dots,
+    cap = trimBurstDefaults.cap,
+    color = trimBurstDefaults.color,
+    seed = trimBurstDefaults.seed,
+    delay = trimBurstDefaults.delay,
+    speed = trimBurstDefaults.speed,
+    className,
+    timing,
+  } = props;
   const frame = useSceneFrame();
-  const { width, height, fps } = useSceneConfig();
+  const { width, height, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    trimBurstTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const rays = useMemo(() => tl.lane("Rays"), [tl]);
   const strokes = useMemo(
     () => getTrimBurstStrokes({ count, rotation, spread, jitter, seed }),
     [count, rotation, spread, jitter, seed],
@@ -352,6 +380,7 @@ export function TrimBurst({
       speed,
     },
     strokes,
+    rays,
   );
 
   return (

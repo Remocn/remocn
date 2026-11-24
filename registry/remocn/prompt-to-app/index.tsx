@@ -18,6 +18,18 @@ import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_DEPLOY_URL,
+  DEFAULT_DONE_MESSAGE,
+  DEFAULT_FILES,
+  DEFAULT_PLAN,
+  DEFAULT_PROMPT,
+  type PromptToAppElementId,
+  promptToAppPlan,
+  promptToAppTimeline,
+  TYPING,
+} from "./timeline";
 
 const geist = loadFont("normal", {
   weights: ["300", "400"],
@@ -76,6 +88,12 @@ export interface PromptToAppProps {
   speed?: number;
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
+  /**
+   * Moves, trims or stretches the typing, the reply, each file, the cursor
+   * and the deploy, by the ids in `./timeline`. Frames on the scene
+   * timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<PromptToAppElementId>;
 }
 
 const DEFAULT_POURS: AppPour[] = [
@@ -186,51 +204,12 @@ function withAlpha(hex: string, alpha: number) {
   return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${alpha})`;
 }
 
-const T = {
-  type: 12,
-  cps: 2.3,
-};
-
-function timeline(promptLen: number, planWords: number) {
-  const typeEnd = T.type + promptLen / T.cps;
-  const send = typeEnd + 6;
-  const think = send + 6;
-  const planAt = think + 16;
-  const planEnd = planAt + planWords * 1.3;
-  const file = (i: number) => {
-    const s = planEnd + 4 + i * 24;
-    return { start: s, done: s + 20 };
-  };
-  const doneMsg = file(3).done + 4;
-  const cursorIn = doneMsg + 4;
-  const deployClick = cursorIn + 22;
-  const deployed = deployClick + 24;
-  return {
-    typeEnd,
-    send,
-    think,
-    planAt,
-    planEnd,
-    file,
-    doneMsg,
-    cursorIn,
-    deployClick,
-    deployed,
-    end: deployed + 40,
-  };
-}
-
 export function promptToAppDuration(
   prompt = DEFAULT_PROMPT,
   plan = DEFAULT_PLAN,
 ) {
-  return Math.ceil(timeline(prompt.length, plan.split(" ").length).end);
+  return Math.ceil(promptToAppPlan(prompt.length, plan.split(" ").length).end);
 }
-
-const DEFAULT_PROMPT =
-  "Build a landing page for Fernway, a neighborhood wine bar. Warm and editorial, with tonight’s pours and a booking button.";
-const DEFAULT_PLAN =
-  "I’ll build a one-page site for Fernway: a sticky nav, an editorial hero with a booking CTA, and a card grid for tonight’s pours.";
 
 interface Pal {
   base: string;
@@ -1108,51 +1087,74 @@ function ScaleLayer({
   );
 }
 
-export function PromptToApp({
-  prompt = DEFAULT_PROMPT,
-  plan = DEFAULT_PLAN,
-  files = [
-    "components/Nav.tsx",
-    "components/Hero.tsx",
-    "components/PourCards.tsx",
-    "app/page.tsx",
-  ],
-  doneMessage = "Fernway is ready. The booking button links to your reservations page.",
-  projectName = "fernway-site",
-  deployUrl = "fernway.remocn.app",
-  siteName = "Fernway",
-  siteEyebrow = "Wine bar · Open late",
-  siteHeadline = "Natural wine, small plates, one long table.",
-  siteBody = "Low-intervention bottles and seasonal plates in the Mission. Walk-ins welcome until 10.",
-  siteLinks = ["Menu", "Wine list", "Events", "Visit"],
-  pours = DEFAULT_POURS,
-  emptyTitle = "What should we build?",
-  siteCta = "Book a table",
-  poursTitle = "Tonight’s pours",
-  children,
-  logo,
-  theme = "light",
-  accent = "#3B5BFD",
-  ink: inkProp,
-  background,
-  fontFamily = geist.fontFamily,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  ground,
-  groundParams,
-}: PromptToAppProps) {
+export function PromptToApp(props: PromptToAppProps) {
+  const {
+    prompt = DEFAULT_PROMPT,
+    plan = DEFAULT_PLAN,
+    files = DEFAULT_FILES,
+    doneMessage = DEFAULT_DONE_MESSAGE,
+    projectName = "fernway-site",
+    deployUrl = DEFAULT_DEPLOY_URL,
+    siteName = "Fernway",
+    siteEyebrow = "Wine bar · Open late",
+    siteHeadline = "Natural wine, small plates, one long table.",
+    siteBody = "Low-intervention bottles and seasonal plates in the Mission. Walk-ins welcome until 10.",
+    siteLinks = ["Menu", "Wine list", "Events", "Visit"],
+    pours = DEFAULT_POURS,
+    emptyTitle = "What should we build?",
+    siteCta = "Book a table",
+    poursTitle = "Tonight’s pours",
+    children,
+    logo,
+    theme = "light",
+    accent = "#3B5BFD",
+    ink: inkProp,
+    background,
+    fontFamily = geist.fontFamily,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    ground,
+    groundParams,
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H, fps } = useSceneConfig();
+  const { width: W, height: H, fps, durationInFrames } = useSceneConfig();
+  const sched = useTimeline(
+    promptToAppTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const tall = H > W;
   const L = tall ? LAYOUT_TALL : LAYOUT_WIDE;
   const u = W / L.w;
   const themePal = palette(theme);
   const pal = inkProp ? { ...themePal, text: inkProp } : themePal;
   const planWords = plan.split(" ");
-  const tl = timeline(prompt.length, planWords.length);
-  const file = (i: number) => tl.file(i);
+  const typeEl = sched.get("prompt");
+  const planEl = sched.get("plan");
+  const tl = {
+    send: sched.get("send").start,
+    think: sched.get("think").start,
+    planAt: planEl.start,
+    doneMsg: sched.get("done").start,
+    cursorIn: sched.get("cursor").start,
+    deployClick: sched.get("deploy").start,
+    deployed: sched.get("live").start,
+    end: sched.get("live").end,
+  };
+  const file = (i: number) => {
+    const e = sched.get(`file:${i}`);
+    return { start: e.start, done: e.start + e.beat("done") };
+  };
+  // Characters a frame; a `timing` that stretches the typing slows it down.
+  const typedLength = prompt.length / TYPING.cps;
+  const cps =
+    typeEl.length > 0
+      ? TYPING.cps * (typedLength / typeEl.length)
+      : Number.MAX_VALUE;
   const sp = (at: number, config: SpringCfg, durationInFrames?: number) =>
     spring({ frame: frame - at, fps, config, durationInFrames });
   const spAt = (f: number, at: number, config: SpringCfg) =>
@@ -1180,7 +1182,7 @@ export function PromptToApp({
   );
   const typed = Math.max(
     0,
-    Math.min(prompt.length, Math.floor((frame - T.type) * T.cps)),
+    Math.min(prompt.length, Math.floor((frame - typeEl.start) * cps)),
   );
   const sent = frame >= tl.send + 1;
   const sendScale =
@@ -1479,8 +1481,8 @@ export function PromptToApp({
                               style={{
                                 opacity: tween(
                                   frame,
-                                  tl.planAt + k * 1.3,
-                                  tl.planAt + k * 1.3 + 5,
+                                  tl.planAt + k * planEl.beat("word"),
+                                  tl.planAt + k * planEl.beat("word") + 5,
                                 ),
                               }}
                             >

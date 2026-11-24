@@ -19,6 +19,15 @@ import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround, gshParams } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
 
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  CTA_COLLAPSE_LENGTH,
+  CTA_MARK_WORD,
+  type CtaCollapseMarkElementId,
+  ctaCollapseMarkTimeline,
+  DEFAULT_CTA,
+} from "./timeline";
+
 const manrope = loadManrope("normal", {
   weights: ["300", "400", "600"],
   subsets: ["latin"],
@@ -40,22 +49,7 @@ const SWAY = Easing.bezier(0.45, 0, 0.55, 1);
 const HEAVY = { mass: 1, damping: 26, stiffness: 120 };
 const LETTER = { mass: 0.6, damping: 14, stiffness: 180 };
 
-const B = {
-  cta: 0,
-  wordStep: 2,
-  url: 12,
-  shed: 36,
-  shedSpread: 12,
-  drift: 7,
-  travel: 18,
-  merge: 74,
-  snap: 78,
-  word: 84,
-  letterStep: 4,
-  end: 138,
-};
-
-export const CTA_COLLAPSE_MARK_DURATION = B.end;
+export const CTA_COLLAPSE_MARK_DURATION = CTA_COLLAPSE_LENGTH;
 
 const MEASURE_PX = 100;
 
@@ -223,6 +217,13 @@ export interface CtaCollapseMarkProps {
   speed?: number;
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
+  /**
+   * Moves, trims or stretches single words of the call to action, the URL,
+   * the shed, the merge, the snap, the reveal, single letters of the
+   * wordmark and the camera push, by the ids in `./timeline`. Frames on the
+   * scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<CtaCollapseMarkElementId>;
 }
 
 /** The foreground at `scale`, around the frame's center; nothing extra at 1. */
@@ -241,25 +242,38 @@ function ScaleLayer({
   );
 }
 
-export function CtaCollapseMark({
-  theme = "dark",
-  accent = "#3B5BFD",
-  cta = "Ship your first launch film",
-  url = "remocn.dev",
-  ink: inkProp,
-  background,
-  fontFamily = manrope.fontFamily,
-  stagger = B.wordStep,
-  logo,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  ground,
-  groundParams,
-}: CtaCollapseMarkProps) {
+export function CtaCollapseMark(props: CtaCollapseMarkProps) {
+  const {
+    theme = "dark",
+    accent = "#3B5BFD",
+    cta = DEFAULT_CTA,
+    url = "remocn.dev",
+    ink: inkProp,
+    background,
+    fontFamily = manrope.fontFamily,
+    logo,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    ground,
+    groundParams,
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width, height, fps } = useSceneConfig();
+  const { width, height, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    ctaCollapseMarkTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const pushEl = tl.get("push");
+  const urlEl = tl.get("url");
+  const shed = tl.get("shed");
+  const mergeEl = tl.get("merge");
+  const snapEl = tl.get("snap");
+  const revealEl = tl.get("reveal");
   const m = useMetrics(fontFamily);
   const cells = useMemo(() => computeCells(), []);
   const dark = theme === "dark";
@@ -331,9 +345,9 @@ export function CtaCollapseMark({
     ...glyphs.map((g) => Math.abs(g.x + g.adv / 2 - cx)),
   );
   const shedAt = (g: Glyph) =>
-    B.shed +
+    shed.start +
     Math.round(
-      (1 - Math.abs(g.x + g.adv / 2 - cx) / maxDist) * B.shedSpread +
+      (1 - Math.abs(g.x + g.adv / 2 - cx) / maxDist) * shed.beat("spread") +
         (g.url ? 2 : 0),
     );
 
@@ -341,24 +355,24 @@ export function CtaCollapseMark({
   const Rh = L * 0.76;
   const Rw = (Rh * R_W) / R_H;
   const baseY = cy + Rh / 2;
-  const word = "emocn";
+  const word = CTA_MARK_WORD;
   const wChars = Array.from(word);
   const wPrefix = wChars.map(
     (_, i) => m.logo.width(wChars.slice(0, i).join("")) * L,
   );
   const wordW = m.logo.width(word) * L;
   const settle = spring({
-    frame: frame - B.word - 6,
+    frame: frame - revealEl.start - revealEl.beat("settleAt"),
     fps,
     config: HEAVY,
-    durationInFrames: 30,
+    durationInFrames: revealEl.beat("settle"),
   });
   const extra = L * 0.16 * (1 - settle);
   const reveal = spring({
-    frame: frame - B.word,
+    frame: frame - revealEl.start,
     fps,
     config: HEAVY,
-    durationInFrames: 26,
+    durationInFrames: revealEl.length,
   });
   const rs = mix(BIG, 1, reveal);
   const RwS = Rw * rs;
@@ -388,15 +402,24 @@ export function CtaCollapseMark({
   const N = sortedCells.length;
   const G = srcGlyphs.length;
 
-  const merge = ramp(frame, B.merge, 4, MOVE);
-  const snap = ramp(frame, B.snap, 5, LIGHT);
+  const merge = ramp(frame, mergeEl.start, mergeEl.length, MOVE);
+  const snap = ramp(frame, snapEl.start, snapEl.length, LIGHT);
   const pushAt = (f: number) =>
-    (1 + 0.03 * ramp(f, 0, B.end, SWAY)) *
-    interpolate(f, [B.snap, B.snap + 2, B.snap + 9], [1, 1.05, 1], {
-      extrapolateLeft: "clamp",
-      extrapolateRight: "clamp",
-      easing: SWAY,
-    });
+    (1 + 0.03 * ramp(f, pushEl.start, pushEl.length, SWAY)) *
+    interpolate(
+      f,
+      [
+        snapEl.start,
+        snapEl.start + snapEl.beat("peak"),
+        snapEl.start + snapEl.beat("punch"),
+      ],
+      [1, 1.05, 1],
+      {
+        extrapolateLeft: "clamp",
+        extrapolateRight: "clamp",
+        easing: SWAY,
+      },
+    );
   // The slow push carries every glyph and the wordmark, so its tilt covers
   // them all; it is on for as long as the push still moves.
   const pushMoving =
@@ -480,10 +503,10 @@ export function CtaCollapseMark({
             }}
           >
             {glyphs.map((g, i) => {
-              const enterAt = g.url ? B.url : B.cta + g.word * stagger;
-              const inK = ramp(frame, enterAt, 12, LIGHT);
+              const enter = g.url ? urlEl : tl.get(`word:${g.word}`);
+              const inK = ramp(frame, enter.start, enter.length, LIGHT);
               const s0 = shedAt(g);
-              const out = ramp(frame, s0, 10, EXIT);
+              const out = ramp(frame, s0, shed.beat("fade"), EXIT);
               if (out >= 1) return null;
               const jx = (random(`ccm-gx-${i}`) - 0.5) * g.size * 0.12;
               const jy = -random(`ccm-gy-${i}`) * g.size * 0.1;
@@ -527,12 +550,12 @@ export function CtaCollapseMark({
               const oy = g.base - r2 * g.size * 0.62;
               const dx = (r3 - 0.5) * g.size * 0.7;
               const dy = -(0.2 + r2 * 0.5) * g.size * 0.5;
-              const dr = ramp(frame, s0, B.drift, ENTER);
-              const startT = s0 + 5;
+              const dr = ramp(frame, s0, shed.beat("drift"), ENTER);
+              const startT = s0 + shed.beat("travelAt");
               const tr = ramp(
                 frame,
                 startT,
-                B.travel + Math.round(r1 * 4),
+                shed.beat("travel") + Math.round(r1 * 4),
                 MOVE,
               );
               const tx = lockL + (cell.c + 0.5) * cellW;
@@ -548,7 +571,8 @@ export function CtaCollapseMark({
                 [0, 0.6, 1],
                 [g.url ? urlColor : ink, markColor, markColor],
               );
-              const vis = ramp(frame, s0, 3, LIGHT) * (1 - snap);
+              const vis =
+                ramp(frame, s0, shed.beat("show"), LIGHT) * (1 - snap);
               const speed = tr > 0.05 && tr < 0.95 ? 1 : 0;
               return (
                 <div
@@ -607,15 +631,13 @@ export function CtaCollapseMark({
             )}
 
             {(logo ? [] : wChars).map((ch, i) => {
+              const letter = tl.get(`letter:${i}`);
               const p = spring({
-                frame: frame - B.word - 6 - i * B.letterStep,
+                frame: frame - letter.start,
                 fps,
                 config: LETTER,
               });
-              const vis = Math.min(
-                1,
-                ramp(frame, B.word + 6 + i * B.letterStep, 6),
-              );
+              const vis = Math.min(1, ramp(frame, letter.start, letter.length));
               return (
                 <span
                   key={`w${i.toString()}`}

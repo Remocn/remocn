@@ -6,6 +6,8 @@ import { useId, useMemo } from "react";
 import { AbsoluteFill, Easing, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import { type FlowArrowElementId, flowArrowTimeline } from "./timeline";
 
 const { fontFamily: space } = loadSpace("normal", {
   weights: ["400", "500"],
@@ -33,6 +35,12 @@ export interface FlowArrowProps {
   grain?: boolean;
   theme?: "dark" | "light";
   speed?: number;
+  /**
+   * Moves, trims or stretches the stray stream, the push, the dots filling
+   * the arrow, the baseline, the metric, the shine and the label, by the ids
+   * in `./timeline`. Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<FlowArrowElementId>;
 }
 
 const EASE_IO = Easing.bezier(0.65, 0, 0.35, 1);
@@ -75,10 +83,6 @@ const TREND: [number, number][] = [
   [1, 0.9],
 ];
 
-const LAUNCH = 4;
-const SPAN = 52;
-const JITTER = 8;
-const FLY = 32;
 const PASSERS = 80;
 
 function hash(n: number) {
@@ -262,28 +266,50 @@ function ScaleLayer({
   );
 }
 
-export function FlowArrow({
-  metric = "3×",
-  label = "faster growth",
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = space,
-  fontWeight = 400,
-  flight = FLY,
-  scale = 1,
-  delay = 0,
-  grain = true,
-  theme = "dark",
-  speed = 1,
-}: FlowArrowProps) {
+export function FlowArrow(props: FlowArrowProps) {
+  const {
+    metric = "3×",
+    label = "faster growth",
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = space,
+    fontWeight = 400,
+    scale = 1,
+    delay = 0,
+    grain = true,
+    theme = "dark",
+    speed = 1,
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H } = useSceneConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    flowArrowTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const streamEl = tl.get("stream");
+  const pushEl = tl.get("push");
+  const fillEl = tl.get("fill");
+  const baseEl = tl.get("baseline");
+  const metricEl = tl.get("metric");
+  const shineEl = tl.get("shine");
+  const labelEl = tl.get("label");
+  const launch = fillEl.start;
+  const span = fillEl.beat("span");
+  const jitter = fillEl.beat("jitter");
+  const flight = fillEl.beat("flight");
+  const settleLen = fillEl.beat("settle");
+  const streamAt = streamEl.start;
+  const spread = streamEl.beat("spread");
+  const dur = streamEl.beat("dur");
+  const vary = streamEl.beat("vary");
   const u = Math.min(W / 1280, H / 720);
   const p = THEMES[theme];
   const fg = ink ?? p.fg;
-  const hit = LAUNCH + SPAN + JITTER + flight;
   // The tail starts in the accent (the palette's own first stop is the same blue).
   const halo = useMemo(
     () => [accent, ...HALO[theme].slice(1)],
@@ -315,10 +341,10 @@ export function FlowArrow({
           b,
           c,
           d: { x: pt.x, y: pt.y },
-          start: LAUNCH + pt.s * SPAN + h(7) * JITTER,
+          start: launch + pt.s * span + h(7) * jitter,
         };
       }),
-    [arrow, W, H, halo],
+    [arrow, W, H, halo, launch, span, jitter],
   );
 
   const passers = useMemo(
@@ -332,27 +358,30 @@ export function FlowArrow({
           b: { x: W * 0.36, y: H * (0.2 + o * 0.06) },
           c: { x: W * 0.7, y: H * (0.62 + o * 0.07) },
           d: { x: W * 1.06, y: H * (0.42 + o * 0.08) },
-          start: h(5) * 54 - 14,
-          dur: 46 + h(6) * 12,
+          start: h(5) * spread + streamAt,
+          dur: dur + h(6) * vary,
         };
       }),
-    [W, H],
+    [W, H, streamAt, spread, dur, vary],
   );
 
-  const sweep = interpolate(t, [hit - 2, hit + 26], [-0.15, 1.15], {
+  const sweep = interpolate(t, [shineEl.start, shineEl.end], [-0.15, 1.15], {
     ...CLAMP,
     easing: EASE_IO,
   });
-  const land = interpolate(t, [hit - 6, hit + 16], [0, 1], {
+  const land = interpolate(t, [metricEl.start, metricEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
-  const labIn = interpolate(t, [hit + 4, hit + 22], [0, 1], {
+  const labIn = interpolate(t, [labelEl.start, labelEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
-  const hairIn = interpolate(t, [6, 60], [0, 1], { ...CLAMP, easing: EASE_IO });
-  const push = interpolate(t, [0, hit + 50], [0, 1], {
+  const hairIn = interpolate(t, [baseEl.start, baseEl.end], [0, 1], {
+    ...CLAMP,
+    easing: EASE_IO,
+  });
+  const push = interpolate(t, [pushEl.start, pushEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
@@ -387,7 +416,7 @@ export function FlowArrow({
       const g = Math.exp(-(((q.s - sweep) / 0.07) ** 2));
       const settle = interpolate(
         t,
-        [q.start + flight, q.start + flight + 6],
+        [q.start + flight, q.start + flight + settleLen],
         [1.3, 1],
         CLAMP,
       );

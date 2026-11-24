@@ -18,6 +18,8 @@ import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import { type UpCloseElementId, upCloseTimeline } from "./timeline";
 
 const onest = loadFont("normal", {
   weights: ["300", "400"],
@@ -50,6 +52,12 @@ export interface UpCloseProps {
   delay?: number;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches the close-up, its line, the pull back and the
+   * wide line, by the ids in `./timeline`. Frames on the scene timeline,
+   * after `delay` and `speed`.
+   */
+  timing?: Timing<UpCloseElementId>;
 }
 
 const THEMES = {
@@ -273,29 +281,36 @@ function ScaleLayer({
   );
 }
 
-export function UpClose({
-  close = "Up close, it’s code.",
-  wide = "From here, it’s your launch.",
-  src,
-  aspect = 1200 / 630,
-  focus = { x: 0.58, y: 0.52 },
-  zoom = 3,
-  readoutLabel = "Zoom",
-  pullAt = 44,
-  accent,
-  ink,
-  background,
-  fontFamily = onest.fontFamily,
-  ground,
-  groundParams,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: UpCloseProps) {
+export function UpClose(props: UpCloseProps) {
+  const {
+    close = "Up close, it’s code.",
+    wide = "From here, it’s your launch.",
+    src,
+    aspect = 1200 / 630,
+    focus = { x: 0.58, y: 0.52 },
+    zoom = 3,
+    readoutLabel = "Zoom",
+    accent,
+    ink,
+    background,
+    fontFamily = onest.fontFamily,
+    ground,
+    groundParams,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay);
   const { width: W, height: H, durationInFrames: D, fps } = useSceneConfig();
+  // The beats scale with the clip's length, not with `speed`, as before.
+  const tl = useTimeline(upCloseTimeline, props, D, timing);
+  const shotEl = tl.get("shot");
+  const closeEl = tl.get("close");
+  const pull = tl.get("pull");
+  const wideEl = tl.get("wide");
   const c = THEMES[theme];
   const hi = accent ?? c.accent;
   const fg = ink ?? c.ink;
@@ -306,7 +321,6 @@ export function UpClose({
   const closeWords = close.split(/\s+/).filter(Boolean);
   const wideWords = wide.split(/\s+/).filter(Boolean);
 
-  const k = Math.min(1.6, Math.max(0.6, D / 125));
   const t = frame * speed;
   const portrait = H > W * 1.1;
   const sp = widths(" ");
@@ -351,10 +365,7 @@ export function UpClose({
     h: finalH,
   };
 
-  const PULL_AT = pullAt * k;
-  const WIDE_AT = PULL_AT + 20 * k;
-
-  const q = Math.min(1, spring({ frame: t - PULL_AT, fps, config: HEAVY }));
+  const q = Math.min(1, spring({ frame: t - pull.start, fps, config: HEAVY }));
   const win = {
     x: lerp(win0.x, win1.x, q),
     y: lerp(win0.y, win1.y, q),
@@ -363,11 +374,16 @@ export function UpClose({
   };
   const radius = lerp(0, Math.min(W, H) * 0.018, q);
 
-  const creep = interpolate(t, [0, PULL_AT], [1.05, 1], CLAMP);
-  const settle = interpolate(t, [PULL_AT, D], [1.03, 1], {
-    ...CLAMP,
-    easing: Easing.bezier(0.22, 1, 0.36, 1),
-  });
+  const creep = interpolate(t, [shotEl.start, pull.start], [1.05, 1], CLAMP);
+  const settle = interpolate(
+    t,
+    [pull.start, pull.start + pull.beat("settle")],
+    [1.03, 1],
+    {
+      ...CLAMP,
+      easing: Easing.bezier(0.22, 1, 0.36, 1),
+    },
+  );
   const z = zoom ** (1 - q) * lerp(creep, settle, q);
   const coverW = Math.max(win.w, win.h * aspect);
   const coverH = coverW / aspect;
@@ -378,26 +394,39 @@ export function UpClose({
   const left = Math.min(0, Math.max(win.w - imgW, win.w / 2 - ax * imgW));
   const top = Math.min(0, Math.max(win.h - imgH, win.h / 2 - ay * imgH));
 
-  const fadeIn = interpolate(t, [0, 8 * k], [0, 1], {
+  const fadeIn = interpolate(t, [shotEl.start, shotEl.end], [0, 1], {
     ...CLAMP,
     easing: ENTER,
   });
-  const closeIn = interpolate(t, [6 * k, 20 * k], [0, 1], {
+  const closeIn = interpolate(t, [closeEl.start, closeEl.end], [0, 1], {
     ...CLAMP,
     easing: ENTER,
   });
-  const lift = interpolate(t, [WIDE_AT - 6 * k, WIDE_AT + 12 * k], [0, 1], {
-    ...CLAMP,
-    easing: MOVE,
-  });
-  const wideIn = interpolate(t, [WIDE_AT, WIDE_AT + 14 * k], [0, 1], {
+  const lift = interpolate(
+    t,
+    [
+      wideEl.start + wideEl.beat("liftAt"),
+      wideEl.start + wideEl.beat("liftEnd"),
+    ],
+    [0, 1],
+    {
+      ...CLAMP,
+      easing: MOVE,
+    },
+  );
+  const wideIn = interpolate(t, [wideEl.start, wideEl.end], [0, 1], {
     ...CLAMP,
     easing: ENTER,
   });
-  const readoutIn = interpolate(t, [PULL_AT, PULL_AT + 10 * k], [0, 1], {
-    ...CLAMP,
-    easing: ENTER,
-  });
+  const readoutIn = interpolate(
+    t,
+    [pull.start, pull.start + pull.beat("readout")],
+    [0, 1],
+    {
+      ...CLAMP,
+      easing: ENTER,
+    },
+  );
   // The lines are laid out where they finally rest and move by a transform
   // all their life: layout rounds a baseline to whole pixels, so a line eased
   // by `top` clicks along, and one handed back to layout at rest jumps.

@@ -13,6 +13,12 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_LINES,
+  type FinePrintUpElementId,
+  finePrintUpTimeline,
+} from "./timeline";
 
 const gloock = loadFont("normal", { weights: ["400"], subsets: ["latin"] });
 
@@ -33,13 +39,13 @@ export interface FinePrintUpProps {
   delay?: number;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches the fade-in, single lines and the closing, by
+   * the ids in `./timeline`. Frames on the scene timeline, after `delay` and
+   * `speed`.
+   */
+  timing?: Timing<FinePrintUpElementId>;
 }
-
-const DEFAULT_LINES = [
-  "Every component you install is a file you own.",
-  "Use it in paid client work. It’s MIT.",
-  "No account and no watermark. Ever.",
-];
 
 const THEMES = {
   dark: {
@@ -59,9 +65,6 @@ const THEMES = {
 const TRACK = -0.02;
 const LH = 1.08;
 const FINE_LH = 1.3;
-const START = 10;
-const TRAVEL = 26;
-const TAIL = 76;
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
 const EASE_IO = Easing.bezier(0.65, 0, 0.35, 1);
 const CLAMP = {
@@ -177,23 +180,30 @@ function ScaleLayer({
   );
 }
 
-export function FinePrintUp({
-  lines = DEFAULT_LINES,
-  closing = "That’s all the fine print.",
-  travel = TRAVEL,
-  accent,
-  ink,
-  background,
-  fontFamily = gloock.fontFamily,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: FinePrintUpProps) {
+export function FinePrintUp(props: FinePrintUpProps) {
+  const {
+    lines = DEFAULT_LINES,
+    closing = "That’s all the fine print.",
+    accent,
+    ink,
+    background,
+    fontFamily = gloock.fontFamily,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay);
   const t = frame * speed;
   const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    finePrintUpTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const c = THEMES[theme];
   const hi = accent ?? c.accent;
   const fg = ink ?? c.ink;
@@ -240,12 +250,11 @@ export function FinePrintUp({
     return { F, lay: balanced(ws, boxW / F, fontFamily) };
   });
 
-  const D = durationInFrames * speed;
-  const per = Math.max(50, (D - START - TAIL) / n);
-  const stepAt = (i: number) => START + i * per;
-  const closeAt = stepAt(n - 1) + travel + 26;
+  const lineEls = tl.lane("Lines");
+  const introEl = tl.get("intro");
+  const closeEl = tl.get("closing");
 
-  const intro = interpolate(t, [0, 12], [0, 1], {
+  const intro = interpolate(t, [introEl.start, introEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
@@ -289,22 +298,35 @@ export function FinePrintUp({
   };
 
   lines.forEach((_, i) => {
-    const s0 = stepAt(i);
+    const el = lineEls[i];
+    const s0 = el.start;
     const u = t - s0;
     const { F, lay } = heads[i];
     const fl = fineLays[i];
-    const pick = interpolate(u, [-2, 6], [0, 1], CLAMP);
+    const pick = interpolate(
+      u,
+      [el.beat("pick"), el.beat("picked")],
+      [0, 1],
+      CLAMP,
+    );
     const exitAt = (tt: number) =>
       i < n - 1
-        ? interpolate(tt, [stepAt(i + 1), stepAt(i + 1) + 12], [0, 1], {
-            ...CLAMP,
-            easing: Easing.bezier(0.55, 0, 1, 0.45),
-          })
+        ? interpolate(
+            tt,
+            [lineEls[i + 1].start, lineEls[i + 1].start + el.beat("exit")],
+            [0, 1],
+            {
+              ...CLAMP,
+              easing: Easing.bezier(0.55, 0, 1, 0.45),
+            },
+          )
         : 0;
     const exit = exitAt(t);
     if (exit >= 1) return;
 
-    const markOp = interpolate(u, [4, 14], [1, 0], CLAMP) * intro;
+    const markOp =
+      interpolate(u, [el.beat("markOut"), el.beat("markGone")], [1, 0], CLAMP) *
+      intro;
     if (markOp > 0) {
       nodes.push(
         text(
@@ -323,7 +345,7 @@ export function FinePrintUp({
     }
 
     const count = lay.words.length;
-    const stagger = Math.min(1.4, 12 / Math.max(1, count));
+    const stagger = Math.min(1.4, el.beat("spread") / Math.max(1, count));
     lay.words.forEach((hw, wi) => {
       const fw = fl.words[wi];
       const fx = fineX + (markW + fw.x) * fs;
@@ -334,7 +356,10 @@ export function FinePrintUp({
       const geometry = (tt: number) => {
         const mv = interpolate(
           tt - s0,
-          [6 + wi * stagger, 6 + wi * stagger + travel],
+          [
+            el.beat("lift") + wi * stagger,
+            el.beat("lift") + wi * stagger + el.beat("travel"),
+          ],
           [0, 1],
           { ...CLAMP, easing: EASE_IO },
         );
@@ -374,7 +399,7 @@ export function FinePrintUp({
     });
   });
 
-  const closeIn = interpolate(t, [closeAt, closeAt + 16], [0, 1], {
+  const closeIn = interpolate(t, [closeEl.start, closeEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });

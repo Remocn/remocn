@@ -7,6 +7,13 @@ import type React from "react";
 import { AbsoluteFill, Easing, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  LAP_COUNT,
+  PREROLL,
+  type TimingTowerElementId,
+  timingTowerTimeline,
+} from "./timeline";
 
 const { fontFamily: saira } = loadFont("normal", {
   weights: ["400", "500"],
@@ -84,6 +91,13 @@ export interface TimingTowerProps {
   delay?: number;
   theme?: "dark" | "light";
   speed?: number;
+  /**
+   * Moves, trims or stretches the tower's entry, each lap, the P1 finish,
+   * the tower's exit, the poster, the numeral and the ground's drift, by the
+   * ids in `./timeline`. Frames on the scene timeline, after `delay` and
+   * `speed`.
+   */
+  timing?: Timing<TimingTowerElementId>;
 }
 
 // Beat sheet (internal clock = frame + 4, 30fps, speed 1):
@@ -98,9 +112,6 @@ export interface TimingTowerProps {
 // 110–130  the tower peels off to the left, bottom row first; the numeral
 //          slides left and the code, team logo and interval wipe in beside it
 // 130–     poster hold: "P1 · RMC" with the interval counted up to +12.408
-const LAP_AT = [14, 28, 41, 53, 64, 74, 84];
-const SWAP = 9;
-const EXIT_AT = 110;
 
 const EASE = Easing.bezier(0.22, 1, 0.36, 1);
 const SWAP_EASE = Easing.bezier(0.65, 0, 0.35, 1);
@@ -206,29 +217,51 @@ function ScaleLayer({
   );
 }
 
-export function TimingTower({
-  code = "RMC",
-  field = ["KRV", "DLA", "MTS", "BRN", "OKO", "VAL", "PIR", "SAN", "TOR"],
-  lap = 41,
-  laps = 58,
-  interval = "+12.408",
-  intervalLabel = "Gap to P2",
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = saira,
-  lapLabel = "LAP",
-  positionLabel = "Position",
-  logo,
-  scale = 1,
-  delay = 0,
-  theme = "dark",
-  speed = 1,
-}: TimingTowerProps) {
+export function TimingTower(props: TimingTowerProps) {
+  const {
+    code = "RMC",
+    field = ["KRV", "DLA", "MTS", "BRN", "OKO", "VAL", "PIR", "SAN", "TOR"],
+    lap = 41,
+    laps = 58,
+    interval = "+12.408",
+    intervalLabel = "Gap to P2",
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = saira,
+    lapLabel = "LAP",
+    positionLabel = "Position",
+    logo,
+    scale = 1,
+    delay = 0,
+    theme = "dark",
+    speed = 1,
+    timing,
+  } = props;
   const glide = useGlide();
   // Starts four frames in, so frame 0 already shows the tower wiping in.
-  const t = Math.max(0, useSceneFrame() - delay) * speed + 4;
-  const { width: W, height: H } = useSceneConfig();
+  const t = Math.max(0, useSceneFrame() - delay) * speed + PREROLL;
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    timingTowerTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  // The schedule counts scene frames; `t` runs `PREROLL` ahead of them.
+  const towerEl = tl.get("tower");
+  const towerAt = towerEl.start + PREROLL;
+  const lapEls = Array.from({ length: LAP_COUNT }, (_, i) =>
+    tl.get(`lap:${i}`),
+  );
+  const LAP_AT = lapEls.map((e) => e.start + PREROLL);
+  const p1El = tl.get("p1");
+  const exitEl = tl.get("exit");
+  const EXIT_AT = exitEl.start + PREROLL;
+  const posterEl = tl.get("poster");
+  const posterAt = posterEl.start + PREROLL;
+  const giantEl = tl.get("giant");
+  const driftEl = tl.get("drift");
   const c = THEMES[theme];
   const fg = ink ?? c.ink;
   const stage =
@@ -252,12 +285,12 @@ export function TimingTower({
   while (k < LAP_AT.length && t >= LAP_AT[k]) k++;
   const from = orders[Math.max(0, k - 1)];
   const to = orders[k];
-  const swapP = k === 0 ? 1 : SWAP_EASE(ramp(t, LAP_AT[k - 1], SWAP));
+  const swapP =
+    k === 0 ? 1 : SWAP_EASE(ramp(t, LAP_AT[k - 1], lapEls[k - 1].beat("swap")));
   const slotIn = (order: number[], car: number) => order.indexOf(car);
   const heroSlot = slotIn(to, hero);
   const heroPos = heroSlot + 1;
-  const p1At = LAP_AT[LAP_AT.length - 1];
-  const p1 = SWAP_EASE(ramp(t, p1At + SWAP - 1, 6));
+  const p1 = SWAP_EASE(ramp(t, p1El.start + PREROLL, p1El.length));
 
   // ── Layout ────────────────────────────────────────────────────────────────
   const towerX = 64 * u;
@@ -269,13 +302,22 @@ export function TimingTower({
   const rowsY = towerY + headH + 8 * u;
   const posW = 50 * u;
 
-  const enter = (delay: number) => EASE(ramp(t, delay, 9));
+  const enter = (at: number) => EASE(ramp(t, at, towerEl.beat("enter")));
+  const rowAt = (slot: number) =>
+    towerAt + towerEl.beat("rowsAt") + slot * towerEl.beat("rowStagger");
   const exitP = (slot: number) =>
-    EXIT_EASE(ramp(t, EXIT_AT + (9 - slot) * 0.8, 9));
+    EXIT_EASE(
+      ramp(
+        t,
+        EXIT_AT + (9 - slot) * exitEl.beat("stagger"),
+        exitEl.beat("peel"),
+      ),
+    );
   const exitDX = towerX + towerW + 60 * u;
 
   const lapNow = lap + k;
-  const lapFlash = k > 0 ? flash(t - LAP_AT[k - 1], 8) : 0;
+  const lapFlash =
+    k > 0 ? flash(t - LAP_AT[k - 1], lapEls[k - 1].beat("flash")) : 0;
 
   // Interval to the car ahead: rewritten every lap, leader shows "Leader".
   const gapText = (slot: number) => {
@@ -286,25 +328,45 @@ export function TimingTower({
 
   // Hero flash on every pass.
   const passFlash = LAP_AT.reduce(
-    (a, at) => Math.max(a, flash(t - at - 3, 12)),
+    (a, at, i) =>
+      Math.max(
+        a,
+        flash(t - at - lapEls[i].beat("passAt"), lapEls[i].beat("pass")),
+      ),
     0,
   );
 
   // ── Giant numeral & poster ────────────────────────────────────────────────
   const giantFs = 400 * u;
   const cellW = 0.58 * giantFs;
-  const posterP = MOVE(ramp(t, EXIT_AT + 7, 18));
-  const blockIn = (d: number) => EASE(ramp(t, EXIT_AT + 15 + d, 12));
+  const posterP = MOVE(ramp(t, posterAt, posterEl.length));
+  const blockIn = (d: number) =>
+    EASE(
+      ramp(t, posterAt + posterEl.beat("blocksAt") + d, posterEl.beat("block")),
+    );
   const giantShift = (1 - posterP) * 420 * u;
-  const giantIn = EASE(ramp(t, 6, 12));
+  const giantIn = EASE(ramp(t, giantEl.start + PREROLL, giantEl.length));
   const intervalNum = Number.parseFloat(interval.replace(/[^0-9.]/g, "")) || 0;
   const decimals = (interval.split(".")[1] ?? "").length;
-  const countP = Easing.bezier(0.22, 1, 0.36, 1)(ramp(t, EXIT_AT + 19, 18));
+  const countP = Easing.bezier(
+    0.22,
+    1,
+    0.36,
+    1,
+  )(ramp(t, posterAt + posterEl.beat("countAt"), posterEl.beat("count")));
   const intervalText = `${interval.trim().startsWith("-") ? "−" : "+"}${(intervalNum * countP).toFixed(decimals)}`;
 
   // Which digit is rolling in the giant numeral.
-  const lastPass = k > 0 ? LAP_AT[k - 1] : -100;
-  const rollP = SWAP_EASE(ramp(t, lastPass + 2, 8));
+  const rollP =
+    k > 0
+      ? SWAP_EASE(
+          ramp(
+            t,
+            LAP_AT[k - 1] + lapEls[k - 1].beat("rollAt"),
+            lapEls[k - 1].beat("roll"),
+          ),
+        )
+      : SWAP_EASE(ramp(t, -100 + 2, 8));
   const prevPos = k > 0 ? slotIn(from, hero) + 1 : heroPos;
 
   // One glyph, stacked: ink, then the green flash and the purple P1 fill as
@@ -397,7 +459,12 @@ export function TimingTower({
   const giantW = 0.62 * giantFs + cellW;
 
   // Aurora ground under the poster, gently drifting.
-  const drift = interpolate(t, [0, 165], [0, 8], CLAMP);
+  const drift = interpolate(
+    t,
+    [driftEl.start + PREROLL, driftEl.end + PREROLL],
+    [0, 8],
+    CLAMP,
+  );
   const ground = [
     `radial-gradient(34% 60% at ${62 - drift}% 30%, color-mix(in oklab, ${AURORA[3]} 55%, transparent) 0%, transparent 70%)`,
     `radial-gradient(34% 60% at ${84 - drift}% 38%, color-mix(in oklab, ${AURORA[2]} 65%, transparent) 0%, transparent 70%)`,
@@ -417,7 +484,7 @@ export function TimingTower({
     const settled = b;
     const isHero = car === hero;
     const passing = a !== b && b < a ? Math.sin(Math.PI * swapP) : 0;
-    const ent = enter(3 + settled * 1.2);
+    const ent = enter(rowAt(settled));
     const ex = exitP(settled);
     // Layout rounds a box and a baseline to whole pixels, so a row eased by
     // `left`/`top` steps unevenly. The row is laid out once, in the slot it
@@ -512,7 +579,7 @@ export function TimingTower({
 
   // Position boxes stay put; the cars move past them.
   const posBoxes = cars.map((_, s) => {
-    const ent = enter(3 + s * 1.2);
+    const ent = enter(rowAt(s));
     const ex = exitP(s);
     // Laid out in place and slid in by a transform, like the rows.
     const dx = -(1 - ent) * (towerW + towerX) - ex * exitDX;
@@ -542,7 +609,7 @@ export function TimingTower({
     );
   });
 
-  const headEnt = enter(0);
+  const headEnt = enter(towerAt);
   const headEx = exitP(-1);
   const headDX = -(1 - headEnt) * (towerW + towerX) - headEx * exitDX;
 

@@ -12,8 +12,14 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  type GearShiftElementId,
+  gearCount,
+  gearShiftTimeline,
+  WEIGHTS,
+} from "./timeline";
 
-const WEIGHTS = ["200", "300", "400", "500"] as const;
 const jakarta = loadJakarta("normal", {
   weights: [...WEIGHTS],
   subsets: ["latin"],
@@ -41,6 +47,12 @@ export interface GearShiftProps {
   delay?: number;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches the panel, the figure's entry, the caption and
+   * single gears, by the ids in `./timeline`. Frames on the scene timeline,
+   * after `delay` and `speed`.
+   */
+  timing?: Timing<GearShiftElementId>;
 }
 
 const THEMES = {
@@ -60,8 +72,6 @@ const THEMES = {
 
 const TRACK = -0.03;
 const FONT_PX = 200;
-const START = 6;
-const SHIFT = 4;
 
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
 const CLAMP = {
@@ -163,31 +173,38 @@ function ScaleLayer({
   );
 }
 
-export function GearShift({
-  value = 42,
-  from = 0,
-  decimals = 0,
-  prefix = "",
-  suffix = "",
-  label = "scenes in one launch film",
-  gears = 4,
-  accent,
-  ink,
-  background,
-  fontFamily = jakarta.fontFamily,
-  pause = SHIFT,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: GearShiftProps) {
+export function GearShift(props: GearShiftProps) {
+  const {
+    value = 42,
+    from = 0,
+    decimals = 0,
+    prefix = "",
+    suffix = "",
+    label = "scenes in one launch film",
+    gears = 4,
+    accent,
+    ink,
+    background,
+    fontFamily = jakarta.fontFamily,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H } = useSceneConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    gearShiftTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const c = THEMES[theme];
   const panel = accent ?? c.teal;
   const fg = ink ?? c.ink;
-  const G = Math.max(2, Math.min(WEIGHTS.length, Math.round(gears)));
+  const G = gearCount(gears);
   const finalText = useMemo(
     () => `${prefix}${format(value, decimals)}${suffix}`,
     [prefix, value, decimals, suffix],
@@ -206,14 +223,9 @@ export function GearShift({
   const portrait = H > W * 1.1;
   const minDim = Math.min(W, H);
 
-  const dur = (k: number) => 9 + 3 * k;
-  const gearStart: number[] = [];
-  let acc = START;
-  for (let k = 0; k < G; k++) {
-    gearStart.push(acc);
-    acc += dur(k) + (k < G - 1 ? pause : 0);
-  }
-  const end = acc;
+  const gearEls = tl.lane("Gears");
+  const gearStart = gearEls.map((e) => e.start);
+  const end = gearEls[G - 1].end;
 
   const gearAt = (tt: number) => {
     let k0 = 0;
@@ -222,17 +234,12 @@ export function GearShift({
   };
   const gear = gearAt(t);
   const top = gear === G - 1;
-  const u = interpolate(
-    t,
-    [gearStart[gear], gearStart[gear] + dur(gear)],
-    [0, 1],
-    {
-      ...CLAMP,
-      easing: top
-        ? Easing.bezier(0.3, 0.6, 0.25, 1)
-        : Easing.bezier(0.5, 0, 0.9, 0.6),
-    },
-  );
+  const u = interpolate(t, [gearEls[gear].start, gearEls[gear].end], [0, 1], {
+    ...CLAMP,
+    easing: top
+      ? Easing.bezier(0.3, 0.6, 0.25, 1)
+      : Easing.bezier(0.5, 0, 0.9, 0.6),
+  });
   const g = (gear + u) / G;
   const count = from + (value - from) * g;
   const text = `${prefix}${format(
@@ -248,7 +255,10 @@ export function GearShift({
   };
   const kick = kickAt(t);
 
-  const panelIn = interpolate(t, [0, 14], [0, 1], {
+  const panelEl = tl.get("panel");
+  const enterEl = tl.get("enter");
+  const labelEl = tl.get("label");
+  const panelIn = interpolate(t, [panelEl.start, panelEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
@@ -266,17 +276,22 @@ export function GearShift({
     F *
     (gear === 0
       ? sizeK(0)
-      : interpolate(tau, [0, 5], [sizeK(gear - 1), sizeK(gear)], {
-          ...CLAMP,
-          easing: EASE_OUT,
-        }));
+      : interpolate(
+          tau,
+          [0, gearEls[gear].beat("grow")],
+          [sizeK(gear - 1), sizeK(gear)],
+          {
+            ...CLAMP,
+            easing: EASE_OUT,
+          },
+        ));
   // A font size that eases moves the baseline inside its own box by layout,
   // pixel by pixel, and so does switching the layout from one gear's size to
   // the next. Until the top gear's size is reached the figure is laid out at
   // that size and scaled to the live one about its baseline; the switch to
   // the plain layout lands where the scale is exactly 1, so nothing moves.
   const sizing = Math.abs(sz - F) > F * 1e-9;
-  const growing = gear > 0 && tau > 0 && tau < 5;
+  const growing = gear > 0 && tau > 0 && tau < gearEls[gear].beat("grow");
   const szBox = F;
   const grow = sz / szBox;
   const baseY = areaTop + areaH / 2 + (m.figTop * F) / 2;
@@ -287,11 +302,14 @@ export function GearShift({
   const jolting =
     Math.abs(shove(t + speed) - shove(t)) > 1e-3 ||
     Math.abs(shove(t) - shove(t - speed)) > 1e-3;
-  const enter = interpolate(t, [0, 8], [0, 1], { ...CLAMP, easing: EASE_OUT });
+  const enter = interpolate(t, [enterEl.start, enterEl.end], [0, 1], {
+    ...CLAMP,
+    easing: EASE_OUT,
+  });
 
   const labelFs = Math.max(minDim * 0.04, Math.min(minDim * 0.052, 40));
   const gearFs = labelFs * 0.8;
-  const labelP = interpolate(t, [8, 24], [0, 1], {
+  const labelP = interpolate(t, [labelEl.start, labelEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });

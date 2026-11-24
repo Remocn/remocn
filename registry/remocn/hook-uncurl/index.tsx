@@ -13,6 +13,15 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_ANSWER,
+  DEFAULT_QUESTION,
+  type HookUncurlElementId,
+  hookUncurlTimeline,
+  sharedEnds,
+  words,
+} from "./timeline";
 
 const barlow = loadFont("normal", { weights: ["500"], subsets: ["latin"] });
 
@@ -35,6 +44,12 @@ export interface HookUncurlProps {
   delay?: number;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches the question words and mark, the uncurl, the
+   * swap, each word sinking out or rolling in and the retract, by the ids in
+   * `./timeline`. Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<HookUncurlElementId>;
 }
 
 const THEMES = {
@@ -54,19 +69,6 @@ const TRACK = 0;
 const PITCH = 0.9;
 const CURL_SX = 0.74;
 
-const ENTER_LEN = 16;
-const ENTER_STAGGER = 3;
-const ENTER_SPREAD = 18;
-const UNCURL_AT = 40;
-const UNCURL_LEN = 15;
-const SWAP_AT = 45;
-const SWAP_STAGGER = 2;
-const SWAP_SPREAD = 6;
-const SINK_LEN = 6;
-const ROLL_LEN = 12;
-const RETRACT_AT = 63;
-const RETRACT_LEN = 7;
-
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
 const EASE_UNCURL = Easing.bezier(0.5, 0, 0.18, 1);
 const EASE_SINK = Easing.bezier(0.5, 0, 0.75, 0);
@@ -85,15 +87,6 @@ const SEG_TOTAL = SEGS.reduce((s, g) => s + g.len, 0);
 const STEPS = 120;
 
 type Terminal = "." | "!" | "";
-
-function words(s: string) {
-  return s
-    .trim()
-    .replace(/[?.!…]+$/u, "")
-    .split(/\s+/)
-    .filter(Boolean)
-    .map((w) => w.toUpperCase());
-}
 
 function terminalOf(s: string): Terminal {
   const m = s.trim().match(/([.!])$/);
@@ -296,29 +289,35 @@ function ScaleLayer({
   );
 }
 
-export function HookUncurl({
-  question = "Why make the video?",
-  answer = "Just make the video.",
-  accent,
-  ink,
-  background,
-  fontFamily = barlow.fontFamily,
-  stagger = ENTER_STAGGER,
-  answerAt = UNCURL_AT,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: HookUncurlProps) {
+export function HookUncurl(props: HookUncurlProps) {
+  const {
+    question = DEFAULT_QUESTION,
+    answer = DEFAULT_ANSWER,
+    accent,
+    ink,
+    background,
+    fontFamily = barlow.fontFamily,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const tilt = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H, fps } = useSceneConfig();
+  const { width: W, height: H, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    hookUncurlTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const c = THEMES[theme];
   const spot = accent ?? c.accent;
   const fg = ink ?? c.ink;
-  const uncurlAt = answerAt;
-  const swapAt = SWAP_AT + answerAt - UNCURL_AT;
-  const retractAt = RETRACT_AT + answerAt - UNCURL_AT;
+  const swapEl = tl.get("swap");
+  const uncurlEl = tl.get("uncurl");
+  const retractEl = tl.get("retract");
   const clipId = `huc${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
 
   const A = useMemo(() => words(question), [question]);
@@ -365,33 +364,22 @@ export function HookUncurl({
   const baseA = baseOf(pa.count);
   const baseB = baseOf(pb.count);
 
-  let pre = 0;
-  while (pre < A.length && pre < B.length && A[pre] === B[pre]) pre++;
-  let suf = 0;
-  while (
-    suf < Math.min(A.length, B.length) - pre &&
-    A[A.length - 1 - suf] === B[B.length - 1 - suf]
-  )
-    suf++;
+  const { pre, suf } = sharedEnds(A, B);
 
   const glide = spring({
-    frame: t - swapAt - 2,
+    frame: t - swapEl.start - swapEl.beat("glide"),
     fps,
     config: { damping: 17, stiffness: 120, mass: 0.9 },
   });
-  const es = Math.min(stagger, ENTER_SPREAD / Math.max(1, A.length));
-  const enterAt = (i: number) => i * es - 2;
-  const nOut = Math.max(1, A.length - pre - suf);
-  const nIn = Math.max(1, B.length - pre - suf);
-  const xs = Math.min(SWAP_STAGGER, SWAP_SPREAD / nOut);
-  const ns = Math.min(SWAP_STAGGER, SWAP_SPREAD / nIn);
-  const inAt = swapAt + SINK_LEN - 1;
   const floor = 0.03 * F;
-  const enterK = (i: number) =>
-    interpolate(t, [enterAt(i), enterAt(i) + ENTER_LEN], [0, 1], {
+  // Index `A.length` is the question mark, rising in after the last word.
+  const enterK = (i: number) => {
+    const e = i < A.length ? tl.get(`word:${i}`) : tl.get("mark");
+    return interpolate(t, [e.start, e.end], [0, 1], {
       ...CLAMP,
       easing: EASE_OUT,
     });
+  };
 
   const clipTopOff = (m.asc + 0.08) * F;
   const clipBotOff = (Math.max(0.04, m.desc) + 0.06) * F;
@@ -427,17 +415,15 @@ export function HookUncurl({
         lit: false,
       });
     } else {
-      const k = i - pre;
-      const out = interpolate(
-        t,
-        [swapAt + k * xs, swapAt + k * xs + SINK_LEN],
-        [0, 1],
-        { ...CLAMP, easing: EASE_SINK },
-      );
+      const sink = tl.get(`out:${i - pre}`);
+      const out = interpolate(t, [sink.start, sink.end], [0, 1], {
+        ...CLAMP,
+        easing: EASE_SINK,
+      });
       if (out >= 1) return;
       const cut = interpolate(
         t,
-        [swapAt + k * xs, swapAt + k * xs + 2],
+        [sink.start, sink.start + sink.beat("cut")],
         [0, 1],
         CLAMP,
       );
@@ -454,14 +440,12 @@ export function HookUncurl({
   });
   B.forEach((word, j) => {
     if (j < pre || j >= B.length - suf) return;
-    const k = j - pre;
+    const roll = tl.get(`in:${j - pre}`);
     const b = pb.out[j];
-    const inK = interpolate(
-      t,
-      [inAt + k * ns, inAt + k * ns + ROLL_LEN],
-      [0, 1],
-      { ...CLAMP, easing: EASE_OUT },
-    );
+    const inK = interpolate(t, [roll.start, roll.end], [0, 1], {
+      ...CLAMP,
+      easing: EASE_OUT,
+    });
     if (inK <= 0) return;
     items.push({
       key: `b${j}`,
@@ -492,11 +476,11 @@ export function HookUncurl({
   const footX = dotX;
   const baseP = lerp(baseA(pa.anchor.line), baseB(pb.anchor.line), glide);
 
-  const u = interpolate(t, [uncurlAt, uncurlAt + UNCURL_LEN], [0, 1], {
+  const u = interpolate(t, [uncurlEl.start, uncurlEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_UNCURL,
   });
-  const r = interpolate(t, [retractAt, retractAt + RETRACT_LEN], [0, 1], {
+  const r = interpolate(t, [retractEl.start, retractEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_SNAP,
   });
@@ -528,7 +512,7 @@ export function HookUncurl({
   const landed = r >= 1;
   const pop = landed
     ? spring({
-        frame: t - retractAt - RETRACT_LEN,
+        frame: t - retractEl.start - retractEl.length,
         fps,
         config: { damping: 11, stiffness: 220, mass: 0.6 },
       })
@@ -537,7 +521,10 @@ export function HookUncurl({
   const dotFade = term === "" ? 1 - r : 1;
   const dotColor = interpolate(
     t,
-    [retractAt + RETRACT_LEN - 2, retractAt + RETRACT_LEN + 6],
+    [
+      retractEl.end + retractEl.beat("colorAt"),
+      retractEl.end + retractEl.beat("colorEnd"),
+    ],
     [0, 1],
     CLAMP,
   );

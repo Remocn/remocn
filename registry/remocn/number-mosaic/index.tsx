@@ -8,6 +8,8 @@ import { useId, useMemo } from "react";
 import { AbsoluteFill, Easing, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import { type NumberMosaicElementId, numberMosaicTimeline } from "./timeline";
 
 const { fontFamily: sans } = loadFont("normal", {
   weights: ["400", "500"],
@@ -82,6 +84,12 @@ export interface NumberMosaicProps {
   /** Playback multiplier. */
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches the fade-in, the camera, the light sweep, the
+   * field's dim and clock brake, and the label, by the ids in `./timeline`.
+   * Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<NumberMosaicElementId>;
 }
 
 const EASE_IO = Easing.bezier(0.65, 0, 0.35, 1);
@@ -407,10 +415,8 @@ function Grain({ opacity }: { opacity: number }) {
 
 const LIT_STEPS = 6;
 
-/** Field running clock: ticks at full rate, then brakes to a stop. */
-function fieldClock(t: number) {
-  const a = 44;
-  const b = 92;
+/** Field running clock: ticks at full rate, then brakes to a stop from `a` to `b`. */
+function fieldClock(t: number, a: number, b: number) {
   if (t <= a) return t;
   const d = Math.min(t, b) - a;
   return a + d - (d * d) / (2 * (b - a));
@@ -432,26 +438,35 @@ function ScaleLayer({
   );
 }
 
-export function NumberMosaic({
-  value = "10,000",
-  label = "launch videos rendered",
-  name = "remocn",
-  logo,
-  accent = "#3B5BFD",
-  ink: inkProp,
-  background,
-  fontFamily = sans,
-  sweep = 26,
-  cellSize = 12,
-  grain = true,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: NumberMosaicProps) {
+export function NumberMosaic(props: NumberMosaicProps) {
+  const {
+    value = "10,000",
+    label = "launch videos rendered",
+    name = "remocn",
+    logo,
+    accent = "#3B5BFD",
+    ink: inkProp,
+    background,
+    fontFamily = sans,
+    cellSize = 12,
+    grain = true,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width, height } = useSceneConfig();
+  const { width, height, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    numberMosaicTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const light = tl.get("light");
+  const brake = tl.get("brake");
   const u = height / 720;
   const p: Palette = THEMES[theme];
   const fg = inkProp ?? p.fg;
@@ -504,27 +519,37 @@ export function NumberMosaic({
           tier: n1 < 0.52 ? 0 : n1 < 0.86 ? 1 : 2,
           rate: n2 < 0.35 ? 0 : 1 / (5 + n2 * 14),
           seed: Math.floor(n3 * 10),
-          start: 22 + xN * sweep + hash(i * 5.1 + 3) * 12,
+          start:
+            light.start +
+            xN * light.beat("sweep") +
+            hash(i * 5.1 + 3) * light.beat("jitter"),
         });
       }
     }
     return out;
-  }, [rows, cols, cellW, cellH, ox, oy, unit, numLeft, numTop, layout, sweep]);
+  }, [rows, cols, cellW, cellH, ox, oy, unit, numLeft, numTop, layout, light]);
 
   // Global beats
-  const enter = interpolate(t, [0, 16], [0.7, 1], {
+  const span = (id: NumberMosaicElementId) => {
+    const e = tl.get(id);
+    return [e.start, e.end];
+  };
+  const enter = interpolate(t, span("enter"), [0.7, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
-  const dim = interpolate(t, [26, 76], [1, p.rest], {
+  const dim = interpolate(t, span("dim"), [1, p.rest], {
     ...CLAMP,
     easing: EASE_IO,
   });
-  const cam = interpolate(t, [0, 112], [0, 1], { ...CLAMP, easing: EASE_IO });
+  const cam = interpolate(t, span("camera"), [0, 1], {
+    ...CLAMP,
+    easing: EASE_IO,
+  });
   const push = 1.08 - cam * 0.08;
   const rotY = -12 * (1 - cam);
   const rotX = 5 * (1 - cam);
-  const clock = fieldClock(t);
+  const clock = fieldClock(t, brake.start, brake.end);
   const lx = interpolate(t, [0, 130], [32, 66], CLAMP);
   const ly = 38 + Math.sin(t / 50) * 6;
 
@@ -545,15 +570,29 @@ export function NumberMosaic({
     }
     for (let c = 0; c < cols; c++) {
       const cell = cells[r * cols + c];
-      const lit = interpolate(t, [cell.start, cell.start + 12], [0, 1], {
-        ...CLAMP,
-        easing: EASE_OUT,
-      });
+      const lit = interpolate(
+        t,
+        [cell.start, cell.start + light.beat("lit")],
+        [0, 1],
+        {
+          ...CLAMP,
+          easing: EASE_OUT,
+        },
+      );
       const v = cell.cov * lit;
       const step = Math.round(v * LIT_STEPS);
       // lit counters lock their digit as they light up
       const k =
-        cell.cov > 0.5 ? Math.min(clock, fieldClock(cell.start + 4)) : clock;
+        cell.cov > 0.5
+          ? Math.min(
+              clock,
+              fieldClock(
+                cell.start + light.beat("lock"),
+                brake.start,
+                brake.end,
+              ),
+            )
+          : clock;
       const digit = (cell.seed + Math.floor(k * cell.rate)) % 10;
       const layer = step === 0 ? cell.tier : 2 + step;
       if (step > 0) {
@@ -588,10 +627,13 @@ export function NumberMosaic({
 
   // Label: tilted while it rises, none at rest (exactly 0 or 1).
   const tilt = (k: number) => glide(k > 0 && k < 1);
-  const lab = (d: number) =>
-    interpolate(t, [84 + d, 108 + d], [0, 1], { ...CLAMP, easing: EASE_OUT });
+  const lab = (id: "logo" | "divider" | "label") =>
+    interpolate(t, span(id), [0, 1], { ...CLAMP, easing: EASE_OUT });
   const labelTop = numTop + unit * 1.08 + 30 * u;
-  const band = interpolate(t, [74, 100], [0, 1], { ...CLAMP, easing: EASE_IO });
+  const band = interpolate(t, span("band"), [0, 1], {
+    ...CLAMP,
+    easing: EASE_IO,
+  });
 
   return (
     <AbsoluteFill style={{ background: bg, overflow: "hidden" }}>
@@ -741,8 +783,8 @@ export function NumberMosaic({
               display: "flex",
               alignItems: "center",
               gap: 9 * u,
-              opacity: lab(0),
-              transform: `translateY(${(1 - lab(0)) * 14 * u}px)${tilt(lab(0))}`,
+              opacity: lab("logo"),
+              transform: `translateY(${(1 - lab("logo")) * 14 * u}px)${tilt(lab("logo"))}`,
             }}
           >
             {logo ??
@@ -766,7 +808,7 @@ export function NumberMosaic({
               width: Math.max(1, u),
               height: 22 * u,
               background: p.hair,
-              transform: `scaleY(${lab(3)})`,
+              transform: `scaleY(${lab("divider")})`,
             }}
           />
           <span
@@ -774,8 +816,8 @@ export function NumberMosaic({
               color: p.muted,
               fontWeight: 400,
               letterSpacing: "-0.01em",
-              opacity: lab(6),
-              transform: `translateY(${(1 - lab(6)) * 14 * u}px)${tilt(lab(6))}`,
+              opacity: lab("label"),
+              transform: `translateY(${(1 - lab("label")) * 14 * u}px)${tilt(lab("label"))}`,
             }}
           >
             {label}

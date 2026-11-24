@@ -5,6 +5,13 @@ import { type ReactNode, useId } from "react";
 import { AbsoluteFill, Easing, interpolate, spring } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  type ActivityRingsElementId,
+  activityRingsTimeline,
+  DEFAULT_RINGS,
+  shownRings,
+} from "./timeline";
 
 const { fontFamily: sans } = loadFont("normal", {
   weights: ["300", "400", "500"],
@@ -52,13 +59,13 @@ export interface ActivityRingsProps {
   /** Playback multiplier. */
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches the fade-in, the push, the title, each readout,
+   * each ring's close and the goal hit, by the ids in `./timeline`.
+   * Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<ActivityRingsElementId>;
 }
-
-const DEFAULT_RINGS: ActivityRing[] = [
-  { label: "Renders", value: 1284, goal: 1.14 },
-  { label: "Templates", value: 42, goal: 1.08 },
-  { label: "Hours saved", value: 310, goal: 1.05 },
-];
 
 const EASE_FILL = Easing.bezier(0.55, 0, 0.18, 1);
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
@@ -256,30 +263,37 @@ function Ring({
   );
 }
 
-export function ActivityRings({
-  rings = DEFAULT_RINGS,
-  title = "This month",
-  accent = "#3B5BFD",
-  goalLabel = "of goal",
-  fill = 42,
-  ink,
-  background,
-  fontFamily = sans,
-  scale = 1,
-  delay = 0,
-  grain = true,
-  speed = 1,
-  theme = "dark",
-}: ActivityRingsProps) {
+export function ActivityRings(props: ActivityRingsProps) {
+  const {
+    rings = DEFAULT_RINGS,
+    title = "This month",
+    accent = "#3B5BFD",
+    goalLabel = "of goal",
+    ink,
+    background,
+    fontFamily = sans,
+    scale = 1,
+    delay = 0,
+    grain = true,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay);
-  const { width, height, fps } = useSceneConfig();
+  const { width, height, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    activityRingsTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const t = frame * speed;
   const u = Math.min(width / 1280, height / 720);
   const c = THEMES[theme];
   const fg = ink ?? c.fg;
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
-  const list = rings.slice(0, 3);
+  const list = shownRings(rings);
 
   // hero ring carries the gradient; the others stay neutral so the data reads
   const gradId = `${uid}beam`;
@@ -294,25 +308,27 @@ export function ActivityRings({
   const R0 = 182 * u;
   const radius = (i: number) => R0 - i * (sw + gap);
 
-  // timeline
-  const FILL_START = 16;
-  const fillEnd = (i: number) => FILL_START + fill + i * 4; // every ring closes, outermost first
-  const HIT = fillEnd(list.length - 1);
+  const goalEl = tl.get("goal");
+  const HIT = goalEl.start;
+  const stageEl = tl.get("stage");
+  const pushEl = tl.get("push");
+  const titleEl = tl.get("title");
 
-  const stageIn = interpolate(t, [0, 22], [0, 1], {
+  const stageIn = interpolate(t, [stageEl.start, stageEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
 
   const progress = (i: number) => {
     const goal = Math.max(1, list[i].goal ?? 1);
-    const p1 = interpolate(t, [FILL_START + i * 4, fillEnd(i)], [0, 1], {
+    const ringEl = tl.get(`ring:${i}`);
+    const p1 = interpolate(t, [ringEl.start, ringEl.end], [0, 1], {
       ...CLAMP,
       easing: EASE_FILL,
     });
     if (t < HIT) return p1;
     const s = spring({
-      frame: t - HIT - i * 2,
+      frame: t - HIT - i * goalEl.beat("lap"),
       fps,
       config: { damping: 15, mass: 0.9, stiffness: 120 },
     });
@@ -320,25 +336,29 @@ export function ActivityRings({
   };
 
   // the hit: a small bump of the whole object and a check in the centre
-  const bump = interpolate(t, [HIT, HIT + 5, HIT + 16], [0, 1, 0], {
-    ...CLAMP,
-    easing: Easing.bezier(0.65, 0, 0.35, 1),
-  });
+  const bump = interpolate(
+    t,
+    [HIT, HIT + goalEl.beat("bumpPeak"), HIT + goalEl.beat("bumpEnd")],
+    [0, 1, 0],
+    { ...CLAMP, easing: Easing.bezier(0.65, 0, 0.35, 1) },
+  );
   const check = spring({
-    frame: t - HIT - 1,
+    frame: t - HIT - goalEl.beat("check"),
     fps,
     config: { damping: 13, mass: 0.6, stiffness: 160 },
   });
-  const checkDraw = interpolate(t, [HIT + 3, HIT + 13], [0, 1], {
-    ...CLAMP,
-    easing: EASE_OUT,
-  });
-  const pulse = interpolate(t, [HIT, HIT + 20], [0, 1], {
+  const checkDraw = interpolate(
+    t,
+    [HIT + goalEl.beat("checkAt"), HIT + goalEl.beat("checkEnd")],
+    [0, 1],
+    { ...CLAMP, easing: EASE_OUT },
+  );
+  const pulse = interpolate(t, [HIT, goalEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
 
-  const push = interpolate(t, [0, HIT + 60], [0, 1], CLAMP);
+  const push = interpolate(t, [pushEl.start, pushEl.end], [0, 1], CLAMP);
   const innerR = radius(list.length - 1) - sw / 2;
   const badge = Math.min(32 * u, innerR * 0.42);
 
@@ -346,21 +366,35 @@ export function ActivityRings({
   const rowX = width * 0.6;
   const rowH = 108 * u;
   const rowsTop = cy - (list.length * rowH) / 2 + 18 * u;
-  const rowAt = (tt: number, k: number, d = 0) =>
-    interpolate(tt, [8 + k * 4 + d, 26 + k * 4 + d], [0, 1], {
+  const titleSpan = [titleEl.start, titleEl.end];
+  const ruleSpan = [
+    titleEl.start + titleEl.beat("rule"),
+    titleEl.end + titleEl.beat("rule"),
+  ];
+  const readoutSpan = (i: number) => {
+    const e = tl.get(`readout:${i}`);
+    return [e.start, e.end];
+  };
+  const rowAt = (tt: number, span: number[]) =>
+    interpolate(tt, span, [0, 1], {
       ...CLAMP,
       easing: EASE_OUT,
     });
-  const row = (k: number, d = 0) => rowAt(t, k, d);
+  const row = (span: number[]) => rowAt(t, span);
   // Whether a travel of `px` at full stroke is still moving at this frame.
   const stirs = (at: (tt: number) => number, px: number) =>
     Math.abs(at(t + 1) - at(t)) * px > 1e-3 ||
     Math.abs(at(t) - at(t - 1)) * px > 1e-3;
   const overInAt = (tt: number, i: number) =>
-    interpolate(tt, [HIT + 4 + i * 3, HIT + 16 + i * 3], [0, 1], {
-      ...CLAMP,
-      easing: EASE_OUT,
-    });
+    interpolate(
+      tt,
+      [
+        HIT + goalEl.beat("overAt") + i * goalEl.beat("overStep"),
+        HIT + goalEl.beat("overEnd") + i * goalEl.beat("overStep"),
+      ],
+      [0, 1],
+      { ...CLAMP, easing: EASE_OUT },
+    );
 
   return (
     <AbsoluteFill
@@ -476,8 +510,8 @@ export function ActivityRings({
               display: "flex",
               alignItems: "center",
               gap: 12 * u,
-              opacity: row(0, -6),
-              transform: `translateY(${(1 - row(0, -6)) * 10 * u}px)${glide(stirs((tt) => rowAt(tt, 0, -6), 10 * u))}`,
+              opacity: row(titleSpan),
+              transform: `translateY(${(1 - row(titleSpan)) * 10 * u}px)${glide(stirs((tt) => rowAt(tt, titleSpan), 10 * u))}`,
             }}
           >
             <span
@@ -492,7 +526,7 @@ export function ActivityRings({
             </span>
             <span
               style={{
-                width: 200 * u * row(0, -2),
+                width: 200 * u * row(ruleSpan),
                 height: Math.max(1, u),
                 background: c.hair,
               }}
@@ -503,8 +537,8 @@ export function ActivityRings({
             const v = ring.value * Math.min(1, p);
             const over = Math.round((p - 1) * 100);
             const overIn = overInAt(t, i);
-            const r = row(i + 1);
-            const rising = stirs((tt) => rowAt(tt, i + 1), 80 * u);
+            const r = row(readoutSpan(i));
+            const rising = stirs((tt) => rowAt(tt, readoutSpan(i)), 80 * u);
             return (
               <div
                 key={ring.label}

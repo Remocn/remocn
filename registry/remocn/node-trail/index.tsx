@@ -10,6 +10,17 @@ import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_PROMPT,
+  DEFAULT_STEPS,
+  type NodeTrailElementId,
+  type TrailIcon,
+  type TrailStep,
+  type TrailTint,
+  trailPlan,
+  trailTimeline,
+} from "./timeline";
 
 const geist = loadGeist("normal", {
   weights: ["300", "400"],
@@ -17,35 +28,9 @@ const geist = loadGeist("normal", {
 });
 const mono = loadMono("normal", { weights: ["400"], subsets: ["latin"] });
 
-export type NodeIcon =
-  | "doc"
-  | "captions"
-  | "frame"
-  | "image"
-  | "play"
-  | "spark"
-  | "wave"
-  | "music"
-  | "palette"
-  | "wide"
-  | "tall"
-  | "square";
-
-export type NodeTint =
-  | "blue"
-  | "violet"
-  | "cyan"
-  | "green"
-  | "pink"
-  | "amber"
-  | "coral";
-
-export type NodeTrailStep = {
-  label: string;
-  icons: NodeIcon[];
-  tint?: NodeTint;
-  cols?: number;
-};
+export type NodeIcon = TrailIcon;
+export type NodeTint = TrailTint;
+export type NodeTrailStep = TrailStep;
 
 export type NodeTrailProps = {
   theme?: "dark" | "light";
@@ -75,24 +60,13 @@ export type NodeTrailProps = {
   speed?: number;
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
+  /**
+   * Moves, trims or stretches the typing, the press, single edges of the
+   * trail, the pull back, the board and the headline, by the ids in
+   * `./timeline`. Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<NodeTrailElementId>;
 };
-
-const DEFAULT_STEPS: NodeTrailStep[] = [
-  { label: "Script", icons: ["doc", "captions"], tint: "violet", cols: 1 },
-  {
-    label: "Scenes",
-    icons: ["frame", "image", "play", "frame"],
-    tint: "cyan",
-    cols: 2,
-  },
-  { label: "Render", icons: ["spark"], tint: "green", cols: 1 },
-  {
-    label: "Publish",
-    icons: ["wide", "tall", "square"],
-    tint: "pink",
-    cols: 3,
-  },
-];
 
 const TINTS: Record<"dark" | "light", Record<NodeTint, string>> = {
   dark: {
@@ -415,40 +389,9 @@ function partialPath(e: Edge, frac: number) {
   return { d, tip };
 }
 
-export function nodeTrailTimeline(
-  stepCount: number,
-  promptLength: number,
-  draw = 22,
-  pause = 10,
-) {
-  const edges: { start: number; dur: number; arrive: number }[] = [];
-  let start = Math.max(30, promptLength + 9);
-  let dur = draw;
-  let hold = pause;
-  for (let i = 0; i < stepCount; i++) {
-    edges.push({ start, dur, arrive: start + dur - 3 });
-    start = start + dur + hold;
-    dur = Math.max(10, Math.round(dur * 0.8));
-    hold = Math.max(5, Math.round(hold * 0.8));
-  }
-  const last = edges[edges.length - 1];
-  const pull = last ? last.start + last.dur + 8 : 40;
-  const pullDur = 24;
-  return {
-    typeStart: 3,
-    press: (edges[0]?.start ?? 30) - 4,
-    edges,
-    pull,
-    pullDur,
-    board: pull + 10,
-    headline: pull + 13,
-    end: pull + pullDur + 42,
-  };
-}
+export const nodeTrailTimeline = trailPlan;
 
-const DEFAULT_PROMPT = "A launch film for v2";
-
-export const NODE_TRAIL_DURATION = nodeTrailTimeline(
+export const NODE_TRAIL_DURATION = trailPlan(
   DEFAULT_STEPS.length,
   DEFAULT_PROMPT.length,
 ).end;
@@ -646,37 +589,65 @@ function ScaleLayer({
   );
 }
 
-export function NodeTrail({
-  theme = "dark",
-  accent,
-  prompt = DEFAULT_PROMPT,
-  placeholder = "Describe your launch",
-  promptLabel = "Prompt",
-  steps = DEFAULT_STEPS,
-  headline = "From one prompt to every screen.",
-  boardName = "launch-film.flow",
-  draw = 22,
-  pause = 10,
-  motionBlur = true,
-  ink,
-  background,
-  fontFamily = geist.fontFamily,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  ground,
-  groundParams,
-}: NodeTrailProps) {
+export function NodeTrail(props: NodeTrailProps) {
+  const {
+    theme = "dark",
+    accent,
+    prompt = DEFAULT_PROMPT,
+    placeholder = "Describe your launch",
+    promptLabel = "Prompt",
+    steps = DEFAULT_STEPS,
+    headline = "From one prompt to every screen.",
+    boardName = "launch-film.flow",
+    motionBlur = true,
+    ink,
+    background,
+    fontFamily = geist.fontFamily,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    ground,
+    groundParams,
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H, fps } = useSceneConfig();
+  const { width: W, height: H, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    trailTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const uid = useId().replace(/:/g, "");
   const c = THEMES[theme];
   const fg = ink ?? c.ink;
   const tints = TINTS[theme];
   const acc = accent ?? (theme === "dark" ? tints.blue : c.accent);
   const btn = accent ?? c.accent;
-  const T = nodeTrailTimeline(steps.length, prompt.length, draw, pause);
+  const typeEl = tl.get("type");
+  const pressEl = tl.get("press");
+  const pullEl = tl.get("pull");
+  const boardEl = tl.get("board");
+  const headEl = tl.get("headline");
+  const T = {
+    typeStart: typeEl.start,
+    press: pressEl.start,
+    edges: steps.map((_, i) => {
+      const e = tl.get(`edge:${i}`);
+      return {
+        start: e.start,
+        dur: e.length,
+        arrive: e.start + e.beat("arrive"),
+        cam: e.start + e.beat("cam"),
+        deselect: e.start + e.beat("deselect"),
+      };
+    }),
+    pull: pullEl.start,
+    pullDur: pullEl.length,
+    board: boardEl.start,
+    headline: headEl.start,
+  };
 
   const chars = Math.max(prompt.length, placeholder.length);
   const promptW = 14 + chars * 0.6 * FIELD_TEXT + 12 + 32 + 10;
@@ -717,15 +688,17 @@ export function NodeTrail({
   const cam = (f: number) => {
     const first = T.edges[0];
     const n0 = nodes[0];
-    if (!first || f < first.start + 2) {
-      const lim = first ? first.start + 2 : 30;
+    if (!first || f < first.cam) {
+      const lim = first ? first.cam : 30;
       return { x: n0.x, y: n0.y, z: Z * (1 + 0.025 * clamp01(f / lim)) };
     }
     if (f >= T.pull) {
       const ln = nodes[nodes.length - 1];
       const t = clamp01((f - T.pull) / T.pullDur);
       const e = CAM(t);
-      const zEnd = 1 + 0.025 * ENTER(clamp01((f - T.pull - T.pullDur) / 48));
+      const zEnd =
+        1 +
+        0.025 * ENTER(clamp01((f - T.pull - T.pullDur) / pullEl.beat("drift")));
       return {
         x: lerp(ln.x, W / 2, e),
         y: lerp(ln.y, H / 2, e),
@@ -734,14 +707,14 @@ export function NodeTrail({
     }
     for (let i = T.edges.length - 1; i >= 0; i--) {
       const ed = T.edges[i];
-      const s0 = ed.start + 2;
+      const s0 = ed.cam;
       if (f >= s0) {
         const t = clamp01((f - s0) / ed.dur);
         const e = MOVE(t);
         const a = nodes[i];
         const b = nodes[i + 1];
         const next = T.edges[i + 1];
-        const settle = next ? next.start + 2 : T.pull;
+        const settle = next ? next.cam : T.pull;
         const push =
           t >= 1
             ? 0.02 * clamp01((f - s0 - ed.dur) / (settle - s0 - ed.dur))
@@ -779,28 +752,37 @@ export function NodeTrail({
   const nodeArrive = (i: number) => (i === 0 ? -100 : T.edges[i - 1].arrive);
   const selectedUntil = (i: number) => {
     if (i === nodes.length - 1) return T.pull;
-    return T.edges[i].start + 4;
+    return T.edges[i].deselect;
   };
   const dash = 5 * k;
   const march = -frame * 0.35 * k;
 
   const worldExt = { x: -W, y: -H, w: W * 3, h: H * 3 };
 
-  const boardT = clamp01((frame - T.board) / 12);
+  const boardT = clamp01((frame - T.board) / boardEl.length);
   const boardE = ENTER(boardT);
   const headT = frame - T.headline;
-  const headE = ENTER(clamp01(headT / 14));
+  const headE = ENTER(clamp01(headT / headEl.length));
 
   const typed = Math.floor(
-    clamp01((frame - T.typeStart) / prompt.length) * prompt.length,
+    clamp01((frame - T.typeStart) / typeEl.length) * prompt.length,
   );
   const pressS =
     frame >= T.press
       ? 1 -
-        0.12 * Math.sin(Math.PI * clamp01((frame - T.press) / 6)) +
+        0.12 *
+          Math.sin(Math.PI * clamp01((frame - T.press) / pressEl.beat("dip"))) +
         0.05 *
-          (spring({ frame: frame - T.press - 5, fps, config: CHIP }) -
-            spring({ frame: frame - T.press - 9, fps, config: CHIP }))
+          (spring({
+            frame: frame - T.press - pressEl.beat("bounce"),
+            fps,
+            config: CHIP,
+          }) -
+            spring({
+              frame: frame - T.press - pressEl.beat("settle"),
+              fps,
+              config: CHIP,
+            }))
       : 1;
 
   return (
@@ -1037,7 +1019,7 @@ export function NodeTrail({
                       }}
                     >
                       {typed > 0 ? prompt.slice(0, typed) : placeholder}
-                      {frame < T.press + 2 &&
+                      {frame < T.press + pressEl.beat("caretOff") &&
                       Math.floor(frame / 5) % 2 === 0 ? (
                         <span
                           style={{
@@ -1175,7 +1157,11 @@ export function NodeTrail({
                   k={u * 1.1}
                   color={c.boardStroke.replace(/[\d.]+\)$/, "0.55)")}
                   fill={c.handle}
-                  t={spring({ frame: frame - T.board - 4, fps, config: CHIP })}
+                  t={spring({
+                    frame: frame - T.board - boardEl.beat("pop"),
+                    fps,
+                    config: CHIP,
+                  })}
                 />
               </div>
               <div

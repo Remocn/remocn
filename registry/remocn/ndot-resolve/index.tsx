@@ -13,6 +13,14 @@ import {
 } from "react";
 import { AbsoluteFill, continueRender, delayRender, Easing } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_EMPHASIS,
+  DEFAULT_TEXT,
+  type NdotResolveElementId,
+  ndotResolveTimeline,
+  ROWS_PER_LINE,
+} from "./timeline";
 
 const geist = loadFont("normal", {
   weights: ["500"],
@@ -55,6 +63,12 @@ export interface NdotResolveProps {
   delay?: number;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches the scan, single letters resolving and the
+   * refresh pass, by the ids in `./timeline`. Frames on the scene timeline,
+   * after `delay` and `speed`.
+   */
+  timing?: Timing<NdotResolveElementId>;
 }
 
 const THEMES = {
@@ -352,11 +366,6 @@ function layout(text: string, emphasis: string, maxEm: number, m: Measure) {
   return { lines, glyphs, widths, count: order, descender };
 }
 
-// Timeline (frames at speed 1).
-const ROW_STEP = 1.1;
-const RES_START = 34;
-const STAGGER = 2.2;
-const WIPE_LEN = 5;
 const WIPE_EASE = Easing.bezier(0.33, 0, 0.2, 1);
 const DOT_R = 0.47;
 
@@ -379,22 +388,28 @@ function ScaleLayer({
   );
 }
 
-export function NdotResolve({
-  text = "Less noise. More launch.",
-  emphasis = "launch",
-  resolveAt = RES_START,
-  stagger = STAGGER,
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = geist.fontFamily,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: NdotResolveProps) {
+export function NdotResolve(props: NdotResolveProps) {
+  const {
+    text = DEFAULT_TEXT,
+    emphasis = DEFAULT_EMPHASIS,
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = geist.fontFamily,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H } = useSceneConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    ndotResolveTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
   const pal = THEMES[theme];
   const fg = ink ?? pal.ink;
@@ -417,7 +432,7 @@ export function NdotResolve({
     );
   }
 
-  const { glyphs, widths, lines, count, descender } = laid;
+  const { glyphs, widths, lines, descender } = laid;
   const CAP = metrics.cap;
   const blockEm = Math.max(...widths);
   const fs = Math.min(maxFs, (W * 0.84) / blockEm);
@@ -426,7 +441,8 @@ export function NdotResolve({
   const blockH = (lines.length - 1) * lead + CAP * fs;
   const left = (W - blockEm * fs) / 2;
   const top = (H - blockH) / 2 + CAP * fs;
-  const rowsPerLine = 9;
+  const rowsPerLine = ROWS_PER_LINE;
+  const scan = tl.get("scan");
 
   const ink2: string[] = [];
   const ink3: string[] = [];
@@ -434,7 +450,6 @@ export function NdotResolve({
   const hotDim: string[] = [];
   const wiping: ReactNode[] = [];
   const solid: ReactNode[] = [];
-  const resEnd = resolveAt + (count - 1) * stagger + WIPE_LEN;
   // Extent of the emphasis word, for its gradient.
   let hotX0 = Number.POSITIVE_INFINITY;
   let hotX1 = Number.NEGATIVE_INFINITY;
@@ -447,25 +462,28 @@ export function NdotResolve({
     const inkLeft = penX + (g.adv * fs - g.cols * p) / 2;
     const cx = (c: number) => inkLeft + (c + 0.5) * p;
     const cy = (r: number) => baseline - (6.5 - r) * p;
-    const start = resolveAt + g.order * stagger;
+    const letter = tl.get(`letter:${g.order}`);
+    const start = letter.start;
+    const wipeLen = letter.length;
 
     if (g.emphasis) {
       hotX0 = Math.min(hotX0, inkLeft);
       hotX1 = Math.max(hotX1, inkLeft + g.cols * p);
       hotY = baseline;
+      const passEl = tl.get("pass");
       for (const [c, r] of g.cells) {
-        const tr = (g.line * rowsPerLine + r) * ROW_STEP;
+        const tr = scan.start + (g.line * rowsPerLine + r) * scan.beat("row");
         if (t < tr) continue;
         // Refresh into the gradient, row by row, one dark step per row.
-        const sw = start + r * 0.6;
-        if (t >= sw && t < sw + 1) continue;
+        const sw = start + r * letter.beat("refreshRow");
+        if (t >= sw && t < sw + letter.beat("dark")) continue;
         // A quiet refresh pass over the emphasis word during the hold.
-        const pass = resEnd + 12 + r * 0.9;
+        const pass = passEl.start + r * passEl.beat("row");
         const d = dotPath(cx(c), cy(r), DOT_R * p);
-        if (t >= sw + 1) {
-          if (t >= pass && t < pass + 1.5) hotDim.push(d);
+        if (t >= sw + letter.beat("dark")) {
+          if (t >= pass && t < pass + passEl.beat("dim")) hotDim.push(d);
           else hot.push(d);
-        } else if (t < tr + 1) ink2.push(d);
+        } else if (t < tr + scan.beat("flash")) ink2.push(d);
         else ink3.push(d);
       }
       continue;
@@ -479,15 +497,15 @@ export function NdotResolve({
     const wipeY =
       lf <= 0
         ? yTop
-        : yTop + (yBot - yTop) * WIPE_EASE(Math.min(1, lf / WIPE_LEN));
+        : yTop + (yBot - yTop) * WIPE_EASE(Math.min(1, lf / wipeLen));
 
-    if (lf < WIPE_LEN) {
+    if (lf < wipeLen) {
       for (const [c, row] of g.cells) {
-        const tr = (g.line * rowsPerLine + row) * ROW_STEP;
+        const tr = scan.start + (g.line * rowsPerLine + row) * scan.beat("row");
         if (t < tr) continue;
         if (lf > 0 && cy(row) < wipeY) continue;
         const d = dotPath(cx(c), cy(row), DOT_R * p);
-        if (t < tr + 1) ink2.push(d);
+        if (t < tr + scan.beat("flash")) ink2.push(d);
         else ink3.push(d);
       }
     }
@@ -509,7 +527,7 @@ export function NdotResolve({
       </text>
     );
 
-    if (lf >= WIPE_LEN) {
+    if (lf >= wipeLen) {
       solid.push(glyphText({}));
       continue;
     }

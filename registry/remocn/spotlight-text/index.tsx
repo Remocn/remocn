@@ -13,6 +13,13 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_EYEBROW,
+  DEFAULT_TITLE,
+  type SpotlightTextElementId,
+  spotlightTextTimeline,
+} from "./timeline";
 
 const geist = loadGeist("normal", {
   weights: ["500"],
@@ -47,6 +54,12 @@ export interface SpotlightTextProps {
   /** Playback multiplier. */
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches the headline's entry, the eyebrow and the
+   * light's glide and widening, by the ids in `./timeline`. Frames on the
+   * scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<SpotlightTextElementId>;
 }
 
 const THEMES = {
@@ -82,14 +95,6 @@ const CLAMP = {
   extrapolateLeft: "clamp",
   extrapolateRight: "clamp",
 } as const;
-
-const T = {
-  inStart: 0,
-  inDur: 26,
-  glideStart: 14,
-  glideEnd: 92,
-  widenEnd: 132,
-};
 
 function hexToRgb(hex: string): [number, number, number] {
   const h = hex.replace("#", "");
@@ -161,30 +166,39 @@ function ScaleLayer({
   );
 }
 
-export function SpotlightText({
-  title = "Launch videos, in code.",
-  eyebrow = "remocn 2.0",
-  accent = "#3B5BFD",
-  sweep = T.glideEnd - T.glideStart,
-  spotSize = 1.25,
-  ink,
-  background,
-  fontFamily = geist.fontFamily,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: SpotlightTextProps) {
+export function SpotlightText(props: SpotlightTextProps) {
+  const {
+    title = DEFAULT_TITLE,
+    eyebrow = DEFAULT_EYEBROW,
+    accent = "#3B5BFD",
+    spotSize = 1.25,
+    ink,
+    background,
+    fontFamily = geist.fontFamily,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   // `glide` names the spotlight's travel below.
   const tilt = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H } = useSceneConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    spotlightTextTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const enterEl = tl.get("enter");
+  const eyebrowEl = tl.get("eyebrow");
+  const glideEl = tl.get("glide");
+  const widenEl = tl.get("widen");
   const c = THEMES[theme];
   const lit = ink ?? c.lit;
   const stage =
     background === "transparent" ? "transparent" : (background ?? c.bg);
-  const glideEnd = T.glideStart + sweep;
-  const widenEnd = glideEnd + (T.widenEnd - T.glideEnd);
   const s = Math.min(W / 1280, H / 720);
 
   const em = useTitleWidth(title, fontFamily);
@@ -197,18 +211,18 @@ export function SpotlightText({
   const top = H / 2 - boxH / 2 + 0.04 * H;
 
   // Entrance of the dim line.
-  const enter = interpolate(frame, [T.inStart, T.inStart + T.inDur], [0, 1], {
+  const enter = interpolate(frame, [enterEl.start, enterEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
 
   // Spotlight: glide left → right, then ease back to centre while widening.
   const r0 = spotSize * fontSize;
-  const glide = interpolate(frame, [T.glideStart, glideEnd], [0, 1], {
+  const glide = interpolate(frame, [glideEl.start, glideEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_GLIDE,
   });
-  const widen = interpolate(frame, [glideEnd - 6, widenEnd], [0, 1], {
+  const widen = interpolate(frame, [widenEl.start, widenEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
@@ -222,7 +236,10 @@ export function SpotlightText({
   const rim = core + (1 - core) * 0.5;
   const lightIn = interpolate(
     frame,
-    [T.glideStart - 4, T.glideStart + 14],
+    [
+      glideEl.start + glideEl.beat("lightFrom"),
+      glideEl.start + glideEl.beat("lightTo"),
+    ],
     [0, 1],
     CLAMP,
   );
@@ -235,10 +252,15 @@ export function SpotlightText({
   const washA = c.washAlpha * lightIn * (1 - 0.5 * widen);
   const wash = `radial-gradient(circle ${washR}px at ${left + x}px ${top + y}px, ${mix(c.bg, accent, 0.5, washA)} 0%, ${mix(c.bg, accent, 0.5, 0)} 70%)`;
 
-  const eyebrowIn = interpolate(frame, [8, 30], [0, 1], {
-    ...CLAMP,
-    easing: EASE_OUT,
-  });
+  const eyebrowIn = interpolate(
+    frame,
+    [eyebrowEl.start, eyebrowEl.end],
+    [0, 1],
+    {
+      ...CLAMP,
+      easing: EASE_OUT,
+    },
+  );
 
   const textStyle: CSSProperties = {
     fontFamily,

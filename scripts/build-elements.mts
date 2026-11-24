@@ -44,6 +44,10 @@ const INLINABLE_LIBS: Record<string, { artifact: string; importPath: string }> =
       artifact: "frame-rate",
       importPath: "@/lib/remocn/frame-rate",
     },
+    "@remocn/timeline": {
+      artifact: "timeline",
+      importPath: "@/lib/remocn/timeline",
+    },
   };
 
 interface RegistryItem {
@@ -156,11 +160,47 @@ function parseSource(source: string): ParsedSource {
   return { imports, body };
 }
 
+const TOP_LEVEL =
+  /^(export\s+)?(?:async\s+)?(?:const|let|function|class|interface|type|enum)\s+([A-Za-z_$][\w$]*)/gm;
+
+/** Names a source declares at its top level. */
+function topLevelNames(body: string) {
+  const exported = new Set<string>();
+  const local = new Set<string>();
+  for (const [, isExported, name] of body.matchAll(TOP_LEVEL)) {
+    (isExported ? exported : local).add(name);
+  }
+  return { exported, local };
+}
+
+/**
+ * A component's own module (`timeline.ts`) is inlined into the same file as
+ * the component and its libs. Names it keeps to itself may clash with theirs
+ * (`const STAGGER` in both), so those are renamed inside the module.
+ */
+function renameClashes(module: ParsedSource, others: ParsedSource[]) {
+  const taken = new Set<string>();
+  for (const other of others) {
+    const { exported, local } = topLevelNames(other.body);
+    for (const name of [...exported, ...local]) taken.add(name);
+  }
+  let body = module.body;
+  for (const name of topLevelNames(module.body).local) {
+    if (!taken.has(name)) continue;
+    body = body.replace(
+      new RegExp(`(?<![\\w$.])${name.replace(/\$/g, "\\$")}(?![\\w$])`, "g"),
+      `${name}$own`,
+    );
+  }
+  return { ...module, body };
+}
+
 function stripExports(body: string): string {
-  return body.replace(
-    /^export\s+(?=(function|const|class|interface|type|let)\b)/gm,
-    "",
-  );
+  // `export type { A };` re-exports a name already in scope; once everything
+  // sits in one file it has nothing left to do.
+  return body
+    .replace(/^export\s+(?:type\s+)?\{[^}]*\};?[ \t]*\n?/gm, "")
+    .replace(/^export\s+(?=(function|const|class|interface|type|let)\b)/gm, "");
 }
 
 const WRAPPER_IMPORTS: ParsedSource["imports"] = new Map([
@@ -196,6 +236,7 @@ function mergeSources(
   for (const source of [component, ...libs, { imports: extra, body: "" }]) {
     for (const [module, entry] of source.imports) {
       if (
+        module.startsWith("./") ||
         Object.values(INLINABLE_LIBS).some((lib) => lib.importPath === module)
       )
         continue;
@@ -467,14 +508,17 @@ for (const file of readdirSync(ARTIFACTS_DIR).sort()) {
   if (!file.endsWith(".json")) continue;
   const item = readItem(file.replace(/\.json$/, ""));
   if (item.type !== "registry:component") continue;
-  if (!item.files || item.files.length !== 1) continue;
-  const path = item.files[0].path;
+  if (!item.files || item.files.length === 0) continue;
+  // A component may carry modules of its own beside it (`timeline.ts`),
+  // imported relatively; they are inlined ahead of it like the libs.
+  const [main, ...ownModules] = item.files;
+  const path = main.path;
   if (
     !path.startsWith("registry/remocn/") &&
     !path.startsWith("registry/remocn-icons/")
   )
     continue;
-  const component = parseSource(item.files[0].content);
+  const component = parseSource(main.content);
   const ownsSequence =
     /^export\s+const\s+[\w$]+\s*=\s*Interactive\.create\(/m.test(
       component.body,
@@ -510,10 +554,24 @@ for (const file of readdirSync(ARTIFACTS_DIR).sort()) {
     : (previewManifest[item.name]?.fps ?? 30);
   const durationInFrames = Math.round((ownFrames * ELEMENT_FPS) / ownFps);
 
-  const libs = regDeps.flatMap((dep) => {
-    const lib = libSources.get(dep);
-    return lib ? [lib] : [];
-  });
+  const libs = [
+    ...regDeps.flatMap((dep) => {
+      const lib = libSources.get(dep);
+      return lib ? [lib] : [];
+    }),
+    ...ownModules.map((file) => ({
+      parsed: parseSource(file.content),
+      dependencies: [] as string[],
+      registryDependencies: [] as string[],
+    })),
+  ];
+  for (const lib of libs.slice(libs.length - ownModules.length)) {
+    const others = [
+      component,
+      ...libs.filter((other) => other !== lib).map((other) => other.parsed),
+    ];
+    lib.parsed = renameClashes(lib.parsed, others);
+  }
   const { schema, dimensions } = await loadElementConfig(item.name, path);
   let sourceCode = mergeSources(
     component,

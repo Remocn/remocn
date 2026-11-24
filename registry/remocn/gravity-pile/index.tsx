@@ -4,6 +4,14 @@ import type React from "react";
 import { useMemo } from "react";
 import { AbsoluteFill, random } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  FRAMES,
+  type GravityPileElementId,
+  gravityPileTimeline,
+  SETTLE_FRAMES,
+  SETTLE_FROM,
+} from "./timeline";
 
 export type GravityPileColors = {
   background: string;
@@ -26,6 +34,11 @@ export type GravityPileProps = {
   /** Background color. Overrides `colors.background`. */
   backgroundColor?: string;
   speed?: number;
+  /**
+   * Moves, trims or stretches the fall, by the ids in `./timeline`. Frames
+   * on the scene timeline, after `speed`.
+   */
+  timing?: Timing<GravityPileElementId>;
 };
 
 export const gravityPileDefaults = {
@@ -45,15 +58,12 @@ type Kind = "circle" | "square" | "triangle" | "item";
 type Body = { r: number; kind: Kind; color: number; accent: boolean };
 type Sim = { bodies: Body[]; frames: Float32Array[]; floor: number };
 
-const FRAMES = 150;
 const SUBSTEPS = 10;
 const ITERATIONS = 4;
 const BOUNCE = 0.42;
 const FRICTION = 0.12;
 const DAMPING = 0.999;
 const GRIP = 0.45;
-const SETTLE_FROM = 46;
-const SETTLE_FRAMES = 18;
 
 // Verlet integration with position-based circle contacts. Runs once per
 // (size, count, seed, gravity), records every frame, and the component only
@@ -252,18 +262,30 @@ function Shape({ body, fill }: { body: Body; fill: string }) {
   );
 }
 
-export function GravityPile({
-  count = gravityPileDefaults.count,
-  seed = gravityPileDefaults.seed,
-  gravity = gravityPileDefaults.gravity,
-  items,
-  colors: colorOverrides,
-  accentColor,
-  backgroundColor,
-  speed = gravityPileDefaults.speed,
-}: GravityPileProps) {
+export function GravityPile(props: GravityPileProps) {
+  const {
+    count = gravityPileDefaults.count,
+    seed = gravityPileDefaults.seed,
+    gravity = gravityPileDefaults.gravity,
+    items,
+    colors: colorOverrides,
+    accentColor,
+    backgroundColor,
+    speed = gravityPileDefaults.speed,
+    timing,
+  } = props;
   const frame = useSceneFrame();
-  const { width, height, fps } = useSceneConfig();
+  const { width, height, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    gravityPileTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const fall = tl.get("fall");
+  // Stretching the fall plays the recorded frames slower; trimming it
+  // freezes the heap where the fall ends. The heap sleeps by then anyway.
+  const rate = FRAMES / fall.beat("frames");
   const baseColors = { ...gravityPileDefaults.colors, ...colorOverrides };
   const colors = {
     ...baseColors,
@@ -287,7 +309,11 @@ export function GravityPile({
     [width, height, count, seed, gravity, itemCount],
   );
 
-  const t = Math.min(FRAMES, Math.max(0, (frame * speed * 30) / fps));
+  const t = Math.min(
+    FRAMES,
+    fall.length * rate,
+    Math.max(0, ((frame * speed * 30) / fps - fall.start) * rate),
+  );
   const f0 = Math.floor(t);
   const f1 = Math.min(FRAMES, f0 + 1);
   const mix = t - f0;

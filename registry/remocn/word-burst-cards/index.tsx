@@ -19,6 +19,13 @@ import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround, gshParams } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_LINE,
+  type WordBurstCardsElementId,
+  wordBurstCardsTimeline,
+  wordsOf,
+} from "./timeline";
 
 const hanken = loadHanken("normal", {
   weights: ["300", "400"],
@@ -84,6 +91,12 @@ export interface WordBurstCardsProps {
   /** Frames to hold the first frame before anything moves. */
   delay?: number;
   speed?: number;
+  /**
+   * Moves, trims or stretches the line rising in, single word bursts, the
+   * logo and the caption, by the ids in `./timeline`. Frames on the scene
+   * timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<WordBurstCardsElementId>;
 }
 
 const DEFAULT_IMAGES = [
@@ -141,15 +154,6 @@ const THEMES = {
       "0 1px 2px rgba(30,24,20,0.07), 0 10px 24px rgba(30,24,20,0.09), 0 30px 70px rgba(30,24,20,0.13)",
     hairline: "inset 0 0 0 1px rgba(0,0,0,0.06)",
   },
-};
-
-const BEAT = {
-  lineIn: -6,
-  burst: 30,
-  wordGap: 4,
-  letterGap: 0.5,
-  logo: 60,
-  caption: 66,
 };
 
 const FONT_PX = 200;
@@ -473,30 +477,37 @@ function ScaleLayer({
   );
 }
 
-export function WordBurstCards({
-  line = "Every screen you built, in motion",
-  caption = "Launch films from your product",
-  images = DEFAULT_IMAGES,
-  accent,
-  ink,
-  background,
-  fontFamily = hanken.fontFamily,
-  theme = "dark",
-  ground,
-  groundParams,
-  reverse = false,
-  burstAt = BEAT.burst,
-  stagger = BEAT.wordGap,
-  showLogo = true,
-  logo,
-  seed = 3,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-}: WordBurstCardsProps) {
+export function WordBurstCards(props: WordBurstCardsProps) {
+  const {
+    line = DEFAULT_LINE,
+    caption = "Launch films from your product",
+    images = DEFAULT_IMAGES,
+    accent,
+    ink,
+    background,
+    fontFamily = hanken.fontFamily,
+    theme = "dark",
+    ground,
+    groundParams,
+    reverse = false,
+    showLogo = true,
+    logo,
+    seed = 3,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay) * speed;
   const { width: W, height: H, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    wordBurstCardsTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const lineEl = tl.get("line");
   const c = THEMES[theme];
   const inkC = ink ?? c.ink;
   const hi = accent ?? c.accent;
@@ -507,12 +518,12 @@ export function WordBurstCards({
   const m = useMeasure(fontFamily);
   const pics = (images.length > 0 ? images : DEFAULT_IMAGES).map(resolveSrc);
   const tt = reverse ? durationInFrames - 1 - frame : frame;
-  const logoAt = burstAt + (BEAT.logo - BEAT.burst);
-  const captionAt = burstAt + (BEAT.caption - BEAT.burst);
+  const logoAt = tl.get("logo").start;
+  const captionEl = tl.get("caption");
 
   let content: ReactNode = <div />;
   if (m) {
-    const words = line.split(" ").filter((w) => w.length > 0);
+    const words = wordsOf(line);
     const maxW = (portrait ? 0.84 : 0.8) * W;
     const maxLines = portrait ? 4 : 2;
     let size = portrait ? W * 0.17 : H * 0.2;
@@ -560,7 +571,9 @@ export function WordBurstCards({
           y,
           w,
           word: wi,
-          tb: burstAt + wi * stagger + inWord * BEAT.letterGap,
+          tb:
+            tl.get(`word:${wi}`).start +
+            inWord * tl.get(`word:${wi}`).beat("letter"),
         });
         inWord++;
       });
@@ -641,10 +654,15 @@ export function WordBurstCards({
     const lineIn = (wIdx: number) =>
       reverse
         ? 1
-        : interpolate(tt - BEAT.lineIn - wIdx * 2, [0, 12], [0, 1], {
-            ...CLAMP,
-            easing: RISE,
-          });
+        : interpolate(
+            tt - lineEl.start - wIdx * lineEl.beat("stagger"),
+            [0, lineEl.beat("rise")],
+            [0, 1],
+            {
+              ...CLAMP,
+              easing: RISE,
+            },
+          );
 
     const letterEls = glyphs.map((g, gi) => {
       const d = tt - g.tb;
@@ -742,10 +760,15 @@ export function WordBurstCards({
     const logoSize = portrait ? W * 0.15 : H * 0.14;
     const capSize = Math.max(H * 0.026, logoSize * 0.3);
     const logoP = spring({ frame: tt - logoAt, fps, config: LAND });
-    const capP = interpolate(tt - captionAt, [0, 12], [0, 1], {
-      ...CLAMP,
-      easing: RISE,
-    });
+    const capP = interpolate(
+      tt - captionEl.start,
+      [0, captionEl.length],
+      [0, 1],
+      {
+        ...CLAMP,
+        easing: RISE,
+      },
+    );
     const centre = showLogo ? (
       <div
         style={{

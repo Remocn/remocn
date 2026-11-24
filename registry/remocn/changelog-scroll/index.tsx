@@ -9,6 +9,11 @@ import { useId } from "react";
 import { AbsoluteFill, Easing, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  type ChangelogScrollElementId,
+  changelogScrollTimeline,
+} from "./timeline";
 
 const { fontFamily: sans } = loadOnest("normal", {
   weights: ["400", "500"],
@@ -58,6 +63,12 @@ export interface ChangelogScrollProps {
   delay?: number;
   theme?: "dark" | "light";
   speed?: number;
+  /**
+   * Moves, trims or stretches the scroll, the band, the landing, the
+   * expansion, the accent and the labels, by the ids in `./timeline`.
+   * Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<ChangelogScrollElementId>;
 }
 
 const DEFAULT_ENTRIES: ChangelogEntry[] = [
@@ -113,9 +124,6 @@ const MIST_BG = "#040407";
 const PANEL_INK = "#F7F4FF";
 
 const SCROLL_ROWS = 30;
-const LAND = 58;
-const EXPAND = 64;
-const EXPAND_END = 92;
 const HERO_TRACK = -0.04;
 const ROW_TRACK = -0.01;
 
@@ -215,8 +223,8 @@ function split(text: string) {
   return { tag: text.slice(0, i), body: text.slice(i + 3) };
 }
 
-function scrollOffset(t: number, land: number, rows: number) {
-  const p = interpolate(t, [0, land], [0, 1], CLAMP);
+function scrollOffset(t: number, from: number, land: number, rows: number) {
+  const p = interpolate(t, [from, land], [0, 1], CLAMP);
   return -rows * (1 - Easing.bezier(0.22, 1, 0.36, 1)(p));
 }
 
@@ -393,35 +401,48 @@ function ScaleLayer({
   );
 }
 
-export function ChangelogScroll({
-  entries = DEFAULT_ENTRIES,
-  focus = 9,
-  title = "Changelog",
-  url = "remocn.dev/changelog",
-  logo,
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = sans,
-  scrollLength = LAND,
-  scrollRows = SCROLL_ROWS,
-  grain = true,
-  scale = 1,
-  delay = 0,
-  theme = "dark",
-  speed = 1,
-}: ChangelogScrollProps) {
+export function ChangelogScroll(props: ChangelogScrollProps) {
+  const {
+    entries = DEFAULT_ENTRIES,
+    focus = 9,
+    title = "Changelog",
+    url = "remocn.dev/changelog",
+    logo,
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = sans,
+    scrollRows = SCROLL_ROWS,
+    grain = true,
+    scale = 1,
+    delay = 0,
+    theme = "dark",
+    speed = 1,
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H } = useSceneConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    changelogScrollTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const scrollEl = tl.get("scroll");
+  const bandEl = tl.get("band");
+  const landEl = tl.get("land");
+  const expandEl = tl.get("expand");
+  const accentEl = tl.get("accent");
+  const labelsEl = tl.get("labels");
   const u = H / 720;
   const c = THEMES[theme];
   const fg = ink ?? c.fg;
   const stage =
     background === "transparent" ? "transparent" : (background ?? c.bg);
-  const landAt = scrollLength;
-  const expandAt = EXPAND + (scrollLength - LAND);
-  const expandEnd = EXPAND_END + (scrollLength - LAND);
+  const landAt = landEl.start;
+  const expandAt = expandEl.start;
+  const expandEnd = expandEl.end;
   const n = Math.max(1, entries.length);
   const fi = Math.min(Math.max(0, Math.round(focus)), n - 1);
   const hero = entries[fi] ?? { date: "", text: "" };
@@ -439,12 +460,19 @@ export function ChangelogScroll({
   const kickerGap = 18 * u;
   const bandBig = heroF * 1.12 + dateFont + kickerGap + 64 * u;
 
-  const off = scrollOffset(t, landAt, scrollRows);
-  const v = (off - scrollOffset(t - 1, landAt, scrollRows)) * rowH;
+  const off = scrollOffset(t, scrollEl.start, scrollEl.end, scrollRows);
+  const v =
+    (off - scrollOffset(t - 1, scrollEl.start, scrollEl.end, scrollRows)) *
+    rowH;
   const fast = interpolate(Math.abs(v), [10 * u, 70 * u], [0, 1], CLAMP);
-  const intro = interpolate(t, [0, 8], [0, 1], CLAMP);
+  const intro = interpolate(
+    t,
+    [scrollEl.start, scrollEl.start + scrollEl.beat("intro")],
+    [0, 1],
+    CLAMP,
+  );
 
-  const land = interpolate(t, [landAt, landAt + 14], [0, 1], {
+  const land = interpolate(t, [landAt, landEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
@@ -452,11 +480,11 @@ export function ChangelogScroll({
     ...CLAMP,
     easing: EASE_IO,
   });
-  const accentIn = interpolate(t, [expandEnd - 8, expandEnd + 8], [0, 1], {
+  const accentIn = interpolate(t, [accentEl.start, accentEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
-  const chrome = interpolate(t, [expandEnd - 4, expandEnd + 16], [0, 1], {
+  const chrome = interpolate(t, [labelsEl.start, labelsEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
@@ -470,7 +498,7 @@ export function ChangelogScroll({
   // Not `midway(ex)`: the hero's tracking keeps changing its layout until the
   // last frame of the expansion, and the lean must not go in such a frame.
   const expanding = t > expandAt - speed && t < expandEnd + speed;
-  const rowsMoving = (t > 0 && t < landAt) || expanding;
+  const rowsMoving = (t > scrollEl.start && t < scrollEl.end) || expanding;
 
   const visible = Math.ceil(H / rowH / 2) + 3;
   const base = Math.round(off);
@@ -540,13 +568,28 @@ export function ChangelogScroll({
     `color-mix(in srgb, ${b} ${Math.round(p * 100)}%, ${a})`;
 
   const hair = Math.max(1, u);
-  const bandIn = interpolate(t, [4, 24], [0, 1], { ...CLAMP, easing: EASE_IO });
-  const bandHair = interpolate(t, [landAt - 4, landAt + 12], [0.55, 1], CLAMP);
-
-  const panel = interpolate(t, [expandAt - 2, expandAt + 22], [0, 1], {
+  const bandIn = interpolate(t, [bandEl.start, bandEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
+  const hairAt = landAt + landEl.beat("hair");
+  const bandHair = interpolate(
+    t,
+    [hairAt, hairAt + landEl.beat("hairIn")],
+    [0.55, 1],
+    CLAMP,
+  );
+
+  const panelAt = expandAt + expandEl.beat("panel");
+  const panel = interpolate(
+    t,
+    [panelAt, panelAt + expandEl.beat("panelIn")],
+    [0, 1],
+    {
+      ...CLAMP,
+      easing: EASE_IO,
+    },
+  );
   const panelLeft = W * 0.06;
   const panelRight = panelLeft + W * 0.88 * panel;
 

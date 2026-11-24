@@ -6,6 +6,14 @@ import type React from "react";
 import { useId } from "react";
 import { AbsoluteFill, Easing, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  cutWord,
+  DEFAULT_WORDS,
+  listOf,
+  type StrobeWordsElementId,
+  strobeWordsTimeline,
+} from "./timeline";
 
 const manrope = loadManrope("normal", {
   weights: ["500", "600"],
@@ -80,6 +88,11 @@ export interface StrobeWordsProps {
   delay?: number;
   theme?: "dark" | "light";
   speed?: number;
+  /**
+   * Moves, trims or stretches single strobe cuts and the poster, by the ids
+   * in `./timeline`. Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<StrobeWordsElementId>;
 }
 
 const CAP = 0.73;
@@ -99,14 +112,6 @@ function widthEm(text: string) {
     w += adv / 1000 + TRACK;
   }
   return Math.max(w, 0.5);
-}
-
-function defaultRhythm(count: number, beat: number, cuts: number) {
-  let n = count - 1;
-  while (n < cuts) n += count;
-  return Array.from({ length: n }, (_, i) =>
-    Math.round(beat - ((beat / 2) * i) / Math.max(1, n - 1)),
-  );
 }
 
 function Grain({ opacity }: { opacity: number }) {
@@ -213,50 +218,47 @@ function ScaleLayer({
   );
 }
 
-export function StrobeWords({
-  words = ["Plan.", "Write.", "Render.", "Ship."],
-  rhythm,
-  beat = 6,
-  cuts = 13,
-  logo,
-  accent = "#3B5BFD",
-  fontFamily = display,
-  grain = true,
-  scale = 1,
-  delay = 0,
-  theme = "dark",
-  speed = 1,
-}: StrobeWordsProps) {
+export function StrobeWords(props: StrobeWordsProps) {
+  const {
+    words = DEFAULT_WORDS,
+    logo,
+    accent = "#3B5BFD",
+    fontFamily = display,
+    grain = true,
+    scale = 1,
+    delay = 0,
+    theme = "dark",
+    speed = 1,
+    timing,
+  } = props;
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H } = useSceneConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    strobeWordsTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const u = H / 720;
-  const list = words.length > 0 ? words : ["Ship."];
-  const beats =
-    rhythm && rhythm.length > 0
-      ? rhythm
-      : defaultRhythm(list.length, beat, cuts);
+  const list = listOf(words);
+  const cutEls = tl.lane("Cuts");
+  const posterEl = tl.get("poster");
+  const cutCount = cutEls.length;
   const poster: Field = theme === "light" ? "paper" : "ink";
 
-  const offset = (((CYCLE.indexOf("accent") - (beats.length - 1)) % 3) + 3) % 3;
+  const offset = (((CYCLE.indexOf("accent") - (cutCount - 1)) % 3) + 3) % 3;
 
-  let index = beats.length;
-  let at = 0;
-  for (let i = 0; i < beats.length; i++) {
-    if (t < at + beats[i]) {
-      index = i;
-      break;
-    }
-    at += beats[i];
-  }
-  const isPoster = index >= beats.length;
+  // On screen: the last cut started, or the poster once it has.
+  let index = 0;
+  cutEls.forEach((e, i) => {
+    if (t >= e.start) index = i;
+  });
+  if (t >= posterEl.start) index = cutCount;
+  const isPoster = index >= cutCount;
   const field: Field = isPoster ? poster : CYCLE[(index + offset) % 3];
   const text = isPoster
     ? list[list.length - 1]
-    : list[
-        (((index - beats.length + list.length - 1) % list.length) +
-          list.length) %
-          list.length
-      ];
+    : cutWord(list, index, cutCount);
 
   // Each strobe beat on the accent field is a radial-glow ground; the disc
   // sits in a slightly different place per beat so the cuts read as light.
@@ -267,7 +269,7 @@ export function StrobeWords({
     `radial-gradient(90% 90% at ${100 - bx}% 0%, color-mix(in oklab, ${GLOW[3]} 80%, transparent) 0%, transparent 70%)`,
     `linear-gradient(180deg, ${GLOW[3]} 0%, ${GLOW[2]} 62%, #7e6fe0 100%)`,
   ].join(", ");
-  const rise = interpolate(t - at, [0, 60], [0, 1], {
+  const rise = interpolate(t - posterEl.start, [0, posterEl.length], [0, 1], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
     easing: Easing.bezier(0.22, 1, 0.36, 1),

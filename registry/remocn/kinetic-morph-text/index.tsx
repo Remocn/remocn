@@ -4,6 +4,18 @@ import { useId, useLayoutEffect, useMemo, useState } from "react";
 import { Easing } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_TEXT,
+  finite,
+  HOLD,
+  type KineticMorphSpan,
+  type KineticMorphTextElementId,
+  kineticMorphTextTimeline,
+  morphSpans,
+  splitPhrases,
+  TRANSITION,
+} from "./timeline";
 
 export interface KineticMorphTextProps {
   /** One phrase per line, or separate phrases with |. */
@@ -25,17 +37,17 @@ export interface KineticMorphTextProps {
   loop?: boolean;
   speed?: number;
   className?: string;
+  /**
+   * Moves, trims or stretches single morphs, by the ids in `./timeline`.
+   * Frames on the scene timeline, after `speed`.
+   */
+  timing?: Timing<KineticMorphTextElementId>;
 }
 
-export const kineticMorphTextDefaultText =
-  "Hello | Make it move | Shape what's next";
+export const kineticMorphTextDefaultText = DEFAULT_TEXT;
 
 const FONT_FAMILY = "Arial, Helvetica, sans-serif";
-const TRANSITION = 54;
-const HOLD = 42;
 const clamp = (value: number) => Math.min(1, Math.max(0, value));
-const finite = (value: number, fallback: number) =>
-  Number.isFinite(value) ? value : fallback;
 const ease = Easing.bezier(0.65, 0, 0.25, 1);
 const smooth = (value: number) => {
   const p = clamp(value);
@@ -47,12 +59,7 @@ const noise = (index: number) => {
   return value - Math.floor(value);
 };
 
-export function parseKineticMorphText(text: string): string[] {
-  return text
-    .split(/[|\n\r]+/)
-    .map((phrase) => phrase.trim().replace(/\s+/g, " "))
-    .filter(Boolean);
-}
+export const parseKineticMorphText = splitPhrases;
 
 /** Includes the last readable hold. Timing values are authored at 30 fps. */
 export function getKineticMorphTextDuration({
@@ -120,31 +127,41 @@ export function matchKineticMorphGlyphs(
   return pairs;
 }
 
+/**
+ * The morph under way at `frame`: the phrases it runs between and how far it
+ * has come. `morphs` are the morphs in order, as the schedule lays them out
+ * (`morphSpans` by default); a loop repeats them, every turn ending where
+ * the last one ends.
+ */
 export function getKineticMorphTimeline(
   frame: number,
   count: number,
   transitionFrames = TRANSITION,
   holdFrames = HOLD,
   loop = false,
+  morphs: KineticMorphSpan[] = morphSpans(
+    count,
+    transitionFrames,
+    holdFrames,
+    loop,
+  ),
 ) {
-  const transition = Math.max(1, finite(transitionFrames, TRANSITION));
-  const hold = Math.max(0, finite(holdFrames, HOLD));
   const time = Math.max(0, finite(frame, 0));
   if (count === 0) return { from: -1, to: -1, progress: 1 };
-  if (!loop && time < transition) {
-    return { from: -1, to: 0, progress: time / transition };
+  const last = morphs[morphs.length - 1];
+  if (!last) return { from: count - 1, to: count - 1, progress: 1 };
+  const at = loop ? time % (last.start + last.length) : time;
+  for (let i = 0; i < morphs.length; i++) {
+    const m = morphs[i];
+    if (at < m.start + m.length) {
+      return {
+        from: i > 0 ? morphs[i - 1].to : loop ? last.to : -1,
+        to: m.to,
+        progress: clamp((at - m.start) / m.length),
+      };
+    }
   }
-  const cursor = loop ? time : time - transition;
-  const cycle = transition + hold;
-  const index = Math.floor(cursor / cycle);
-  if ((!loop && index >= count - 1) || (loop && count === 1)) {
-    return { from: count - 1, to: count - 1, progress: 1 };
-  }
-  return {
-    from: index % count,
-    to: (index + 1) % count,
-    progress: clamp(((cursor % cycle) - hold) / transition),
-  };
+  return { from: last.to, to: last.to, progress: 1 };
 }
 
 interface PoseOptions {
@@ -356,25 +373,42 @@ function MorphGlyph({
   );
 }
 
-export function KineticMorphText({
-  text = kineticMorphTextDefaultText,
-  fontSize = 100,
-  fontWeight = 600,
-  color = "#b4f4d9",
-  backgroundColor = "#a800b7",
-  spread = 180,
-  rotation = 110,
-  morph = 0.75,
-  trails = 0.45,
-  transitionFrames = TRANSITION,
-  holdFrames = HOLD,
-  loop = false,
-  speed = 1,
-  className,
-}: KineticMorphTextProps) {
+export function KineticMorphText(props: KineticMorphTextProps) {
+  const {
+    text = DEFAULT_TEXT,
+    fontSize = 100,
+    fontWeight = 600,
+    color = "#b4f4d9",
+    backgroundColor = "#a800b7",
+    spread = 180,
+    rotation = 110,
+    morph = 0.75,
+    trails = 0.45,
+    transitionFrames = TRANSITION,
+    holdFrames = HOLD,
+    loop = false,
+    speed = 1,
+    className,
+    timing,
+  } = props;
   const glide = useGlide();
   const currentFrame = useSceneFrame();
-  const { width, height, fps } = useSceneConfig();
+  const { width, height, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    kineticMorphTextTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const morphs = useMemo(
+    () =>
+      tl.elements.map((e) => ({
+        to: Number(e.id.slice("phrase:".length)),
+        start: e.start,
+        length: e.length,
+      })),
+    [tl],
+  );
   const rate = (30 / fps) * Math.max(0, finite(speed, 1));
   const frame = currentFrame * rate;
   const size = Math.min(height * 0.28, Math.max(1, finite(fontSize, 100)));
@@ -387,6 +421,7 @@ export function KineticMorphText({
     transition,
     holdFrames,
     loop,
+    morphs,
   );
   // Letters turn through level on their way, where the SVG would put them on
   // whole pixels; the mark keeps them off that grid while any of them moves.
@@ -397,6 +432,7 @@ export function KineticMorphText({
       transition,
       holdFrames,
       loop,
+      morphs,
     );
   const before = progressAt(frame - rate);
   const after = progressAt(frame + rate);

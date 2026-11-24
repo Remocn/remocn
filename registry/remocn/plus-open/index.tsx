@@ -12,6 +12,13 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_NEXT,
+  DEFAULT_VALUE,
+  type PlusOpenElementId,
+  plusOpenTimeline,
+} from "./timeline";
 
 const sora = loadSora("normal", {
   weights: ["300", "400", "500"],
@@ -39,6 +46,12 @@ export interface PlusOpenProps {
   delay?: number;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches the digits, the plus, the label, the arms, the
+   * opening and the statement's words, by the ids in `./timeline`.
+   * Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<PlusOpenElementId>;
 }
 
 const THEMES = {
@@ -70,17 +83,6 @@ const THEMES = {
 
 const TRACK = -0.035;
 const FONT_PX = 400;
-
-const RISE_AT = 0;
-const RISE_LEN = 18;
-const RISE_GAP = 3;
-const PLUS_AT = 12;
-const LABEL_AT = 16;
-const ARMS_AT = 56;
-const ARMS_LEN = 14;
-const OPEN_AT = 70;
-const OPEN_LEN = 28;
-const NEXT_AT = 82;
 
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
 const EASE_IO = Easing.bezier(0.65, 0, 0.35, 1);
@@ -216,30 +218,39 @@ function crossPolygon(
     .join(", ")})`;
 }
 
-export function PlusOpen({
-  value = "150",
-  label = "updates in this release",
-  next = "Here’s everything new.",
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = sora.fontFamily,
-  hold = ARMS_AT,
-  stagger = 3,
-  grain = true,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: PlusOpenProps) {
+export function PlusOpen(props: PlusOpenProps) {
+  const {
+    value = DEFAULT_VALUE,
+    label = "updates in this release",
+    next = DEFAULT_NEXT,
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = sora.fontFamily,
+    grain = true,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H, fps } = useSceneConfig();
+  const { width: W, height: H, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    plusOpenTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const c = THEMES[theme];
   const bg = background ?? c.bg;
-  const armsAt = hold;
-  const openAt = hold + OPEN_AT - ARMS_AT;
-  const nextAt = hold + NEXT_AT - ARMS_AT;
+  const plusEl = tl.get("plus");
+  const labelEl = tl.get("label");
+  const armsEl = tl.get("arms");
+  const openEl = tl.get("open");
+  const armsAt = armsEl.start;
+  const openAt = openEl.start;
 
   const chars = useMemo(() => Array.from(value), [value]);
   const m = useMetrics(chars, label, fontFamily);
@@ -274,22 +285,32 @@ export function PlusOpen({
   const arm0 = (plusSpan * F) / 2;
 
   const land = spring({
-    frame: t - PLUS_AT,
+    frame: t - plusEl.start,
     fps,
     config: { damping: 15, stiffness: 120, mass: 0.9 },
   });
   const plusScale = 0.55 + 0.45 * land;
   const plusAngle = (-Math.PI / 2) * (1 - land);
-  const plusOn = interpolate(t, [PLUS_AT, PLUS_AT + 5], [0, 1], CLAMP);
+  const plusOn = interpolate(
+    t,
+    [plusEl.start, plusEl.start + plusEl.beat("on")],
+    [0, 1],
+    CLAMP,
+  );
 
-  const armH = interpolate(t, [armsAt, armsAt + ARMS_LEN], [0, 1], {
+  const armH = interpolate(t, [armsAt, armsAt + armsEl.beat("grow")], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
-  const armV = interpolate(t, [armsAt + 3, armsAt + 3 + ARMS_LEN], [0, 1], {
-    ...CLAMP,
-    easing: EASE_IO,
-  });
+  const armV = interpolate(
+    t,
+    [
+      armsAt + armsEl.beat("vertical"),
+      armsAt + armsEl.beat("vertical") + armsEl.beat("grow"),
+    ],
+    [0, 1],
+    { ...CLAMP, easing: EASE_IO },
+  );
   const arms = {
     l: arm0 + (cx + 4 - arm0) * armH,
     r: arm0 + (W - cx + 4 - arm0) * armH,
@@ -297,7 +318,7 @@ export function PlusOpen({
     d: arm0 + (H - cy + 4 - arm0) * armV,
   };
   const spreadAt = (tt: number) =>
-    interpolate(tt, [openAt, openAt + OPEN_LEN], [0, 1], {
+    interpolate(tt, [openAt, openEl.end], [0, 1], {
       ...CLAMP,
       easing: EASE_OPEN,
     }) *
@@ -324,16 +345,16 @@ export function PlusOpen({
     c.fieldBg,
   ].join(", ");
 
-  const rise = (i: number) =>
-    interpolate(
-      t,
-      [RISE_AT + i * RISE_GAP, RISE_AT + i * RISE_GAP + RISE_LEN],
-      [0, 1],
-      { ...CLAMP, easing: EASE_OUT },
-    );
+  const rise = (i: number) => {
+    const e = tl.get(`digit:${i}`);
+    return interpolate(t, [e.start, e.end], [0, 1], {
+      ...CLAMP,
+      easing: EASE_OUT,
+    });
+  };
   const maskTop = baseY - m.cap * F - F * 0.1;
   const maskH = m.cap * F + F * 0.32;
-  const labelP = interpolate(t, [LABEL_AT, LABEL_AT + 18], [0, 1], {
+  const labelP = interpolate(t, [labelEl.start, labelEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
@@ -467,12 +488,11 @@ export function PlusOpen({
           }}
         >
           {nextWords.map((w, k) => {
-            const p = interpolate(
-              t,
-              [nextAt + k * stagger, nextAt + k * stagger + 18],
-              [0, 1],
-              { ...CLAMP, easing: EASE_OUT },
-            );
+            const wordEl = tl.get(`word:${k}`);
+            const p = interpolate(t, [wordEl.start, wordEl.end], [0, 1], {
+              ...CLAMP,
+              easing: EASE_OUT,
+            });
             return (
               <span
                 key={`${w}-${k}`}
@@ -500,7 +520,14 @@ export function PlusOpen({
     </>
   );
 
-  const lit = 1 - interpolate(t, [openAt - 2, openAt + 14], [0, 1], CLAMP);
+  const lit =
+    1 -
+    interpolate(
+      t,
+      [openAt + openEl.beat("litFrom"), openAt + openEl.beat("litTo")],
+      [0, 1],
+      CLAMP,
+    );
   const boost =
     lit > 0
       ? `brightness(${(1 + c.boost * lit).toFixed(3)}) saturate(${(1 + 0.25 * lit).toFixed(3)})`

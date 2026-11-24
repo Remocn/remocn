@@ -8,6 +8,13 @@ import { useId, useMemo } from "react";
 import { AbsoluteFill, Easing, interpolate, spring } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_TEXT,
+  type TaglineJustifyElementId,
+  taglineJustifyTimeline,
+  taglineWords,
+} from "./timeline";
 
 const { fontFamily: sans } = loadTight("normal", {
   weights: ["500"],
@@ -44,6 +51,12 @@ export interface TaglineJustifyProps {
   delay?: number;
   theme?: "dark" | "light";
   speed?: number;
+  /**
+   * Moves, trims or stretches single words, the highlight, the rule, the
+   * logo and the push, by the ids in `./timeline`. Frames on the scene
+   * timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<TaglineJustifyElementId>;
 }
 
 /** Inter Tight 500 advance widths (per 1000 em) for ASCII 32–126. */
@@ -103,9 +116,6 @@ const DESC = 0.17;
 const SERIF_SCALE = 1.12;
 const SERIF_TRACK = -0.01;
 const SERIF_BASELINE = 0.84;
-
-const STAGGER = 6;
-const FIRST = 6;
 
 const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
 
@@ -297,35 +307,43 @@ function ScaleLayer({
   );
 }
 
-export function TaglineJustify({
-  words: wordsProp,
-  text = "Your launch deserves a film as good as the product.",
-  highlight = "film",
-  stagger = STAGGER,
-  logo,
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = sans,
-  grain = true,
-  scale = 1,
-  delay = 0,
-  theme = "dark",
-  speed = 1,
-}: TaglineJustifyProps) {
+export function TaglineJustify(props: TaglineJustifyProps) {
+  const {
+    words: wordsProp,
+    text = DEFAULT_TEXT,
+    highlight = "film",
+    logo,
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = sans,
+    grain = true,
+    scale = 1,
+    delay = 0,
+    theme = "dark",
+    speed = 1,
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H, fps } = useSceneConfig();
+  const { width: W, height: H, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    taglineJustifyTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const ePush = tl.get("push");
+  const eHighlight = tl.get("highlight");
+  const eRule = tl.get("rule");
+  const eLogo = tl.get("logo");
   const u = H / 720;
   const c = THEMES[theme];
   const fg = ink ?? c.fg;
   const stage =
     background === "transparent" ? "transparent" : (background ?? c.bg);
 
-  const words = useMemo(
-    () => wordsProp ?? text.trim().split(/\s+/),
-    [wordsProp, text],
-  );
+  const words = useMemo(() => taglineWords(wordsProp, text), [wordsProp, text]);
   const target = clean(highlight);
   const widths = useMemo(
     () =>
@@ -361,20 +379,20 @@ export function TaglineJustify({
         : baselines[i - 1] + DESC * sizes[i - 1] + ASC * F,
     );
   });
-  const arrive = (j: number) => FIRST + j * stagger;
+  const arrive = (j: number) => tl.get(`word:${j}`).start;
   const settle = (j: number) =>
     spring({
       frame: t - arrive(j),
       fps,
       config: { damping: 17, stiffness: 170, mass: 0.8 },
     });
-  const push = interpolate(t, [0, 160], [0, 1], CLAMP);
+  const push = interpolate(t, [ePush.start, ePush.end], [0, 1], CLAMP);
 
   const nodes: React.ReactNode[] = [];
   const key: { box: { x: number; y: number; w: number; h: number } | null } = {
     box: null,
   };
-  const sweep = interpolate(t, [0, 160], [0, 1], CLAMP);
+  const sweep = interpolate(t, [ePush.start, ePush.end], [0, 1], CLAMP);
   const swirlFill = `linear-gradient(${100 + sweep * 14}deg, ${c.swirl[0]} 0%, ${c.swirl[1]} ${42 + sweep * 6}%, ${c.swirl[2]} 100%)`;
   lines.forEach((line, li) => {
     const F = sizes[li];
@@ -400,10 +418,21 @@ export function TaglineJustify({
     line.forEach((j, k) => {
       const s = settle(j);
       const firstIn = k === 0 ? (1 - s) * 0.5 : 0;
-      const o = interpolate(t, [arrive(j), arrive(j) + 6], [0, 1], CLAMP);
+      const word = tl.get(`word:${j}`);
+      const o = interpolate(t, [word.start, word.end], [0, 1], CLAMP);
       const isKey = target !== "" && clean(words[j]) === target;
       const fill = isKey
-        ? interpolate(t, [80, 98], [0, 1], { ...CLAMP, easing: EASE_IO })
+        ? interpolate(
+            t,
+            [
+              eHighlight.start + eHighlight.beat("fillAt"),
+              eHighlight.start +
+                eHighlight.beat("fillAt") +
+                eHighlight.beat("fill"),
+            ],
+            [0, 1],
+            { ...CLAMP, easing: EASE_IO },
+          )
         : 0;
       const anchor = k === 0 ? x : x + widths[j];
       const size = isKey ? F * SERIF_SCALE : F;
@@ -467,13 +496,16 @@ export function TaglineJustify({
   });
 
   const foot = (d: number) =>
-    interpolate(t, [90 + d, 112 + d], [0, 1], { ...CLAMP, easing: EASE_OUT });
-  const ruleP = interpolate(t, [84, 108], [0, 1], {
+    interpolate(t, [eLogo.start + d, eLogo.end + d], [0, 1], {
+      ...CLAMP,
+      easing: EASE_OUT,
+    });
+  const ruleP = interpolate(t, [eRule.start, eRule.end], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
   const footTop = capTop + blockH + footGap;
-  const emberIn = interpolate(t, [78, 110], [0, 1], {
+  const emberIn = interpolate(t, [eHighlight.start, eHighlight.end], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });

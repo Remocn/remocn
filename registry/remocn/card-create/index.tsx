@@ -9,6 +9,16 @@ import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
+import {
+  type ResolvedElement,
+  type Timing,
+  useTimeline,
+} from "@/lib/remocn/timeline";
+import {
+  type CardCreateElementId,
+  cardCreateTimeline,
+  DEFAULT_HOLDER,
+} from "./timeline";
 
 const hanken = loadFont("normal", {
   weights: ["300", "400"],
@@ -45,6 +55,12 @@ export interface CardCreateProps {
   lines?: [string, string, string, string, string];
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
+  /**
+   * Moves, trims or stretches the page, single copy lines, each tap of the
+   * finger and what the card does after it, by the ids in `./timeline`.
+   * Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<CardCreateElementId>;
 }
 
 const SW = 390;
@@ -60,19 +76,6 @@ const SLOT_Y = 170;
 const CARD_Y = 188;
 const SWATCH_Y = 424;
 const TOOLS_Y = 484;
-const TAP_NEW = 62;
-const OUT = 64;
-const SLOT = 72;
-const PRINT = 84;
-const SWATCH_TAPS = [136, 150, 164];
-const NAME_TAB = 182;
-const ENGRAVE = 188;
-const DETAILS_TAB = 222;
-const FLIP = 226;
-const REVEAL_TAP = 256;
-const SCRAMBLE = 258;
-const ADD_TAP = 302;
-const WALLET = 306;
 
 const clamp = { extrapolateLeft: "clamp", extrapolateRight: "clamp" } as const;
 const MOVE = Easing.bezier(0.65, 0, 0.35, 1);
@@ -201,6 +204,7 @@ function CardFront({
   holder,
   shown,
   engraveAt,
+  settle: settleFrames = 5,
   f,
   last4,
   brand,
@@ -212,6 +216,8 @@ function CardFront({
   holder: string;
   shown: number;
   engraveAt?: (i: number) => number;
+  /** Frames an engraved letter takes to settle. */
+  settle?: number;
   f: number;
   last4: string;
   brand: string;
@@ -293,7 +299,7 @@ function CardFront({
       >
         {letters.slice(0, shown).map((ch, i) => {
           const t = engraveAt ? f - engraveAt(i) : 99;
-          const settle = interpolate(t, [0, 5], [0, 1], {
+          const settle = interpolate(t, [0, settleFrames], [0, 1], {
             ...clamp,
             easing: Easing.bezier(0.22, 1, 0.36, 1),
           });
@@ -602,36 +608,68 @@ function Phone({ children, c }: { children: React.ReactNode; c: Palette }) {
   );
 }
 
-export function CardCreate({
-  holder = "Maya Chen",
-  last4 = "4821",
-  colors = ["#232428", "#c4673f", "#8fa68a", "#d9bf86", "#3d5677", "#ebe8e1"],
-  finishes = ["Graphite", "Terracotta", "Sage", "Sand", "Harbour", "Bone"],
-  brand = "fernway",
-  ctaLabel = "Add to wallet",
-  toastLabel = "Card ready to use",
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = hanken.fontFamily,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-  lines = [
-    "Spin up a new card.",
-    "Pick a finish.",
-    "Put your name on it.",
-    "Only you see the number.",
-    "Ready to spend.",
-  ],
-  ground,
-  groundParams,
-}: CardCreateProps) {
+export function CardCreate(props: CardCreateProps) {
+  const {
+    holder = DEFAULT_HOLDER,
+    last4 = "4821",
+    colors = ["#232428", "#c4673f", "#8fa68a", "#d9bf86", "#3d5677", "#ebe8e1"],
+    finishes = ["Graphite", "Terracotta", "Sage", "Sand", "Harbour", "Bone"],
+    brand = "fernway",
+    ctaLabel = "Add to wallet",
+    toastLabel = "Card ready to use",
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = hanken.fontFamily,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    lines = [
+      "Spin up a new card.",
+      "Pick a finish.",
+      "Put your name on it.",
+      "Only you see the number.",
+      "Ready to spend.",
+    ],
+    ground,
+    groundParams,
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay);
-  const { fps, width, height } = useSceneConfig();
+  const { fps, width, height, durationInFrames } = useSceneConfig();
   const f = frame * speed;
+  const tl = useTimeline(
+    cardCreateTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const page = tl.get("page");
+  const cameraEl = tl.get("camera");
+  const reach = tl.get("reach");
+  const newEl = tl.get("new");
+  const outEl = tl.get("out");
+  const slotEl = tl.get("slot");
+  const printEl = tl.get("print");
+  const swatchEls = [0, 1, 2].map((i) => tl.get(`swatch:${i}`));
+  const nameEl = tl.get("name");
+  const engraveEl = tl.get("engrave");
+  const detailsEl = tl.get("details");
+  const flipEl = tl.get("flip");
+  const revealEl = tl.get("reveal");
+  const scrambleEl = tl.get("scramble");
+  const addEl = tl.get("add");
+  const walletEl = tl.get("wallet");
+  const stackOutAt = outEl.start;
+  const slotAt = slotEl.start;
+  const printAt = printEl.start;
+  const nameAt = nameEl.start;
+  const detailsAt = detailsEl.start;
+  const scrambleAt = scrambleEl.start;
+  const addAt = addEl.start;
+  const walletAt = walletEl.start;
   const dark = theme !== "light";
   const c: Palette = dark ? DARK : LIGHT;
   const tall = height > width;
@@ -644,8 +682,18 @@ export function CardCreate({
 
   const sp = (at: number, config: Partial<typeof CARD> = CARD) =>
     spring({ frame: f - at, fps, config });
-  const bump = (at: number) =>
-    Math.max(0, Math.min(1, sp(at - 1, CHIP) - sp(at + 5, CHIP)));
+  const bump = (e: ResolvedElement<CardCreateElementId>) =>
+    Math.max(
+      0,
+      Math.min(
+        1,
+        sp(e.start + e.beat("pressIn"), CHIP) -
+          sp(e.start + e.beat("pressOut"), CHIP),
+      ),
+    );
+  // A swatch nobody taps never presses (its tap sat at frame -99).
+  const bumpOf = (e?: ResolvedElement<CardCreateElementId>) =>
+    e ? bump(e) : Math.max(0, Math.min(1, sp(-100, CHIP) - sp(-94, CHIP)));
   const enter = (v: number, dy = 14): React.CSSProperties => ({
     opacity: Math.min(1, v * 1.4),
     transform: `translateY(${(1 - v) * dy}px)`,
@@ -657,30 +705,33 @@ export function CardCreate({
       : [...colors, ...STACK.map((s) => s.color || accent)];
   const swatches = palette.slice(0, 6);
   const swatchX = (i: number) => SW / 2 + (i - (swatches.length - 1) / 2) * 50;
-  const taps = SWATCH_TAPS.map((t, i) => ({
-    t,
+  const taps = swatchEls.map((el, i) => ({
+    t: el.start,
+    el,
     idx: Math.min(i + 1, swatches.length - 1),
   }));
   let colorIdx = 0;
   let prevIdx = 0;
   let wipe = 1;
   for (const tp of taps) {
-    if (f >= tp.t + 1) {
+    const wipeAt = tp.t + tp.el.beat("wipeAt");
+    if (f >= wipeAt) {
       prevIdx = colorIdx;
       colorIdx = tp.idx;
-      wipe = interpolate(f, [tp.t + 1, tp.t + 13], [0, 1], {
+      wipe = interpolate(f, [wipeAt, wipeAt + tp.el.beat("wipe")], [0, 1], {
         ...clamp,
         easing: Easing.bezier(0.65, 0, 0.35, 1),
       });
     }
   }
-  const lastTap = taps.filter((tp) => f >= tp.t + 1).pop();
+  const lastTap = taps.filter((tp) => f >= tp.t + tp.el.beat("wipeAt")).pop();
   const ring = sp(lastTap ? lastTap.t : -99, CHIP);
   const letters = holder.toUpperCase().split("");
-  const engraveAt = (i: number) => ENGRAVE + i * 2.4;
+  const engraveAt = (i: number) =>
+    engraveEl.start + i * engraveEl.beat("letter");
   const shown = letters.filter((_, i) => f >= engraveAt(i)).length;
-  const flipA = sp(FLIP, HEAVY);
-  const wal = sp(WALLET, HEAVY);
+  const flipA = sp(flipEl.start, HEAVY);
+  const wal = sp(walletAt, HEAVY);
   const angle = flipA * 180 + wal * 180;
   const lift = Math.sin(Math.min(1, flipA) * Math.PI) * 0.06;
   const digits = `5274 8820 1934 ${last4}`;
@@ -689,53 +740,82 @@ export function CardCreate({
       .split("")
       .map((ch, j) => {
         if (ch === " " || ch === "/" || offset + j >= 15) return ch;
-        const settle = SCRAMBLE + (offset + j) * 0.9;
-        if (f < SCRAMBLE) return "•";
-        if (f >= settle + 4) return ch;
+        const settle = scrambleAt + (offset + j) * scrambleEl.beat("digit");
+        if (f < scrambleAt) return "•";
+        if (f >= settle + scrambleEl.beat("settle")) return ch;
         return String(
           Math.floor(hash(j * 13 + offset + Math.floor(f / 2)) * 10),
         );
       })
       .join("");
-  const number = f < SCRAMBLE ? `•••• •••• •••• ${last4}` : scr(digits, 0);
+  const number = f < scrambleAt ? `•••• •••• •••• ${last4}` : scr(digits, 0);
   const exp = scr("09/29", 19);
   const cvv = scr("417", 25);
-  const stackIn = STACK.map((_, i) => sp(8 + i * 6, CARD));
-  const out = sp(OUT, HEAVY);
-  const back = sp(WALLET + 6, CARD);
-  const slot = sp(SLOT, CARD);
-  const slotGone = interpolate(f, [PRINT + 34, PRINT + 44], [1, 0], clamp);
-  const print = interpolate(f, [PRINT, PRINT + 30], [0, 1], {
+  const stackIn = STACK.map((_, i) =>
+    sp(page.start + page.beat("stackAt") + i * page.beat("stack"), CARD),
+  );
+  const out = sp(stackOutAt, HEAVY);
+  const backAt = walletAt + walletEl.beat("backAt");
+  const back = sp(backAt, CARD);
+  const slot = sp(slotAt, CARD);
+  const slotGone = interpolate(
+    f,
+    [printAt + printEl.beat("slotOutAt"), printAt + printEl.beat("slotOutEnd")],
+    [1, 0],
+    clamp,
+  );
+  const print = interpolate(f, [printAt, printEl.end], [0, 1], {
     ...clamp,
     easing: ENTER,
   });
-  const sweep = interpolate(f, [PRINT + 18, PRINT + 40], [-0.4, 1.4], {
-    ...clamp,
-    easing: MOVE,
-  });
-  const custIn = sp(SLOT + 6, CARD);
-  const custOut = interpolate(f, [ADD_TAP + 1, ADD_TAP + 7], [1, 0], {
-    ...clamp,
-    easing: EXIT,
-  });
-  const tool = f >= DETAILS_TAB + 1 ? 2 : f >= NAME_TAB + 1 ? 1 : 0;
-  const toast = sp(WALLET + 26, CHIP);
+  const sweep = interpolate(
+    f,
+    [printAt + printEl.beat("sweepAt"), printAt + printEl.beat("sweepEnd")],
+    [-0.4, 1.4],
+    {
+      ...clamp,
+      easing: MOVE,
+    },
+  );
+  const custIn = sp(slotAt + slotEl.beat("custAt"), CARD);
+  const hideAt = addAt + addEl.beat("hideAt");
+  const custOut = interpolate(
+    f,
+    [hideAt, hideAt + addEl.beat("hide")],
+    [1, 0],
+    {
+      ...clamp,
+      easing: EXIT,
+    },
+  );
+  const tool =
+    f >= detailsAt + detailsEl.beat("switchAt")
+      ? 2
+      : f >= nameAt + nameEl.beat("switchAt")
+        ? 1
+        : 0;
+  const toast = sp(walletAt + walletEl.beat("toastAt"), CHIP);
   // The new card is laid out at `CARD_Y` and travels by a transform: layout
   // rounds a box and a baseline to whole pixels, so a card eased by `top`
   // clicks along pixel by pixel.
   const newDy =
-    f < WALLET ? -(1 - print) * (CHT + 18) : wal * (190 + 3 * 52 - CARD_Y);
+    f < walletAt ? -(1 - print) * (CHT + 18) : wal * (190 + 3 * 52 - CARD_Y);
   const toolX = (i: number) => SW / 2 + (i - 1) * 112;
   const path = [
-    { t: 44, x: 300, y: 700 },
-    { t: TAP_NEW, x: SW / 2 - 64, y: 580 },
-    ...taps.map((tp) => ({ t: tp.t, x: swatchX(tp.idx), y: SWATCH_Y + 18 })),
-    { t: NAME_TAB, x: toolX(1), y: TOOLS_Y + 19 },
-    { t: DETAILS_TAB, x: toolX(2), y: TOOLS_Y + 19 },
-    { t: REVEAL_TAP, x: CX + CW - 33, y: CARD_Y + 33 },
-    { t: ADD_TAP, x: SW / 2 + 30, y: SH - 69 },
+    { t: reach.start, el: reach, x: 300, y: 700 },
+    { t: newEl.start, el: newEl, x: SW / 2 - 64, y: 580 },
+    ...taps.map((tp) => ({
+      t: tp.t,
+      el: tp.el,
+      x: swatchX(tp.idx),
+      y: SWATCH_Y + 18,
+    })),
+    { t: nameAt, el: nameEl, x: toolX(1), y: TOOLS_Y + 19 },
+    { t: detailsAt, el: detailsEl, x: toolX(2), y: TOOLS_Y + 19 },
+    { t: revealEl.start, el: revealEl, x: CX + CW - 33, y: CARD_Y + 33 },
+    { t: addAt, el: addEl, x: SW / 2 + 30, y: SH - 69 },
   ];
-  let touch = path[0];
+  let touch: { t: number; x: number; y: number } = path[0];
   for (let i = 0; i < path.length - 1; i++) {
     const a = path[i];
     const b = path[i + 1];
@@ -756,22 +836,22 @@ export function CardCreate({
   const touchOpacity = interpolate(
     f,
     [
-      44,
-      52,
-      TAP_NEW + 6,
-      TAP_NEW + 14,
-      SWATCH_TAPS[0] - 16,
-      SWATCH_TAPS[0] - 8,
-      ADD_TAP + 5,
-      ADD_TAP + 11,
+      reach.start,
+      reach.start + reach.beat("fadeIn"),
+      newEl.start + newEl.beat("fadeAt"),
+      newEl.start + newEl.beat("fadeEnd"),
+      swatchEls[0].start + swatchEls[0].beat("showAt"),
+      swatchEls[0].start + swatchEls[0].beat("showEnd"),
+      addAt + addEl.beat("fadeAt"),
+      addAt + addEl.beat("fadeEnd"),
     ],
     [0, 1, 1, 0, 0, 1, 1, 0],
     clamp,
   );
-  const touchPress = Math.max(...path.slice(1).map((p) => bump(p.t)));
-  const camS = interpolate(f, [0, 370], [1, 1.03], clamp);
-  const camMoving = f > 0 && f < 370;
-  const rise = sp(0, HEAVY);
+  const touchPress = Math.max(...path.slice(1).map((p) => bump(p.el)));
+  const camS = interpolate(f, [cameraEl.start, cameraEl.end], [1, 1.03], clamp);
+  const camMoving = f > cameraEl.start && f < cameraEl.end;
+  const rise = sp(page.start, HEAVY);
 
   const stackCard = (i: number, y: number, style: React.CSSProperties) => (
     <div
@@ -800,25 +880,30 @@ export function CardCreate({
       />
     </div>
   );
-  const walletPhase = f >= WALLET;
+  const walletPhase = f >= walletAt;
   const count = walletPhase ? 4 : 3;
   const titleA = walletPhase ? back : 1 - out;
 
-  const beats = [0, SWATCH_TAPS[0] - 14, NAME_TAB - 2, DETAILS_TAB - 2, WALLET];
   const copyLine = (i: number) => {
-    const inAt = beats[i] + (i === 0 ? 8 : 0);
-    const outAt = beats[i + 1];
-    const pin = interpolate(f, [inAt, inAt + 14], [0, 1], {
+    const copy = tl.get(`line:${i}`);
+    const inAt = copy.start;
+    const outAt = i < 4 ? copy.end : undefined;
+    const pin = interpolate(f, [inAt, inAt + copy.beat("rise")], [0, 1], {
       ...clamp,
       easing: ENTER,
     });
     const pout =
       outAt === undefined
         ? 0
-        : interpolate(f, [outAt - 2, outAt + 6], [0, 1], {
-            ...clamp,
-            easing: EXIT,
-          });
+        : interpolate(
+            f,
+            [outAt - copy.beat("outLead"), outAt + copy.beat("out")],
+            [0, 1],
+            {
+              ...clamp,
+              easing: EXIT,
+            },
+          );
     if (pin <= 0 || pout >= 1) return null;
     return (
       <div
@@ -927,14 +1012,14 @@ export function CardCreate({
               {STACK.map((_, i) => {
                 if (!walletPhase) {
                   const v = stackIn[i];
-                  const o = sp(OUT + i * 3, HEAVY);
+                  const o = sp(stackOutAt + i * outEl.beat("stagger"), HEAVY);
                   const rot = (1 - v) * (i - 1) * 8;
                   return stackCard(i, 196 + i * 60, {
                     transform: `translateY(${(1 - v) * 640 - o * 340}px) rotate(${rot}deg) scale(${1 - o * 0.08})`,
                     opacity: 1 - o,
                   });
                 }
-                const v = sp(WALLET + 6 + i * 3, CARD);
+                const v = sp(backAt + i * walletEl.beat("stack"), CARD);
                 return stackCard(i, 190 + i * 52, {
                   transform: `translateY(${(1 - v) * -28}px) scale(${0.97 + v * 0.03})`,
                   opacity: Math.min(1, v * 1.4),
@@ -949,7 +1034,9 @@ export function CardCreate({
                   display: "flex",
                   justifyContent: "center",
                   gap: 10,
-                  ...enter(sp(28, CARD) * (1 - out)),
+                  ...enter(
+                    sp(page.start + page.beat("titleAt"), CARD) * (1 - out),
+                  ),
                 }}
               >
                 <div
@@ -964,7 +1051,7 @@ export function CardCreate({
                     display: "flex",
                     alignItems: "center",
                     gap: 6,
-                    transform: `scale(${1 - bump(TAP_NEW) * 0.05})`,
+                    transform: `scale(${1 - bump(newEl) * 0.05})`,
                   }}
                 >
                   <span
@@ -990,7 +1077,7 @@ export function CardCreate({
                   Manage
                 </div>
               </div>
-              {f >= SLOT ? (
+              {f >= slotAt ? (
                 <div style={{ opacity: Math.min(custIn, custOut) }}>
                   <div
                     style={{
@@ -1062,8 +1149,16 @@ export function CardCreate({
                           i === colorIdx
                             ? `inset 0 0 0 1px rgba(255,255,255,0.1), 0 0 0 3px ${c.screen}, 0 0 0 ${3 + 2 * ring}px ${c.text}`
                             : `inset 0 0 0 1px ${dark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.08)"}`,
-                        transform: `scale(${1 - bump(taps.find((tp) => tp.idx === i)?.t ?? -99) * 0.12})`,
-                        ...enter(sp(PRINT + 20 + i * 2, CHIP), 10),
+                        transform: `scale(${1 - bumpOf(taps.find((tp) => tp.idx === i)?.el) * 0.12})`,
+                        ...enter(
+                          sp(
+                            printAt +
+                              printEl.beat("swatchesAt") +
+                              i * printEl.beat("swatch"),
+                            CHIP,
+                          ),
+                          10,
+                        ),
                       }}
                     />
                   ))}
@@ -1086,7 +1181,15 @@ export function CardCreate({
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
-                        ...enter(sp(PRINT + 28 + i * 3, CHIP), 10),
+                        ...enter(
+                          sp(
+                            printAt +
+                              printEl.beat("toolsAt") +
+                              i * printEl.beat("tool"),
+                            CHIP,
+                          ),
+                          10,
+                        ),
                       }}
                     >
                       {t}
@@ -1097,11 +1200,33 @@ export function CardCreate({
                     `Printed on the front as ${holder.toUpperCase()}`,
                     "Only you can see the full number",
                   ].map((hint, i) => {
-                    const on = [PRINT + 34, NAME_TAB + 2, DETAILS_TAB + 2][i];
-                    const off = [NAME_TAB + 1, DETAILS_TAB + 1, 9999][i];
+                    const spans: [
+                      typeof printEl,
+                      typeof printEl | undefined,
+                    ][] = [
+                      [printEl, nameEl],
+                      [nameEl, detailsEl],
+                      [detailsEl, undefined],
+                    ];
+                    const [onEl, offEl] = spans[i];
+                    const on = onEl.start + onEl.beat("hintAt");
+                    // The last hint stays.
+                    const off = offEl
+                      ? offEl.start + offEl.beat("switchAt")
+                      : 9999;
                     const v =
-                      interpolate(f, [on, on + 6], [0, 1], clamp) *
-                      interpolate(f, [off, off + 4], [1, 0], clamp) *
+                      interpolate(
+                        f,
+                        [on, on + onEl.beat("hintIn")],
+                        [0, 1],
+                        clamp,
+                      ) *
+                      interpolate(
+                        f,
+                        [off, off + (offEl?.beat("hintOut") ?? 4)],
+                        [1, 0],
+                        clamp,
+                      ) *
                       (i === 0 ? 0.35 + 0.65 * wipe : 1);
                     return (
                       <div
@@ -1137,23 +1262,26 @@ export function CardCreate({
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
-                      transform: `scale(${1 - bump(ADD_TAP) * 0.04})`,
-                      ...enter(sp(PRINT + 34, CARD), 20),
+                      transform: `scale(${1 - bump(addEl) * 0.04})`,
+                      ...enter(sp(printAt + printEl.beat("ctaAt"), CARD), 20),
                     }}
                   >
                     {ctaLabel}
                   </div>
                 </div>
               ) : null}
-              {f >= PRINT ? (
+              {f >= printAt ? (
                 <div
                   style={{
                     position: "absolute",
                     left: CX - 20,
-                    top: f < WALLET ? SLOT_Y : 0,
+                    top: f < walletAt ? SLOT_Y : 0,
                     width: CW + 40,
-                    height: f < WALLET ? SH - SLOT_Y : SH,
-                    overflow: f < PRINT + 32 ? "hidden" : "visible",
+                    height: f < walletAt ? SH - SLOT_Y : SH,
+                    overflow:
+                      f < printAt + printEl.beat("clipEnd")
+                        ? "hidden"
+                        : "visible",
                     perspective: 1100,
                     zIndex: 5,
                   }}
@@ -1162,7 +1290,7 @@ export function CardCreate({
                     style={{
                       position: "absolute",
                       left: 20,
-                      top: CARD_Y - (f < WALLET ? SLOT_Y : 0),
+                      top: CARD_Y - (f < walletAt ? SLOT_Y : 0),
                       width: CW,
                       height: CHT,
                       transformStyle: "preserve-3d",
@@ -1192,6 +1320,7 @@ export function CardCreate({
                         holder={holder}
                         shown={shown}
                         engraveAt={engraveAt}
+                        settle={engraveEl.beat("settle")}
                         f={f}
                         last4={last4}
                         brand={brand}
@@ -1222,8 +1351,8 @@ export function CardCreate({
                     <CardBack
                       color={swatches[colorIdx]}
                       number={number}
-                      exp={f < SCRAMBLE ? "••/••" : exp}
-                      cvv={f < SCRAMBLE ? "•••" : cvv}
+                      exp={f < scrambleAt ? "••/••" : exp}
+                      cvv={f < scrambleAt ? "•••" : cvv}
                       brand={brand}
                     />
                   </div>

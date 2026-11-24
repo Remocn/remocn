@@ -8,6 +8,15 @@ import { Fragment, useId } from "react";
 import { AbsoluteFill, Easing, interpolate, interpolateColors } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_EYEBROW,
+  DEFAULT_NAME,
+  DEFAULT_TAGLINE,
+  type IntroducingElementId,
+  introducingTimeline,
+  taglineWords,
+} from "./timeline";
 
 const manrope = loadManrope("normal", {
   weights: ["500", "600"],
@@ -61,6 +70,12 @@ export interface IntroducingProps {
   /** Playback multiplier. */
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches the settle, the eyebrow, the name, the glow,
+   * the beam and each tagline word, by the ids in `./timeline`. Frames on
+   * the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<IntroducingElementId>;
 }
 
 /** gradients.sh "beam": bg #02030a, [#f4f7ff, #8fb4ff, #3d5bff, #1a1660]. */
@@ -205,26 +220,37 @@ function ScaleLayer({
   );
 }
 
-export function Introducing({
-  eyebrow = "Introducing",
-  name = "remocn",
-  logo,
-  tagline = "Launch-video scenes for Remotion. Copy, paste, render.",
-  accent = "#3B5BFD",
-  background,
-  ink,
-  fontFamily = geist.fontFamily,
-  pass = 44,
-  stagger = 2,
-  scale = 1,
-  delay = 0,
-  grain = true,
-  speed = 1,
-  theme = "dark",
-}: IntroducingProps) {
+export function Introducing(props: IntroducingProps) {
+  const {
+    eyebrow = DEFAULT_EYEBROW,
+    name = DEFAULT_NAME,
+    logo,
+    tagline = DEFAULT_TAGLINE,
+    accent = "#3B5BFD",
+    background,
+    ink,
+    fontFamily = geist.fontFamily,
+    scale = 1,
+    delay = 0,
+    grain = true,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width, height } = useSceneConfig();
+  const { width, height, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    introducingTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const settleEl = tl.get("settle");
+  const eyebrowEl = tl.get("eyebrow");
+  const nameEl = tl.get("name");
+  const glowEl = tl.get("glow");
+  const sweepEl = tl.get("sweep");
   const p = PALETTES[theme];
   const fg = ink ?? p.fg;
   const gid = `b${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
@@ -251,28 +277,49 @@ export function Introducing({
   );
 
   // ---- timing --------------------------------------------------------------
-  const eyeIn = interpolate(frame, [0, 18], [0, 1], {
+  const eyeIn = interpolate(
+    frame,
+    [eyebrowEl.start, eyebrowEl.start + eyebrowEl.beat("in")],
+    [0, 1],
+    {
+      ...CLAMP,
+      easing: EASE_OUT,
+    },
+  );
+  const lift = interpolate(
+    frame,
+    [
+      eyebrowEl.start + eyebrowEl.beat("lift"),
+      eyebrowEl.start + eyebrowEl.beat("liftEnd"),
+    ],
+    [0, 1],
+    {
+      ...CLAMP,
+      easing: EASE_IO,
+    },
+  );
+  const rise = interpolate(
+    frame,
+    [nameEl.start, nameEl.start + nameEl.beat("rise")],
+    [0, 1],
+    {
+      ...CLAMP,
+      easing: EASE_OUT,
+    },
+  );
+  const track = interpolate(frame, [nameEl.start, nameEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
-  const lift = interpolate(frame, [12, 32], [0, 1], {
-    ...CLAMP,
-    easing: EASE_IO,
-  });
-  const rise = interpolate(frame, [24, 48], [0, 1], {
-    ...CLAMP,
-    easing: EASE_OUT,
-  });
-  const track = interpolate(frame, [24, 68], [0, 1], {
-    ...CLAMP,
-    easing: EASE_OUT,
-  });
-  const sweep = interpolate(frame, [34, 34 + pass], [0, 1], {
+  const sweep = interpolate(frame, [sweepEl.start, sweepEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_SWEEP,
   });
   const settleAt = (f: number) =>
-    interpolate(f, [0, 100], [1.035, 1], { ...CLAMP, easing: EASE_OUT });
+    interpolate(f, [settleEl.start, settleEl.end], [1.035, 1], {
+      ...CLAMP,
+      easing: EASE_OUT,
+    });
   const settle = settleAt(frame);
   // The ease-out creeps for its last frames, so "moving" is read off the
   // step at the frame's edge, not off a progress.
@@ -351,7 +398,7 @@ export function Introducing({
 
   // ---- ground --------------------------------------------------------------
   const transparent = background === "transparent";
-  const glow = interpolate(frame, [26, 80], [0, 1], {
+  const glow = interpolate(frame, [glowEl.start, glowEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
@@ -360,7 +407,7 @@ export function Introducing({
     height * interpolate(glow, [0, 1], [1.95, 0.875]) + height * 0.78;
   const column = sweeping ? Math.sin(sweep * Math.PI) : 0;
 
-  const words = tagline.split(/\s+/).filter(Boolean);
+  const words = taglineWords(tagline);
 
   return (
     <AbsoluteFill
@@ -551,15 +598,11 @@ export function Introducing({
               }}
             >
               {words.map((w, i) => {
-                const t = interpolate(
-                  frame,
-                  [56 + i * stagger, 74 + i * stagger],
-                  [0, 1],
-                  {
-                    ...CLAMP,
-                    easing: EASE_OUT,
-                  },
-                );
+                const word = tl.get(`word:${i}`);
+                const t = interpolate(frame, [word.start, word.end], [0, 1], {
+                  ...CLAMP,
+                  easing: EASE_OUT,
+                });
                 return (
                   <Fragment key={i}>
                     {i > 0 ? " " : null}

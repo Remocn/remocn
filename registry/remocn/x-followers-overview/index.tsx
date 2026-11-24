@@ -6,13 +6,15 @@ import { AbsoluteFill, Img, interpolate, spring } from "remotion";
 import { Confetti } from "@/components/remocn/confetti";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  X_SAMPLE_FOLLOWERS,
+  type XFollowerNotification,
+  type XFollowersOverviewElementId,
+  xFollowersOverviewTimeline,
+} from "./timeline";
 
-export interface FollowerNotification {
-  name: string;
-  verified: boolean;
-  /** Relative time label, e.g. "7h", "1d". */
-  time: string;
-}
+export type FollowerNotification = XFollowerNotification;
 
 export interface XFollowersOverviewProps {
   notifications?: FollowerNotification[];
@@ -22,6 +24,12 @@ export interface XFollowersOverviewProps {
   accentColor?: string;
   orientation?: "horizontal" | "vertical";
   speed?: number;
+  /**
+   * Moves, trims or stretches single names and the reveal of the total, by
+   * the ids in `./timeline`.
+   * Frames on the scene timeline, after `speed`.
+   */
+  timing?: Timing<XFollowersOverviewElementId>;
 }
 
 const { fontFamily: SANS_FAMILY } = loadSans();
@@ -49,26 +57,7 @@ const THEMES: Record<"light" | "dark", Theme> = {
   },
 };
 
-/**
- * Hardcoded sample notifications so the composition renders immediately from
- * defaults. A future revision swaps this for live X API data.
- */
-export const SAMPLE_FOLLOWERS: FollowerNotification[] = [
-  { name: "Andre Vitorio", verified: true, time: "7h" },
-  { name: "Sarah Chen", verified: true, time: "7h" },
-  { name: "marcus", verified: false, time: "8h" },
-  { name: "Lena Powell", verified: true, time: "9h" },
-  { name: "dev_jay", verified: false, time: "10h" },
-  { name: "Priya Nair", verified: true, time: "11h" },
-  { name: "Tomás Rivera", verified: true, time: "13h" },
-  { name: "hana.eth", verified: false, time: "15h" },
-  { name: "Will Carter", verified: true, time: "18h" },
-  { name: "Yuki Tanaka", verified: true, time: "21h" },
-  { name: "benoit", verified: false, time: "23h" },
-  { name: "Amara Okafor", verified: true, time: "1d" },
-  { name: "Leo Martins", verified: true, time: "1d" },
-  { name: "sol", verified: false, time: "2d" },
-];
+export const SAMPLE_FOLLOWERS = X_SAMPLE_FOLLOWERS;
 
 // --- Pure helpers (unit-tested) -------------------------------------------
 
@@ -244,18 +233,28 @@ function NameBlock({
 
 // --- Main composition ------------------------------------------------------
 
-export function XFollowersOverview({
-  notifications = SAMPLE_FOLLOWERS,
-  totalFollowers = 1709,
-  handle = "remocn",
-  avatarUrl = "/logo.svg",
-  accentColor = "#1d9bf0",
-  orientation = "horizontal",
-  speed = 1,
-}: XFollowersOverviewProps) {
+export function XFollowersOverview(props: XFollowersOverviewProps) {
+  const {
+    notifications = SAMPLE_FOLLOWERS,
+    totalFollowers = 1709,
+    handle = "remocn",
+    avatarUrl = "/logo.svg",
+    accentColor = "#1d9bf0",
+    orientation = "horizontal",
+    speed = 1,
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = useSceneFrame();
   const { durationInFrames, width, height, fps } = useSceneConfig();
+  // The reveal is capped by the clip in raw frames, as before, not
+  // `durationInFrames * speed`.
+  const tl = useTimeline(
+    xFollowersOverviewTimeline,
+    props,
+    durationInFrames,
+    timing,
+  );
   const t = THEMES.light;
   const isVertical = orientation === "vertical";
 
@@ -270,21 +269,29 @@ export function XFollowersOverview({
   const stageH = isVertical ? 160 : 180;
   const lineH = notifSize * 1.4;
   // Fast cadence: ~0.43s per username at speed 1; flip occupies the back half.
-  const SLOT = 13;
   const HOLD = 0.45;
 
   const fc = frame * speed;
   const items = notifications.length > 0 ? notifications : SAMPLE_FOLLOWERS;
   const count = items.length;
 
-  // Notifications cycle first, then the total blurs in. The reveal starts once
-  // the list is exhausted, capped so it always fits before the timeline ends.
-  const revealStart = Math.min(
-    count * SLOT,
-    Math.round(durationInFrames * 0.82),
-  );
+  // Notifications cycle first, then the total blurs in.
+  const reveal = tl.get("reveal");
+  const revealStart = reveal.start;
 
-  const { idx, frac } = slotProgress(fc, SLOT, count);
+  // The active name is the last one started; `fc / length - start / length`
+  // is the slot position as `slotProgress` counts it.
+  let idx = 0;
+  let pos = 0;
+  for (let i = 0; i < count; i++) {
+    const e = tl.get(`name:${i}`);
+    const at = fc / e.length - e.start / e.length;
+    if (at >= 0 || i === 0) {
+      idx = i;
+      pos = at;
+    }
+  }
+  const frac = Math.max(0, Math.min(pos, 1));
   const flipP = flipEase(frac, HOLD);
   const hasNext = idx + 1 < count;
 
@@ -308,15 +315,18 @@ export function XFollowersOverview({
 
   const notifOpacity = interpolate(
     fc,
-    [revealStart - 4, revealStart + 8],
+    [revealStart + reveal.beat("fadeAt"), revealStart + reveal.beat("faded")],
     [1, 0],
     { extrapolateLeft: "clamp", extrapolateRight: "clamp" },
   );
-  const countIn = blurIn(fc, revealStart + 4, revealStart + 28);
+  const inAt = revealStart + reveal.beat("inAt");
+  const inEnd = revealStart + reveal.beat("in");
+  const popAt = revealStart + reveal.beat("pop");
+  const countIn = blurIn(fc, inAt, inEnd);
   // Dynamic pop: spring overshoot on the total as it blurs in.
   const revealSpring = spring({
     fps,
-    frame: fc - (revealStart + 2),
+    frame: fc - popAt,
     config: { damping: 10, stiffness: 170, mass: 0.8 },
   });
   const revealScale = interpolate(revealSpring, [0, 1], [0.5, 1]);
@@ -328,14 +338,14 @@ export function XFollowersOverview({
     interpolate(
       spring({
         fps,
-        frame: f - (revealStart + 2),
+        frame: f - popAt,
         config: { damping: 10, stiffness: 170, mass: 0.8 },
       }),
       [0, 1],
       [0.5, 1],
     ) *
       countNum +
-    blurIn(f, revealStart + 4, revealStart + 28).translateY;
+    blurIn(f, inAt, inEnd).translateY;
   const countMoving =
     Math.abs(countAt(fc + speed) - countAt(fc)) > 1e-3 ||
     Math.abs(countAt(fc) - countAt(fc - speed)) > 1e-3;
@@ -344,28 +354,18 @@ export function XFollowersOverview({
   // avatar sliding in from the left, handle from the right.
   const avatarSize = isVertical ? 72 : 64;
   const handleSize = isVertical ? 30 : 34;
-  const avatarIn = blurIn(fc, revealStart + 4, revealStart + 28);
+  const avatarIn = blurIn(fc, inAt, inEnd);
   const handleIn = avatarIn;
   const slideOpts = {
     extrapolateLeft: "clamp" as const,
     extrapolateRight: "clamp" as const,
   };
-  const avatarX = interpolate(
-    fc,
-    [revealStart + 4, revealStart + 28],
-    [-36, 0],
-    slideOpts,
-  );
-  const handleX = interpolate(
-    fc,
-    [revealStart + 4, revealStart + 28],
-    [36, 0],
-    slideOpts,
-  );
+  const avatarX = interpolate(fc, [inAt, inEnd], [-36, 0], slideOpts);
+  const handleX = interpolate(fc, [inAt, inEnd], [36, 0], slideOpts);
 
   // Confetti fires on the real frame the reveal begins (sync across speeds),
   // centered on the canvas.
-  const confettiStart = Math.round((revealStart + 2) / speed);
+  const confettiStart = Math.round(popAt / speed);
   const confettiColors = [
     accentColor,
     "#ff5da2",

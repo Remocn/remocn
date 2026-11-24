@@ -6,6 +6,14 @@ import { useId, useMemo } from "react";
 import { AbsoluteFill, Easing, interpolate, interpolateColors } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  type AnagramShuffleElementId,
+  anagramShuffleTimeline,
+  DEFAULT_SOURCE,
+  DEFAULT_TARGET,
+  mapLetters,
+} from "./timeline";
 
 const { fontFamily: serif } = loadFont("normal", {
   weights: ["400"],
@@ -32,6 +40,12 @@ export interface AnagramShuffleProps {
   delay?: number;
   theme?: "dark" | "light";
   speed?: number;
+  /**
+   * Moves, trims or stretches the letters rising in, travelling, arriving
+   * and taking the accent, by the ids in `./timeline`. Frames on the scene
+   * timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<AnagramShuffleElementId>;
 }
 
 const SERIF_400 = [
@@ -105,14 +119,6 @@ const LINE = 1.3;
 const CAP = 0.72;
 const XH = 0.51;
 
-const ENTER_STAGGER = 2;
-const SHUFFLE_AT = 34;
-const STAGGER = 3;
-const TRAVEL = 30;
-const ACCENT_GAP = 10;
-const ACCENT_STAGGER = 3;
-const ACCENT_LEN = 12;
-
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
 const EASE_IO = Easing.bezier(0.65, 0, 0.35, 1);
 const CLAMP = {
@@ -159,30 +165,6 @@ function layoutWord(chars: string[]) {
   return { xs: xs.map((v) => v - total / 2), ws, total };
 }
 
-function mapLetters(a: string[], b: string[]) {
-  const used = new Array<boolean>(a.length).fill(false);
-  const pick = (j: number, same: (x: string, y: string) => boolean) => {
-    let best = -1;
-    let bestD = Number.POSITIVE_INFINITY;
-    a.forEach((ch, i) => {
-      if (used[i] || !same(ch, b[j])) return;
-      const d = Math.abs(i / Math.max(1, a.length) - j / Math.max(1, b.length));
-      if (d < bestD) {
-        bestD = d;
-        best = i;
-      }
-    });
-    if (best >= 0) used[best] = true;
-    return best;
-  };
-  const src = b.map((_, j) => pick(j, (x, y) => x === y));
-  src.forEach((s, j) => {
-    if (s < 0) src[j] = pick(j, (x, y) => x.toLowerCase() === y.toLowerCase());
-  });
-  const orphans = a.map((_, i) => i).filter((i) => !used[i]);
-  return { src, orphans };
-}
-
 function Grain({ opacity }: { opacity: number }) {
   const id = `g${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
   return (
@@ -214,8 +196,13 @@ interface Mover {
   x0: number;
   x1: number;
   start: number;
+  end: number;
+  /** When an arriving letter starts to fade in. */
+  fadeAt: number;
   enterAt: number;
+  enterEnd: number;
   accentAt: number;
+  accentEnd: number;
   dir: number;
   lift: number;
   fadeOut: boolean;
@@ -238,23 +225,29 @@ function ScaleLayer({
   );
 }
 
-export function AnagramShuffle({
-  from = "listen",
-  to = "silent",
-  accent = "#3B5BFD",
-  ink,
-  background,
-  stagger = STAGGER,
-  travel = TRAVEL,
-  grain = true,
-  scale: zoom = 1,
-  delay = 0,
-  theme = "dark",
-  speed = 1,
-}: AnagramShuffleProps) {
+export function AnagramShuffle(props: AnagramShuffleProps) {
+  const {
+    from = DEFAULT_SOURCE,
+    to = DEFAULT_TARGET,
+    accent = "#3B5BFD",
+    ink,
+    background,
+    grain = true,
+    scale: zoom = 1,
+    delay = 0,
+    theme = "dark",
+    speed = 1,
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H } = useSceneConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    anagramShuffleTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const c = THEMES[theme];
   const fg = ink ?? c.fg;
   const stage =
@@ -271,23 +264,26 @@ export function AnagramShuffle({
 
   const movers = useMemo<Mover[]>(() => {
     const { src, orphans } = mapLetters(a, b);
-    const lastStart = SHUFFLE_AT + (a.length - 1) * stagger;
-    const accentBase = lastStart + travel + ACCENT_GAP;
     const list: Mover[] = [];
     b.forEach((ch, j) => {
       const i = src[j];
       const x1 = (lb.xs[j] + lb.ws[j] / 2) * F;
-      const accentAt = accentBase + j * ACCENT_STAGGER;
+      const acc = tl.get(`accent:${j}`);
       if (i < 0) {
+        const arrive = tl.get(`arrive:${j}`);
         list.push({
           key: `in-${j}`,
           glyphFrom: ch,
           glyphTo: ch,
           x0: x1,
           x1,
-          start: lastStart,
+          start: arrive.start,
+          end: arrive.end,
+          fadeAt: arrive.start + arrive.beat("fade"),
           enterAt: 0,
-          accentAt,
+          enterEnd: 16,
+          accentAt: acc.start,
+          accentEnd: acc.end,
           dir: 1,
           lift: 0,
           fadeOut: false,
@@ -298,15 +294,21 @@ export function AnagramShuffle({
       const x0 = (la.xs[i] + la.ws[i] / 2) * F;
       const dx = x1 - x0;
       const still = Math.abs(dx) < F * 0.2;
+      const move = tl.get(`letter:${i}`);
+      const enter = tl.get(`enter:${i}`);
       list.push({
         key: `m-${i}`,
         glyphFrom: a[i],
         glyphTo: ch,
         x0,
         x1,
-        start: SHUFFLE_AT + i * stagger,
-        enterAt: i * ENTER_STAGGER,
-        accentAt,
+        start: move.start,
+        end: move.end,
+        fadeAt: move.end,
+        enterAt: enter.start,
+        enterEnd: enter.end,
+        accentAt: acc.start,
+        accentEnd: acc.end,
         dir: still ? 1 : dx > 0 ? 1 : -1,
         lift: still
           ? F * 0.1
@@ -317,15 +319,21 @@ export function AnagramShuffle({
     });
     for (const i of orphans) {
       const x0 = (la.xs[i] + la.ws[i] / 2) * F;
+      const move = tl.get(`letter:${i}`);
+      const enter = tl.get(`enter:${i}`);
       list.push({
         key: `o-${i}`,
         glyphFrom: a[i],
         glyphTo: a[i],
         x0,
         x1: x0,
-        start: SHUFFLE_AT + i * stagger,
-        enterAt: i * ENTER_STAGGER,
+        start: move.start,
+        end: move.end,
+        fadeAt: move.end,
+        enterAt: enter.start,
+        enterEnd: enter.end,
         accentAt: Number.POSITIVE_INFINITY,
+        accentEnd: Number.POSITIVE_INFINITY,
         dir: -1,
         lift: F * 0.3,
         fadeOut: true,
@@ -333,7 +341,7 @@ export function AnagramShuffle({
       });
     }
     return list;
-  }, [a, b, la, lb, F, stagger, travel]);
+  }, [a, b, la, lb, F, tl]);
 
   const ordered = useMemo(
     () => [...movers].sort((m, n) => m.dir - n.dir),
@@ -385,25 +393,21 @@ export function AnagramShuffle({
           {ordered.map((m) => {
             const over = m.dir > 0;
             const pose = (f: number) => {
-              const p = interpolate(f, [m.start, m.start + travel], [0, 1], {
+              const p = interpolate(f, [m.start, m.end], [0, 1], {
                 ...CLAMP,
                 easing: EASE_IO,
               });
               const arc = Math.sin(Math.PI * p);
-              const enter = interpolate(
-                f,
-                [m.enterAt, m.enterAt + 16],
-                [0, 1],
-                { ...CLAMP, easing: EASE_OUT },
-              );
+              const enter = interpolate(f, [m.enterAt, m.enterEnd], [0, 1], {
+                ...CLAMP,
+                easing: EASE_OUT,
+              });
               const y =
                 (over ? -m.lift : m.lift * 0.7) * arc + (1 - enter) * F * 0.14;
-              const acc = interpolate(
-                f,
-                [m.accentAt, m.accentAt + ACCENT_LEN],
-                [0, 1],
-                { ...CLAMP, easing: EASE_OUT },
-              );
+              const acc = interpolate(f, [m.accentAt, m.accentEnd], [0, 1], {
+                ...CLAMP,
+                easing: EASE_OUT,
+              });
               const bump = Math.sin(Math.PI * acc) * F * 0.045;
               return {
                 p,
@@ -432,12 +436,10 @@ export function AnagramShuffle({
             let opacity = enter;
             if (m.fadeOut) opacity *= interpolate(p, [0, 0.6], [1, 0], CLAMP);
             if (m.fadeIn)
-              opacity = interpolate(
-                t,
-                [m.start + travel * 0.4, m.start + travel],
-                [0, 1],
-                { ...CLAMP, easing: EASE_OUT },
-              );
+              opacity = interpolate(t, [m.fadeAt, m.end], [0, 1], {
+                ...CLAMP,
+                easing: EASE_OUT,
+              });
             const swap = m.glyphFrom !== m.glyphTo;
             const mix = swap ? interpolate(p, [0.35, 0.65], [0, 1], CLAMP) : 1;
             const glyph = (o: number, ch: string, key: string) => {

@@ -6,6 +6,8 @@ import { useId } from "react";
 import { AbsoluteFill, Easing, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import { type RulerScrubElementId, rulerScrubTimeline } from "./timeline";
 
 const { fontFamily: sans } = loadFont("normal", {
   weights: ["400", "500"],
@@ -36,6 +38,12 @@ export interface RulerScrubProps {
   delay?: number;
   theme?: "dark" | "light";
   speed?: number;
+  /**
+   * Moves, trims or stretches the fade in, the scrub, the sheen, the lift,
+   * the label and the push, by the ids in `./timeline`. Frames on the scene
+   * timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<RulerScrubElementId>;
 }
 
 const EASE_IO = Easing.bezier(0.65, 0, 0.35, 1);
@@ -45,7 +53,6 @@ const CLAMP = {
   extrapolateRight: "clamp",
 } as const;
 
-const SCRUB_END = 70;
 const SUBDIV = 10;
 
 const THEMES = {
@@ -236,26 +243,39 @@ function ScaleLayer({
   );
 }
 
-export function RulerScrub({
-  from = 2012,
-  to = 2026,
-  step = 1,
-  format = "{value}",
-  label = "The year launch videos became code",
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = display,
-  scrubLength = SCRUB_END,
-  grain = true,
-  scale = 1,
-  delay = 0,
-  theme = "dark",
-  speed = 1,
-}: RulerScrubProps) {
+export function RulerScrub(props: RulerScrubProps) {
+  const {
+    from = 2012,
+    to = 2026,
+    step = 1,
+    format = "{value}",
+    label = "The year launch videos became code",
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = display,
+    grain = true,
+    scale = 1,
+    delay = 0,
+    theme = "dark",
+    speed = 1,
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width, height } = useSceneConfig();
+  const { width, height, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    rulerScrubTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const enterEl = tl.get("enter");
+  const scrub = tl.get("scrub");
+  const sheenEl = tl.get("sheen");
+  const liftEl = tl.get("lift");
+  const labelEl = tl.get("label");
+  const pushEl = tl.get("push");
   const u = height / 720;
   const p: Palette = THEMES[theme];
   const fg = ink ?? p.fg;
@@ -274,11 +294,11 @@ export function RulerScrub({
 
   const gap = Math.max(width * 0.115, 96 * u);
   const scrubAt = (f: number) => {
-    const x = Math.min(1, Math.max(0, f / scrubLength));
+    const x = Math.min(1, Math.max(0, (f - scrub.start) / scrub.length));
     const main = (1 - (1 - x) ** 3) * 0.93 + x * 0.07;
-    if (f <= scrubLength) return steps * main;
-    const dt = f - scrubLength;
-    const v0 = (0.07 * steps) / scrubLength;
+    if (f <= scrub.end) return steps * main;
+    const dt = f - scrub.end;
+    const v0 = (0.07 * steps) / scrub.length;
     return steps + (v0 / 0.9) * Math.sin(dt * 0.9) * Math.exp(-dt * 0.5);
   };
   const pos = scrubAt(t);
@@ -286,7 +306,7 @@ export function RulerScrub({
   const ghost = interpolate(Math.abs(vel), [8 * u, 60 * u], [0, 1], CLAMP);
 
   const liftAt = (f: number) =>
-    interpolate(f, [scrubLength + 6, scrubLength + 38], [0, 1], {
+    interpolate(f, [liftEl.start, liftEl.end], [0, 1], {
       ...CLAMP,
       easing: EASE_IO,
     });
@@ -312,15 +332,22 @@ export function RulerScrub({
   )}`;
   const centerLit = interpolate(
     t,
-    [scrubLength - 4, scrubLength + 2],
+    [scrub.end + scrub.beat("litAt"), scrub.end + scrub.beat("lit")],
     [0, 1],
     CLAMP,
   );
   const heroOut = interpolate(lift, [0, 0.06], [0, 1], CLAMP);
-  const enter = interpolate(t, [0, 10], [0, 1], { ...CLAMP, easing: EASE_OUT });
+  const enter = interpolate(t, [enterEl.start, enterEl.end], [0, 1], {
+    ...CLAMP,
+    easing: EASE_OUT,
+  });
   const flash = interpolate(
     t,
-    [scrubLength - 2, scrubLength + 1, scrubLength + 14],
+    [
+      scrub.end + scrub.beat("flashAt"),
+      scrub.end + scrub.beat("flashPeak"),
+      scrub.end + scrub.beat("flash"),
+    ],
     [0, 1, 0],
     CLAMP,
   );
@@ -336,7 +363,7 @@ export function RulerScrub({
   const heroDrop = (heroStartY - heroEndY) * (1 - lift);
   const heroScaleAt = (f: number) =>
     interpolate(liftAt(f), [0, 1], [heroScale0, 1]) *
-    interpolate(f, [scrubLength + 38, scrubLength + 110], [1, 1.02], CLAMP);
+    interpolate(f, [pushEl.start, pushEl.end], [1, 1.02], CLAMP);
   const heroScale = heroScaleAt(t);
   // Weighed by half the hero's width, its furthest glyph from the centre;
   // the climb moves with `lift`.
@@ -344,18 +371,13 @@ export function RulerScrub({
     moves((f) => heroScaleAt(f) * heroSize * 1.2) ||
     moves((f) => (heroStartY - heroEndY) * (1 - liftAt(f)));
   const heroWeight = interpolate(lift, [0, 1], [450, 500]);
-  const sheen = interpolate(
-    t,
-    [scrubLength, scrubLength + 110],
-    [-4, 4],
-    CLAMP,
-  );
+  const sheen = interpolate(t, [sheenEl.start, sheenEl.end], [-4, 4], CLAMP);
 
   const markTop = -height * 0.075 * (1 + centerLit * 0.35) - 6 * u;
   const markBottom = height * 0.034;
 
   const labelInAt = (f: number) =>
-    interpolate(f, [scrubLength + 30, scrubLength + 54], [0, 1], {
+    interpolate(f, [labelEl.start, labelEl.end], [0, 1], {
       ...CLAMP,
       easing: EASE_OUT,
     });

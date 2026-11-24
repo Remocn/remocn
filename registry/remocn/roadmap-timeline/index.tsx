@@ -9,28 +9,22 @@ import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_PROJECTS,
+  linksOf,
+  type RoadmapProject,
+  type RoadmapStatus,
+  type RoadmapTimelineElementId,
+  roadmapTimelineTimeline,
+} from "./timeline";
+
+export type { RoadmapProject, RoadmapStatus };
 
 const interTight = loadFont("normal", {
   weights: ["300", "400"],
   subsets: ["latin"],
 });
-
-export type RoadmapStatus = "done" | "active" | "planned";
-
-export interface RoadmapProject {
-  name: string;
-  /** Start date, e.g. "Aug 10". */
-  start: string;
-  /** Target date (inclusive), e.g. "Sep 18". */
-  end: string;
-  status: RoadmapStatus;
-  /** 0–1, drawn as the darker part of the bar and as the status pie. */
-  progress?: number;
-  lead: string;
-  color: string;
-  /** Name of the project this one is blocked by. */
-  dependsOn?: string;
-}
 
 export interface RoadmapTimelineProps {
   projects?: RoadmapProject[];
@@ -66,66 +60,14 @@ export interface RoadmapTimelineProps {
   speed?: number;
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
+  /**
+   * Moves, trims or stretches the panel, single rows, bars and links, the
+   * milestone, the today line, the camera, the cursor's grab, drag and
+   * release, and the toast, by the ids in `./timeline`. Frames on the scene
+   * timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<RoadmapTimelineElementId>;
 }
-
-const DEFAULT_PROJECTS: RoadmapProject[] = [
-  {
-    name: "Billing v2",
-    start: "Jul 6",
-    end: "Aug 7",
-    status: "done",
-    progress: 1,
-    lead: "Maya Chen",
-    color: "#3FA27B",
-  },
-  {
-    name: "Public API",
-    start: "Aug 10",
-    end: "Sep 18",
-    status: "active",
-    progress: 0.4,
-    lead: "Priya Raman",
-    color: "#3B5BFD",
-    dependsOn: "Billing v2",
-  },
-  {
-    name: "Mobile app 1.0",
-    start: "Sep 24",
-    end: "Oct 29",
-    status: "planned",
-    progress: 0,
-    lead: "Ana Souza",
-    color: "#E5795B",
-    dependsOn: "Public API",
-  },
-  {
-    name: "Onboarding",
-    start: "Jul 16",
-    end: "Aug 28",
-    status: "active",
-    progress: 0.8,
-    lead: "Leo Park",
-    color: "#D9A33A",
-  },
-  {
-    name: "Usage analytics",
-    start: "Aug 19",
-    end: "Oct 2",
-    status: "active",
-    progress: 0.25,
-    lead: "Sam Ortiz",
-    color: "#2A9FBF",
-  },
-  {
-    name: "Docs site",
-    start: "Oct 12",
-    end: "Nov 13",
-    status: "planned",
-    progress: 0,
-    lead: "Maya Chen",
-    color: "#D55C9A",
-  },
-];
 
 const MONTHS = [
   "Jan",
@@ -486,33 +428,49 @@ function ScaleLayer({
   );
 }
 
-export function RoadmapTimeline({
-  projects = DEFAULT_PROJECTS,
-  milestone = { name: "Public launch", date: "Nov 18" },
-  today = "Aug 26",
-  dragProject = "Public API",
-  dragDays = 14,
-  startMonth = 6,
-  monthCount = 5,
-  year = 2026,
-  title = "Roadmap · H2 2026",
-  workspace = "remocn",
-  listTitle = "Projects",
-  dragFrames = 26,
-  theme = "light",
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = interTight.fontFamily,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  ground,
-  groundParams,
-}: RoadmapTimelineProps) {
+export function RoadmapTimeline(props: RoadmapTimelineProps) {
+  const {
+    projects = DEFAULT_PROJECTS,
+    milestone = { name: "Public launch", date: "Nov 18" },
+    today = "Aug 26",
+    dragProject = "Public API",
+    dragDays = 14,
+    startMonth = 6,
+    monthCount = 5,
+    year = 2026,
+    title = "Roadmap · H2 2026",
+    workspace = "remocn",
+    listTitle = "Projects",
+    theme = "light",
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = interTight.fontFamily,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    ground,
+    groundParams,
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H, fps } = useSceneConfig();
+  const { width: W, height: H, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    roadmapTimelineTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const panelEl = tl.get("panel");
+  const msEl = tl.get("milestone");
+  const todayEl = tl.get("today");
+  const camera = tl.get("camera");
+  const cursorEl = tl.get("cursor");
+  const grab = tl.get("grab");
+  const dragEl = tl.get("drag");
+  const drop = tl.get("drop");
+  const toastEl = tl.get("toast");
   const tall = H > W;
   const DW = tall ? 720 : 1280;
   const DH = tall ? 1280 : 720;
@@ -553,16 +511,14 @@ export function RoadmapTimeline({
   const lbl = (idx: number) => dayLabel(idx, startMonth, year);
 
   const T = {
-    rows: 8,
-    bars: 12,
-    links: 40,
-    milestone: 50,
-    sweep: 56,
-    cursorIn: 76,
-    grab: 99,
-    dragStart: 102,
-    dragEnd: 102 + dragFrames,
-    toast: 110 + dragFrames,
+    milestone: msEl.start,
+    sweep: todayEl.start,
+    cursorIn: cursorEl.start,
+    grab: grab.start,
+    dragStart: dragEl.start,
+    dragEnd: dragEl.end,
+    drop: drop.start,
+    toast: toastEl.start,
   };
 
   const parsed = projects.map((p) => ({
@@ -613,43 +569,75 @@ export function RoadmapTimeline({
     x: gx(LIST_W + parsed[dragIdx].s * DAY + grabOffset),
     y: gy(barMidY(dragIdx) + 4),
   };
+  const arriveAt = T.grab + grab.beat("arriveAt");
   const keys: Key[] = [
     { t: T.cursorIn, x: DW - 90, y: DH - 50 },
-    { t: T.grab - 4, ...grab0 },
+    { t: arriveAt, ...grab0 },
   ];
   const cursorAt = (f: number) => {
-    if (f > T.dragEnd + 4) {
-      const away = tween(f, T.dragEnd + 6, T.dragEnd + 26, moveEase);
+    if (f > T.drop + drop.beat("awayAt")) {
+      const away = tween(
+        f,
+        T.drop + drop.beat("awayStart"),
+        T.drop + drop.beat("awayEnd"),
+        moveEase,
+      );
       return {
         x: grab0.x + dragDays * DAY + 46 * away,
         y: grab0.y + 64 * away + Math.sin(away * Math.PI) * 6,
       };
     }
-    if (f > T.grab - 4) return { x: grab0.x + dragAt(f) * DAY, y: grab0.y };
+    if (f > arriveAt) return { x: grab0.x + dragAt(f) * DAY, y: grab0.y };
     return pathAt(keys, f);
   };
   const cur = cursorAt(frame);
   const curRest = cursorAt(1e9);
   const pressAt = (f: number) =>
     clamp(spring({ frame: f - T.grab, fps, config: CHIP }), 0, 1.2) *
-    (1 - tween(f, T.dragEnd + 1, T.dragEnd + 5, exitEase));
+    (1 -
+      tween(
+        f,
+        T.drop + drop.beat("releaseAt"),
+        T.drop + drop.beat("releaseEnd"),
+        exitEase,
+      ));
   const press = pressAt(frame);
-  const cursorIn = tween(frame, T.cursorIn, T.cursorIn + 6);
-  const hover = tween(frame, T.grab - 6, T.grab - 1);
+  const cursorIn = tween(
+    frame,
+    T.cursorIn,
+    T.cursorIn + cursorEl.beat("fadeIn"),
+  );
+  const hover = tween(
+    frame,
+    T.grab + grab.beat("hoverAt"),
+    T.grab + grab.beat("hoverEnd"),
+  );
   const lifted = press;
   const tipIn = spring({ frame: frame - T.dragStart, fps, config: CHIP });
-  const tipOut = tween(frame, T.dragEnd + 2, T.dragEnd + 6, exitEase);
+  const tipOut = tween(
+    frame,
+    T.drop + drop.beat("tipOutAt"),
+    T.drop + drop.beat("tipOutEnd"),
+    exitEase,
+  );
   const tip = clamp(tipIn, 0, 1) * (1 - tipOut);
   const flash = (at: number) =>
     tween(frame, at, at + 4) * (1 - tween(frame, at + 10, at + 34, inOut));
 
-  const enter = spring({ frame, fps, config: HEAVY });
-  const camT = tween(frame, 66, 98, inOut);
+  const enter = spring({ frame: frame - panelEl.start, fps, config: HEAVY });
+  const camT = tween(frame, camera.start, camera.end, inOut);
   // The rise never quite lands, so ask the px themselves whether they move;
   // the zoom is measured at the panel's far edge.
   const camMoving =
-    stirs((f) => (1 - spring({ frame: f, fps, config: HEAVY })) * 48, frame) ||
-    stirs((f) => tween(f, 66, 98, inOut) * 0.05 * (DW / 2), frame);
+    stirs(
+      (f) =>
+        (1 - spring({ frame: f - panelEl.start, fps, config: HEAVY })) * 48,
+      frame,
+    ) ||
+    stirs(
+      (f) => tween(f, camera.start, camera.end, inOut) * 0.05 * (DW / 2),
+      frame,
+    );
   const tipMoving =
     stirs(
       (f) => 4 * spring({ frame: f - T.dragStart, fps, config: CHIP }),
@@ -662,7 +650,7 @@ export function RoadmapTimeline({
       (f) => 12 * spring({ frame: f - T.milestone, fps, config: CHIP }),
       frame,
     ) && !camMoving;
-  const sweep = tween(frame, T.sweep, T.sweep + 20, inOut);
+  const sweep = tween(frame, todayEl.start, todayEl.end, inOut);
   const todayIdx = di(today);
   const todayDay = sweep * todayIdx;
   const todayRestX = LIST_W + (todayIdx + 0.5) * DAY;
@@ -677,13 +665,7 @@ export function RoadmapTimeline({
   const msRow = parsed.length;
   const msLabelLeft = (msIdx + 0.5) * DAY + 120 > GRID_W;
 
-  const links = parsed
-    .map((p, i) => {
-      if (!p.dependsOn) return null;
-      const b = parsed.findIndex((q) => q.name === p.dependsOn);
-      return b < 0 ? null : { from: b, to: i };
-    })
-    .filter((l): l is { from: number; to: number } => l !== null);
+  const links = linksOf(projects);
 
   const dates = (i: number) =>
     `${lbl(parsed[i].s + shifts[i])} – ${lbl(parsed[i].e + shifts[i])}`;
@@ -943,13 +925,22 @@ export function RoadmapTimeline({
               </div>
 
               {parsed.map((p, i) => {
-                const a = tween(frame, T.rows + i * 2, T.rows + i * 2 + 10);
+                const row = tl.get(`row:${i}`);
+                const a = tween(frame, row.start, row.end);
                 const changed = i === dragIdx || moved.includes(i);
                 const swap = changed
-                  ? tween(frame, T.dragEnd + 2, T.dragEnd + 8)
+                  ? tween(
+                      frame,
+                      T.drop + drop.beat("swapAt"),
+                      T.drop + drop.beat("swapEnd"),
+                    )
                   : 0;
                 const hl = changed
-                  ? flash(T.dragEnd + 2 + (i === dragIdx ? 0 : 3))
+                  ? flash(
+                      T.drop +
+                        drop.beat("flashAt") +
+                        (i === dragIdx ? 0 : drop.beat("flashLag")),
+                    )
                   : 0;
                 const oldEnd = lbl(p.e);
                 const newEnd = lbl(p.e + finalShifts[i]);
@@ -1055,8 +1046,8 @@ export function RoadmapTimeline({
                   boxSizing: "border-box",
                   opacity: tween(
                     frame,
-                    T.rows + msRow * 2,
-                    T.rows + msRow * 2 + 10,
+                    tl.get(`row:${msRow}`).start,
+                    tl.get(`row:${msRow}`).end,
                   ),
                 }}
               >
@@ -1108,7 +1099,11 @@ export function RoadmapTimeline({
                   bottom: 0,
                   width: 1,
                   background: withAlpha(accent, 0.7),
-                  opacity: tween(frame, T.sweep - 2, T.sweep + 3),
+                  opacity: tween(
+                    frame,
+                    T.sweep + todayEl.beat("fadeAt"),
+                    T.sweep + todayEl.beat("fadeEnd"),
+                  ),
                 }}
               >
                 <div
@@ -1154,12 +1149,8 @@ export function RoadmapTimeline({
                 </defs>
                 <g clipPath={`url(#${uid}-grid)`}>
                   {links.map((l, k) => {
-                    const draw = tween(
-                      frame,
-                      T.links + k * 5,
-                      T.links + k * 5 + 12,
-                      inOut,
-                    );
+                    const link = tl.get(`link:${k}`);
+                    const draw = tween(frame, link.start, link.end, inOut);
                     const x2 = barX(l.to);
                     const y2 = barMidY(l.to);
                     const x1 = Math.min(
@@ -1192,8 +1183,8 @@ export function RoadmapTimeline({
                           strokeLinejoin="round"
                           opacity={tween(
                             frame,
-                            T.links + k * 5 + 9,
-                            T.links + k * 5 + 12,
+                            link.start + link.beat("arrowAt"),
+                            link.end,
                           )}
                         />
                       </g>
@@ -1203,13 +1194,22 @@ export function RoadmapTimeline({
               </svg>
 
               {parsed.map((p, i) => {
-                const grow = tween(frame, T.bars + i * 3, T.bars + i * 3 + 14);
+                const bar = tl.get(`bar:${i}`);
+                const grow = tween(frame, bar.start, bar.end);
                 const isDrag = i === dragIdx;
                 const lift = isDrag ? lifted : 0;
                 const hov = isDrag
-                  ? hover * (1 - tween(frame, T.dragEnd + 8, T.dragEnd + 14))
+                  ? hover *
+                    (1 -
+                      tween(
+                        frame,
+                        T.drop + drop.beat("hoverOutAt"),
+                        T.drop + drop.beat("hoverOutEnd"),
+                      ))
                   : 0;
-                const hl = moved.includes(i) ? flash(T.dragEnd + 5) : 0;
+                const hl = moved.includes(i)
+                  ? flash(T.drop + drop.beat("movedAt"))
+                  : 0;
                 const x = barX(i);
                 const w = barW(i);
                 const prog = clamp(p.progress ?? 0, 0, 1);
@@ -1354,7 +1354,11 @@ export function RoadmapTimeline({
                     fontWeight: 400,
                     color: pal.text,
                     whiteSpace: "nowrap",
-                    opacity: tween(frame, T.milestone + 4, T.milestone + 10),
+                    opacity: tween(
+                      frame,
+                      T.milestone + msEl.beat("labelAt"),
+                      msEl.end,
+                    ),
                   }}
                 >
                   {milestone.name}

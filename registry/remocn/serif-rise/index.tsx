@@ -12,6 +12,13 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_LINES,
+  rowsOf,
+  type SerifRiseElementId,
+  serifRiseTimeline,
+} from "./timeline";
 
 const gothic = loadVariableFont("normal", { subsets: ["latin"] });
 
@@ -33,6 +40,12 @@ export interface SerifRiseProps {
   delay?: number;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches single rules, the letters of single rows and
+   * the serif sweep, by the ids in `./timeline`. Frames on the scene
+   * timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<SerifRiseElementId>;
 }
 
 const THEMES = {
@@ -60,13 +73,6 @@ const TRACK = -0.022;
 const LINE = 1.02;
 const HAIR = 0.03;
 const REACH = 0.62;
-
-const RISE_LEN = 18;
-const RISE_GAP = 1.5;
-const SWEEP_AT = 32;
-const SWEEP_GAP = 2;
-const SWEEP_SPAN = 44;
-const SWEEP_LEN = 16;
 
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
 const EASE_CTRS = Easing.bezier(0.33, 0, 0.2, 1);
@@ -310,30 +316,34 @@ function ScaleLayer({
   );
 }
 
-export function SerifRise({
-  lines = ["From rough cut", "to final cut."],
-  highlight = "final cut.",
-  stagger = RISE_GAP,
-  accent,
-  ink,
-  background,
-  fontFamily = gothic.fontFamily,
-  grain = true,
-  scale: layerScale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: SerifRiseProps) {
+export function SerifRise(props: SerifRiseProps) {
+  const {
+    lines = DEFAULT_LINES,
+    highlight = "final cut.",
+    accent,
+    ink,
+    background,
+    fontFamily = gothic.fontFamily,
+    grain = true,
+    scale: layerScale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H } = useSceneConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    serifRiseTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const c = THEMES[theme];
   const spot = accent ?? c.accent;
   const fg = ink ?? c.ink;
-  const rows = useMemo(
-    () => (lines.length > 0 ? lines : ["final cut."]).map((l) => l || " "),
-    [lines],
-  );
+  const rows = useMemo(() => rowsOf(lines), [lines]);
   const m = useMetrics(rows, fontFamily);
 
   const transparent = background === "transparent";
@@ -384,13 +394,14 @@ export function SerifRise({
   const ruleNodes: React.ReactNode[] = [];
   const glyphNodes: React.ReactNode[] = [];
   const serifNodes: React.ReactNode[] = [];
-  const total = rows.reduce((a, r) => a + Array.from(r).length, 0);
-  const gap = Math.min(SWEEP_GAP, SWEEP_SPAN / Math.max(1, total - 1));
+  const sweep = tl.get("serifs");
   let gi = 0;
   rows.forEach((row, r) => {
     const chars = Array.from(row);
     const baseY = firstBase + r * lineH;
-    const ruleP = interpolate(t, [r * 4, r * 4 + 22], [0, 1], {
+    const rule = tl.get(`rule:${r}`);
+    const line = tl.get(`line:${r}`);
+    const ruleP = interpolate(t, [rule.start, rule.end], [0, 1], {
       ...CLAMP,
       easing: EASE_OUT,
     });
@@ -413,7 +424,10 @@ export function SerifRise({
       const idx = gi + i;
       const p = interpolate(
         t,
-        [SWEEP_AT + idx * gap, SWEEP_AT + idx * gap + SWEEP_LEN],
+        [
+          sweep.start + idx * sweep.beat("gap"),
+          sweep.start + idx * sweep.beat("gap") + sweep.beat("letter"),
+        ],
         [0, 1],
         CLAMP,
       );
@@ -437,10 +451,10 @@ export function SerifRise({
     const colorFor = (i: number) => (hlFill(i) ? spot : fg);
 
     progress.forEach(({ ch, ctrs, serif }, i) => {
-      const idx = gi + i;
       const gxPx = left + xs[i] * F;
+      const at = line.start + i * line.beat("stagger");
       const riseAt = (tt: number) =>
-        interpolate(tt, [idx * stagger, idx * stagger + RISE_LEN], [0, 1], {
+        interpolate(tt, [at, at + line.beat("rise")], [0, 1], {
           ...CLAMP,
           easing: EASE_OUT,
         });

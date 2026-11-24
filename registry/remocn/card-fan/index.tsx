@@ -10,6 +10,13 @@ import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  type CardFanElementId,
+  cardFanTimeline,
+  DEFAULT_CAPTION,
+  DEFAULT_TITLE,
+} from "./timeline";
 
 const onest = loadFont("normal", {
   weights: ["300", "400"],
@@ -50,6 +57,12 @@ export interface CardFanProps {
   /** Frames to hold the first frame before anything moves. */
   delay?: number;
   speed?: number;
+  /**
+   * Moves, trims or stretches the camera push, single title words, the
+   * drop, the fan, the pick and single caption words, by the ids in
+   * `./timeline`. Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<CardFanElementId>;
 }
 
 const DEFAULT_CARDS: FanCard[] = [
@@ -106,17 +119,6 @@ const THEMES = {
   },
 };
 
-const BEATS = [
-  { id: "title", at: 0 },
-  { id: "drop", at: 4 },
-  { id: "fan", at: 18 },
-  { id: "pick", at: 60 },
-  { id: "caption", at: 72 },
-  { id: "end", at: 132 },
-] as const;
-const beat = (id: (typeof BEATS)[number]["id"]) =>
-  BEATS.find((b) => b.id === id)?.at ?? 0;
-
 const EASE_ENTER = Easing.bezier(0.32, 0.72, 0, 1);
 const EASE_CAMERA = Easing.bezier(0.87, 0, 0.13, 1);
 const SPRING_CARD = { mass: 0.8, damping: 18, stiffness: 160 };
@@ -172,27 +174,38 @@ function ScaleLayer({
   );
 }
 
-export function CardFan({
-  title = "Your top formats",
-  accentWord = 2,
-  cards = DEFAULT_CARDS,
-  pick = 0,
-  caption = "Launch films are 41% of this month’s renders",
-  theme = "dark",
-  ink,
-  ground,
-  groundParams,
-  background,
-  fontFamily = onest.fontFamily,
-  stagger = 3,
-  blur: blurPx = 3,
-  scale: scaleProp = 1,
-  delay = 0,
-  speed = 1,
-}: CardFanProps) {
+export function CardFan(props: CardFanProps) {
+  const {
+    title = DEFAULT_TITLE,
+    accentWord = 2,
+    cards = DEFAULT_CARDS,
+    pick = 0,
+    caption = DEFAULT_CAPTION,
+    theme = "dark",
+    ink,
+    ground,
+    groundParams,
+    background,
+    fontFamily = onest.fontFamily,
+    blur: blurPx = 3,
+    scale: scaleProp = 1,
+    delay = 0,
+    speed = 1,
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H, fps } = useSceneConfig();
+  const { width: W, height: H, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    cardFanTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const camera = tl.get("camera");
+  const dropEl = tl.get("drop");
+  const fan = tl.get("fan");
+  const pickEl = tl.get("pick");
   const t = THEMES[theme];
   const light = theme === "light";
   const fg = ink ?? t.ink;
@@ -218,21 +231,21 @@ export function CardFan({
   const pull = portrait ? 0.8 : 0.45;
 
   const drop = spring({
-    frame: frame - beat("drop"),
+    frame: frame - dropEl.start,
     fps,
     config: SPRING_HEAVY,
   });
   const lift = spring({
-    frame: frame - beat("pick"),
+    frame: frame - pickEl.start,
     fps,
     config: SPRING_CARD,
   });
   const liftSettle = spring({
-    frame: frame - beat("pick"),
+    frame: frame - pickEl.start,
     fps,
     config: SPRING_MORPH,
   });
-  const push = interpolate(frame, [0, beat("end")], [1, 1.035], {
+  const push = interpolate(frame, [camera.start, camera.end], [1, 1.035], {
     ...CLAMP,
     easing: EASE_CAMERA,
   });
@@ -244,7 +257,7 @@ export function CardFan({
   const cardState = (j: number) => {
     const m = N - 1 - j;
     const open = spring({
-      frame: frame - (beat("fan") + m * 3),
+      frame: frame - (fan.start + m * fan.beat("stagger")),
       fps,
       config: SPRING_CARD,
     });
@@ -282,7 +295,7 @@ export function CardFan({
       blur = blurPx * Math.min(1, lift);
       dim = 1 - 0.3 * Math.min(1, lift);
     }
-    const hidden = !isFront && frame < beat("drop") + 6;
+    const hidden = !isFront && frame < dropEl.start + dropEl.beat("show");
     // Where the card comes to rest: fanned, dropped and the pick lifted.
     // Layout sits there and the travel is a transform, since layout rounds a
     // box to whole pixels and a card eased by `left`/`top` clicks along.
@@ -342,7 +355,7 @@ export function CardFan({
       <ScaleLayer scale={scaleProp}>
         <AbsoluteFill
           style={{
-            transform: `scale(${push})${glide(frame > 0 && frame < beat("end"))}`,
+            transform: `scale(${push})${glide(frame > camera.start && frame < camera.end)}`,
           }}
         >
           <AbsoluteFill
@@ -462,8 +475,8 @@ export function CardFan({
             }}
           >
             {titleWords.map((word, i) => {
-              const s = beat("title") + i * stagger;
-              const p = interpolate(frame, [s, s + 14], [0, 1], {
+              const e = tl.get(`title:${i}`);
+              const p = interpolate(frame, [e.start, e.end], [0, 1], {
                 ...CLAMP,
                 easing: EASE_ENTER,
               });
@@ -515,8 +528,8 @@ export function CardFan({
             }}
           >
             {capWords.map((word, i) => {
-              const s = beat("caption") + i * 2;
-              const p = interpolate(frame, [s, s + 12], [0, 1], {
+              const e = tl.get(`caption:${i}`);
+              const p = interpolate(frame, [e.start, e.end], [0, 1], {
                 ...CLAMP,
                 easing: EASE_ENTER,
               });

@@ -8,23 +8,20 @@ import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_ROWS,
+  type TableFilterElementId,
+  type TableRecord,
+  tableFilterTimeline,
+} from "./timeline";
+
+export type { TableRecord };
 
 const onest = loadFont("normal", {
   weights: ["300", "400"],
   subsets: ["latin"],
 });
-
-export interface TableRecord {
-  company: string;
-  domain: string;
-  stage: string;
-  /** Annual recurring revenue in dollars, used for sorting. */
-  arr: number;
-  owner: string;
-  lastInteraction: string;
-  /** Logo tile color. */
-  color: string;
-}
 
 export interface TableFilterProps {
   rows?: TableRecord[];
@@ -56,91 +53,13 @@ export interface TableFilterProps {
   speed?: number;
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
+  /**
+   * Moves, trims or stretches the table, each click of the pointer and what
+   * the rows do after it, by the ids in `./timeline`. Frames on the scene
+   * timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<TableFilterElementId>;
 }
-
-const DEFAULT_ROWS: TableRecord[] = [
-  {
-    company: "Kitebase",
-    domain: "kitebase.io",
-    stage: "Negotiation",
-    arr: 1_400_000,
-    owner: "Maya Chen",
-    lastInteraction: "2 hours ago",
-    color: "#3B82F6",
-  },
-  {
-    company: "Lumen",
-    domain: "lumen.app",
-    stage: "Closed-won",
-    arr: 320_000,
-    owner: "Leo Park",
-    lastInteraction: "Yesterday",
-    color: "#F59E0B",
-  },
-  {
-    company: "Fernway",
-    domain: "fernway.com",
-    stage: "Qualified",
-    arr: 860_000,
-    owner: "Priya Raman",
-    lastInteraction: "3 days ago",
-    color: "#10B981",
-  },
-  {
-    company: "Quarry",
-    domain: "quarry.dev",
-    stage: "Closed-won",
-    arr: 2_100_000,
-    owner: "Maya Chen",
-    lastInteraction: "4 hours ago",
-    color: "#18181B",
-  },
-  {
-    company: "Orbitly",
-    domain: "orbitly.co",
-    stage: "Lead",
-    arr: 95_000,
-    owner: "Sam Ortiz",
-    lastInteraction: "1 week ago",
-    color: "#8B5CF6",
-  },
-  {
-    company: "Halcyon",
-    domain: "halcyon.ai",
-    stage: "Negotiation",
-    arr: 1_100_000,
-    owner: "Leo Park",
-    lastInteraction: "Yesterday",
-    color: "#0EA5E9",
-  },
-  {
-    company: "Tessel",
-    domain: "tessel.so",
-    stage: "Closed-won",
-    arr: 640_000,
-    owner: "Priya Raman",
-    lastInteraction: "2 days ago",
-    color: "#EF4444",
-  },
-  {
-    company: "Brightloom",
-    domain: "brightloom.com",
-    stage: "Closed-lost",
-    arr: 210_000,
-    owner: "Sam Ortiz",
-    lastInteraction: "3 weeks ago",
-    color: "#EC4899",
-  },
-  {
-    company: "Cobalt Labs",
-    domain: "cobaltlabs.com",
-    stage: "Closed-won",
-    arr: 1_200_000,
-    owner: "Leo Park",
-    lastInteraction: "6 hours ago",
-    color: "#6366F1",
-  },
-];
 
 const STAGE_COLORS: Record<string, string> = {
   Lead: "#9A9AA2",
@@ -760,30 +679,47 @@ function ScaleLayer({
   );
 }
 
-export function TableFilter({
-  rows = DEFAULT_ROWS,
-  title = "Companies",
-  filterAttribute = "Stage",
-  filterValue = "Closed-won",
-  selectCount = 3,
-  bulkAction = "Add to sequence",
-  workspace = "remocn",
-  filterLabel = "Filter",
-  selectedLabel = "selected",
-  theme = "light",
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = onest.fontFamily,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  ground,
-  groundParams,
-}: TableFilterProps) {
+export function TableFilter(props: TableFilterProps) {
+  const {
+    rows = DEFAULT_ROWS,
+    title = "Companies",
+    filterAttribute = "Stage",
+    filterValue = "Closed-won",
+    selectCount = 3,
+    bulkAction = "Add to sequence",
+    workspace = "remocn",
+    filterLabel = "Filter",
+    selectedLabel = "selected",
+    theme = "light",
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = onest.fontFamily,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    ground,
+    groundParams,
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H, fps } = useSceneConfig();
+  const { width: W, height: H, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    tableFilterTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const tableEl = tl.get("table");
+  const pointerEl = tl.get("pointer");
+  const filterEl = tl.get("filter");
+  const optionEl = tl.get("option");
+  const collapseEl = tl.get("collapse");
+  const cameraEl = tl.get("camera");
+  const sortEl = tl.get("sort");
+  const flipEl = tl.get("flip");
+  const actionEl = tl.get("action");
   const u = Math.min(W / 1280, H / 720);
   const base = palette(theme);
   const pal = { ...base, text: ink ?? base.text };
@@ -808,17 +744,10 @@ export function TableFilter({
   );
   const optIdx = Math.max(0, stages.indexOf(filterValue));
 
-  const T = {
-    filterClick: 48,
-    optionClick: 72,
-    collapse: 78,
-    sortClick: 114,
-    flip: 117,
-    check: [144, 151, 158].slice(0, nSel),
-    actionHover: 180,
-  };
-  const FLIP_LEN = 11;
-  const barStart = T.check[0] ?? 999;
+  const checkEls = Array.from({ length: nSel }, (_, k) => tl.get(`check:${k}`));
+  const barAt0 = checkEls[0]
+    ? checkEls[0].start + checkEls[0].beat("bar")
+    : 999 + 2;
 
   const filterPt = { x: FILTER_BTN.x + 42, y: TOOL_Y + 21 };
   const optPt = { x: POP.x + 78, y: POP.y + 8 + 36 + 36 + optIdx * 30 + 16 };
@@ -826,51 +755,65 @@ export function TableFilter({
   const checkPt = (k: number) => ({ x: MX + 21, y: BODY_Y + k * ROW_H + 19 });
   const barX = MX + (WIN.w - SIDEBAR) / 2 - BAR.w / 2;
   const actionPt = { x: barX + 148 + 84, y: BAR.y + BAR.h / 2 + 3 };
+  const at = (
+    e: { start: number; beat: (name: string) => number },
+    b: string,
+  ) => e.start + e.beat(b);
   const keys: Key[] = [
-    { t: 22, x: 1010, y: 500 },
-    { t: T.filterClick - 4, ...filterPt },
-    { t: T.filterClick + 6, ...filterPt },
-    { t: T.optionClick - 4, ...optPt },
-    { t: T.optionClick + 6, ...optPt },
-    { t: T.sortClick - 4, ...arrPt },
-    { t: T.sortClick + 10, ...arrPt },
+    { t: at(pointerEl, "rest"), x: 1010, y: 500 },
+    { t: at(filterEl, "arrive"), ...filterPt },
+    { t: at(filterEl, "leave"), ...filterPt },
+    { t: at(optionEl, "arrive"), ...optPt },
+    { t: at(optionEl, "leave"), ...optPt },
+    { t: at(sortEl, "arrive"), ...arrPt },
+    { t: at(sortEl, "leave"), ...arrPt },
   ];
-  T.check.forEach((t, k) => {
-    keys.push({ t: t - 3, ...checkPt(k) }, { t: t + 2, ...checkPt(k) });
+  checkEls.forEach((e, k) => {
+    keys.push(
+      { t: at(e, "arrive"), ...checkPt(k) },
+      { t: at(e, "leave"), ...checkPt(k) },
+    );
   });
-  keys.push({ t: T.actionHover, ...actionPt });
+  keys.push({ t: actionEl.start, ...actionPt });
   const cur = pathAt(keys, frame);
   const clicks = [
-    T.filterClick,
-    T.optionClick,
-    T.sortClick,
-    ...T.check,
-    T.actionHover + 8,
+    { c: filterEl.start, e: filterEl },
+    { c: optionEl.start, e: optionEl },
+    { c: sortEl.start, e: sortEl },
+    ...checkEls.map((e) => ({ c: e.start, e })),
+    { c: at(actionEl, "click"), e: actionEl },
   ];
   const press = clamp(
     Math.max(
       0,
       ...clicks.map(
-        (c) => sp(frame - (c - 2), CHIP) - sp(frame - (c + 2), CHIP),
+        ({ c, e }) =>
+          sp(frame - (c + e.beat("pressIn")), CHIP) -
+          sp(frame - (c + e.beat("pressOut")), CHIP),
       ),
     ),
     0,
     1,
   );
-  const cursorIn = interpolate(frame, [20, 28], [0, 1], CL);
+  const cursorIn = interpolate(
+    frame,
+    [pointerEl.start, pointerEl.end],
+    [0, 1],
+    CL,
+  );
 
-  const enterAt = (f: number) => sp(f, HEAVY);
+  const enterAt = (f: number) => sp(f - tableEl.start, HEAVY);
   const enter = enterAt(frame);
   const popAt = (f: number) =>
-    sp(f - (T.filterClick + 1), CARD) *
-    (1 - tween(f, T.optionClick + 2, T.optionClick + 6, EXIT));
+    sp(f - at(filterEl, "open"), CARD) *
+    (1 - tween(f, at(optionEl, "close"), at(optionEl, "closeEnd"), EXIT));
   const pop = popAt(frame);
-  const chipAt = (f: number) => sp(f - (T.optionClick + 4), CHIP);
+  const chipAt = (f: number) => sp(f - at(optionEl, "chip"), CHIP);
   const chip = chipAt(frame);
-  const sortOn = frame >= T.sortClick + 1;
-  const sortArrow = tween(frame, T.sortClick + 1, T.sortClick + 7);
-  const filtered = frame >= T.collapse;
-  const countIn = tween(frame, T.collapse, T.collapse + 6);
+  const sortOn = frame >= at(sortEl, "on");
+  const sortArrow = tween(frame, at(sortEl, "on"), at(sortEl, "arrowEnd"));
+  const filtered = frame >= collapseEl.start;
+  const countIn = tween(frame, collapseEl.start, at(collapseEl, "count"));
   const countVal = filtered ? matchIdx.length : rows.length;
   const sumArr = (idx: number[]) =>
     fmtArr(idx.reduce((s, i) => s + rows[i].arr, 0));
@@ -879,10 +822,11 @@ export function TableFilter({
   let nonMatch = 0;
   const fadeOut = rows.map((_, i) => {
     if (matchIdx.includes(i)) return 0;
-    const at = T.collapse + nonMatch++ * 0.6;
-    return tween(frame, at, at + 4);
+    const from0 = collapseEl.start + nonMatch++ * collapseEl.beat("stagger");
+    return tween(frame, from0, from0 + collapseEl.beat("fade"));
   });
-  const collapseAt = (f: number) => sp(f - (T.collapse + 2), MORPH, 9);
+  const collapseAt = (f: number) =>
+    sp(f - at(collapseEl, "collapseAt"), MORPH, collapseEl.beat("collapse"));
   const collapse = rows.map((_, i) =>
     matchIdx.includes(i) ? 0 : collapseAt(frame),
   );
@@ -892,7 +836,7 @@ export function TableFilter({
     ys.push(acc);
     acc += ROW_H * (1 - collapse[i]);
   });
-  const flipAt = (f: number) => sp(f - T.flip, MORPH, FLIP_LEN + 3);
+  const flipAt = (f: number) => sp(f - flipEl.start, MORPH, flipEl.length);
   const flipT = flipAt(frame);
   const reflowing = moves(collapseAt) || moves(flipAt);
   const flipArc = Math.sin(flipT * Math.PI);
@@ -907,23 +851,22 @@ export function TableFilter({
   const checks = rows.map((_, i) => {
     const s = sorted.indexOf(i);
     if (s < 0 || s >= nSel) return 0;
-    return tween(frame, T.check[s], T.check[s] + 6);
+    return tween(frame, checkEls[s].start, at(checkEls[s], "tick"));
   });
-  const selected = T.check.filter((t) => frame >= t + 1).length;
-  const barAt = (f: number) => sp(f - (barStart + 2), CARD);
+  const selected = checkEls.filter((e) => frame >= at(e, "on")).length;
+  const barAt = (f: number) => sp(f - barAt0, CARD);
   const bar = barAt(frame);
-  const selIn = tween(
-    frame,
-    (T.check[selected - 1] ?? 0) + 1,
-    (T.check[selected - 1] ?? 0) + 6,
-  );
-  const actionHover = tween(frame, T.actionHover - 5, T.actionHover);
+  const lastSel = checkEls[selected - 1];
+  const selIn = lastSel
+    ? tween(frame, at(lastSel, "on"), at(lastSel, "tick"))
+    : tween(frame, 0 + 1, 0 + 6);
+  const actionHover = tween(frame, at(actionEl, "hover"), actionEl.start);
   const tableBottom = BODY_Y + acc;
   const sortW = lerp(SORT_BTN.w, 134, sortArrow);
   const filterX = SORT_BTN.x + sortW + 8;
 
   const camAt = (f: number) =>
-    interpolate(f, [T.collapse, T.check[0] ?? T.collapse + 60], [0, 1], {
+    interpolate(f, [cameraEl.start, cameraEl.end], [0, 1], {
       ...CL,
       easing: CAMERA,
     });
@@ -975,10 +918,15 @@ export function TableFilter({
   const uu = tall ? (W * 0.96) / (WIN.w - SIDEBAR) : u;
   const ox = tall ? W * 0.02 - MX * uu : (W - 1280 * u) / 2;
   const oy = tall ? H * 0.6 - (WIN.y + WIN.h / 2) * uu : (H - 720 * u) / 2;
-  const readIn = interpolate(frame, [6, 20], [0, 1], {
-    ...CL,
-    easing: easeOut,
-  });
+  const readIn = interpolate(
+    frame,
+    [at(tableEl, "readAt"), at(tableEl, "readEnd")],
+    [0, 1],
+    {
+      ...CL,
+      easing: easeOut,
+    },
+  );
 
   return (
     <AbsoluteFill style={{ fontFamily, overflow: "hidden" }}>
@@ -1165,10 +1113,10 @@ export function TableFilter({
               interpolate(
                 frame,
                 [
-                  T.sortClick,
-                  T.sortClick + 4,
-                  T.sortClick + 26,
-                  T.sortClick + 36,
+                  sortEl.start,
+                  at(sortEl, "glowIn"),
+                  at(sortEl, "glowHold"),
+                  at(sortEl, "glowOut"),
                 ],
                 [0, 1, 1, 0],
                 CL,
@@ -1292,7 +1240,11 @@ export function TableFilter({
               }}
             >
               {rows.map((r, i) => {
-                const aAt = (f: number) => sp(f - (10 + i * 2.5), CARD);
+                const aAt = (f: number) =>
+                  sp(
+                    f - (at(tableEl, "rowsAt") + i * tableEl.beat("row")),
+                    CARD,
+                  );
                 const a = aAt(frame);
                 const top = rowY[i] + (1 - a) * 12;
                 const lift = climb[i] > 0 ? flipArc : 0;
@@ -1460,7 +1412,7 @@ export function TableFilter({
                     i === optIdx
                       ? interpolate(
                           frame,
-                          [T.optionClick - 8, T.optionClick - 3],
+                          [at(optionEl, "hover"), at(optionEl, "hoverEnd")],
                           [0, 1],
                           CL,
                         )

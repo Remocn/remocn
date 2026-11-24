@@ -6,6 +6,13 @@ import type React from "react";
 import { AbsoluteFill, Easing, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_ITEMS,
+  type FeatureTrioElementId,
+  featureTrioTimeline,
+  shownItems,
+} from "./timeline";
 
 const bricolage = loadBricolage("normal", {
   weights: ["500"],
@@ -53,6 +60,12 @@ export interface FeatureTrioProps {
   /** Playback multiplier. */
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches single items, the glow, the ticks and the row
+   * resolving, by the ids in `./timeline`. Frames on the scene timeline,
+   * after `delay` and `speed`.
+   */
+  timing?: Timing<FeatureTrioElementId>;
 }
 
 /** gradients.sh "grain": bg #070505, [#ffd8b4, #e0703b, #8a2c1d, #2b1015]. */
@@ -110,18 +123,6 @@ function titleEm(text: string) {
   return w / 1000 + TRACK * [...text].length;
 }
 
-const DEFAULT_ITEMS: FeatureTrioItem[] = [
-  { title: "Fast.", description: "Drop in a scene and render it in minutes." },
-  {
-    title: "Composable.",
-    description: "Every piece is a React component you can remix.",
-  },
-  {
-    title: "Open source.",
-    description: "MIT licensed. The code lands in your repo.",
-  },
-];
-
 const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
 
 /** The foreground at `scale`, around the frame's center; nothing extra at 1. */
@@ -140,24 +141,31 @@ function ScaleLayer({
   );
 }
 
-export function FeatureTrio({
-  items = DEFAULT_ITEMS,
-  hold = 36,
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = bricolage.fontFamily,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: FeatureTrioProps) {
+export function FeatureTrio(props: FeatureTrioProps) {
+  const {
+    items = DEFAULT_ITEMS,
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = bricolage.fontFamily,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay) * speed;
   const { width, height, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    featureTrioTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const p = PALETTES[theme];
   const fg = ink ?? p.fg;
-  const list = items.slice(0, 4);
+  const list = shownItems(items);
   const n = list.length;
   const portrait = height > width * 1.1;
   const s = portrait
@@ -165,16 +173,11 @@ export function FeatureTrio({
     : Math.min(width / 1280, height / 720);
 
   // ---- timing ----------------------------------------------------------------
-  const START = 6;
-  const RESOLVE = 24;
-  const total = durationInFrames * speed;
-  const slot = Math.max(
-    22,
-    Math.min(40, (total - START - RESOLVE - hold + 4) / Math.max(1, n)),
-  );
-  const at = (i: number) => START + i * slot;
-  const r0 = at(n - 1) + slot - 4;
-  const resolve = interpolate(frame, [r0, r0 + RESOLVE], [0, 1], {
+  const item = (i: number) => tl.get(`item:${i}`);
+  const at = (i: number) => item(i).start;
+  const row = tl.get("resolve");
+  const r0 = row.start;
+  const resolve = interpolate(frame, [row.start, row.end], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
@@ -226,7 +229,7 @@ export function FeatureTrio({
       acc +
       interpolate(
         frame,
-        [at(i), at(i) + 10, at(i) + slot],
+        [at(i), at(i) + 10, item(i).end],
         [0, 1, 0.35],
         CLAMP,
       ) *
@@ -235,10 +238,12 @@ export function FeatureTrio({
           : interpolate(frame, [at(i + 1), at(i + 1) + 6], [1, 0], CLAMP)),
     0,
   );
-  const glowIn = interpolate(frame, [0, 24], [0, 1], {
+  const glowEl = tl.get("glow");
+  const glowIn = interpolate(frame, [glowEl.start, glowEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
+  const ticks = tl.get("ticks");
   const glowW = interpolate(resolve, [0, 1], [46, 95]);
   const glowH = interpolate(resolve, [0, 1], [58, 44]);
   const glowY = interpolate(resolve, [0, 1], [104, 112]);
@@ -278,9 +283,9 @@ export function FeatureTrio({
           const th = interpolate(resolve, [0, 1], [3, 1.5]) * s;
           const fill =
             i === n - 1
-              ? interpolate(frame, [at(i), at(i) + slot - 6], [0, 1], CLAMP)
+              ? interpolate(frame, [at(i), item(i).end - 6], [0, 1], CLAMP)
               : interpolate(frame, [at(i), at(i + 1)], [0, 1], CLAMP);
-          const tickIn = interpolate(frame, [0, 14], [0, 1], {
+          const tickIn = interpolate(frame, [ticks.start, ticks.end], [0, 1], {
             ...CLAMP,
             easing: EASE_OUT,
           });
@@ -341,13 +346,23 @@ export function FeatureTrio({
           // row: earlier titles come back into their columns
           const back = interpolate(
             frame,
-            [r0 + 15 + i * 3, r0 + 31 + i * 3],
+            [
+              r0 + row.beat("back") + i * row.beat("stagger"),
+              r0 +
+                (row.beat("back") + row.beat("rowIn")) +
+                i * row.beat("stagger"),
+            ],
             [0, 1],
             { ...CLAMP, easing: EASE_OUT },
           );
           const rowDescIn = interpolate(
             frame,
-            [r0 + 20 + i * 3, r0 + 36 + i * 3],
+            [
+              r0 + row.beat("desc") + i * row.beat("stagger"),
+              r0 +
+                (row.beat("desc") + row.beat("rowIn")) +
+                i * row.beat("stagger"),
+            ],
             [0, 1],
             { ...CLAMP, easing: EASE_OUT },
           );

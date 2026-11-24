@@ -2,7 +2,14 @@
 
 import { useId } from "react";
 import { Easing, interpolate } from "remotion";
-import { useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_BAR_REST_POSITIONS,
+  DEFAULT_WORD,
+  type GooeyMorphElementId,
+  gooeyMorphTimeline,
+} from "./timeline";
 
 export interface GooeyMorphProps {
   className?: string;
@@ -32,6 +39,11 @@ export interface GooeyMorphProps {
   displaceComplexity?: number;
   displaceEvolutionPerSecond?: number;
   fill?: string;
+  /**
+   * Moves, trims or stretches single bars and the morph, by the ids in
+   * `./timeline`. Frames on the scene timeline.
+   */
+  timing?: Timing<GooeyMorphElementId>;
 }
 
 function boxBlurSigma(radius: number, iterations: number): number {
@@ -39,54 +51,49 @@ function boxBlurSigma(radius: number, iterations: number): number {
   return Math.sqrt((iterations * (w * w - 1)) / 12);
 }
 
-export function GooeyMorph({
-  className,
-  width = 1920,
-  height = 1080,
-  barWidth = 213,
-  barHeight = 181,
-  barStartPositions = [
-    [956.9, 764.9],
-    [297.5, 799.9],
-    [738.2, 257.9],
-    [1617.9, 302.9],
-  ],
-  barRestPositions = [
-    [634.9, 538.9],
-    [852.5, 538.9],
-    [1070.2, 538.9],
-    [1287.9, 538.9],
-  ],
-  barEntryFrames = [8, 0, 4, 13],
-  barTravelFrames = 30,
-  word = "HELLO",
-  fontFamily = "sans-serif",
-  fontSize = 237,
-  tracking = 0,
-  wordCenterX = 961.4,
-  wordBaselineY = 601.3,
-  blurRadius = 6,
-  blurIterations = 6,
-  alphaInputBlack = 0.4588,
-  alphaInputWhite = 0.5098,
-  morphStartFrame = 50,
-  morphPeakFrame = 63,
-  morphEndFrame = 76,
-  displaceAmount = 20,
-  displaceSize = 19,
-  displaceComplexity = 1,
-  displaceEvolutionPerSecond = 50,
-  fill = "#ffffff",
-}: GooeyMorphProps) {
+export function GooeyMorph(props: GooeyMorphProps) {
+  const {
+    className,
+    width = 1920,
+    height = 1080,
+    barWidth = 213,
+    barHeight = 181,
+    barStartPositions = [
+      [956.9, 764.9],
+      [297.5, 799.9],
+      [738.2, 257.9],
+      [1617.9, 302.9],
+    ],
+    barRestPositions = DEFAULT_BAR_REST_POSITIONS,
+    word = DEFAULT_WORD,
+    fontFamily = "sans-serif",
+    fontSize = 237,
+    tracking = 0,
+    wordCenterX = 961.4,
+    wordBaselineY = 601.3,
+    blurRadius = 6,
+    blurIterations = 6,
+    alphaInputBlack = 0.4588,
+    alphaInputWhite = 0.5098,
+    displaceAmount = 20,
+    displaceSize = 19,
+    displaceComplexity = 1,
+    displaceEvolutionPerSecond = 50,
+    fill = "#ffffff",
+    timing,
+  } = props;
   const frame = useSceneFrame();
+  const { durationInFrames } = useSceneConfig();
+  const tl = useTimeline(gooeyMorphTimeline, props, durationInFrames, timing);
+  const morph = tl.get("morph");
   const filterId = useId();
 
   const travelEase = Easing.bezier(0.88, 0.14, 0.12, 0.86);
 
   const morphWindow: [number, number, number] = [
-    morphStartFrame,
-    morphPeakFrame,
-    morphEndFrame,
+    morph.start,
+    morph.start + morph.beat("peak"),
+    morph.end,
   ];
 
   const blur = interpolate(frame, morphWindow, [0, blurRadius, 0], {
@@ -107,24 +114,14 @@ export function GooeyMorph({
     },
   );
 
-  const barsOpacity = interpolate(
-    frame,
-    [morphStartFrame, morphEndFrame],
-    [1, 0],
-    {
-      extrapolateLeft: "clamp",
-      extrapolateRight: "clamp",
-    },
-  );
-  const wordOpacity = interpolate(
-    frame,
-    [morphStartFrame, morphEndFrame],
-    [0, 1],
-    {
-      extrapolateLeft: "clamp",
-      extrapolateRight: "clamp",
-    },
-  );
+  const barsOpacity = interpolate(frame, [morph.start, morph.end], [1, 0], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+  });
+  const wordOpacity = interpolate(frame, [morph.start, morph.end], [0, 1], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+  });
 
   const slope = 1 / Math.max(alphaInputWhite - alphaInputBlack, 1e-6);
   const offset = -alphaInputBlack * slope;
@@ -195,9 +192,9 @@ export function GooeyMorph({
           <g opacity={barsOpacity}>
             {barRestPositions.map((rest, i) => {
               const start = barStartPositions[i] ?? rest;
-              const entry = barEntryFrames[i] ?? 0;
-              const local = frame - entry;
-              const stops = [0, barTravelFrames / 2, barTravelFrames];
+              const bar = tl.get(`bar:${i}`);
+              const local = frame - bar.start;
+              const stops = [0, bar.beat("turn"), bar.length];
 
               const x = interpolate(
                 local,

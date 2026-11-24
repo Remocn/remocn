@@ -1,21 +1,24 @@
 "use client";
-import { Handwrite, handwriteDuration } from "@/components/remocn/handwrite";
-import { useSceneFrame } from "@/lib/remocn/frame-rate";
+import { Handwrite } from "@/components/remocn/handwrite";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { DEFAULT_STEP, hashRange, steppedRamp } from "@/lib/remocn/stop-motion";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  type CheckListBeat,
+  type CheckListElementId,
+  type CheckListEntry,
+  type CheckListItem,
+  type CheckListTiming,
+  checkListEntries,
+  checkListPlan,
+  checkListTimeline,
+  DEFAULT_PER_STEP,
+  enterEndOf,
+} from "./timeline";
 
 const easeOutCubic = (t: number) => 1 - (1 - t) ** 3;
 
-const DEFAULT_PER_STEP = 1.6;
-
-export type CheckListItem = {
-  text: string;
-  checked?: boolean;
-};
-
-export type CheckListEntry = {
-  text: string;
-  checked: boolean;
-};
+export type { CheckListBeat, CheckListEntry, CheckListItem, CheckListTiming };
 
 export type CheckListGeometry = {
   boxSize: number;
@@ -24,34 +27,7 @@ export type CheckListGeometry = {
   labelWidth: number;
 };
 
-export type CheckListBeat = {
-  boxFrom: number;
-  boxTo: number;
-  labelAt: number;
-  labelEnd: number;
-  tickFrom?: number;
-  tickTo?: number;
-  strikeFrom?: number;
-  strikeTo?: number;
-};
-
-export type CheckListTiming = {
-  delay?: number;
-  itemGap?: number;
-  perStep?: number;
-  step?: number;
-  closeGap?: number;
-};
-
-export function normalizeCheckListItems(
-  items: (string | CheckListItem)[],
-): CheckListEntry[] {
-  return items.map((item) =>
-    typeof item === "string"
-      ? { text: item, checked: true }
-      : { text: item.text, checked: item.checked ?? true },
-  );
-}
+export const normalizeCheckListItems = checkListEntries;
 
 export function checkListGeometry(
   width: number,
@@ -72,69 +48,9 @@ export function checkListRowWidth(width: number, fontSize: number): number {
   return boxSize + boxGap + labelWidth;
 }
 
-export function checkListEnterEnd(
-  items: (string | CheckListItem)[],
-  options?: CheckListTiming,
-): number {
-  const step = options?.step ?? DEFAULT_STEP;
-  const delay = options?.delay ?? 0;
-  const itemGap = options?.itemGap ?? step * 6;
-  const perStep = options?.perStep ?? DEFAULT_PER_STEP;
+export const checkListEnterEnd = enterEndOf;
 
-  return normalizeCheckListItems(items).reduce(
-    (end, item, i) =>
-      Math.max(
-        end,
-        delay +
-          i * itemGap +
-          step * 2 +
-          handwriteDuration(item.text, { perStep, step }),
-      ),
-    delay,
-  );
-}
-
-export function checkListSchedule(
-  items: (string | CheckListItem)[],
-  options?: CheckListTiming,
-): CheckListBeat[] {
-  const step = options?.step ?? DEFAULT_STEP;
-  const delay = options?.delay ?? 0;
-  const itemGap = options?.itemGap ?? step * 6;
-  const perStep = options?.perStep ?? DEFAULT_PER_STEP;
-  const closeGap = options?.closeGap ?? step * 3;
-  const entries = normalizeCheckListItems(items);
-  const enterEnd = checkListEnterEnd(entries, options);
-
-  const closeOrder = new Map<number, number>();
-  entries.forEach((item, i) => {
-    if (item.checked) {
-      closeOrder.set(i, closeOrder.size);
-    }
-  });
-
-  return entries.map((item, i) => {
-    const boxFrom = delay + i * itemGap;
-    const boxTo = boxFrom + step * 2;
-    const labelEnd = boxTo + handwriteDuration(item.text, { perStep, step });
-    const slot = closeOrder.get(i);
-    if (slot === undefined) {
-      return { boxFrom, boxTo, labelAt: boxTo, labelEnd };
-    }
-    const tickFrom = enterEnd + slot * closeGap;
-    const tickTo = tickFrom + step * 2;
-    return {
-      boxFrom,
-      boxTo,
-      labelAt: boxTo,
-      labelEnd,
-      tickFrom,
-      tickTo,
-      strikeFrom: tickTo,
-      strikeTo: tickTo + step * 2,
-    };
-  });
-}
+export const checkListSchedule = checkListPlan;
 
 export function checkListDuration(
   items: (string | CheckListItem)[],
@@ -207,34 +123,34 @@ export interface CheckListProps {
   weight?: 400 | 500 | 600 | 700;
   seed?: string;
   step?: number;
+  /**
+   * Moves, trims or stretches single rows and checks, by the ids in
+   * `./timeline`. Frames on the scene timeline; the first row starts at
+   * `delay`.
+   */
+  timing?: Timing<CheckListElementId>;
 }
 
-export function CheckList({
-  items,
-  width,
-  fontSize = 40,
-  color = "#26242c",
-  boxColor = "#26242c",
-  tickColor = "#6f7f35",
-  delay = 0,
-  itemGap,
-  closeGap,
-  rowGap,
-  strokeWidth = 3,
-  perStep = DEFAULT_PER_STEP,
-  weight = 600,
-  seed = "checklist",
-  step = DEFAULT_STEP,
-}: CheckListProps) {
+export function CheckList(props: CheckListProps) {
+  const {
+    items,
+    width,
+    fontSize = 40,
+    color = "#26242c",
+    boxColor = "#26242c",
+    tickColor = "#6f7f35",
+    rowGap,
+    strokeWidth = 3,
+    perStep = DEFAULT_PER_STEP,
+    weight = 600,
+    seed = "checklist",
+    step = DEFAULT_STEP,
+    timing,
+  } = props;
   const frame = useSceneFrame();
+  const { durationInFrames } = useSceneConfig();
+  const tl = useTimeline(checkListTimeline, props, durationInFrames, timing);
   const entries = normalizeCheckListItems(items);
-  const schedule = checkListSchedule(entries, {
-    delay,
-    itemGap,
-    closeGap,
-    perStep,
-    step,
-  });
   const { boxSize, boxGap, rowHeight, labelWidth } = checkListGeometry(
     width,
     fontSize,
@@ -250,25 +166,28 @@ export function CheckList({
       }}
     >
       {entries.map((item, i) => {
-        const beat = schedule[i];
-        const boxProgress = steppedRamp(frame, beat.boxFrom, beat.boxTo, {
+        const row = tl.get(`item:${i}`);
+        const boxTo = row.start + row.beat("box");
+        const boxProgress = steppedRamp(frame, row.start, boxTo, {
           ease: easeOutCubic,
           step,
         });
-        const tickProgress =
-          beat.tickFrom === undefined || beat.tickTo === undefined
-            ? 0
-            : steppedRamp(frame, beat.tickFrom, beat.tickTo, {
-                ease: easeOutCubic,
-                step,
-              });
-        const strikeProgress =
-          beat.strikeFrom === undefined || beat.strikeTo === undefined
-            ? 0
-            : steppedRamp(frame, beat.strikeFrom, beat.strikeTo, {
-                ease: easeOutCubic,
-                step,
-              });
+        let tickProgress = 0;
+        let strikeProgress = 0;
+        if (item.checked) {
+          const check = tl.get(`check:${i}`);
+          const tickTo = check.start + check.beat("tick");
+          tickProgress = steppedRamp(frame, check.start, tickTo, {
+            ease: easeOutCubic,
+            step,
+          });
+          strikeProgress = steppedRamp(
+            frame,
+            tickTo,
+            tickTo + check.beat("strike"),
+            { ease: easeOutCubic, step },
+          );
+        }
 
         return (
           <div
@@ -325,7 +244,7 @@ export function CheckList({
                 text={item.text}
                 fontSize={fontSize}
                 color={color}
-                delay={beat.labelAt}
+                delay={boxTo}
                 perStep={perStep}
                 weight={weight}
                 align="left"

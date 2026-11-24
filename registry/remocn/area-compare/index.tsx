@@ -7,6 +7,8 @@ import { type ReactNode, useId } from "react";
 import { AbsoluteFill, Easing, interpolate, interpolateColors } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import { type AreaCompareElementId, areaCompareTimeline } from "./timeline";
 
 const { fontFamily: sans } = loadFont("normal", {
   weights: ["400", "500"],
@@ -96,6 +98,12 @@ export interface AreaCompareProps {
   grain?: boolean;
   theme?: "dark" | "light";
   speed?: number;
+  /**
+   * Moves, trims or stretches the fade-in, the shrink, the glide, the
+   * landing, the ratio and the drift, by the ids in `./timeline`. Frames on
+   * the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<AreaCompareElementId>;
 }
 
 const EASE_IO = Easing.bezier(0.65, 0, 0.35, 1);
@@ -132,10 +140,6 @@ const THEMES = {
     grain: 0.045,
   },
 } as const;
-
-const T_IN = 0;
-const T_SHRINK = 38;
-const SHRINK_LEN = 40;
 
 function groupThousands(n: number) {
   return String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
@@ -199,12 +203,16 @@ function Grain({ opacity }: { opacity: number }) {
 function Hero({
   text,
   t,
+  stagger,
+  rise,
   size,
   color,
   fontFamily,
 }: {
   text: string;
   t: number;
+  stagger: number;
+  rise: number;
   size: number;
   color: string;
   fontFamily: string;
@@ -225,7 +233,8 @@ function Hero({
       }}
     >
       {chars.map((ch, i) => {
-        const p = interpolate(t, [i * 3, i * 3 + 22], [0, 1], {
+        const at = i * stagger;
+        const p = interpolate(t, [at, at + rise], [0, 1], {
           ...CLAMP,
           easing: EASE_OUT,
         });
@@ -255,35 +264,49 @@ function Hero({
   );
 }
 
-export function AreaCompare({
-  label = "Bundle size",
-  before = "Before",
-  after = "remocn",
-  beforeValue = 1200,
-  afterValue = 84,
-  unit = "KB",
-  verdict = "smaller",
-  shape = "circle",
-  accent = "#3B5BFD",
-  shrink = SHRINK_LEN,
-  ink,
-  background,
-  fontFamily = display,
-  logo,
-  scale = 1,
-  delay = 0,
-  grain = true,
-  theme = "dark",
-  speed = 1,
-}: AreaCompareProps) {
+export function AreaCompare(props: AreaCompareProps) {
+  const {
+    label = "Bundle size",
+    before = "Before",
+    after = "remocn",
+    beforeValue = 1200,
+    afterValue = 84,
+    unit = "KB",
+    verdict = "smaller",
+    shape = "circle",
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = display,
+    logo,
+    scale = 1,
+    delay = 0,
+    grain = true,
+    theme = "dark",
+    speed = 1,
+    timing,
+  } = props;
   const tilt = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width, height } = useSceneConfig();
+  const { width, height, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    areaCompareTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const enterEl = tl.get("enter");
+  const driftEl = tl.get("drift");
+  const shrinkEl = tl.get("shrink");
+  const glideEl = tl.get("glide");
+  const land = tl.get("land");
+  const ratioEl = tl.get("ratio");
+  const T_SHRINK = shrinkEl.start;
+  const T_LAND = land.start;
   const u = Math.min(width / 1280, height / 720);
   const p = THEMES[theme];
   const fg = ink ?? p.fg;
   const stage = background ?? p.bg;
-  const T_LAND = T_SHRINK + shrink;
 
   const big = Math.max(beforeValue, afterValue, 0.0001);
   const small = Math.max(Math.min(beforeValue, afterValue), 0.0001);
@@ -293,22 +316,22 @@ export function AreaCompare({
   const R0 = height * (square ? 0.33 : 0.36);
   const Rf = R0 * Math.sqrt(small / big);
 
-  const enter = interpolate(t, [T_IN - 8, T_IN + 16], [0, 1], {
+  const enter = interpolate(t, [enterEl.start, enterEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
-  const s = interpolate(t, [T_SHRINK, T_LAND], [0, 1], {
+  const s = interpolate(t, [shrinkEl.start, shrinkEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_SHRINK,
   });
-  const sLin = interpolate(t, [T_SHRINK, T_LAND], [0, 1], {
+  const sLin = interpolate(t, [shrinkEl.start, shrinkEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
   const r = R0 + (Rf - R0) * s;
   const value = beforeValue + (afterValue - beforeValue) * sLin;
 
-  const glide = interpolate(t, [T_SHRINK + 6, T_LAND + 14], [0, 1], {
+  const glide = interpolate(t, [glideEl.start, glideEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
@@ -319,16 +342,31 @@ export function AreaCompare({
   const bottom = gy + R0;
   const cy = bottom - r;
 
-  const ghostIn = interpolate(t, [T_SHRINK, T_SHRINK + 10], [0, 1], CLAMP);
-  const tagIn = interpolate(t, [T_SHRINK + 14, T_SHRINK + 30], [0, 1], {
-    ...CLAMP,
-    easing: EASE_OUT,
-  });
+  const ghostIn = interpolate(
+    t,
+    [T_SHRINK, T_SHRINK + shrinkEl.beat("ghost")],
+    [0, 1],
+    CLAMP,
+  );
+  const tagIn = interpolate(
+    t,
+    [T_SHRINK + shrinkEl.beat("tagAt"), T_SHRINK + shrinkEl.beat("tag")],
+    [0, 1],
+    {
+      ...CLAMP,
+      easing: EASE_OUT,
+    },
+  );
   const tint = interpolate(s, [0.2, 0.62], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
-  const meshDrift = interpolate(t, [0, T_LAND + 90], [0, 1.4], CLAMP);
+  const meshDrift = interpolate(
+    t,
+    [driftEl.start, driftEl.end],
+    [0, 1.4],
+    CLAMP,
+  );
   const onFill = interpolateColors(
     interpolate(tint, [0.38, 0.58], [0, 1], CLAMP),
     [0, 1],
@@ -341,10 +379,18 @@ export function AreaCompare({
   const insideAlpha = fitsInside
     ? 1
     : interpolate(s, [0.55, 0.8], [1, 0], CLAMP);
-  const eyebrowAlpha = interpolate(t, [T_SHRINK - 2, T_SHRINK + 10], [1, 0], {
-    ...CLAMP,
-    easing: EASE_IO,
-  });
+  const eyebrowAlpha = interpolate(
+    t,
+    [
+      T_SHRINK + shrinkEl.beat("eyebrowAt"),
+      T_SHRINK + shrinkEl.beat("eyebrow"),
+    ],
+    [1, 0],
+    {
+      ...CLAMP,
+      easing: EASE_IO,
+    },
+  );
   // While the shape shrinks, the value's font size eases and the label above
   // it folds away, which moves the value's baseline by layout, pixel by
   // pixel. For those frames the block is laid out once at its landed size
@@ -352,31 +398,51 @@ export function AreaCompare({
   const folding = (s > 0 && s < 1) || (eyebrowAlpha > 0 && eyebrowAlpha < 1);
   const valueK = valueSize / valueEnd;
   const fold = 17 * u * eyebrowAlpha;
-  const afterTagIn = interpolate(t, [T_LAND - 4, T_LAND + 14], [0, 1], {
-    ...CLAMP,
-    easing: EASE_OUT,
-  });
+  const afterTagIn = interpolate(
+    t,
+    [T_LAND + land.beat("tagAt"), T_LAND + land.beat("tag")],
+    [0, 1],
+    {
+      ...CLAMP,
+      easing: EASE_OUT,
+    },
+  );
   const outsideIn = fitsInside
     ? 0
-    : interpolate(t, [T_LAND - 6, T_LAND + 12], [0, 1], {
-        ...CLAMP,
-        easing: EASE_OUT,
-      });
+    : interpolate(
+        t,
+        [T_LAND + land.beat("outsideAt"), T_LAND + land.beat("outside")],
+        [0, 1],
+        {
+          ...CLAMP,
+          easing: EASE_OUT,
+        },
+      );
 
-  const heroT = t - (T_LAND + 2);
+  const heroT = t - ratioEl.start;
   const heroSize = Math.min(250 * u, width * 0.19);
   const textX = gxEnd + R0 + width * 0.07;
   const textW = width - margin - textX;
-  const lineIn = interpolate(heroT, [10, 30], [0, 1], {
-    ...CLAMP,
-    easing: EASE_OUT,
-  });
-  const eyeIn = interpolate(heroT, [-4, 14], [0, 1], {
-    ...CLAMP,
-    easing: EASE_OUT,
-  });
+  const lineIn = interpolate(
+    heroT,
+    [ratioEl.beat("verdictAt"), ratioEl.beat("verdict")],
+    [0, 1],
+    {
+      ...CLAMP,
+      easing: EASE_OUT,
+    },
+  );
+  const eyeIn = interpolate(
+    heroT,
+    [ratioEl.beat("labelAt"), ratioEl.beat("label")],
+    [0, 1],
+    {
+      ...CLAMP,
+      easing: EASE_OUT,
+    },
+  );
   const breatheAt = (at: number) =>
-    interpolate(at, [0, T_LAND + 90], [1.025, 1], {
+    interpolate(at, [driftEl.start, driftEl.end], [1.025, 1], {
       ...CLAMP,
       easing: EASE_IO,
     });
@@ -643,6 +709,8 @@ export function AreaCompare({
               <Hero
                 text={formatRatio(ratio)}
                 t={heroT}
+                stagger={ratioEl.beat("stagger")}
+                rise={ratioEl.beat("rise")}
                 size={heroSize}
                 color={fg}
                 fontFamily={fontFamily}

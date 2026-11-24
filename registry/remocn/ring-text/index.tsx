@@ -4,6 +4,13 @@ import { loadFont } from "@remotion/google-fonts/Inter";
 import { useEffect, useState } from "react";
 import { continueRender, delayRender, Easing, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  ENTRANCE,
+  FADE,
+  type RingTextElementId,
+  ringTextTimeline,
+} from "./timeline";
 
 const { fontFamily: INTER } = loadFont("normal", {
   weights: ["100", "900"],
@@ -24,6 +31,11 @@ export interface RingTextProps {
   period?: number;
   speed?: number;
   className?: string;
+  /**
+   * Moves, trims or stretches the ring's entrance, by the ids in
+   * `./timeline`. Frames on the scene timeline, after `speed`.
+   */
+  timing?: Timing<RingTextElementId>;
 }
 
 export const ringTextDefaults = {
@@ -39,7 +51,7 @@ export const ringTextDefaults = {
   roll: -16,
   period: 240,
   speed: 1,
-} satisfies Required<Omit<RingTextProps, "className">>;
+} satisfies Required<Omit<RingTextProps, "className" | "timing">>;
 
 /** Frame where the entrance has settled into the cruise spin. */
 export const ringTextLength = 30;
@@ -47,8 +59,6 @@ export const ringTextLength = 30;
 /** Band height, in em. */
 export const ringBandHeight = 1.5;
 
-const ENTRANCE = 30;
-const FADE = 12;
 const START_SCALE = 0.85;
 /** Extra turn, in degrees, that decays over the entrance. */
 const ENTRANCE_SPIN = 90;
@@ -142,16 +152,33 @@ export function getRingTextLayout(
 /** Ring pose at `t`: spin in degrees, tilt with its wobble, entrance scale and opacity. */
 export function getRingTextPose(
   t: number,
-  options: { period?: number; tilt?: number } = {},
+  options: {
+    period?: number;
+    tilt?: number;
+    /** When the entrance starts, how long it settles and fades in. */
+    entrance?: { start: number; length: number; fade: number };
+  } = {},
 ) {
   const period = Math.max(1, finite(options.period, ringTextDefaults.period));
   const tilt = finite(options.tilt, ringTextDefaults.tilt);
-  const settle = easeOutCubic(Math.min(1, Math.max(0, t / ENTRANCE)));
+  const entrance = options.entrance ?? {
+    start: 0,
+    length: ENTRANCE,
+    fade: FADE,
+  };
+  const settle = easeOutCubic(
+    Math.min(1, Math.max(0, (t - entrance.start) / entrance.length)),
+  );
   return {
     spin: (360 * t) / period + ENTRANCE_SPIN * settle,
     tilt: tilt + WOBBLE * Math.sin((2 * Math.PI * t) / WOBBLE_PERIOD),
     scale: START_SCALE + (1 - START_SCALE) * settle,
-    opacity: interpolate(t, [0, FADE], [0, 1], CLAMP),
+    opacity: interpolate(
+      t,
+      [entrance.start, entrance.start + entrance.fade],
+      [0, 1],
+      CLAMP,
+    ),
   };
 }
 
@@ -189,23 +216,32 @@ function useAdvances(chars: readonly string[], font: string, fallback: number) {
   return advances ?? chars.map(() => fallback);
 }
 
-export function RingText({
-  text = ringTextDefaults.text,
-  separator = ringTextDefaults.separator,
-  radius = ringTextDefaults.radius,
-  fontSize = ringTextDefaults.fontSize,
-  fontWeight = ringTextDefaults.fontWeight,
-  fontFamily = ringTextDefaults.fontFamily,
-  color = ringTextDefaults.color,
-  band = ringTextDefaults.band,
-  tilt = ringTextDefaults.tilt,
-  roll = ringTextDefaults.roll,
-  period = ringTextDefaults.period,
-  speed = ringTextDefaults.speed,
-  className,
-}: RingTextProps) {
+export function RingText(props: RingTextProps) {
+  const {
+    text = ringTextDefaults.text,
+    separator = ringTextDefaults.separator,
+    radius = ringTextDefaults.radius,
+    fontSize = ringTextDefaults.fontSize,
+    fontWeight = ringTextDefaults.fontWeight,
+    fontFamily = ringTextDefaults.fontFamily,
+    color = ringTextDefaults.color,
+    band = ringTextDefaults.band,
+    tilt = ringTextDefaults.tilt,
+    roll = ringTextDefaults.roll,
+    period = ringTextDefaults.period,
+    speed = ringTextDefaults.speed,
+    className,
+    timing,
+  } = props;
   const frame = useSceneFrame();
-  const { fps, height } = useSceneConfig();
+  const { fps, height, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    ringTextTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const entranceEl = tl.get("entrance");
   const unit = height / 720;
   const t = getRingTextTime(frame, { fps, speed });
   const chars = getRingTextToken(text, separator);
@@ -215,7 +251,15 @@ export function RingText({
     FALLBACK_ADVANCE * fontSize,
   );
   const layout = getRingTextLayout(advances, radius);
-  const pose = getRingTextPose(t, { period, tilt });
+  const pose = getRingTextPose(t, {
+    period,
+    tilt,
+    entrance: {
+      start: entranceEl.start,
+      length: entranceEl.length,
+      fade: entranceEl.beat("fade"),
+    },
+  });
   const bandHeight = ringBandHeight * fontSize * unit;
   // Adjacent flat panels meet at an angle and their antialiased edges let the
   // background through; bleeding each panel into its neighbors hides the seam.

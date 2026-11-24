@@ -8,6 +8,12 @@ import { useId, useMemo } from "react";
 import { AbsoluteFill, Easing, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_SORT_GROUPS,
+  type DotSortElementId,
+  dotSortTimeline,
+} from "./timeline";
 
 const { fontFamily: sans } = loadSans("normal", {
   weights: ["400", "500"],
@@ -107,15 +113,15 @@ export interface DotSortProps {
   grain?: boolean;
   theme?: "dark" | "light";
   speed?: number;
+  /**
+   * Moves, trims or stretches the scatter, the sort, the band labels, the
+   * focus, the figure and the caption, by the ids in `./timeline`.
+   * Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<DotSortElementId>;
 }
 
-const DEFAULT_GROUPS: DotSortGroup[] = [
-  { label: "remocn", value: 41 },
-  { label: "Kitebase", value: 23 },
-  { label: "Lumen", value: 17 },
-  { label: "Fernway", value: 12 },
-  { label: "Other", value: 7 },
-];
+const DEFAULT_GROUPS: DotSortGroup[] = DEFAULT_SORT_GROUPS;
 
 const EASE_IO = Easing.bezier(0.65, 0, 0.35, 1);
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
@@ -144,10 +150,6 @@ const THEMES = {
 
 const DOTS = 400;
 const ROWS = 4;
-const SORT_AT = 18;
-const SWEEP = 24;
-const JITTER = 9;
-const FLY = 28;
 
 function hash(n: number) {
   const x = Math.sin(n * 127.1 + 311.7) * 43758.5453;
@@ -212,31 +214,44 @@ function ScaleLayer({
   );
 }
 
-export function DotSort({
-  groups = DEFAULT_GROUPS,
-  highlight = 0,
-  caption,
-  verb = "choose",
-  logo,
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = sans,
-  fly = FLY,
-  scale = 1,
-  delay = 0,
-  grain = true,
-  theme = "dark",
-  speed = 1,
-}: DotSortProps) {
+export function DotSort(props: DotSortProps) {
+  const {
+    groups = DEFAULT_GROUPS,
+    highlight = 0,
+    caption,
+    verb = "choose",
+    logo,
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = sans,
+    scale = 1,
+    delay = 0,
+    grain = true,
+    theme = "dark",
+    speed = 1,
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H } = useSceneConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    dotSortTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const scatterEl = tl.get("scatter");
+  const pushEl = tl.get("push");
+  const sortEl = tl.get("sort");
+  const focusEl = tl.get("focus");
+  const figureEl = tl.get("figure");
+  const captionEl = tl.get("caption");
+  const fly = sortEl.beat("fly");
   const u = Math.min(W / 1280, H / 720);
   const p = THEMES[theme];
   const fg = ink ?? p.fg;
   const bg = background ?? p.bg;
-  const HIT = SORT_AT + SWEEP + JITTER + fly + 2;
   const aurora = AURORA[theme];
 
   const list = groups.slice(0, 5);
@@ -315,9 +330,12 @@ export function DotSort({
           tx: barX + (col + 0.5) * pitch,
           ty: y0 + bi * (bandH + bandGap) + (row + 0.5) * pitch,
           bend: (hash(seed + 3.3) - 0.5) * 120 * u,
-          start: SORT_AT + (col / maxCols) * SWEEP + hash(seed + 5.5) * JITTER,
+          start:
+            sortEl.start +
+            (col / maxCols) * sortEl.beat("sweep") +
+            hash(seed + 5.5) * sortEl.beat("jitter"),
           phase: hash(seed + 9.1) * Math.PI * 2,
-          appear: hash(seed + 2.4) * 10 - 6,
+          appear: scatterEl.start + hash(seed + 2.4) * scatterEl.beat("spread"),
         });
         k++;
       }
@@ -326,25 +344,45 @@ export function DotSort({
       .map((d) => d.k)
       .sort((a, b) => hash(a * 1.9 + 0.3) - hash(b * 1.9 + 0.3));
     return order.map((i) => out[i]);
-  }, [bands, W, H, u, barX, pitch, y0, bandH, bandGap, maxCols, hl, aurora]);
+  }, [
+    bands,
+    W,
+    H,
+    u,
+    barX,
+    pitch,
+    y0,
+    bandH,
+    bandGap,
+    maxCols,
+    hl,
+    aurora,
+    sortEl,
+    scatterEl,
+  ]);
 
-  const dim = interpolate(t, [HIT, HIT + 16], [0, 1], {
+  const dim = interpolate(t, [focusEl.start, focusEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
-  const land = interpolate(t, [HIT + 2, HIT + 22], [0, 1], {
-    ...CLAMP,
-    easing: EASE_OUT,
-  });
-  const count = interpolate(t, [HIT + 2, HIT + 30], [0, 1], {
+  const land = interpolate(
+    t,
+    [figureEl.start, figureEl.start + figureEl.beat("land")],
+    [0, 1],
+    {
+      ...CLAMP,
+      easing: EASE_OUT,
+    },
+  );
+  const count = interpolate(t, [figureEl.start, figureEl.end], [0, 1], {
     ...CLAMP,
     easing: Easing.bezier(0.22, 1, 0.36, 1),
   });
-  const capIn = interpolate(t, [HIT + 12, HIT + 30], [0, 1], {
+  const capIn = interpolate(t, [captionEl.start, captionEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
-  const push = interpolate(t, [0, HIT + 50], [0, 1], {
+  const push = interpolate(t, [pushEl.start, pushEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
@@ -352,7 +390,7 @@ export function DotSort({
 
   const circles: React.ReactNode[] = [];
   for (const d of dots) {
-    const a = interpolate(t - d.appear, [0, 12], [0, 1], {
+    const a = interpolate(t - d.appear, [0, scatterEl.beat("fade")], [0, 1], {
       ...CLAMP,
       easing: EASE_OUT,
     });
@@ -405,8 +443,8 @@ export function DotSort({
           </svg>
 
           {bands.map((b, bi) => {
-            const done = SORT_AT + SWEEP * 0.4 + fly + bi * 3;
-            const a = interpolate(t, [done, done + 16], [0, 1], {
+            const labelEl = tl.get(`label:${bi}`);
+            const a = interpolate(t, [labelEl.start, labelEl.end], [0, 1], {
               ...CLAMP,
               easing: EASE_OUT,
             });

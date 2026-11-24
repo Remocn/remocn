@@ -16,6 +16,12 @@ import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_SLIDES,
+  type WhatsNewModalElementId,
+  whatsNewModalTimeline,
+} from "./timeline";
 
 const { fontFamily: figtree } = loadFont("normal", {
   weights: ["300", "400"],
@@ -63,26 +69,14 @@ export interface WhatsNewModalProps {
   speed?: number;
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
+  /**
+   * Moves, trims or stretches the app, the modal, each slide, the camera and
+   * the cursor's press, by the ids in `./timeline`. Frames on the scene
+   * timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<WhatsNewModalElementId>;
 }
 
-const DEFAULT_SLIDES: WhatsNewSlide[] = [
-  {
-    eyebrow: "New in 2.0",
-    title: "Launch videos, built from components",
-    body: "Drop product UI, charts and captions into a scene. Every piece is a React component you own.",
-  },
-  {
-    eyebrow: "Timeline",
-    title: "Retime every beat in one place",
-    body: "Trim, reorder and stretch scenes. Springs stay in sync at any length.",
-  },
-  {
-    eyebrow: "Cloud render",
-    title: "Render in 4K, share in one click",
-    body: "Export from the browser and send a review link before your coffee gets cold.",
-    cta: "Try it now",
-  },
-];
 const DEFAULT_IMAGES = [1, 4, 5, 6].map((i) =>
   staticFile(`reel/reel-${i}.jpg`),
 );
@@ -109,8 +103,6 @@ const tween = (
   easing: (t: number) => number,
 ) => interpolate(f, [from, from + len], [0, 1], { ...CL, easing });
 
-const FIRST = 10;
-const DWELL = 66;
 const ART_H = 272;
 
 function withAlpha(color: string, alpha: number) {
@@ -735,30 +727,37 @@ function ScaleLayer({
   );
 }
 
-export function WhatsNewModal({
-  slides = DEFAULT_SLIDES,
-  brand = "remocn",
-  userName = "Maya Chen",
-  children,
-  src,
-  images = DEFAULT_IMAGES,
-  nextLabel = "Next",
-  skipLabel = "Skip",
-  dwell = DWELL,
-  theme = "light",
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = figtree,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  ground,
-  groundParams,
-}: WhatsNewModalProps) {
+export function WhatsNewModal(props: WhatsNewModalProps) {
+  const {
+    slides = DEFAULT_SLIDES as WhatsNewSlide[],
+    brand = "remocn",
+    userName = "Maya Chen",
+    children,
+    src,
+    images = DEFAULT_IMAGES,
+    nextLabel = "Next",
+    skipLabel = "Skip",
+    theme = "light",
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = figtree,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    ground,
+    groundParams,
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width, height, fps } = useSceneConfig();
+  const { width, height, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    whatsNewModalTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const tall = height > width;
   const SW = tall ? 600 : 1280;
   const SH = tall ? (600 * height) / width : 720;
@@ -772,9 +771,16 @@ export function WhatsNewModal({
     spAt(frame, at, config);
 
   const n = Math.max(1, slides.length);
-  const swipeAt = Array.from({ length: n }, (_, i) => FIRST + i * dwell);
-  const endAt = swipeAt[n - 1] + dwell - 10;
-  const PRESS = endAt + 20;
+  const slideEls = tl.lane("Slides");
+  const swipeAt = slideEls.map((e) => e.start);
+  const appEl = tl.get("app");
+  const dimEl = tl.get("dim");
+  const modalEl = tl.get("modal");
+  const camera = tl.get("camera");
+  const cursorEl = tl.get("cursor");
+  const pressEl = tl.get("press");
+  const endAt = cursorEl.start;
+  const PRESS = pressEl.start;
   const pos = swipeAt.slice(1).reduce((acc, t) => acc + sp(t, SPR.heavy), 0);
   const active = Math.min(n - 1, swipeAt.filter((t) => frame >= t).length - 1);
 
@@ -786,24 +792,30 @@ export function WhatsNewModal({
     ? { x: 20, y: 56, w: SW - 40, h: SH }
     : { x: 120, y: 56, w: SW - 240, h: 608 };
 
-  const winIn = sp(0, SPR.heavy);
-  const winOp = tween(frame, 0, 10, EASE.enter);
-  const dim = tween(frame, 4, 14, EASE.soft);
-  const modalIn = sp(6, SPR.card);
-  const modalOp = tween(frame, 6, 8, EASE.enter);
-  const fan = sp(12, SPR.card);
-  const kick = swipeAt
+  const winIn = sp(appEl.start, SPR.heavy);
+  const winOp = tween(frame, appEl.start, appEl.length, EASE.enter);
+  const dim = tween(frame, dimEl.start, dimEl.length, EASE.soft);
+  const modalIn = sp(modalEl.start, SPR.card);
+  const modalOp = tween(frame, modalEl.start, modalEl.length, EASE.enter);
+  const fan = sp(tl.get("fan").start, SPR.card);
+  const kick = slideEls
     .slice(1)
-    .reduce((acc, t) => acc + Math.sin(clamp01((frame - t) / 16) * Math.PI), 0);
-  const camAt = (f: number) => 1 + 0.03 * tween(f, 6, PRESS, EASE.camera);
+    .reduce(
+      (acc, e) =>
+        acc + Math.sin(clamp01((frame - e.start) / e.beat("kick")) * Math.PI),
+      0,
+    );
+  const camAt = (f: number) =>
+    1 + 0.03 * tween(f, camera.start, camera.length, EASE.camera);
   const cam = camAt(frame);
   // The camera carries the window and the modal, so its tilt covers their
   // text; each of them tilts on its own only while the camera holds still.
   const camMoving = stirs((f) => camAt(f) * 1000, frame);
   const winMoving =
-    !camMoving && stirs((f) => spAt(f, 0, SPR.heavy) * 36, frame);
+    !camMoving && stirs((f) => spAt(f, appEl.start, SPR.heavy) * 36, frame);
   const modalMoving =
-    !camMoving && stirs((f) => spAt(f, 6, SPR.card) * (20 + 0.04 * MH), frame);
+    !camMoving &&
+    stirs((f) => spAt(f, modalEl.start, SPR.card) * (20 + 0.04 * MH), frame);
   // Layout rounds a box to whole pixels, so slides swiped by `left` click
   // sideways; they are laid out on the nearest stop and the swipe there is a
   // transform.
@@ -822,10 +834,18 @@ export function WhatsNewModal({
     x: start.x + dxx * legP + (dyy / len) * bend,
     y: start.y + dyy * legP - (dxx / len) * bend,
   };
-  const press = clamp01(sp(PRESS - 2, SPR.chip) - sp(PRESS + 3, SPR.chip));
+  const press = clamp01(
+    sp(PRESS + pressEl.beat("down"), SPR.chip) -
+      sp(PRESS + pressEl.beat("up"), SPR.chip),
+  );
   const pressed = frame >= PRESS;
-  const hoverCta = tween(frame, PRESS - 8, 6, EASE.enter);
-  const cursorOp = tween(frame, endAt, 6, EASE.enter);
+  const hoverCta = tween(
+    frame,
+    PRESS + pressEl.beat("hover"),
+    pressEl.beat("hoverIn"),
+    EASE.enter,
+  );
+  const cursorOp = tween(frame, endAt, cursorEl.beat("fade"), EASE.enter);
   const cta = slides[active]?.cta ?? nextLabel;
 
   return (
@@ -970,7 +990,8 @@ export function WhatsNewModal({
                 {slides.map((s, i) => {
                   const x = (i - pos) * (MW - 16);
                   if (Math.abs(x) > MW + 10) return null;
-                  const t = frame - (i === 0 ? FIRST : swipeAt[i] - 2);
+                  const t =
+                    frame - (slideEls[i].start + slideEls[i].beat("art"));
                   return (
                     <div
                       key={s.title}
@@ -1028,13 +1049,21 @@ export function WhatsNewModal({
                 <Icon d={ICON.close} size={16} color={pal.muted} />
               </div>
               {slides.map((s, i) => {
-                const inAt = i === 0 ? FIRST + 2 : swipeAt[i] + 4;
-                const tin = tween(frame, inAt, 14, EASE.enter);
+                const el = slideEls[i];
+                const inAt = el.start + el.beat("text");
+                const tin = tween(frame, inAt, el.beat("line"), EASE.enter);
                 const tout =
-                  i < n - 1 ? tween(frame, swipeAt[i + 1], 6, EASE.exit) : 0;
+                  i < n - 1
+                    ? tween(frame, swipeAt[i + 1], el.beat("exit"), EASE.exit)
+                    : 0;
                 if (tout >= 1 || tin <= 0) return null;
-                const line = (d: number) => {
-                  const p = tween(frame, inAt + d, 14, EASE.enter);
+                const line = (k: number) => {
+                  const p = tween(
+                    frame,
+                    inAt + k * el.beat("stagger"),
+                    el.beat("line"),
+                    EASE.enter,
+                  );
                   return {
                     opacity: p * (1 - tout),
                     transform: `translateX(${(1 - p) * 26 - tout * 22}px)`,
@@ -1061,7 +1090,7 @@ export function WhatsNewModal({
                         color: fg,
                         textWrap: "balance",
                         marginTop: 10,
-                        ...line(2),
+                        ...line(1),
                       }}
                     >
                       {s.title}
@@ -1073,7 +1102,7 @@ export function WhatsNewModal({
                         color: pal.muted,
                         textWrap: "pretty",
                         marginTop: 12,
-                        ...line(4),
+                        ...line(2),
                       }}
                     >
                       {s.body}
@@ -1098,7 +1127,10 @@ export function WhatsNewModal({
                       ? 1
                       : interpolate(
                           frame,
-                          [swipeAt[i], swipeAt[i] + dwell - 4],
+                          [
+                            swipeAt[i],
+                            slideEls[i].end - slideEls[i].beat("fillGap"),
+                          ],
                           [0, 1],
                           CL,
                         );

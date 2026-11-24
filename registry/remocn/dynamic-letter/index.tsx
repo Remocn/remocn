@@ -4,17 +4,17 @@ import type React from "react";
 import { useId, useMemo } from "react";
 import { AbsoluteFill, Easing, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_FINAL,
+  DEFAULT_VARIANTS,
+  type DynamicLetterElementId,
+  type DynamicLetterVariant,
+  dynamicLetterSequence,
+  dynamicLetterTimeline,
+} from "./timeline";
 
-export type DynamicLetterVariant =
-  | "solid"
-  | "outline"
-  | "stripes"
-  | "slice"
-  | "stencil"
-  | "dots"
-  | "overflow"
-  | "counter"
-  | "shadow";
+export type { DynamicLetterVariant };
 
 export interface DynamicLetterProps {
   /** Wordmark after the R mark, as in the remocn.dev logo. Lowercase a–z; it never moves. */
@@ -44,6 +44,12 @@ export interface DynamicLetterProps {
   grain?: boolean;
   theme?: "dark" | "light";
   speed?: number;
+  /**
+   * Moves, trims or stretches single cuts and the final treatment, by the
+   * ids in `./timeline`. Frames on the scene timeline, after `delay` and
+   * `speed`.
+   */
+  timing?: Timing<DynamicLetterElementId>;
 }
 
 type Glyph = readonly [number, number, number, number, number, string];
@@ -283,16 +289,6 @@ const THEMES = {
   },
 } as const;
 
-const DEFAULT_VARIANTS: DynamicLetterVariant[] = [
-  "solid",
-  "outline",
-  "stripes",
-  "slice",
-  "stencil",
-  "dots",
-  "counter",
-];
-
 interface Placed {
   ch: string;
   g: Glyph;
@@ -319,19 +315,6 @@ function setText(text: string) {
   const last = placed[placed.length - 1];
   const right = last ? last.x + last.g[2] : R_WIDTH;
   return { placed, ink: right };
-}
-
-/** Cut frames: the first beats are `beat` long, then they tighten by a frame every two cuts. */
-function cutFrames(count: number, beat: number, minBeat: number) {
-  const frames: number[] = [];
-  let f = 8;
-  for (let i = 0; i < count; i++) {
-    frames.push(f);
-    const step = Math.max(minBeat, beat - Math.floor(i / 2));
-    // A held breath before the final treatment lands.
-    f += i === count - 2 ? step + 4 : step;
-  }
-  return frames;
 }
 
 /** Centers of a hex dot grid that sit fully inside the glyph. */
@@ -573,25 +556,31 @@ function ScaleLayer({
   );
 }
 
-export function DynamicLetter({
-  text = "emocn",
-  letterIndex,
-  variants = DEFAULT_VARIANTS,
-  final = "overflow",
-  beat = 8,
-  minBeat = 5,
-  accent = "#3B5BFD",
-  ink,
-  background,
-  logo,
-  scale = 1,
-  delay = 0,
-  grain = true,
-  theme = "dark",
-  speed = 1,
-}: DynamicLetterProps) {
+export function DynamicLetter(props: DynamicLetterProps) {
+  const {
+    text = "emocn",
+    letterIndex,
+    variants = DEFAULT_VARIANTS,
+    final = DEFAULT_FINAL,
+    accent = "#3B5BFD",
+    ink,
+    background,
+    logo,
+    scale = 1,
+    delay = 0,
+    grain = true,
+    theme = "dark",
+    speed = 1,
+    timing,
+  } = props;
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H } = useSceneConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    dynamicLetterTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const c = THEMES[theme];
   const fg = ink ?? c.fg;
   // The knock-out stroke around the letters has to match what sits behind them.
@@ -610,17 +599,23 @@ export function DynamicLetter({
     return o >= 0 ? o : Math.floor(set.placed.length / 2);
   }, [set, letterIndex]);
 
-  const sequence = [...variants.filter((v) => v !== final), final];
-  const cuts = cutFrames(sequence.length, beat, minBeat);
-  const step = cuts.findLastIndex((f) => t >= f);
+  const sequence = dynamicLetterSequence(variants, final);
+  const cuts = tl.lane("Treatments");
+  const step = cuts.findLastIndex((e) => t >= e.start);
+  const cut = cuts[step];
   const current: DynamicLetterVariant | "plain" =
     step >= 0 ? sequence[step] : "plain";
   // Each treatment cuts in hard; only the last one eases into its size.
-  const land = interpolate(t - (cuts[step] ?? 0), [0, 9], [0, 1], {
-    extrapolateLeft: "clamp",
-    extrapolateRight: "clamp",
-    easing: Easing.bezier(0.22, 1, 0.36, 1),
-  });
+  const land = interpolate(
+    t - (cut?.start ?? 0),
+    [0, cut?.beat("land") ?? 9],
+    [0, 1],
+    {
+      extrapolateLeft: "clamp",
+      extrapolateRight: "clamp",
+      easing: Easing.bezier(0.22, 1, 0.36, 1),
+    },
+  );
 
   const k = Math.min((W * 0.7) / set.ink, (H * 0.34) / 760);
   const ox = W / 2 - (set.ink / 2) * k;

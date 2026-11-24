@@ -7,6 +7,13 @@ import { useId } from "react";
 import { AbsoluteFill, Easing, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_TAGLINE,
+  DEFAULT_WORDS,
+  type OvalTypeElementId,
+  ovalTypeTimeline,
+} from "./timeline";
 
 const { fontFamily: sans } = loadFont("normal", {
   weights: ["500"],
@@ -43,6 +50,12 @@ export interface OvalTypeProps {
   grain?: boolean;
   theme?: "dark" | "light";
   speed?: number;
+  /**
+   * Moves, trims or stretches each conveyor step, the passed capsules
+   * clearing out and each tagline capsule growing, by the ids in
+   * `./timeline`. Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<OvalTypeElementId>;
 }
 
 /**
@@ -55,10 +68,6 @@ export interface OvalTypeProps {
  *          the words grow, the gaps close.
  *  78–     poster hold; the blurred field keeps drifting inside the ovals.
  */
-const FIRST_STEP = 6;
-const MOVE = 7;
-const LAND_LEN = 18;
-
 const CLAMP = {
   extrapolateLeft: "clamp",
   extrapolateRight: "clamp",
@@ -162,24 +171,32 @@ function ScaleLayer({
   );
 }
 
-export function OvalType({
-  tagline = ["Make", "it", "move"],
-  words = ["Plan", "Cut", "Edit", "Loop", "Sync", "Draft"],
-  accentWord = 1,
-  beat = 9,
-  landLen = LAND_LEN,
-  ink,
-  background,
-  fontFamily = sans,
-  scale = 1,
-  delay = 0,
-  grain = true,
-  theme = "dark",
-  speed = 1,
-}: OvalTypeProps) {
+export function OvalType(props: OvalTypeProps) {
+  const {
+    tagline = DEFAULT_TAGLINE,
+    words = DEFAULT_WORDS,
+    accentWord = 1,
+    ink,
+    background,
+    fontFamily = sans,
+    scale = 1,
+    delay = 0,
+    grain = true,
+    theme = "dark",
+    speed = 1,
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H } = useSceneConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    ovalTypeTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const steps = tl.lane("Conveyor");
+  const clearEl = tl.get("clear");
   const c = THEMES[theme];
 
   const row = tagline.length > 0 ? tagline : ["Make"];
@@ -204,15 +221,11 @@ export function OvalType({
   );
   const fsPoster = Math.min((ow * 0.78) / widest, H * 0.2);
 
-  const lastEnd = FIRST_STEP + (m - 1) * beat + MOVE;
-  const posterAt = lastEnd + 2;
-
   // Conveyor position in slots, with a per-capsule lag: the leader moves first.
   const offsetAt = (time: number) => {
     let s = 0;
-    for (let j = 0; j < m; j++) {
-      const at = FIRST_STEP + j * beat;
-      s += STEP(interpolate(time, [at, at + MOVE], [0, 1], CLAMP));
+    for (const step of steps) {
+      s += STEP(interpolate(time, [step.start, step.end], [0, 1], CLAMP));
     }
     return s;
   };
@@ -239,18 +252,22 @@ export function OvalType({
 
     // Landing bounce after each step: tall, then settle.
     let bump = 0;
-    for (let j = 0; j < m; j++) {
-      const end = FIRST_STEP + j * beat + MOVE + lag;
+    for (const step of steps) {
+      const end = step.end + lag;
       const dt = t - end;
-      if (dt > 0 && dt < 12) {
-        bump += Math.sin((dt / 12) * Math.PI * 2) * Math.exp(-dt / 4);
+      const ring = step.beat("bounce");
+      if (dt > 0 && dt < ring) {
+        bump +=
+          Math.sin((dt / ring) * Math.PI * 2) *
+          Math.exp(-dt / step.beat("decay"));
       }
     }
 
     const fi = k - m;
-    const growAt = posterAt + Math.max(0, fi) * 2;
-    const growP =
-      fi >= 0 ? interpolate(t, [growAt, growAt + landLen], [0, 1], CLAMP) : 0;
+    const growEl = fi >= 0 ? tl.get(`grow:${fi}`) : null;
+    const growP = growEl
+      ? interpolate(t, [growEl.start, growEl.end], [0, 1], CLAMP)
+      : 0;
     const grow = fi >= 0 ? GROW(growP) : 0;
     const gap = gapLoose + (gapTight - gapLoose) * grow;
     const pitchNow = ow + gap;
@@ -270,7 +287,7 @@ export function OvalType({
     // Capsules that already passed slide out as the poster row closes up.
     const clear =
       fi < 0
-        ? GROW(interpolate(t, [posterAt, posterAt + landLen], [0, 1], CLAMP)) *
+        ? GROW(interpolate(t, [clearEl.start, clearEl.end], [0, 1], CLAMP)) *
           (ow + 0.1 * W)
         : 0;
     const fsRest = fsPoster * (isAccent(k) ? SERIF_BUMP : 1);

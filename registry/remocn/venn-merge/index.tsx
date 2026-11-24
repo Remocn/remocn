@@ -7,6 +7,15 @@ import { useId } from "react";
 import { AbsoluteFill, Easing, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_CAPTION,
+  DEFAULT_CENTER,
+  DEFAULT_SETS,
+  type VennMergeElementId,
+  vennMergeTimeline,
+  vennSets,
+} from "./timeline";
 
 const { fontFamily: serif } = loadSerif("normal", {
   weights: ["400"],
@@ -75,6 +84,12 @@ export interface VennMergeProps {
   grain?: boolean;
   theme?: "dark" | "light";
   speed?: number;
+  /**
+   * Moves, trims or stretches the draw, single labels, the slide, the fill,
+   * the brand and the caption, by the ids in `./timeline`. Frames on the
+   * scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<VennMergeElementId>;
 }
 
 const EASE_IO = Easing.bezier(0.65, 0, 0.35, 1);
@@ -100,12 +115,6 @@ const THEMES = {
     grain: 0.045,
   },
 } as const;
-
-const DRAW = [0, 24];
-const SLIDE = [26, 66];
-const FILL = [62, 84];
-const BRAND = 74;
-const CAPTION = 96;
 
 function Grain({ opacity }: { opacity: number }) {
   const id = `g${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
@@ -147,33 +156,46 @@ function ScaleLayer({
   );
 }
 
-export function VennMerge({
-  sets = ["Design", "Code"],
-  center = "remocn",
-  caption = "Motion design, written as code.",
-  accent = "#3B5BFD",
-  slide: slideDur = SLIDE[1] - SLIDE[0],
-  ringWidth = 2,
-  logo,
-  ink,
-  background,
-  fontFamily = serif,
-  scale = 1,
-  delay = 0,
-  grain = true,
-  theme = "dark",
-  speed = 1,
-}: VennMergeProps) {
+export function VennMerge(props: VennMergeProps) {
+  const {
+    sets = DEFAULT_SETS,
+    center = DEFAULT_CENTER,
+    caption = DEFAULT_CAPTION,
+    accent = "#3B5BFD",
+    ringWidth = 2,
+    logo,
+    ink,
+    background,
+    fontFamily = serif,
+    scale = 1,
+    delay = 0,
+    grain = true,
+    theme = "dark",
+    speed = 1,
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width, height } = useSceneConfig();
+  const { width, height, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    vennMergeTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const drawEl = tl.get("draw");
+  const slideEl = tl.get("slide");
+  const fillEl = tl.get("fill");
+  const brandEl = tl.get("brand");
+  const captionEl = tl.get("caption");
+  const pushEl = tl.get("push");
   const u = Math.min(width / 1280, height / 720);
   const p = THEMES[theme];
   const fg = ink ?? p.fg;
   const bg =
     background === "transparent" ? "transparent" : (background ?? p.bg);
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
-  const list = (sets.length ? sets : ["Design", "Code"]).slice(0, 3);
+  const list = vennSets(sets);
   const n = list.length;
   const three = n === 3;
 
@@ -184,27 +206,27 @@ export function VennMerge({
     (three ? (R * 0.92) / Math.sqrt(3) / 4 : 0);
   const ring = Math.max(1.5, ringWidth * u);
 
-  const slide = interpolate(t, [SLIDE[0], SLIDE[0] + slideDur], [0, 1], {
+  const slide = interpolate(t, [slideEl.start, slideEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
-  const draw = interpolate(t, [DRAW[0], DRAW[1]], [0, 1], {
+  const draw = interpolate(t, [drawEl.start, drawEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
-  const fill = interpolate(t, [FILL[0], FILL[1]], [0, 1], {
+  const fill = interpolate(t, [fillEl.start, fillEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
-  const brand = interpolate(t, [BRAND, BRAND + 22], [0, 1], {
+  const brand = interpolate(t, [brandEl.start, brandEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
-  const capIn = interpolate(t, [CAPTION, CAPTION + 20], [0, 1], {
+  const capIn = interpolate(t, [captionEl.start, captionEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
-  const push = interpolate(t, [0, CAPTION + 40], [0, 1], {
+  const push = interpolate(t, [pushEl.start, pushEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
@@ -251,10 +273,12 @@ export function VennMerge({
       y: rest.y,
       dx: now.x - rest.x,
       dy: now.y - rest.y,
-      a: interpolate(t, [DRAW[0] + 4 + i * 3, DRAW[0] + 20 + i * 3], [0, 1], {
-        ...CLAMP,
-        easing: EASE_OUT,
-      }),
+      a: interpolate(
+        t,
+        [tl.get(`label:${i}`).start, tl.get(`label:${i}`).end],
+        [0, 1],
+        { ...CLAMP, easing: EASE_OUT },
+      ),
     };
   });
 
@@ -267,7 +291,13 @@ export function VennMerge({
     (regionW * 0.8) / (isLogo ? 3.75 : Math.max(center.length, 3) * 0.56),
   );
   const glowX =
-    R * interpolate(t, [FILL[0], CAPTION + 60], [-0.12, 0.12], CLAMP);
+    R *
+    interpolate(
+      t,
+      [fillEl.start, fillEl.start + fillEl.beat("glow")],
+      [-0.12, 0.12],
+      CLAMP,
+    );
   const brandY = cy;
 
   const circ = 2 * Math.PI * R;
@@ -278,7 +308,7 @@ export function VennMerge({
         <AbsoluteFill
           style={{
             // The push carries every label, so its tilt covers them all.
-            transform: `scale(${pushScale})${glide(t > 0 && t < CAPTION + 40)}`,
+            transform: `scale(${pushScale})${glide(t > pushEl.start && t < pushEl.end)}`,
             transformOrigin: "50% 50%",
           }}
         >

@@ -14,6 +14,14 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_WORDS,
+  type EdgeFitElementId,
+  edgeFitTimeline,
+  edgeFitWordTimes,
+  wordsOf,
+} from "./timeline";
 
 const anton = loadAnton("normal", { weights: ["400"], subsets: ["latin"] });
 const manrope = loadManrope("normal", {
@@ -41,6 +49,12 @@ export interface EdgeFitProps {
   delay?: number;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches single words and the caption with the logo,
+   * by the ids in `./timeline`. Frames on the scene timeline, after `delay`
+   * and `speed`.
+   */
+  timing?: Timing<EdgeFitElementId>;
 }
 
 const REMOCN_R_PATH =
@@ -85,8 +99,6 @@ const THEMES = {
 
 const TRACK = -0.005;
 const FONT_PX = 200;
-const RISE = 6;
-const LEAD = 3;
 
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
 const CLAMP = {
@@ -202,15 +214,7 @@ function useMetrics(words: string[], family: string) {
   return state && state.key === key ? state.m : null;
 }
 
-export function edgeFitTiming(words: string[], letterGap = 3, hold = 14) {
-  const starts: number[] = [];
-  let at = 0;
-  for (const w of words) {
-    starts.push(at);
-    at += Math.max(1, Array.from(w).length - 1) * letterGap + 10 + hold;
-  }
-  return { starts, end: at };
-}
+export const edgeFitTiming = edgeFitWordTimes;
 
 /** The foreground at `scale`, around the frame's center; nothing extra at 1. */
 function ScaleLayer({
@@ -228,29 +232,35 @@ function ScaleLayer({
   );
 }
 
-export function EdgeFit({
-  words = ["intros", "teasers", "recaps"],
-  caption = "Fresh from the registry",
-  logo,
-  letterGap = 3,
-  hold = 14,
-  accent,
-  ink,
-  background,
-  fontFamily = anton.fontFamily,
-  fit = 0.9,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: EdgeFitProps) {
+export function EdgeFit(props: EdgeFitProps) {
+  const {
+    words = DEFAULT_WORDS,
+    caption = "Fresh from the registry",
+    logo,
+    accent,
+    ink,
+    background,
+    fontFamily = anton.fontFamily,
+    fit = 0.9,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H, fps } = useSceneConfig();
+  const { width: W, height: H, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    edgeFitTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const c = THEMES[theme];
   const fg = ink ?? c.ink;
   const spot = accent ?? fg;
-  const list = useMemo(() => (words.length > 0 ? words : ["remocn"]), [words]);
+  const list = useMemo(() => wordsOf(words), [words]);
   const m = useMetrics(list, fontFamily);
 
   const transparent = background === "transparent";
@@ -264,12 +274,14 @@ export function EdgeFit({
 
   const portrait = H > W * 1.1;
   const s = portrait ? W / 1080 : Math.min(W / 1280, H / 720);
-  const { starts } = edgeFitTiming(list, letterGap, hold);
   let wi = 0;
-  for (let i = 0; i < starts.length; i++) if (t >= starts[i]) wi = i;
+  for (let i = 0; i < list.length; i++)
+    if (t >= tl.get(`word:${i}`).start) wi = i;
   const last = wi === list.length - 1;
   const wm = m.words[wi];
-  const local = t - starts[wi];
+  const word = tl.get(`word:${wi}`);
+  const letterGap = word.beat("gap");
+  const local = t - word.start;
   const n = wm.chars.length;
 
   const measureW = W * fit;
@@ -283,7 +295,7 @@ export function EdgeFit({
     j === 0
       ? 1
       : spring({
-          frame: lt - j * letterGap + LEAD,
+          frame: lt - j * letterGap + word.beat("lead"),
           fps,
           config: { damping: 19, stiffness: 260, mass: 0.6 },
         });
@@ -337,9 +349,9 @@ export function EdgeFit({
   const maskTop = baseY - wm.inkTop * S - S * 0.04;
   const maskH = inkH * S + S * 0.08;
 
-  const signAt = starts[list.length - 1] + Math.max(0, n - 1) * letterGap;
+  const signEl = tl.get("sign");
   const sign = last
-    ? interpolate(t, [signAt, signAt + 16], [0, 1], {
+    ? interpolate(t, [signEl.start, signEl.end], [0, 1], {
         ...CLAMP,
         easing: EASE_OUT,
       })
@@ -370,15 +382,20 @@ export function EdgeFit({
             const first = j === 0;
             const rp = first
               ? wi === 0
-                ? interpolate(local, [0, RISE + 2], [0, 1], {
+                ? interpolate(local, [0, word.beat("firstRise")], [0, 1], {
                     ...CLAMP,
                     easing: EASE_OUT,
                   })
                 : 1
-              : interpolate(local - j * letterGap, [0, RISE], [0, 1], {
-                  ...CLAMP,
-                  easing: EASE_OUT,
-                });
+              : interpolate(
+                  local - j * letterGap,
+                  [0, word.beat("rise")],
+                  [0, 1],
+                  {
+                    ...CLAMP,
+                    easing: EASE_OUT,
+                  },
+                );
             const dx = xNow[j] - xRest[j];
             return (
               <div

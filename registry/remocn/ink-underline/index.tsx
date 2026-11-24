@@ -7,8 +7,10 @@ import {
   brushRibbon,
   sampleCubic,
 } from "@/components/remocn/brush";
-import { useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { DEFAULT_STEP, hashRange, steppedRamp } from "@/lib/remocn/stop-motion";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import { type InkUnderlineElementId, inkUnderlineTimeline } from "./timeline";
 
 const SAMPLES = 40;
 
@@ -39,24 +41,30 @@ export interface InkUnderlineProps {
   durationSteps?: number;
   seed?: string;
   step?: number;
+  /**
+   * Moves, trims or stretches the stroke, by the ids in `./timeline`.
+   * Frames on the scene timeline.
+   */
+  timing?: Timing<InkUnderlineElementId>;
 }
 
-export function InkUnderline({
-  width,
-  color = "#6f7f35",
-  thickness = 9,
-  pressure = 1,
-  release = 0.15,
-  grain = 1,
-  delay = 0,
-  durationSteps = 5,
-  seed = "ink",
-  step = DEFAULT_STEP,
-}: InkUnderlineProps) {
+export function InkUnderline(props: InkUnderlineProps) {
+  const {
+    width,
+    color = "#6f7f35",
+    thickness = 9,
+    pressure = 1,
+    release = 0.15,
+    grain = 1,
+    seed = "ink",
+    step = DEFAULT_STEP,
+    timing,
+  } = props;
   const frame = useSceneFrame();
-  const progress = steppedRamp(frame, delay, delay + durationSteps * step, {
-    step,
-  });
+  const { durationInFrames } = useSceneConfig();
+  const tl = useTimeline(inkUnderlineTimeline, props, durationInFrames, timing);
+  const stroke = tl.get("stroke");
+  const progress = steppedRamp(frame, stroke.start, stroke.end, { step });
 
   const reach = brushReach(thickness, grain);
   const height = thickness + 4;

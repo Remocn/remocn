@@ -10,6 +10,19 @@ import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
+import {
+  type ResolvedTimeline,
+  type Timing,
+  useTimeline,
+} from "@/lib/remocn/timeline";
+import {
+  DEFAULT_PLANS,
+  type PricingPlan,
+  type PricingRevealElementId,
+  pricingRevealTimeline,
+} from "./timeline";
+
+export type { PricingPlan };
 
 const geist = loadGeist("normal", {
   weights: ["300", "400"],
@@ -17,18 +30,6 @@ const geist = loadGeist("normal", {
 });
 const mono = loadGeistMono("normal", { weights: ["400"], subsets: ["latin"] });
 const serif = loadSerif("normal", { weights: ["400"], subsets: ["latin"] });
-
-export interface PricingPlan {
-  name: string;
-  price: number | string;
-  /** Previous price, struck through and replaced by `price` on the featured plan. */
-  was?: number | string;
-  period: string;
-  description: string;
-  features: string[];
-  cta: string;
-  featured?: boolean;
-}
 
 export interface PricingRevealProps {
   plans?: PricingPlan[];
@@ -56,54 +57,13 @@ export interface PricingRevealProps {
   speed?: number;
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
+  /**
+   * Moves, trims or stretches the heading, single cards and the featured
+   * card's lift, strike, price roll, press, fill and badge, by the ids in
+   * `./timeline`. Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<PricingRevealElementId>;
 }
-
-const DEFAULT_PLANS: PricingPlan[] = [
-  {
-    name: "Starter",
-    price: 0,
-    period: "/mo",
-    description: "For side projects and your first launch video.",
-    features: [
-      "40 core components",
-      "1080p renders",
-      "Community templates",
-      "MIT licensed source",
-      "Discord support",
-    ],
-    cta: "Get started",
-  },
-  {
-    name: "Pro",
-    price: 29,
-    was: 45,
-    period: "/mo",
-    description: "For solo builders shipping a launch every month.",
-    features: [
-      "Everything in Starter",
-      "All 128 components",
-      "4K renders, no watermark",
-      "Premium launch templates",
-      "Priority support",
-    ],
-    cta: "Start free trial",
-    featured: true,
-  },
-  {
-    name: "Team",
-    price: 79,
-    period: "/mo",
-    description: "For small teams reviewing cuts together.",
-    features: [
-      "Everything in Pro",
-      "Up to 5 seats",
-      "Shared brand tokens",
-      "Review links with comments",
-      "Invoice billing",
-    ],
-    cta: "Talk to sales",
-  },
-];
 
 const clamp = { extrapolateLeft: "clamp", extrapolateRight: "clamp" } as const;
 const ENTER = Easing.bezier(0.32, 0.72, 0, 1);
@@ -118,19 +78,6 @@ const MORPH = { damping: 200 };
 /** Whether a value of the frame moves into or out of `f`. */
 const stirs = (at: (f: number) => number, f: number, eps = 1e-3) =>
   Math.abs(at(f + 1) - at(f)) > eps || Math.abs(at(f) - at(f - 1)) > eps;
-
-const B = {
-  head: 0,
-  cards: 6,
-  stagger: 3,
-  features: 16,
-  lift: 30,
-  strike: 36,
-  roll: 42,
-  press: 58,
-  fill: 61,
-  tag: 66,
-};
 
 interface Pal {
   text: string;
@@ -216,11 +163,16 @@ function RollingNumber({
   value,
   frame,
   start,
+  stagger,
+  roll,
   lineHeight,
 }: {
   value: string;
   frame: number;
   start: number;
+  /** Frames between one digit and the next, and each digit's roll. */
+  stagger: number;
+  roll: number;
   lineHeight: number;
 }) {
   return (
@@ -228,7 +180,7 @@ function RollingNumber({
       {value.split("").map((ch, i) => {
         const p = interpolate(
           frame,
-          [start + i * 2, start + i * 2 + 14],
+          [start + i * stagger, start + i * stagger + roll],
           [0, 1],
           { ...clamp, easing: LIGHT },
         );
@@ -256,9 +208,9 @@ function RollingNumber({
   );
 }
 
-function pressScale(frame: number, at: number, fps: number) {
+function pressScale(frame: number, at: number, release: number, fps: number) {
   const down = spring({ frame: frame - at, fps, config: CHIP });
-  const up = spring({ frame: frame - at - 4, fps, config: CHIP });
+  const up = spring({ frame: frame - at - release, fps, config: CHIP });
   return 1 - 0.04 * (down - up);
 }
 
@@ -270,7 +222,7 @@ interface CardProps {
   currency: string;
   discountLabel: string;
   badgeLabel: string;
-  stagger: number;
+  tl: ResolvedTimeline<PricingRevealElementId>;
   radius: number;
   frame: number;
   fps: number;
@@ -289,7 +241,7 @@ function PlanCard({
   currency,
   discountLabel,
   badgeLabel,
-  stagger,
+  tl,
   radius,
   frame,
   fps,
@@ -300,11 +252,17 @@ function PlanCard({
 }: CardProps) {
   const glide = useGlide();
   const featured = !!plan.featured;
-  const enterAt = B.cards + index * stagger;
+  const card = tl.get(`card:${index}`);
+  const liftAt = tl.get("lift").start;
+  const strikeEl = tl.get("strike");
+  const rollEl = tl.get("roll");
+  const pressEl = tl.get("press");
+  const fillEl = tl.get("fill");
+  const enterAt = card.start;
   const motionAt = (f: number) => {
     const r = spring({ frame: f - enterAt, fps, config: CARD });
-    const l = spring({ frame: f - B.lift, fps, config: HEAVY });
-    const rc = featured ? 0 : spring({ frame: f - B.lift, fps, config: MORPH });
+    const l = spring({ frame: f - liftAt, fps, config: HEAVY });
+    const rc = featured ? 0 : spring({ frame: f - liftAt, fps, config: MORPH });
     return {
       y: (1 - r) * 56 + (featured ? -10 * l : 6 * rc),
       k: (0.96 + 0.04 * r) * (1 + 0.025 * (featured ? l : -rc * 0.6)),
@@ -316,35 +274,37 @@ function PlanCard({
     (stirs((f) => motionAt(f).y, frame) ||
       stirs((f) => motionAt(f).k * Math.max(width, height) * 0.5, frame));
   const settleAt = (f: number) =>
-    featured ? spring({ frame: f - B.roll, fps, config: MORPH }) : 0;
+    featured ? spring({ frame: f - rollEl.start, fps, config: MORPH }) : 0;
   const rise = spring({ frame: frame - enterAt, fps, config: CARD });
-  const fade = interpolate(frame, [enterAt, enterAt + 10], [0, 1], {
+  const fade = interpolate(frame, [card.start, card.end], [0, 1], {
     ...clamp,
     easing: ENTER,
   });
-  const lift = spring({ frame: frame - B.lift, fps, config: HEAVY });
+  const lift = spring({ frame: frame - liftAt, fps, config: HEAVY });
   const recede = featured
     ? 0
-    : spring({ frame: frame - B.lift, fps, config: MORPH });
+    : spring({ frame: frame - liftAt, fps, config: MORPH });
   const strike = featured
-    ? interpolate(frame, [B.strike, B.strike + 9], [0, 1], {
+    ? interpolate(frame, [strikeEl.start, strikeEl.end], [0, 1], {
         ...clamp,
         easing: MOVE,
       })
     : 0;
   const settle = featured
-    ? spring({ frame: frame - B.roll, fps, config: MORPH })
+    ? spring({ frame: frame - rollEl.start, fps, config: MORPH })
     : 0;
   const fill = featured
-    ? interpolate(frame, [B.fill, B.fill + 8], [0, 1], {
+    ? interpolate(frame, [fillEl.start, fillEl.end], [0, 1], {
         ...clamp,
         easing: ENTER,
       })
     : 0;
   const tag = featured
-    ? spring({ frame: frame - B.tag, fps, config: CHIP })
+    ? spring({ frame: frame - tl.get("tag").start, fps, config: CHIP })
     : 0;
-  const press = featured ? pressScale(frame, B.press, fps) : 1;
+  const press = featured
+    ? pressScale(frame, pressEl.start, pressEl.beat("release"), fps)
+    : 1;
   const hasWas = featured && plan.was !== undefined;
 
   const priceSize = compact ? 48 : 64;
@@ -441,10 +401,18 @@ function PlanCard({
               top: strap,
               display: "flex",
               alignItems: "center",
-              opacity: interpolate(frame, [B.roll + 1, B.roll + 5], [0, 1], {
-                ...clamp,
-                easing: ENTER,
-              }),
+              opacity: interpolate(
+                frame,
+                [
+                  rollEl.start + rollEl.beat("fadeAt"),
+                  rollEl.start + rollEl.beat("fadeAt") + rollEl.beat("fade"),
+                ],
+                [0, 1],
+                {
+                  ...clamp,
+                  easing: ENTER,
+                },
+              ),
             }}
           >
             <span
@@ -462,7 +430,9 @@ function PlanCard({
               <RollingNumber
                 value={String(plan.price)}
                 frame={frame}
-                start={B.roll + 2}
+                start={rollEl.start + rollEl.beat("digitsAt")}
+                stagger={rollEl.beat("digit")}
+                roll={rollEl.beat("digitRoll")}
                 lineHeight={lh}
               />
             </span>
@@ -623,7 +593,11 @@ function PlanCard({
             {plan.features.map((feat, j) => {
               const featAt = (f: number) =>
                 spring({
-                  frame: f - (B.features + index * stagger + j * 2),
+                  frame:
+                    f -
+                    (card.start +
+                      card.beat("featuresAt") +
+                      j * card.beat("feature")),
                   fps,
                   config: CARD,
                 });
@@ -675,29 +649,38 @@ function ScaleLayer({
   );
 }
 
-export function PricingReveal({
-  plans = DEFAULT_PLANS,
-  currency = "$",
-  discountLabel = "−35% launch week",
-  badgeLabel = "Most picked",
-  eyebrow = "Billed monthly · cancel anytime",
-  heading = "Simple pricing for every launch.",
-  stagger = B.stagger,
-  radius = 18,
-  theme = "light",
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = geist.fontFamily,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  ground,
-  groundParams,
-}: PricingRevealProps) {
+export function PricingReveal(props: PricingRevealProps) {
+  const {
+    plans = DEFAULT_PLANS,
+    currency = "$",
+    discountLabel = "−35% launch week",
+    badgeLabel = "Most picked",
+    eyebrow = "Billed monthly · cancel anytime",
+    heading = "Simple pricing for every launch.",
+    radius = 18,
+    theme = "light",
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = geist.fontFamily,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    ground,
+    groundParams,
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width, height, fps } = useSceneConfig();
+  const { width, height, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    pricingRevealTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const headEl = tl.get("head");
+  const cameraEl = tl.get("camera");
   const tall = height > width;
   const W = tall ? 720 : 1280;
   const H = tall ? 1280 : 720;
@@ -705,16 +688,27 @@ export function PricingReveal({
   const themed = palette(theme);
   const pal = ink ? { ...themed, text: ink } : themed;
 
-  const head = interpolate(frame, [B.head, B.head + 16], [0, 1], {
+  const head = interpolate(frame, [headEl.start, headEl.end], [0, 1], {
     ...clamp,
     easing: ENTER,
   });
-  const meta = interpolate(frame, [B.head + 6, B.head + 20], [0, 1], {
-    ...clamp,
-    easing: LIGHT,
-  });
+  const meta = interpolate(
+    frame,
+    [
+      headEl.start + headEl.beat("metaAt"),
+      headEl.start + headEl.beat("metaAt") + headEl.beat("meta"),
+    ],
+    [0, 1],
+    {
+      ...clamp,
+      easing: LIGHT,
+    },
+  );
   const cameraAt = (f: number) =>
-    interpolate(f, [0, 100], [1.035, 1], { ...clamp, easing: CAMERA });
+    interpolate(f, [cameraEl.start, cameraEl.end], [1.035, 1], {
+      ...clamp,
+      easing: CAMERA,
+    });
   const camera = cameraAt(frame);
   // Measured at the frame's far corner from the origin.
   const camMoving = stirs((f) => cameraAt(f) * 760, frame);
@@ -843,7 +837,7 @@ export function PricingReveal({
                     currency={currency}
                     discountLabel={discountLabel}
                     badgeLabel={badgeLabel}
-                    stagger={stagger}
+                    tl={tl}
                     radius={radius}
                     frame={frame}
                     fps={fps}

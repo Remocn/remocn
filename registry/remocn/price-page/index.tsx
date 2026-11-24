@@ -12,6 +12,13 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_LINES,
+  type PricePageElementId,
+  pricePageTimeline,
+  rowsOf,
+} from "./timeline";
 
 const albert = loadFont("normal", {
   weights: ["400", "500"],
@@ -37,22 +44,18 @@ export interface PricePageProps {
   delay?: number;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches the label, single lines coming in and leaving,
+   * the price and the note, by the ids in `./timeline`. Frames on the scene
+   * timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<PricePageElementId>;
 }
 
 const THEMES = {
   dark: { bg: "#141414", ink: "#FFFFFF", accent: "#3DD9FF" },
   light: { bg: "#FFFFFF", ink: "#000000", accent: "#0077B6" },
 } as const;
-
-const DEFAULT_LINES = [
-  "Starter, Pro, Team, Enterprise",
-  "Per seat, per month",
-  "Billed yearly, save 20%",
-  "Watermark on the free plan",
-  "Three exports a month",
-  "Overage fees may apply",
-  "Contact sales",
-];
 
 const LH = 1.2;
 const TRACK_LINE = -0.015;
@@ -127,34 +130,40 @@ function ScaleLayer({
   );
 }
 
-export function PricePage({
-  label = "Pricing",
-  lines = DEFAULT_LINES,
-  price = "Free.",
-  note = "That’s the whole pricing page.",
-  accent,
-  ink,
-  background,
-  fontFamily = albert.fontFamily,
-  hold = 40,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: PricePageProps) {
+export function PricePage(props: PricePageProps) {
+  const {
+    label = "Pricing",
+    lines = DEFAULT_LINES,
+    price = "Free.",
+    note = "That’s the whole pricing page.",
+    accent,
+    ink,
+    background,
+    fontFamily = albert.fontFamily,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const frame = useSceneFrame();
   const glide = useGlide();
   const tAt = (df: number) => Math.max(0, frame + df - delay) * speed;
   const t = tAt(0);
   const { width: W, height: H, durationInFrames } = useSceneConfig();
-  const T = durationInFrames * speed;
+  const tl = useTimeline(
+    pricePageTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const c = THEMES[theme];
   const hi = accent ?? c.accent;
   const fg = ink ?? c.ink;
   const stage =
     background === "transparent" ? "transparent" : (background ?? c.bg);
 
-  const rows = lines.filter((s) => s.trim().length > 0);
+  const rows = rowsOf(lines);
   const keys = [
     ...rows.map((s) => `400|${s}`),
     `500|${price}`,
@@ -204,63 +213,70 @@ export function PricePage({
   const labelH = Fs * 2.1;
   const noteH = note ? Fn * 1.9 : 0;
 
-  const intro = hold;
-  const tail = 44;
-  const land = 22;
-  const gap =
-    n > 1
-      ? Math.max(4, Math.min(10, (T - intro - tail - land - 12) / (n - 1)))
-      : 0;
-  const ord = Array.from({ length: n }, (_, i) => i).sort(
-    (a, b) => ((a * 3) % n) - ((b * 3) % n) || a - b,
-  );
-  const exitAt: number[] = new Array(n).fill(0);
-  ord.forEach((i, k) => {
-    exitAt[i] = intro + k * gap;
-  });
-  const EXIT_LEN = 9;
-  const lastExit = n > 0 ? intro + (n - 1) * gap : intro;
-  const landAt = lastExit + 8;
+  const labelEl = tl.get("label");
+  const lineEls = rows.map((_, i) => tl.get(`line:${i}`));
+  const exitEls = rows.map((_, i) => tl.get(`exit:${i}`));
+  const priceEl = tl.get("price");
+  const noteEl = tl.get("note");
+  const landAt = priceEl.start;
 
   // The vertical layout at time `tt`, so each line can tell motion from
   // rest by its neighbouring frames.
   const geo = (tt: number) => {
     const presence = rows.map((_, i) =>
-      interpolate(tt, [exitAt[i] + 7, exitAt[i] + 18], [1, 0], {
-        ...CLAMP,
-        easing: EASE_IO,
-      }),
+      interpolate(
+        tt,
+        [
+          exitEls[i].start + exitEls[i].beat("collapse"),
+          exitEls[i].start + exitEls[i].beat("collapseEnd"),
+        ],
+        [1, 0],
+        {
+          ...CLAMP,
+          easing: EASE_IO,
+        },
+      ),
     );
     const listH = presence.reduce((a, p) => a + p * lineH, 0);
-    const grow = interpolate(tt, [landAt - 6, landAt + 14], [0, 1], {
-      ...CLAMP,
-      easing: EASE_IO,
-    });
+    const grow = interpolate(
+      tt,
+      [landAt + priceEl.beat("grow"), landAt + priceEl.beat("growEnd")],
+      [0, 1],
+      {
+        ...CLAMP,
+        easing: EASE_IO,
+      },
+    );
     const contentH = labelH + listH + grow * (priceH + noteH);
     const top = H / 2 - contentH / 2;
     const listTop = top + labelH;
-    const labelIn = interpolate(tt, [0, 16], [0, 1], {
+    const labelIn = interpolate(tt, [labelEl.start, labelEl.end], [0, 1], {
       ...CLAMP,
       easing: EASE_OUT,
     });
     const lineY = rows.map((_, i) => {
       let rank = 0;
       for (let j = 0; j < i; j++) rank += presence[j];
-      const enter = interpolate(tt, [3 + i * 3, 19 + i * 3], [0, 1], {
-        ...CLAMP,
-        easing: EASE_OUT,
-      });
+      const enter = interpolate(
+        tt,
+        [lineEls[i].start, lineEls[i].end],
+        [0, 1],
+        {
+          ...CLAMP,
+          easing: EASE_OUT,
+        },
+      );
       return {
         base: listTop + rank * lineH + F * 0.93,
         enter,
         dy: (1 - enter) * F * 0.45,
       };
     });
-    const priceIn = interpolate(tt, [landAt, landAt + 20], [0, 1], {
+    const priceIn = interpolate(tt, [landAt, priceEl.end], [0, 1], {
       ...CLAMP,
       easing: EASE_OUT,
     });
-    const noteIn = interpolate(tt, [landAt + 12, landAt + 30], [0, 1], {
+    const noteIn = interpolate(tt, [noteEl.start, noteEl.end], [0, 1], {
       ...CLAMP,
       easing: EASE_OUT,
     });
@@ -294,7 +310,7 @@ export function PricePage({
       const l = near(df).lineY[i];
       return l.base + l.dy;
     });
-    const out = interpolate(t, [exitAt[i], exitAt[i] + EXIT_LEN], [0, 1], {
+    const out = interpolate(t, [exitEls[i].start, exitEls[i].end], [0, 1], {
       ...CLAMP,
       easing: EASE_EXIT,
     });

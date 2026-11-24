@@ -5,6 +5,13 @@ import { useId } from "react";
 import { AbsoluteFill, Easing, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  columnHeights,
+  DEFAULT_VALUES,
+  type PixelBarsElementId,
+  pixelBarsTimeline,
+} from "./timeline";
 
 const { fontFamily: grotesk } = loadFont("normal", {
   weights: ["400", "500"],
@@ -32,9 +39,13 @@ export interface PixelBarsProps {
   delay?: number;
   theme?: "dark" | "light";
   speed?: number;
+  /**
+   * Moves, trims or stretches single columns, the metric, the reference line,
+   * the camera and the label, by the ids in `./timeline`. Frames on the scene
+   * timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<PixelBarsElementId>;
 }
-
-const DEFAULT_VALUES = [31, 38, 35, 44, 41, 50, 84];
 
 const EASE_IO = Easing.bezier(0.65, 0, 0.35, 1);
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
@@ -94,12 +105,6 @@ function numWidth(text: string, size: number) {
   return (w - NUM_TRACK) * size;
 }
 
-const START = 6;
-const COL_STAGGER = 5;
-const PIXEL_STEP = 1.6;
-const POP_DUR = 4;
-const LEAD = 6;
-
 function parseMetric(metric: string) {
   const m = /^(\D*?)(\d[\d,]*(?:\.\d+)?)(.*)$/.exec(metric);
   if (!m) return null;
@@ -125,25 +130,32 @@ function ScaleLayer({
   );
 }
 
-export function PixelBars({
-  values = DEFAULT_VALUES,
-  label = "this quarter",
-  metric = "+64%",
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = grotesk,
-  stagger = COL_STAGGER,
-  rows: maxRows = 14,
-  grain = true,
-  scale = 1,
-  delay = 0,
-  theme = "dark",
-  speed = 1,
-}: PixelBarsProps) {
+export function PixelBars(props: PixelBarsProps) {
+  const {
+    values = DEFAULT_VALUES,
+    label = "this quarter",
+    metric = "+64%",
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = grotesk,
+    rows: maxRows = 14,
+    grain = true,
+    scale = 1,
+    delay = 0,
+    theme = "dark",
+    speed = 1,
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H } = useSceneConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    pixelBarsTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const u = H / 720;
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
   const pal = THEMES[theme];
@@ -151,11 +163,7 @@ export function PixelBars({
   const bg =
     background === "transparent" ? "transparent" : (background ?? pal.bg);
 
-  const list = values.length ? values.slice(0, 16) : DEFAULT_VALUES;
-  const maxV = Math.max(...list.map((v) => Math.max(0, v)), 1);
-  const heights = list.map((v) =>
-    Math.max(1, Math.round((Math.max(0, v) / maxV) * maxRows)),
-  );
+  const heights = columnHeights(values, maxRows);
   const last = heights.length - 1;
   const prevMax = Math.max(1, ...heights.slice(0, last));
 
@@ -175,28 +183,30 @@ export function PixelBars({
   const left = W / 2 - groupW / 2;
   const base = H / 2 + chartH / 2;
 
-  const colStart = (i: number) => START + i * stagger;
+  const columns = tl.lane("Columns");
   const pixelTime = (i: number, k: number) => {
-    if (i !== last || k < prevMax) return colStart(i) + k * PIXEL_STEP;
+    const col = columns[i];
+    const step = col.beat("step");
+    if (i !== last || k < prevMax) return col.start + k * step;
     const extra = k - prevMax;
     return (
-      colStart(i) +
-      prevMax * PIXEL_STEP +
-      extra * PIXEL_STEP * 1.3 +
-      extra * extra * 0.14
+      col.start +
+      prevMax * step +
+      extra * step * 1.3 +
+      extra * extra * col.beat("accel")
     );
   };
-  const finish = pixelTime(last, heights[last] - 1) + POP_DUR;
-  const passAt = pixelTime(last, prevMax);
+  const hero = columns[last];
 
   const slots: React.ReactNode[] = [];
   const cells: React.ReactNode[] = [];
   heights.forEach((rows, i) => {
     const x = left + i * colPitch;
     const isLast = i === last;
+    const col = columns[i];
     const slotIn = interpolate(
       t,
-      [colStart(i) - 6, colStart(i) + 2],
+      [col.start + col.beat("slotIn"), col.start + col.beat("slotOut")],
       [0, 1],
       CLAMP,
     );
@@ -219,10 +229,12 @@ export function PixelBars({
       const tp = pixelTime(i, k);
       const age = t - tp;
       if (age < 0) continue;
-      const pop = POP(interpolate(age, [0, POP_DUR], [0, 1], CLAMP));
-      const on = interpolate(age, [0, 2], [0, 1], CLAMP);
+      const pop = POP(interpolate(age, [0, col.beat("pop")], [0, 1], CLAMP));
+      const on = interpolate(age, [0, col.beat("on")], [0, 1], CLAMP);
       const s = sq * (0.7 + 0.3 * pop);
-      const lead = isLast ? 0 : interpolate(age, [0, LEAD], [1, 0], CLAMP);
+      const lead = isLast
+        ? 0
+        : interpolate(age, [0, col.beat("lead")], [1, 0], CLAMP);
       cells.push(
         <g key={`c${i}-${k}`} opacity={on}>
           {[0, 1].map((j) => (
@@ -255,8 +267,9 @@ export function PixelBars({
 
   const lastX = left + last * colPitch;
   const refY = base - prevMax * P + (P - sq) - (P - sq) / 2;
+  const reference = tl.get("reference");
   const refK = EASE_OUT(
-    interpolate(t, [passAt - 4, passAt + 8], [0, 1], CLAMP),
+    interpolate(t, [reference.start, reference.end], [0, 1], CLAMP),
   );
 
   let litRows = 0;
@@ -265,14 +278,16 @@ export function PixelBars({
     if (t < tp) break;
     litRows = Math.max(
       litRows,
-      k + EASE_OUT(interpolate(t - tp, [0, POP_DUR], [0, 1], CLAMP)),
+      k + EASE_OUT(interpolate(t - tp, [0, hero.beat("pop")], [0, 1], CLAMP)),
     );
   }
+  const countEl = tl.get("count");
+  const numberEl = tl.get("number");
   const countK = EASE_OUT(
-    interpolate(t, [passAt - 6, finish + 2], [0, 1], CLAMP),
+    interpolate(t, [countEl.start, countEl.end], [0, 1], CLAMP),
   );
   const numIn = EASE_OUT(
-    interpolate(t, [passAt - 2, passAt + 6], [0, 1], CLAMP),
+    interpolate(t, [numberEl.start, numberEl.end], [0, 1], CLAMP),
   );
   const shown = parsed
     ? `${parsed.prefix}${(parsed.value * countK).toLocaleString("en-US", {
@@ -287,20 +302,28 @@ export function PixelBars({
   const numLift = (heights[last] - litRows) * P + (1 - numIn) * 14 * u;
   const numMove =
     Math.abs(numLift) > 1e-3 ? `translateY(${numLift}px)` : undefined;
-  const labelK = EASE_OUT(interpolate(t, [finish, finish + 14], [0, 1], CLAMP));
+  const labelEl = tl.get("label");
+  const labelK = EASE_OUT(
+    interpolate(t, [labelEl.start, labelEl.end], [0, 1], CLAMP),
+  );
   // Colour turns hot exactly where the hero column passes the previous best.
   const passK = Math.min(0.9, prevMax / heights[last]);
-  const baseK = EASE_OUT(interpolate(t, [0, 14], [0, 1], CLAMP));
+  const baseEl = tl.get("base");
+  const push = tl.get("push");
+  const slide = tl.get("slide");
+  const baseK = EASE_OUT(
+    interpolate(t, [baseEl.start, baseEl.end], [0, 1], CLAMP),
+  );
   const camAt = (f: number) => {
-    const k = interpolate(f, [0, finish + 30], [1.035, 1], {
+    const k = interpolate(f, [push.start, push.end], [1.035, 1], {
       ...CLAMP,
       easing: EASE_IO,
     });
     // Chart alone sits centred; the frame slides over as the number arrives.
-    const slide = EASE_IO(
-      interpolate(f, [passAt - 10, finish + 8], [0, 1], CLAMP),
+    const slid = EASE_IO(
+      interpolate(f, [slide.start, slide.end], [0, 1], CLAMP),
     );
-    return { k, x: ((numGap + numW) / 2) * (1 - slide) };
+    return { k, x: ((numGap + numW) / 2) * (1 - slid) };
   };
   const { k: cam, x: camX } = camAt(t);
   // The camera eases in and out, so test the motion itself, in px at the

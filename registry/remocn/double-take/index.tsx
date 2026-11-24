@@ -13,6 +13,12 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_TEXT,
+  type DoubleTakeElementId,
+  doubleTakeTimeline,
+} from "./timeline";
 
 const outfit = loadFont("normal", {
   weights: ["400", "500"],
@@ -39,6 +45,12 @@ export interface DoubleTakeProps {
   delay?: number;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches single words, the crawl, the cue, the rewind
+   * and the focus, by the ids in `./timeline`. Frames on the scene timeline,
+   * after `delay` and `speed`.
+   */
+  timing?: Timing<DoubleTakeElementId>;
 }
 
 const THEMES = {
@@ -57,15 +69,6 @@ const CLAMP = {
   extrapolateLeft: "clamp",
   extrapolateRight: "clamp",
 } as const;
-
-const IN_LEN = 14;
-const IN_STAGGER = 3;
-const CRAWL_AT = 16;
-const PER_WORD = 6.5;
-const STOP_HOLD = 8;
-const REWIND_LEN = 24;
-const CLEAR_LEN = 12;
-const MIN_HOLD = 26;
 
 let measureCtx: CanvasRenderingContext2D | null = null;
 
@@ -181,24 +184,30 @@ function ScaleLayer({
   );
 }
 
-export function DoubleTake({
-  text = "One person wrote this entire launch video over a single lunch break.",
-  focus = "One person",
-  cue = "Read that again.",
-  accent,
-  ink,
-  background,
-  fontFamily = outfit.fontFamily,
-  stagger = IN_STAGGER,
-  hold = STOP_HOLD,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: DoubleTakeProps) {
+export function DoubleTake(props: DoubleTakeProps) {
+  const {
+    text = DEFAULT_TEXT,
+    focus = "One person",
+    cue = "Read that again.",
+    accent,
+    ink,
+    background,
+    fontFamily = outfit.fontFamily,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay);
   const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    doubleTakeTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const c = THEMES[theme];
   const hi = accent ?? c.accent;
   const fg = ink ?? c.ink;
@@ -223,18 +232,17 @@ export function DoubleTake({
   const my = H * (portrait ? 0.07 : 0.1);
   const { words, lineW, focusX0, focusX1, baseline, cap } = layout;
 
-  const crawlLen = Math.max(36, Math.min(120, words.length * PER_WORD));
-  const stopAt = CRAWL_AT + crawlLen;
-  const rewindAt = stopAt + hold;
-  const landAt = rewindAt + REWIND_LEN;
-  const motionEnd = landAt + CLEAR_LEN;
-  const room = durationInFrames * speed - MIN_HOLD;
-  const k = Math.max(0.55, Math.min(1, room / motionEnd));
-  const t = (frame * speed) / k;
+  const crawlEl = tl.get("crawl");
+  const cueEl = tl.get("cue");
+  const rewind = tl.get("rewind");
+  const focusEl = tl.get("focus");
+  const rewindAt = rewind.start;
+  const landAt = rewind.end;
+  const t = frame * speed;
 
   const startLeft = mx;
   const endLeft = Math.min(mx, W - mx - lineW * F);
-  const crawl = interpolate(t, [CRAWL_AT, stopAt], [0, 1], {
+  const crawl = interpolate(t, [crawlEl.start, crawlEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_CRAWL,
   });
@@ -250,7 +258,7 @@ export function DoubleTake({
   const zoomAt = (tt: number) =>
     Math.exp(
       Math.log(sF) *
-        interpolate(tt, [rewindAt + REWIND_LEN * 0.35, landAt], [0, 1], {
+        interpolate(tt, [rewindAt + rewind.beat("zoom"), landAt], [0, 1], {
           ...CLAMP,
           easing: Easing.bezier(0.45, 0, 0.2, 1),
         }),
@@ -259,7 +267,8 @@ export function DoubleTake({
   // The zoom eases in and out slowly, so its tail still moves the far words
   // across pixels: compare the scale with the neighbouring frames, weighed by
   // the frame height.
-  const dt = speed / k;
+  // One composition frame, on the scene timeline.
+  const dt = speed;
   const zooming =
     Math.abs(zoomAt(t + dt) - s) * H > 1e-3 ||
     Math.abs(s - zoomAt(t - dt)) * H > 1e-3;
@@ -273,15 +282,25 @@ export function DoubleTake({
   const stripY = H * (portrait ? 0.52 : 0.55);
   const lineTop = stripY + (cap / 2 - baseline) * F;
 
-  const tint = interpolate(t, [landAt - 10, landAt + 2], [0, 1], CLAMP);
-  const clear = interpolate(t, [landAt - 6, landAt + CLEAR_LEN], [1, 0], {
-    ...CLAMP,
-    easing: Easing.bezier(0.4, 0, 0.6, 1),
-  });
+  const tint = interpolate(
+    t,
+    [focusEl.start, focusEl.start + focusEl.beat("tint")],
+    [0, 1],
+    CLAMP,
+  );
+  const clear = interpolate(
+    t,
+    [focusEl.start + focusEl.beat("fade"), focusEl.end],
+    [1, 0],
+    {
+      ...CLAMP,
+      easing: Easing.bezier(0.4, 0, 0.6, 1),
+    },
+  );
   const focusColor = interpolateColors(tint, [0, 1], [fg, hi]);
 
   const cueF = Math.max(16, (portrait ? W : H) * 0.07);
-  const cueIn = interpolate(t, [stopAt + 2, stopAt + 16], [0, 1], {
+  const cueIn = interpolate(t, [cueEl.start, cueEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
@@ -349,15 +368,14 @@ export function DoubleTake({
               }}
             >
               {words.map((w, i) => {
+                const word = tl.get(`word:${i}`);
                 const riseAt = (tt: number) =>
                   (
                     (1 -
-                      interpolate(
-                        tt,
-                        [i * stagger, i * stagger + IN_LEN],
-                        [0, 1],
-                        { ...CLAMP, easing: EASE_OUT },
-                      )) *
+                      interpolate(tt, [word.start, word.end], [0, 1], {
+                        ...CLAMP,
+                        easing: EASE_OUT,
+                      })) *
                     1.15 *
                     F
                   ).toFixed(2);

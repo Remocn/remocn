@@ -15,6 +15,12 @@ import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
+import {
+  type ResolvedElement,
+  type Timing,
+  useTimeline,
+} from "@/lib/remocn/timeline";
+import { type StockScrubElementId, stockScrubTimeline } from "./timeline";
 
 const geist = loadFont("normal", {
   weights: ["300", "400"],
@@ -51,6 +57,12 @@ export interface StockScrubProps {
   lines?: [string, string, string, string];
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
+  /**
+   * Moves, trims or stretches the page, the chart drawing, single copy
+   * lines and each gesture of the finger, by the ids in `./timeline`. Frames
+   * on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<StockScrubElementId>;
 }
 
 const REMOCN_R_PATH =
@@ -69,13 +81,6 @@ const TABS_Y = 502;
 const N = 96;
 const TABS = ["LIVE", "1D", "1W", "1M", "1Y", "ALL"];
 const TAB_W = (SW - 24) / TABS.length;
-const DRAW = 8;
-const PRESS = 72;
-const LEFT = 112;
-const RIGHT = 146;
-const RELEASE = 154;
-const TAB_TAP = 174;
-const BUY_TAP = 214;
 
 const clamp = { extrapolateLeft: "clamp", extrapolateRight: "clamp" } as const;
 const MOVE = Easing.bezier(0.65, 0, 0.35, 1);
@@ -392,35 +397,59 @@ function ScaleLayer({
   );
 }
 
-export function StockScrub({
-  ticker = "RMCN",
-  name = "remocn Inc.",
-  series = DAY,
-  yearSeries = YEAR,
-  ctaLabel = "Buy",
-  orderLabel = "Review order",
-  logo,
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = geist.fontFamily,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-  lines = [
-    "Every tick, live.",
-    "Drag through the day.",
-    "Zoom out to the year.",
-    "Buy in two taps.",
-  ],
-  ground,
-  groundParams,
-}: StockScrubProps) {
+export function StockScrub(props: StockScrubProps) {
+  const {
+    ticker = "RMCN",
+    name = "remocn Inc.",
+    series = DAY,
+    yearSeries = YEAR,
+    ctaLabel = "Buy",
+    orderLabel = "Review order",
+    logo,
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = geist.fontFamily,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    lines = [
+      "Every tick, live.",
+      "Drag through the day.",
+      "Zoom out to the year.",
+      "Buy in two taps.",
+    ],
+    ground,
+    groundParams,
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay);
-  const { fps, width, height } = useSceneConfig();
+  const { fps, width, height, durationInFrames } = useSceneConfig();
   const f = frame * speed;
+  const tl = useTimeline(
+    stockScrubTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const page = tl.get("page");
+  const cameraEl = tl.get("camera");
+  const drawEl = tl.get("draw");
+  const reach = tl.get("reach");
+  const pressEl = tl.get("press");
+  const leftEl = tl.get("left");
+  const rightEl = tl.get("right");
+  const releaseEl = tl.get("release");
+  const tab = tl.get("tab");
+  const buy = tl.get("buy");
+  const pressAt = pressEl.start;
+  const leftAt = leftEl.start;
+  const rightAt = rightEl.start;
+  const releaseAt = releaseEl.start;
+  const tabAt = tab.start;
+  const buyAt = buy.start;
   const dark = theme !== "light";
   const pal: Palette = dark ? DARK : LIGHT;
   const c: Palette = { ...pal, copy: ink ?? pal.copy };
@@ -435,8 +464,15 @@ export function StockScrub({
   const phoneCy = tall ? H - 30 - (BH * k) / 2 : H / 2;
   const sp = (at: number, config: Partial<typeof CARD> = CARD) =>
     spring({ frame: f - at, fps, config });
-  const press = (at: number) =>
-    Math.max(0, Math.min(1, sp(at - 1, CHIP) - sp(at + 5, CHIP)));
+  const press = (e: ResolvedElement<StockScrubElementId>) =>
+    Math.max(
+      0,
+      Math.min(
+        1,
+        sp(e.start + e.beat("pressIn"), CHIP) -
+          sp(e.start + e.beat("pressOut"), CHIP),
+      ),
+    );
 
   const day = resample(series);
   const last = day[N - 1];
@@ -452,10 +488,18 @@ export function StockScrub({
   };
   const yDay = yOf(day);
   const yYear = yOf(year);
-  const morph = interpolate(f, [TAB_TAP + 3, TAB_TAP + 25], [0, 1], {
-    ...clamp,
-    easing: Easing.bezier(0.65, 0, 0.35, 1),
-  });
+  const morph = interpolate(
+    f,
+    [
+      tabAt + tab.beat("morphAt"),
+      tabAt + tab.beat("morphAt") + tab.beat("morph"),
+    ],
+    [0, 1],
+    {
+      ...clamp,
+      easing: Easing.bezier(0.65, 0, 0.35, 1),
+    },
+  );
   const pts = day.map((v, i) => ({
     x: (i / (N - 1)) * CH_W,
     y: yDay(v) + (yYear(year[i]) - yDay(v)) * morph,
@@ -467,16 +511,16 @@ export function StockScrub({
   const baseY = yDay(open) + (yYear(year[0]) - yDay(open)) * morph;
   const fingerY = CH_Y + CH_H;
   const path = [
-    { t: 52, x: 330, y: 700 },
-    { t: PRESS, x: SW * 0.78, y: fingerY },
-    { t: PRESS + 4, x: SW * 0.78, y: fingerY },
-    { t: LEFT, x: SW * 0.38, y: fingerY + 6 },
-    { t: LEFT + 8, x: SW * 0.38, y: fingerY + 6 },
-    { t: RIGHT, x: SW * 0.9, y: fingerY - 4 },
-    { t: RELEASE - 3, x: SW * 0.95, y: fingerY - 4 },
-    { t: TAB_TAP, x: 12 + TAB_W * 4.5, y: TABS_Y + 16 },
-    { t: TAB_TAP + 4, x: 12 + TAB_W * 4.5, y: TABS_Y + 16 },
-    { t: BUY_TAP, x: SW - 82, y: SH - 64 },
+    { t: reach.start, x: 330, y: 700 },
+    { t: pressAt, x: SW * 0.78, y: fingerY },
+    { t: pressAt + pressEl.beat("hold"), x: SW * 0.78, y: fingerY },
+    { t: leftAt, x: SW * 0.38, y: fingerY + 6 },
+    { t: leftAt + leftEl.beat("hold"), x: SW * 0.38, y: fingerY + 6 },
+    { t: rightAt, x: SW * 0.9, y: fingerY - 4 },
+    { t: releaseAt + releaseEl.beat("drift"), x: SW * 0.95, y: fingerY - 4 },
+    { t: tabAt, x: 12 + TAB_W * 4.5, y: TABS_Y + 16 },
+    { t: tabAt + tab.beat("hold"), x: 12 + TAB_W * 4.5, y: TABS_Y + 16 },
+    { t: buyAt, x: SW - 82, y: SH - 64 },
   ];
   let touch = path[0];
   for (let i = 0; i < path.length - 1; i++) {
@@ -496,22 +540,40 @@ export function StockScrub({
   }
   const touchOpacity = interpolate(
     f,
-    [path[0].t, path[0].t + 8, BUY_TAP + 4, BUY_TAP + 10],
+    [
+      path[0].t,
+      path[0].t + reach.beat("fadeIn"),
+      buyAt + buy.beat("fadeAt"),
+      buyAt + buy.beat("fadeEnd"),
+    ],
     [0, 1, 1, 0],
     clamp,
   );
   const held = interpolate(
     f,
-    [PRESS - 2, PRESS + 2, RELEASE - 2, RELEASE + 2],
+    [
+      pressAt + pressEl.beat("heldAt"),
+      pressAt + pressEl.beat("heldEnd"),
+      releaseAt + releaseEl.beat("heldAt"),
+      releaseAt + releaseEl.beat("heldEnd"),
+    ],
     [0, 1, 1, 0],
     clamp,
   );
-  const touchScale = 1 - 0.16 * Math.max(held, press(TAB_TAP), press(BUY_TAP));
+  const touchScale = 1 - 0.16 * Math.max(held, press(tab), press(buy));
   const scrubAt = (ff: number) => {
-    const on = ff >= PRESS && ff < RELEASE;
+    const on = ff >= pressAt && ff < releaseAt;
     const x = interpolate(
       ff,
-      [PRESS, PRESS + 4, LEFT, LEFT + 8, RIGHT, RELEASE - 3, RELEASE + 6],
+      [
+        pressAt,
+        pressAt + pressEl.beat("hold"),
+        leftAt,
+        leftAt + leftEl.beat("hold"),
+        rightAt,
+        releaseAt + releaseEl.beat("drift"),
+        releaseAt + releaseEl.beat("settle"),
+      ],
       [0.78, 0.78, 0.38, 0.38, 0.9, 0.95, 1],
       { ...clamp, easing: MOVE },
     );
@@ -519,11 +581,18 @@ export function StockScrub({
     return { on, x: idx / (N - 1), price: day[idx] };
   };
   const priceAt = (ff: number) =>
-    ff < PRESS || ff >= RELEASE + 6 ? last : scrubAt(ff).price;
+    ff < pressAt || ff >= releaseAt + releaseEl.beat("settle")
+      ? last
+      : scrubAt(ff).price;
   const scrub = scrubAt(f);
   const cross = interpolate(
     f,
-    [PRESS - 1, PRESS + 4, RELEASE, RELEASE + 6],
+    [
+      pressAt + pressEl.beat("crossAt"),
+      pressAt + pressEl.beat("crossEnd"),
+      releaseAt,
+      releaseAt + releaseEl.beat("settle"),
+    ],
     [0, 1, 1, 0],
     clamp,
   );
@@ -544,18 +613,22 @@ export function StockScrub({
   const changeLabel =
     cross > 0.5 ? timeLabel : morph > 0.5 ? "Past year" : "Today";
   const crossX = scrub.x * CH_W;
-  const rise = sp(0, HEAVY);
-  const draw = interpolate(f, [DRAW, DRAW + 40], [0, 1], {
+  const rise = sp(page.start, HEAVY);
+  const draw = interpolate(f, [drawEl.start, drawEl.end], [0, 1], {
     ...clamp,
     easing: Easing.bezier(0.65, 0, 0.35, 1),
   });
-  const headIn = [0, 1, 2, 3].map((i) => sp(6 + i * 3, CARD));
-  const tabX = 12 + TAB_W * (1 + 3 * sp(TAB_TAP + 1, CHIP));
-  const sheet = sp(BUY_TAP + 4, HEAVY);
-  const sheetRows = [0, 1, 2, 3].map((i) => sp(BUY_TAP + 10 + i * 3, CARD));
-  const pulse = ((f - DRAW - 40) % 36) / 36;
-  const camS = interpolate(f, [0, 270], [1, 1.03], clamp);
-  const camMoving = f > 0 && f < 270;
+  const headIn = [0, 1, 2, 3].map((i) =>
+    sp(page.start + page.beat("headAt") + i * page.beat("head"), CARD),
+  );
+  const tabX = 12 + TAB_W * (1 + 3 * sp(tabAt + tab.beat("slideAt"), CHIP));
+  const sheet = sp(buyAt + buy.beat("sheetAt"), HEAVY);
+  const sheetRows = [0, 1, 2, 3].map((i) =>
+    sp(buyAt + buy.beat("rowsAt") + i * buy.beat("row"), CARD),
+  );
+  const pulse = ((f - drawEl.start - drawEl.length) % 36) / 36;
+  const camS = interpolate(f, [cameraEl.start, cameraEl.end], [1, 1.03], clamp);
+  const camMoving = f > cameraEl.start && f < cameraEl.end;
 
   const enter = (v: number, dy = 12): React.CSSProperties => ({
     opacity: Math.min(1, v * 1.4),
@@ -580,21 +653,26 @@ export function StockScrub({
   ];
   const lineEnd = pts[N - 1];
 
-  const beats = [0, PRESS - 6, TAB_TAP - 4, BUY_TAP];
   const copyLine = (i: number) => {
-    const inAt = beats[i] + (i === 0 ? 8 : 0);
-    const outAt = beats[i + 1];
-    const pin = interpolate(f, [inAt, inAt + 14], [0, 1], {
+    const copy = tl.get(`line:${i}`);
+    const inAt = copy.start;
+    const outAt = i < 3 ? copy.end : undefined;
+    const pin = interpolate(f, [inAt, inAt + copy.beat("rise")], [0, 1], {
       ...clamp,
       easing: ENTER,
     });
     const pout =
       outAt === undefined
         ? 0
-        : interpolate(f, [outAt - 2, outAt + 6], [0, 1], {
-            ...clamp,
-            easing: EXIT,
-          });
+        : interpolate(
+            f,
+            [outAt - copy.beat("outLead"), outAt + copy.beat("out")],
+            [0, 1],
+            {
+              ...clamp,
+              easing: EXIT,
+            },
+          );
     if (pin <= 0 || pout >= 1) return null;
     return (
       <div
@@ -612,12 +690,13 @@ export function StockScrub({
       </div>
     );
   };
-  const readIn = sp(18, CARD);
+  const readAt = page.start + page.beat("readAt");
+  const readIn = sp(readAt, CARD);
   // The spring overshoots, so it is still moving past 1: the neighbouring
   // frames say whether it is, not the progress.
   const readMoving =
-    Math.abs(sp(17, CARD) - readIn) > 1e-5 ||
-    Math.abs(readIn - sp(19, CARD)) > 1e-5;
+    Math.abs(sp(readAt - 1, CARD) - readIn) > 1e-5 ||
+    Math.abs(readIn - sp(readAt + 1, CARD)) > 1e-5;
 
   return (
     <AbsoluteFill style={{ fontFamily, overflow: "hidden" }}>
@@ -984,7 +1063,7 @@ export function StockScrub({
                   left: 18,
                   right: 18,
                   color: c.text,
-                  ...enter(sp(24, CARD), 20),
+                  ...enter(sp(page.start + page.beat("statsAt"), CARD), 20),
                 }}
               >
                 <div style={{ fontSize: 20, fontWeight: 400, marginBottom: 6 }}>
@@ -1063,7 +1142,7 @@ export function StockScrub({
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    transform: `scale(${1 - press(BUY_TAP) * 0.04})`,
+                    transform: `scale(${1 - press(buy) * 0.04})`,
                   }}
                 >
                   {ctaLabel}

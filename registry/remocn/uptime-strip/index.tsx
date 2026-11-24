@@ -7,6 +7,8 @@ import { useId } from "react";
 import { AbsoluteFill, Easing, interpolate, interpolateColors } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import { type UptimeStripElementId, uptimeStripTimeline } from "./timeline";
 
 const { fontFamily: sans } = loadSans("normal", {
   weights: ["400", "500"],
@@ -42,6 +44,13 @@ export interface UptimeStripProps {
   delay?: number;
   theme?: "dark" | "light";
   speed?: number;
+  /**
+   * Moves, trims or stretches the fade-up, the push, the captions, the
+   * sweep, the strip's glide and settle, the gradient drift, the figure and
+   * its label, by the ids in `./timeline`. Frames on the scene timeline,
+   * after `delay` and `speed`.
+   */
+  timing?: Timing<UptimeStripElementId>;
 }
 
 const EASE_IO = Easing.bezier(0.65, 0, 0.35, 1);
@@ -79,13 +88,6 @@ const THEMES = {
   },
 } as const;
 
-const SWEEP_START = 6;
-const SWEEP_LEN = 34;
-const GROW = 12;
-const SETTLE = 54;
-const SETTLE_SPREAD = 16;
-const LAND = 60;
-
 function Grain({ opacity }: { opacity: number }) {
   const id = `g${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
   return (
@@ -115,6 +117,7 @@ function RisingText({
   t,
   start,
   stagger,
+  rise,
   fontSize,
   color,
   family,
@@ -124,6 +127,7 @@ function RisingText({
   t: number;
   start: number;
   stagger: number;
+  rise: number;
   fontSize: number;
   color: string;
   family: string;
@@ -142,7 +146,7 @@ function RisingText({
       {Array.from(text).map((ch, i) => {
         const k = interpolate(
           t,
-          [start + i * stagger, start + i * stagger + 22],
+          [start + i * stagger, start + i * stagger + rise],
           [0, 1],
           { ...CLAMP, easing: EASE_OUT },
         );
@@ -198,27 +202,44 @@ function ScaleLayer({
   );
 }
 
-export function UptimeStrip({
-  value = "99.99%",
-  days = 90,
-  incidents = [27, 63],
-  label = "uptime",
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = sans,
-  agoLabel = "days ago",
-  todayLabel = "Today",
-  stagger = 2,
-  grain = true,
-  scale = 1,
-  delay = 0,
-  theme = "dark",
-  speed = 1,
-}: UptimeStripProps) {
+export function UptimeStrip(props: UptimeStripProps) {
+  const {
+    value = "99.99%",
+    days = 90,
+    incidents = [27, 63],
+    label = "uptime",
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = sans,
+    agoLabel = "days ago",
+    todayLabel = "Today",
+    grain = true,
+    scale = 1,
+    delay = 0,
+    theme = "dark",
+    speed = 1,
+    timing,
+  } = props;
   const tilt = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width, height } = useSceneConfig();
+  const { width, height, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    uptimeStripTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const stageEl = tl.get("stage");
+  const pushEl = tl.get("push");
+  const agoEl = tl.get("ago");
+  const sweep = tl.get("sweep");
+  const todayEl = tl.get("today");
+  const glideEl = tl.get("glide");
+  const settle = tl.get("settle");
+  const driftEl = tl.get("drift");
+  const valueEl = tl.get("value");
+  const labelEl = tl.get("label");
   const u = Math.min(width / 1280, height / 720);
   const p = THEMES[theme];
   const fg = ink ?? p.fg;
@@ -233,7 +254,7 @@ export function UptimeStrip({
   const barH = 74 * u;
   const left = (width - stripW) / 2 + (pitch - barW) / 2;
 
-  const glide = interpolate(t, [SETTLE - 6, SETTLE + 26], [0, 1], {
+  const glide = interpolate(t, [glideEl.start, glideEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
@@ -244,52 +265,51 @@ export function UptimeStrip({
   const stripRest = height / 2 + 64 * u;
   const lift = (1 - glide) * 64 * u;
   const ride = lift < 1e-3 ? undefined : `translateY(${-lift}px)`;
-  const pushP = interpolate(t, [0, 130], [0, 1], {
+  const pushP = interpolate(t, [pushEl.start, pushEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
   const push = 0.965 + 0.04 * pushP;
-  const stage = interpolate(t, [0, 8], [0.45, 1], CLAMP);
+  const stage = interpolate(t, [stageEl.start, stageEl.end], [0.45, 1], CLAMP);
 
   const gid = `up${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
-  const drift = interpolate(t, [SETTLE, 130], [0, 1], {
+  const drift = interpolate(t, [driftEl.start, driftEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
 
   const frontAt = (i: number) =>
-    SWEEP_START + (n > 1 ? (i / (n - 1)) * SWEEP_LEN : 0);
+    sweep.start + (n > 1 ? (i / (n - 1)) * sweep.length : 0);
   const settleAt = (i: number) =>
-    SETTLE + (n > 1 ? (i / (n - 1)) * SETTLE_SPREAD : 0);
+    settle.start + (n > 1 ? (i / (n - 1)) * settle.beat("spread") : 0);
 
-  const front = interpolate(
-    t,
-    [SWEEP_START, SWEEP_START + SWEEP_LEN],
-    [0, 1],
-    CLAMP,
-  );
+  const front = interpolate(t, [sweep.start, sweep.end], [0, 1], CLAMP);
   const frontX = left + front * (n - 1) * pitch + barW / 2;
   const scanO =
-    interpolate(t, [SWEEP_START, SWEEP_START + 4], [0, 1], CLAMP) *
     interpolate(
       t,
-      [SWEEP_START + SWEEP_LEN, SWEEP_START + SWEEP_LEN + 10],
+      [sweep.start, sweep.start + sweep.beat("scanIn")],
+      [0, 1],
+      CLAMP,
+    ) *
+    interpolate(
+      t,
+      [sweep.end, sweep.end + sweep.beat("scanOut")],
       [1, 0],
       CLAMP,
     );
 
   const headSize = 132 * u;
   const headTop = stripRest - barH / 2 - 44 * u - headSize * 0.92;
-  const valueChars = Array.from(value).length;
-  const wordStart = LAND + valueChars * stagger + 4;
 
-  const capA = interpolate(t, [4, 18], [0, 1], { ...CLAMP, easing: EASE_OUT });
-  const capB = interpolate(
-    t,
-    [SWEEP_START + SWEEP_LEN - 4, SWEEP_START + SWEEP_LEN + 10],
-    [0, 1],
-    { ...CLAMP, easing: EASE_OUT },
-  );
+  const capA = interpolate(t, [agoEl.start, agoEl.end], [0, 1], {
+    ...CLAMP,
+    easing: EASE_OUT,
+  });
+  const capB = interpolate(t, [todayEl.start, todayEl.end], [0, 1], {
+    ...CLAMP,
+    easing: EASE_OUT,
+  });
 
   return (
     <AbsoluteFill style={{ background: fill, overflow: "hidden" }}>
@@ -326,7 +346,7 @@ export function UptimeStrip({
               const isDown = down.has(i);
               const g = interpolate(
                 t,
-                [frontAt(i), frontAt(i) + GROW],
+                [frontAt(i), frontAt(i) + sweep.beat("grow")],
                 [0, 1],
                 {
                   ...CLAMP,
@@ -335,13 +355,17 @@ export function UptimeStrip({
               );
               const flash = interpolate(
                 t,
-                [frontAt(i), frontAt(i) + 2, frontAt(i) + 16],
+                [
+                  frontAt(i),
+                  frontAt(i) + sweep.beat("flash"),
+                  frontAt(i) + sweep.beat("fade"),
+                ],
                 [0, 1, 0],
                 CLAMP,
               );
               const s = interpolate(
                 t,
-                [settleAt(i), settleAt(i) + 10],
+                [settleAt(i), settleAt(i) + settle.beat("each")],
                 [0, 1],
                 {
                   ...CLAMP,
@@ -425,8 +449,9 @@ export function UptimeStrip({
             <RisingText
               text={value}
               t={t}
-              start={LAND}
-              stagger={stagger}
+              start={valueEl.start}
+              stagger={valueEl.beat("stagger")}
+              rise={valueEl.beat("rise")}
               fontSize={headSize}
               color={fg}
               family={fontFamily}
@@ -437,8 +462,9 @@ export function UptimeStrip({
               <RisingText
                 text={label}
                 t={t}
-                start={wordStart}
-                stagger={1}
+                start={labelEl.start}
+                stagger={labelEl.beat("stagger")}
+                rise={labelEl.beat("rise")}
                 fontSize={headSize * 1.12}
                 color={p.muted}
                 family={serif}

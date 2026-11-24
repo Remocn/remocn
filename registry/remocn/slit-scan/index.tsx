@@ -6,6 +6,8 @@ import { useId } from "react";
 import { AbsoluteFill, Easing, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import { type SlitScanElementId, slitScanTimeline } from "./timeline";
 
 const { fontFamily: bricolage } = loadBricolage("normal", {
   weights: ["400", "500"],
@@ -33,6 +35,12 @@ export interface SlitScanProps {
   delay?: number;
   theme?: "dark" | "light";
   speed?: number;
+  /**
+   * Moves, trims or stretches the slide, the trail, the ground, the rule and
+   * the caption, by the ids in `./timeline`. Frames on the scene timeline,
+   * after `delay` and `speed`.
+   */
+  timing?: Timing<SlitScanElementId>;
 }
 
 const CLAMP = {
@@ -42,12 +50,7 @@ const CLAMP = {
 
 const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
 
-const MOVE_AT = -30;
-const MOVE_END = 28;
 const LAG = 34;
-const RESOLVE_AT = 36;
-const RESOLVE_END = 76;
-const CAPTION_AT = 78;
 
 const MOVE = Easing.bezier(0.3, 0.1, 0.2, 1);
 const RESOLVE = Easing.bezier(0.65, 0, 0.35, 1);
@@ -160,25 +163,39 @@ function ScaleLayer({
   );
 }
 
-export function SlitScan({
-  word = "Faster.",
-  caption = "First render in 1.8s, down from 4.7s",
-  slices = 120,
-  trail = LAG,
-  fontWeight = 500,
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = bricolage,
-  grain = true,
-  scale = 1,
-  delay = 0,
-  theme = "dark",
-  speed = 1,
-}: SlitScanProps) {
+export function SlitScan(props: SlitScanProps) {
+  const {
+    word = "Faster.",
+    caption = "First render in 1.8s, down from 4.7s",
+    slices = 120,
+    trail = LAG,
+    fontWeight = 500,
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = bricolage,
+    grain = true,
+    scale = 1,
+    delay = 0,
+    theme = "dark",
+    speed = 1,
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H } = useSceneConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    slitScanTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const move = tl.get("move");
+  const ground = tl.get("ground");
+  const trailEl = tl.get("trail");
+  const resolve = tl.get("resolve");
+  const rule = tl.get("rule");
+  const captionEl = tl.get("caption");
   const u = H / 720;
   const stage = THEMES[theme];
   const heat = FLUTED[theme];
@@ -192,29 +209,32 @@ export function SlitScan({
 
   const lag =
     trail *
-    interpolate(t, [0, 14], [0.35, 1], CLAMP) *
-    (1 - RESOLVE(interpolate(t, [RESOLVE_AT, RESOLVE_END], [0, 1], CLAMP)));
+    interpolate(t, [trailEl.start, trailEl.end], [0.35, 1], CLAMP) *
+    (1 - RESOLVE(interpolate(t, [resolve.start, resolve.end], [0, 1], CLAMP)));
   const lagK = lag / Math.max(1, trail);
   const pos = (tau: number) =>
-    travel * (1 - MOVE(interpolate(tau, [MOVE_AT, MOVE_END], [0, 1], CLAMP)));
+    travel *
+    (1 - MOVE(interpolate(tau, [move.start, move.end], [0, 1], CLAMP)));
 
   const [body, tail] = splitTail(word);
   const sw = W / n;
   const gap = Math.max(0, 1.2 * u * Math.min(1, lagK * 1.6));
 
   const capIn = SETTLE(
-    interpolate(t, [CAPTION_AT, CAPTION_AT + 20], [0, 1], CLAMP),
+    interpolate(t, [captionEl.start, captionEl.end], [0, 1], CLAMP),
   );
-  const ruleIn = SETTLE(
-    interpolate(t, [CAPTION_AT - 4, CAPTION_AT + 18], [0, 1], CLAMP),
-  );
+  const ruleIn = SETTLE(interpolate(t, [rule.start, rule.end], [0, 1], CLAMP));
   const capSize = Math.max(15, 24 * u);
   const baseY = H / 2 + lift + size * 0.5;
 
   // Fluted ground: the same heat palette as a low band behind the word,
   // ribbed into the slice pitch so the slits read as glass flutes.
-  const bandIn = interpolate(t, [0, 30], [0, 1], CLAMP);
-  const flow = interpolate(t, [0, 125], [-4, 4]);
+  const bandIn = interpolate(t, [ground.start, ground.end], [0, 1], CLAMP);
+  const flow = interpolate(
+    t,
+    [ground.start, ground.start + ground.beat("drift")],
+    [-4, 4],
+  );
   const bandStops = `${heat[3]} ${8 + flow}%, ${heat[2]} ${34 + flow}%, ${heat[1]} ${62 + flow}%, ${heat[0]} ${88 + flow}%`;
   const ribW = Math.max(4, W / n) * 2;
 

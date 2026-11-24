@@ -5,6 +5,13 @@ import type React from "react";
 import { AbsoluteFill, Easing, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  clockStart,
+  PREROLL,
+  type ShotClockElementId,
+  shotClockTimeline,
+} from "./timeline";
 
 const { fontFamily: mono } = loadFont("normal", {
   weights: ["400", "500"],
@@ -44,6 +51,12 @@ export interface ShotClockProps {
   delay?: number;
   theme?: "dark" | "light";
   speed?: number;
+  /**
+   * Moves, trims or stretches the drop, the seconds, the tenths, the buzzer,
+   * the shrink, the title and the subtitle, by the ids in `./timeline`.
+   * Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<ShotClockElementId>;
 }
 
 // Beat sheet (internal clock = frame + 2, 30fps, speed 1, from 24):
@@ -58,12 +71,6 @@ export interface ShotClockProps {
 // 120–131  the clock shrinks up under the light; the title slams in at the
 //          centre as it clears, the subtitle four frames after it
 // 135–     poster hold
-const DROP_AT = 0;
-const TICK_AT = 14;
-const TICK = 2.6;
-const TENTH = 1;
-const SHRINK_DELAY = 6;
-const SHRINK_LEN = 11;
 
 const SLAM = Easing.bezier(0.22, 1, 0.36, 1);
 const MOVE = Easing.bezier(0.7, 0, 0.2, 1);
@@ -130,45 +137,62 @@ function ScaleLayer({
   );
 }
 
-export function ShotClock({
-  from = 24,
-  tenthsBelow = 5,
-  title = "Shipped",
-  subtitle = "at the buzzer",
-  label = "Shot clock",
-  period = "Q4 · 00:24",
-  alarm = "#FF4433",
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = mono,
-  tick = TICK,
-  hold = SHRINK_DELAY,
-  scale = 1,
-  delay = 0,
-  theme = "dark",
-  speed = 1,
-}: ShotClockProps) {
+export function ShotClock(props: ShotClockProps) {
+  const {
+    from = 24,
+    tenthsBelow = 5,
+    title = "Shipped",
+    subtitle = "at the buzzer",
+    label = "Shot clock",
+    period = "Q4 · 00:24",
+    alarm = "#FF4433",
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = mono,
+    scale = 1,
+    delay = 0,
+    theme = "dark",
+    speed = 1,
+    timing,
+  } = props;
   const glide = useGlide();
   // Starts two frames in, so frame 0 already shows the drop.
-  const t = Math.max(0, useSceneFrame() - delay) * speed + 2;
-  const { width: W, height: H } = useSceneConfig();
+  const t = Math.max(0, useSceneFrame() - delay) * speed + PREROLL;
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    shotClockTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  // The schedule counts scene frames; `t` runs `PREROLL` ahead of them.
+  const dropEl = tl.get("drop");
+  const secondsEl = tl.get("seconds");
+  const tenthsEl = tl.get("tenths");
+  const buzzerEl = tl.get("buzzer");
+  const shrinkEl = tl.get("shrink");
+  const titleEl = tl.get("title");
+  const subtitleEl = tl.get("subtitle");
+  const dropStart = dropEl.start + PREROLL;
+  const tickAt = secondsEl.start + PREROLL;
+  const tick = secondsEl.beat("tick");
+  const tenth = tenthsEl.beat("tenth");
   const c = THEMES[theme];
   const fg = ink ?? c.ink;
   const stage =
     background === "transparent" ? "transparent" : (background ?? c.stage);
   const u = Math.min(W / 1280, H / 720);
 
-  const start = Math.max(tenthsBelow + 1, Math.floor(from));
-  const wholeTicks = start - tenthsBelow;
-  const redAt = TICK_AT + wholeTicks * tick;
-  const buzzAt = redAt + tenthsBelow * 10 * TENTH;
+  const start = clockStart(from, tenthsBelow);
+  const redAt = tenthsEl.start + PREROLL;
+  const buzzAt = buzzerEl.start + PREROLL;
 
   // Clock value in tenths of a second.
   let tenths: number;
-  if (t < TICK_AT) tenths = start * 10;
-  else if (t < redAt) tenths = (start - Math.floor((t - TICK_AT) / tick)) * 10;
-  else tenths = Math.max(0, tenthsBelow * 10 - Math.floor((t - redAt) / TENTH));
+  if (t < tickAt) tenths = start * 10;
+  else if (t < redAt) tenths = (start - Math.floor((t - tickAt) / tick)) * 10;
+  else tenths = Math.max(0, tenthsBelow * 10 - Math.floor((t - redAt) / tenth));
   const red = t >= redAt;
   const buzzed = t >= buzzAt;
   const text = red
@@ -178,7 +202,7 @@ export function ShotClock({
   // Possession bar: continuous, so it runs smoothly between ticks.
   const remaining = interpolate(
     t,
-    [TICK_AT, redAt, buzzAt],
+    [tickAt, redAt, buzzAt],
     [start, tenthsBelow, 0],
     CLAMP,
   );
@@ -192,27 +216,35 @@ export function ShotClock({
   const lightY = clockCY - 0.5 * clockFs - 34 * u;
   const barY = clockCY + 0.5 * clockFs + 18 * u;
 
-  const dropAt = (tt: number) => SLAM(ramp(tt, DROP_AT, 9));
+  const dropAt = (tt: number) => SLAM(ramp(tt, dropStart, dropEl.length));
   const drop = dropAt(t);
-  const draw = SLAM(ramp(t, DROP_AT + 2, 12));
-  const labelsIn = ramp(t, 5, 8);
-  const flash = buzzed ? kick(t - buzzAt, 9) : 0;
+  const draw = SLAM(
+    ramp(t, dropStart + dropEl.beat("draw"), dropEl.beat("drawLen")),
+  );
+  const labelsIn = ramp(
+    t,
+    dropStart + dropEl.beat("labels"),
+    dropEl.beat("labelsLen"),
+  );
+  const flash = buzzed ? kick(t - buzzAt, buzzerEl.beat("flash")) : 0;
 
   // Shrink to the poster position under the light.
   const posterScale = 0.38;
   const posterCY = 150 * u;
   const groupAt = (tt: number) => {
-    const shrink = MOVE(ramp(tt, buzzAt + hold, SHRINK_LEN));
+    const shrink = MOVE(ramp(tt, shrinkEl.start + PREROLL, shrinkEl.length));
     // A slow push-in while the clock runs down builds the pressure.
     const push = Easing.bezier(
       0.65,
       0,
       0.35,
       1,
-    )(ramp(tt, TICK_AT, buzzAt - TICK_AT));
+    )(ramp(tt, tickAt, buzzAt - tickAt));
     const scale =
       interpolate(shrink, [0, 1], [1 + 0.07 * push, posterScale]) *
-      (1 + 0.03 * kick(tt - redAt, 8) + 0.04 * kick(tt - buzzAt, 10));
+      (1 +
+        0.03 * kick(tt - redAt, tenthsEl.beat("kick")) +
+        0.04 * kick(tt - buzzAt, buzzerEl.beat("kick")));
     const dy = interpolate(shrink, [0, 1], [0, posterCY - clockCY]);
     return { shrink, scale, dy };
   };
@@ -227,12 +259,15 @@ export function ShotClock({
     speed,
   );
 
-  const titleAt = buzzAt + hold + SHRINK_LEN - 4;
+  const titleAt = titleEl.start + PREROLL;
   const titleScaleAt = (tt: number) =>
-    (1.22 - 0.22 * SLAM(ramp(tt, titleAt, 7))) *
-    (1 + 0.025 * kick(tt - (titleAt + 3), 8));
-  const subAt = (tt: number) => SLAM(ramp(tt, titleAt + 4, 9));
-  const titleIn = SLAM(ramp(t, titleAt, 7));
+    (1.22 - 0.22 * SLAM(ramp(tt, titleAt, titleEl.length))) *
+    (1 +
+      0.025 *
+        kick(tt - (titleAt + titleEl.beat("kickAt")), titleEl.beat("kick")));
+  const subAt = (tt: number) =>
+    SLAM(ramp(tt, subtitleEl.start + PREROLL, subtitleEl.length));
+  const titleIn = SLAM(ramp(t, titleAt, titleEl.length));
   const subIn = subAt(t);
   const titleMoving = moves((tt) => [titleScaleAt(tt) * W], t, speed);
   const subMoving = moves((tt) => [(1 - subAt(tt)) * 36 * u], t, speed);
@@ -257,7 +292,8 @@ export function ShotClock({
     `radial-gradient(45% 35% at 50% 100%, color-mix(in oklab, ${RISE[0]} 35%, transparent) 0%, transparent 70%)`,
     `radial-gradient(90% 70% at 50% 115%, color-mix(in oklab, ${RISE[2]} 70%, transparent) 0%, transparent 80%)`,
   ].join(", ");
-  const groundOp = (theme === "dark" ? 0.75 : 0.45) * ramp(t, buzzAt, 6);
+  const groundOp =
+    (theme === "dark" ? 0.75 : 0.45) * ramp(t, buzzAt, buzzerEl.beat("ground"));
 
   return (
     <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>

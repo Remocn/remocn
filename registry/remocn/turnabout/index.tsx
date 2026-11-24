@@ -12,6 +12,13 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_BEFORE,
+  type TurnaboutElementId,
+  tokenize,
+  turnaboutTimeline,
+} from "./timeline";
 
 const dmSans = loadFont("normal", {
   weights: ["400", "500"],
@@ -37,6 +44,12 @@ export interface TurnaboutProps {
   delay?: number;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches single words, the turn and the landing, by the
+   * ids in `./timeline`. Frames on the scene timeline, after `delay` and
+   * `speed`.
+   */
+  timing?: Timing<TurnaboutElementId>;
 }
 
 const THEMES = {
@@ -47,7 +60,6 @@ const THEMES = {
 const WGHT = 500;
 const TRACK = -0.035;
 const PROBE = 200;
-const BASE = 150;
 
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
 const EASE_IO = Easing.bezier(0.65, 0, 0.35, 1);
@@ -55,14 +67,6 @@ const CLAMP = {
   extrapolateLeft: "clamp",
   extrapolateRight: "clamp",
 } as const;
-
-const IN = 4;
-const STAGGER = 3;
-const ENTER = 16;
-const TURN = 52;
-const LIFT = 13;
-const TRAVEL = 30;
-const LIT = 8;
 
 interface Tok {
   text: string;
@@ -82,15 +86,6 @@ interface Metrics {
   a: Line;
   b: Line;
   cap: number;
-}
-
-function tokenize(s: string) {
-  const out: { text: string; start: number; end: number }[] = [];
-  const re = /[^\s.,!?…;:]+|[.,!?…;:]+/g;
-  for (let m = re.exec(s); m; m = re.exec(s)) {
-    out.push({ text: m[0], start: m.index, end: m.index + m[0].length });
-  }
-  return out;
 }
 
 function layoutLine(s: string, em: (x: string) => number): Line {
@@ -238,26 +233,28 @@ function ScaleLayer({
   );
 }
 
-export function Turnabout({
-  before = "You work for the video.",
-  after = "The video works for you.",
-  highlight = "you.",
-  stagger = STAGGER,
-  fontWeight = WGHT,
-  accent,
-  ink,
-  background,
-  fontFamily = dmSans.fontFamily,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: TurnaboutProps) {
+export function Turnabout(props: TurnaboutProps) {
+  const {
+    before = DEFAULT_BEFORE,
+    after = "The video works for you.",
+    highlight = "you.",
+    fontWeight = WGHT,
+    accent,
+    ink,
+    background,
+    fontFamily = dmSans.fontFamily,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay);
   const { width: W, height: H, durationInFrames } = useSceneConfig();
-  const k = Math.min(1, durationInFrames / BASE);
-  const t = (frame * speed) / k;
+  // The schedule fits itself to the clip length without `speed`.
+  const tl = useTimeline(turnaboutTimeline, props, durationInFrames, timing);
+  const t = frame * speed;
   const c = THEMES[theme];
   const hi = accent ?? c.accent;
   const fg = ink ?? c.ink;
@@ -308,12 +305,14 @@ export function Turnabout({
   const isHi = (tk: Tok) =>
     hiStart >= 0 && tk.start < hiEnd && tk.end > hiStart;
 
-  const t1 = TURN + LIFT * 0.6;
-  const t2 = t1 + TRAVEL;
-  const dropAt = t2 - LIFT * 0.4;
-  const landed = dropAt + LIFT;
+  const turn = tl.get("turn");
+  const land = tl.get("land");
+  const t1 = turn.start + turn.beat("travel");
+  const t2 = t1 + turn.beat("travelLen");
+  const dropAt = land.start;
+  const landed = dropAt + land.beat("drop");
   const lift =
-    interpolate(t, [TURN, TURN + LIFT], [0, 1], {
+    interpolate(t, [turn.start, turn.start + turn.beat("lift")], [0, 1], {
       ...CLAMP,
       easing: EASE_OUT,
     }) -
@@ -325,11 +324,16 @@ export function Turnabout({
     ...CLAMP,
     easing: EASE_IO,
   });
-  const lit = interpolate(t, [landed - 2, landed + LIT], [0, 1], {
-    ...CLAMP,
-    easing: EASE_OUT,
-  });
-  const swapped = t >= t1 + TRAVEL * 0.5;
+  const lit = interpolate(
+    t,
+    [landed + land.beat("litLead"), landed + land.beat("lit")],
+    [0, 1],
+    {
+      ...CLAMP,
+      easing: EASE_OUT,
+    },
+  );
+  const swapped = t >= t1 + turn.beat("travelLen") * 0.5;
   const suffixIn = interpolate(t, [dropAt, landed], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
@@ -337,8 +341,14 @@ export function Turnabout({
 
   const between = (p: number) => p > 0 && p < 1;
   const liftMoving =
-    between(interpolate(t, [TURN, TURN + LIFT], [0, 1], CLAMP)) ||
-    between(interpolate(t, [dropAt, landed], [0, 1], CLAMP));
+    between(
+      interpolate(
+        t,
+        [turn.start, turn.start + turn.beat("lift")],
+        [0, 1],
+        CLAMP,
+      ),
+    ) || between(interpolate(t, [dropAt, landed], [0, 1], CLAMP));
 
   const word = (
     key: string,
@@ -379,17 +389,21 @@ export function Turnabout({
   const nodes: React.ReactNode[] = [];
 
   m.a.toks.forEach((ta, i) => {
-    const enter = interpolate(
-      t,
-      [IN + i * stagger, IN + i * stagger + ENTER],
-      [0, 1],
-      { ...CLAMP, easing: EASE_OUT },
-    );
-    if (pairedA.has(i)) return;
-    const out = interpolate(t, [TURN, TURN + LIFT], [0, 1], {
+    const w = tl.get(`word:${i}`);
+    const enter = interpolate(t, [w.start, w.end], [0, 1], {
       ...CLAMP,
-      easing: Easing.bezier(0.55, 0, 1, 0.45),
+      easing: EASE_OUT,
     });
+    if (pairedA.has(i)) return;
+    const out = interpolate(
+      t,
+      [turn.start, turn.start + turn.beat("lift")],
+      [0, 1],
+      {
+        ...CLAMP,
+        easing: Easing.bezier(0.55, 0, 1, 0.45),
+      },
+    );
     if (enter * (1 - out) <= 0) return;
     nodes.push(
       word(
@@ -407,12 +421,11 @@ export function Turnabout({
   for (const mv of movers) {
     const ta = m.a.toks[mv.i];
     const tb = m.b.toks[mv.j];
-    const enter = interpolate(
-      t,
-      [IN + mv.i * stagger, IN + mv.i * stagger + ENTER],
-      [0, 1],
-      { ...CLAMP, easing: EASE_OUT },
-    );
+    const w = tl.get(`word:${mv.i}`);
+    const enter = interpolate(t, [w.start, w.end], [0, 1], {
+      ...CLAMP,
+      easing: EASE_OUT,
+    });
     const x = mv.a0 + (mv.b0 - mv.a0) * travel;
     const dy = F * 0.28 * (1 - enter) + mv.lane * laneGap * lift;
     const rising = between(enter) || (mv.lane !== 0 && liftMoving);
@@ -453,7 +466,7 @@ export function Turnabout({
 
   m.b.toks.forEach((tb, j) => {
     if (pairOfB[j] >= 0) return;
-    const inn = interpolate(t, [dropAt, landed + 4], [0, 1], {
+    const inn = interpolate(t, [dropAt, landed + land.beat("newIn")], [0, 1], {
       ...CLAMP,
       easing: EASE_OUT,
     });

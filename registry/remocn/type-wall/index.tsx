@@ -5,6 +5,14 @@ import { loadFont as loadInter } from "@remotion/google-fonts/Inter";
 import { useId } from "react";
 import { Easing, interpolate, random } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  BAND,
+  ENTRANCE,
+  STAGGER,
+  type TypeWallElementId,
+  typeWallTimeline,
+} from "./timeline";
 
 const { fontFamily: INTER } = loadInter("normal", {
   weights: ["900"],
@@ -27,6 +35,11 @@ export interface TypeWallProps {
   seed?: number;
   speed?: number;
   className?: string;
+  /**
+   * Moves, trims or stretches the rows' entrance and the band, by the ids in
+   * `./timeline`. Frames on the scene timeline, after `speed`.
+   */
+  timing?: Timing<TypeWallElementId>;
 }
 
 export const typeWallDefaults = {
@@ -38,7 +51,7 @@ export const typeWallDefaults = {
   accentText: "#0a0a0a",
   seed: 7,
   speed: 1,
-} satisfies Required<Omit<TypeWallProps, "className">>;
+} satisfies Required<Omit<TypeWallProps, "className" | "timing">>;
 
 /** Row faces away from the center, the accent row always solid. */
 export const typeWallStyles: readonly TypeWallStyle[] = [
@@ -51,11 +64,8 @@ export const typeWallStyles: readonly TypeWallStyle[] = [
 const NARROW_SCALE = 0.7275 / 0.8594;
 /** Tokens per second at speed 1, before each row's seeded factor. */
 const TOKENS_PER_SECOND = 0.22;
-const ENTRANCE = 20;
-const STAGGER = 2;
 /** Tokens a row streams past on its way in, on top of its cruise. */
 const ENTRANCE_BURST = 2.5;
-const BAND = [6, 20] as const;
 /** Lower bound on a token's width per character, in em, for the repeat count. */
 const MIN_CHAR_WIDTH = 0.4;
 const MAX_TOKENS = 48;
@@ -121,15 +131,36 @@ export interface TypeWallRowState {
   reveal: number;
 }
 
+/** When the center row starts entering, over how long, and the step per row. */
+export interface TypeWallEntrance {
+  start: number;
+  length: number;
+  stagger: number;
+}
+
+const DEFAULT_ENTRANCE: TypeWallEntrance = {
+  start: 0,
+  length: ENTRANCE,
+  stagger: STAGGER,
+};
+
 export function getTypeWallRow(
   t: number,
   row: number,
   seed = typeWallDefaults.seed,
+  entrance: TypeWallEntrance = DEFAULT_ENTRANCE,
 ): TypeWallRowState {
   const direction = getTypeWallDirection(row);
   const { velocity, phase } = getTypeWallMotion(row, seed);
   const e = easeOutCubic(
-    Math.min(1, Math.max(0, (t - STAGGER * Math.abs(row)) / ENTRANCE)),
+    Math.min(
+      1,
+      Math.max(
+        0,
+        (t - (entrance.start + entrance.stagger * Math.abs(row))) /
+          entrance.length,
+      ),
+    ),
   );
   const travel = phase + velocity * t + ENTRANCE_BURST * e;
   // Leftward rows slide the strip left; rightward rows run it from −1 up to 0.
@@ -137,9 +168,12 @@ export function getTypeWallRow(
   return { direction, shift: shift || 0, reveal: e };
 }
 
-/** The accent band growing from the center, 0..1. */
-export function getTypeWallBand(t: number) {
-  return interpolate(t, [...BAND], [0, 1], { ...CLAMP, easing: easeOutCubic });
+/** The accent band growing from the center over `span`, 0..1. */
+export function getTypeWallBand(
+  t: number,
+  span: readonly [number, number] = BAND,
+) {
+  return interpolate(t, [...span], [0, 1], { ...CLAMP, easing: easeOutCubic });
 }
 
 /** Frame where the slowest (outermost) row has finished entering. */
@@ -159,25 +193,40 @@ export function getTypeWallTokenCount(
   return Math.min(MAX_TOKENS, Math.ceil(width / tokenWidth) + 2);
 }
 
-export function TypeWall({
-  text = typeWallDefaults.text,
-  separator = typeWallDefaults.separator,
-  fontSize = typeWallDefaults.fontSize,
-  color = typeWallDefaults.color,
-  accent = typeWallDefaults.accent,
-  accentText = typeWallDefaults.accentText,
-  seed = typeWallDefaults.seed,
-  speed = typeWallDefaults.speed,
-  className,
-}: TypeWallProps) {
+export function TypeWall(props: TypeWallProps) {
+  const {
+    text = typeWallDefaults.text,
+    separator = typeWallDefaults.separator,
+    fontSize = typeWallDefaults.fontSize,
+    color = typeWallDefaults.color,
+    accent = typeWallDefaults.accent,
+    accentText = typeWallDefaults.accentText,
+    seed = typeWallDefaults.seed,
+    speed = typeWallDefaults.speed,
+    className,
+    timing,
+  } = props;
   const frame = useSceneFrame();
-  const { fps, width, height } = useSceneConfig();
+  const { fps, width, height, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    typeWallTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const rowsEl = tl.get("rows");
+  const bandEl = tl.get("band");
+  const entrance = {
+    start: rowsEl.start,
+    length: rowsEl.length,
+    stagger: rowsEl.beat("stagger"),
+  };
   const unit = height / 720;
   const rowHeight = Math.max(8, fontSize * unit);
   const t = getTypeWallTime(frame, { fps, speed });
   const rows = getTypeWallRows(height, rowHeight);
   const token = `${text} ${separator} `;
-  const band = getTypeWallBand(t);
+  const band = getTypeWallBand(t, [bandEl.start, bandEl.end]);
   const outlineId = `type-wall-${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
 
   return (
@@ -209,7 +258,7 @@ export function TypeWall({
       </svg>
       {rows.map((row) => {
         const style = getTypeWallStyle(row);
-        const state = getTypeWallRow(t, row, seed);
+        const state = getTypeWallRow(t, row, seed, entrance);
         const narrow = style === "narrow";
         const size = narrow ? rowHeight * NARROW_SCALE : rowHeight;
         const count = getTypeWallTokenCount(width, size, token);

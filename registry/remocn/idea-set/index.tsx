@@ -13,6 +13,8 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import { type IdeaSetElementId, ideaSetTimeline } from "./timeline";
 
 const sans = loadPlexSans("normal", {
   weights: ["500"],
@@ -45,6 +47,12 @@ export interface IdeaSetProps {
   delay?: number;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches the rows' entry and the two waves of style
+   * changes, by the ids in `./timeline`. Frames on the scene timeline, after
+   * `delay` and `speed`.
+   */
+  timing?: Timing<IdeaSetElementId>;
 }
 
 const THEMES = {
@@ -167,23 +175,29 @@ function ScaleLayer({
   );
 }
 
-export function IdeaSet({
-  lines = ["Napkin sketch.", "Keynote opener."],
-  highlight = "Keynote opener.",
-  hold = 18,
-  wave = 26,
-  accent,
-  ink,
-  background,
-  fontFamily = sans.fontFamily,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: IdeaSetProps) {
+export function IdeaSet(props: IdeaSetProps) {
+  const {
+    lines = ["Napkin sketch.", "Keynote opener."],
+    highlight = "Keynote opener.",
+    accent,
+    ink,
+    background,
+    fontFamily = sans.fontFamily,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H } = useSceneConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    ideaSetTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const c = THEMES[theme];
   const fg = ink ?? c.ink;
   const faces = facesOf(fontFamily);
@@ -208,18 +222,20 @@ export function IdeaSet({
     );
   }
 
-  const ENTER = 18;
-  const W1 = ENTER + hold;
-  const WAVE = wave;
-  const W2 = W1 + WAVE + hold;
-  const TURN = 10;
+  const enterEl = tl.get("enter");
+  const draft = tl.get("draft");
+  const final = tl.get("final");
 
   const joined = rows.join("\n");
   const hlStart = highlight ? rows.join(" ").indexOf(highlight) : -1;
   const hlEnd = hlStart >= 0 ? hlStart + highlight.length : -1;
 
   const total = Array.from(joined).filter((ch) => ch !== "\n").length;
-  const stagger = Math.min(1.4, (WAVE - TURN) / Math.max(1, total - 1));
+  // A wave spreads its glyphs over what its turn leaves of it.
+  const spread = (e: typeof draft) =>
+    Math.min(1.4, (e.length - e.beat("turn")) / Math.max(1, total - 1));
+  const staggerA = spread(draft);
+  const staggerB = spread(final);
 
   const widthIn = (row: string, s: number) => {
     const g = Array.from(row);
@@ -244,13 +260,19 @@ export function IdeaSet({
   const stateOf = (i: number, tt = t) => {
     const a = interpolate(
       tt,
-      [W1 + i * stagger, W1 + i * stagger + TURN],
+      [
+        draft.start + i * staggerA,
+        draft.start + i * staggerA + draft.beat("turn"),
+      ],
       [0, 1],
       { ...CLAMP, easing: EASE_IO },
     );
     const b = interpolate(
       tt,
-      [W2 + i * stagger, W2 + i * stagger + TURN],
+      [
+        final.start + i * staggerB,
+        final.start + i * staggerB + final.beat("turn"),
+      ],
       [0, 1],
       { ...CLAMP, easing: EASE_IO },
     );
@@ -272,14 +294,21 @@ export function IdeaSet({
   let ci = 0;
   rows.forEach((row, r) => {
     const g = Array.from(row);
-    const enter = interpolate(t, [r * 4, r * 4 + ENTER], [0, 1], {
+    const rowAt = enterEl.start + r * enterEl.beat("rowGap");
+    const enter = interpolate(t, [rowAt, rowAt + enterEl.beat("row")], [0, 1], {
       ...CLAMP,
       easing: EASE_OUT,
     });
-    const ruleP = interpolate(t, [r * 3, r * 3 + ENTER + 4], [0, 1], {
-      ...CLAMP,
-      easing: EASE_OUT,
-    });
+    const ruleAt = enterEl.start + r * enterEl.beat("ruleGap");
+    const ruleP = interpolate(
+      t,
+      [ruleAt, ruleAt + enterEl.beat("rule")],
+      [0, 1],
+      {
+        ...CLAMP,
+        easing: EASE_OUT,
+      },
+    );
     const baseY = top + r * lineH + baseIn;
     // Where each glyph of the row is laid out at a time: a neighbour that
     // changes face pushes it along by layout.

@@ -8,6 +8,14 @@ import { useId } from "react";
 import { AbsoluteFill, Easing, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_CONFIRM,
+  DEFAULT_SUBTITLE,
+  DEFAULT_TITLE,
+  type LandingConfirmedElementId,
+  landingConfirmedTimeline,
+} from "./timeline";
 
 const { fontFamily: sans } = loadFont("normal", {
   weights: ["400", "500"],
@@ -83,21 +91,13 @@ export interface LandingConfirmedProps {
   grain?: boolean;
   theme?: "dark" | "light";
   speed?: number;
+  /**
+   * Moves, trims or stretches the intro, the descent, the flash, the slam,
+   * the resolve and the title, label, subtitle and logo, by the ids in
+   * `./timeline`. Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<LandingConfirmedElementId>;
 }
-
-// Beat sheet (30fps, speed 1):
-//   0–50    altitude counts down fast from 1,200 m; the gauge marker rides the
-//           vertical scale down to the pad line; velocity bleeds off top right
-//   50      0 m: hard stop with a kick, the pad line lights; holds 6 frames
-//   56–57   two-frame "aurora" flash
-//   58      TOUCHDOWN / CONFIRMED slams in; the aurora glows up from the pad
-//   88–102  it shrinks up into a label; SHIPPED. slams, "Nailed the landing."
-//           and the logo rise in under it
-//   104–    poster hold
-const DESCENT = 50;
-const FLASH_AT = DESCENT + 6;
-const SLAM_AT = FLASH_AT + 2;
-const RESOLVE_AT = SLAM_AT + 30;
 
 const OUT = Easing.bezier(0.22, 1, 0.36, 1);
 const MOVE = Easing.bezier(0.7, 0, 0.2, 1);
@@ -185,42 +185,58 @@ function ScaleLayer({
   );
 }
 
-export function LandingConfirmed({
-  from = 1200,
-  confirm = "Touchdown confirmed",
-  title = "Shipped.",
-  subtitle = "Nailed the landing.",
-  logo,
-  altitudeLabel = "Altitude",
-  descent = DESCENT,
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = sans,
-  scale = 1,
-  delay = 0,
-  grain = true,
-  theme = "dark",
-  speed = 1,
-}: LandingConfirmedProps) {
+export function LandingConfirmed(props: LandingConfirmedProps) {
+  const {
+    from = 1200,
+    confirm = DEFAULT_CONFIRM,
+    title = DEFAULT_TITLE,
+    subtitle = DEFAULT_SUBTITLE,
+    logo,
+    altitudeLabel = "Altitude",
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = sans,
+    scale = 1,
+    delay = 0,
+    grain = true,
+    theme = "dark",
+    speed = 1,
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H } = useSceneConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    landingConfirmedTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const introEl = tl.get("intro");
+  const descentEl = tl.get("descent");
+  const flashEl = tl.get("flash");
+  const slamEl = tl.get("slam");
+  const resolveEl = tl.get("resolve");
+  const titleEl = tl.get("title");
+  const labelEl = tl.get("label");
+  const subEl = tl.get("subtitle");
+  const logoEl = tl.get("logo");
   const c = THEMES[theme];
   const fg = ink ?? c.ink;
   const stage =
     background === "transparent" ? "transparent" : (background ?? c.stage);
-  const flashAt = descent + FLASH_AT - DESCENT;
-  const slamAt = descent + SLAM_AT - DESCENT;
-  const resolveAt = descent + RESOLVE_AT - DESCENT;
+  const flashAt = flashEl.start;
+  const slamAt = slamEl.start;
+  const resolveAt = resolveEl.start;
   const u = Math.min(W / 1280, H / 720);
 
   // ── Descent ───────────────────────────────────────────────────────────────
   // Fast off the top, still moving when it hits the pad: a hard stop.
-  const p = ramp(t, 0, descent);
+  const p = ramp(t, descentEl.start, descentEl.length);
   const frac = (1 - p) * (1 - 0.55 * p);
   const alt = Math.max(0, Math.round(from * frac));
-  const landed = t >= descent;
+  const landed = t >= descentEl.end;
   const vel = landed ? 0 : 2 + 238 * (1 - p) ** 1.4;
 
   // ── Layout ────────────────────────────────────────────────────────────────
@@ -233,28 +249,37 @@ export function LandingConfirmed({
   const numCY = H * 0.47;
   const margin = 56 * u;
 
-  const intro = OUT(ramp(t, -4, 10));
-  const stopKick = kick(t - descent, 7);
-  const flash = t >= flashAt && t < flashAt + 2;
-  const glow = OUT(ramp(t, flashAt, 18));
+  const intro = OUT(ramp(t, introEl.start, introEl.length));
+  const stopKick = kick(t - descentEl.end, descentEl.beat("kick"));
+  const flash = t >= flashAt && t < flashEl.end;
+  const glow = OUT(ramp(t, flashAt, flashEl.beat("glow")));
 
-  const slam = OUT(ramp(t, slamAt - 1, 8));
-  const slamHit = kick(t - slamAt - 4, 8);
-  const resolve = MOVE(ramp(t, resolveAt, 14));
-  const exit = Easing.bezier(0.55, 0, 1, 0.45)(ramp(t, resolveAt, 6));
-  const labelIn = OUT(ramp(t, resolveAt + 6, 10));
-  const titleIn = OUT(ramp(t, resolveAt + 5, 9));
-  const titleHit = kick(t - resolveAt - 8, 8);
-  const subIn = OUT(ramp(t, resolveAt + 9, 12));
-  const logoIn = OUT(ramp(t, resolveAt + 14, 12));
-  const descentOut = landed ? 1 - ramp(t, flashAt, 1) : 1;
-  const gaugeOut = 1 - ramp(t, slamAt, 10);
+  const slamFrom = slamAt + slamEl.beat("lead");
+  const slam = OUT(ramp(t, slamFrom, slamEl.beat("in")));
+  const slamHit = kick(t - slamAt - slamEl.beat("hit"), slamEl.beat("hitLen"));
+  const resolve = MOVE(ramp(t, resolveAt, resolveEl.length));
+  const exit = Easing.bezier(
+    0.55,
+    0,
+    1,
+    0.45,
+  )(ramp(t, resolveAt, resolveEl.beat("exit")));
+  const labelIn = OUT(ramp(t, labelEl.start, labelEl.length));
+  const titleIn = OUT(ramp(t, titleEl.start, titleEl.length));
+  const titleHit = kick(
+    t - titleEl.start - titleEl.beat("hit"),
+    titleEl.beat("hitLen"),
+  );
+  const subIn = OUT(ramp(t, subEl.start, subEl.length));
+  const logoIn = OUT(ramp(t, logoEl.start, logoEl.length));
+  const descentOut = landed ? 1 - ramp(t, flashAt, flashEl.beat("out")) : 1;
+  const gaugeOut = 1 - ramp(t, slamAt, slamEl.beat("gaugeOut"));
 
   const words = confirm.split(" ");
   const confirmA = words.slice(0, Math.ceil(words.length / 2)).join(" ");
   const confirmB = words.slice(Math.ceil(words.length / 2)).join(" ");
 
-  const drift = ramp(t, flashAt, 120);
+  const drift = ramp(t, flashAt, flashEl.beat("drift"));
   const aurora = [
     ...AURORA.map(
       (col, i) =>
@@ -465,7 +490,7 @@ export function LandingConfirmed({
         </div>
 
         {/* TOUCHDOWN CONFIRMED: slams, then lifts away as the label fades in. */}
-        {t >= slamAt - 1 && exit < 1 ? (
+        {t >= slamFrom && exit < 1 ? (
           <div
             style={{
               position: "absolute",

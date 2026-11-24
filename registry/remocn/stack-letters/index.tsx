@@ -6,6 +6,13 @@ import { useId, useMemo } from "react";
 import { AbsoluteFill, Easing, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_WORD,
+  DETACH_DEG,
+  type StackLettersElementId,
+  stackLettersTimeline,
+} from "./timeline";
 
 const { fontFamily: sans } = loadFont("normal", {
   weights: ["500"],
@@ -33,6 +40,12 @@ export interface StackLettersProps {
   delay?: number;
   theme?: "dark" | "light";
   speed?: number;
+  /**
+   * Moves, trims or stretches the rule, single letters, the rock and the
+   * topple, by the ids in `./timeline`. Frames on the scene timeline, after
+   * `delay` and `speed`.
+   */
+  timing?: Timing<StackLettersElementId>;
 }
 
 // Space Grotesk 500 advance widths (1/1000 em) for ASCII 32–126.
@@ -110,13 +123,7 @@ const ASC = 0.984;
 const LINE = 1.276;
 const STACK_GAP = 0.16;
 
-const DROP_GAP = 8;
-const FALL = 12;
-const ROCK = 10;
 const ROCK_DEG = 3.5;
-const TOPPLE = 22;
-const DETACH_DEG = 20;
-const LAND_GAP = 4;
 const LIFT_STEP = 0.26;
 const FRAME_H = 0.78;
 const FRAME_W = 0.86;
@@ -246,22 +253,28 @@ function ScaleLayer({
   );
 }
 
-export function StackLetters({
-  word = "STACK",
-  stagger = DROP_GAP,
-  hold = 9,
-  accent = "#3B5BFD",
-  ink: inkColor,
-  background,
-  fontFamily = sans,
-  grain = true,
-  scale: layerScale = 1,
-  delay = 0,
-  theme = "dark",
-  speed = 1,
-}: StackLettersProps) {
+export function StackLetters(props: StackLettersProps) {
+  const {
+    word = DEFAULT_WORD,
+    accent = "#3B5BFD",
+    ink: inkColor,
+    background,
+    fontFamily = sans,
+    grain = true,
+    scale: layerScale = 1,
+    delay = 0,
+    theme = "dark",
+    speed = 1,
+    timing,
+  } = props;
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H } = useSceneConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    stackLettersTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const glide = useGlide();
   const c = THEMES[theme];
   const fg = inkColor ?? c.fg;
@@ -310,10 +323,14 @@ export function StackLetters({
     };
   }, [boxes, em, F, n]);
 
-  const drop = (k: number) => k * stagger - 6;
-  const lastStack = drop(n - 1) + FALL;
-  const rockAt = lastStack + hold;
-  const toppleAt = rockAt + ROCK;
+  const drop = (k: number) => tl.get(`char:${k}`).start;
+  const fallOf = (k: number) => tl.get(`char:${k}`).length;
+  const rock = tl.get("rock");
+  const topple = tl.get("topple");
+  const rockAt = rock.start;
+  const ROCK = rock.length;
+  const toppleAt = topple.start;
+  const TOPPLE = topple.beat("topple");
   const toppleDeg = (time: number) => {
     const u = (time - toppleAt) / TOPPLE;
     return 95 * u * u;
@@ -321,7 +338,8 @@ export function StackLetters({
   // Every letter lets go on the same frame and carries the tower's velocity,
   // so the stack keeps its spacing and only spreads from there.
   const release = toppleAt + TOPPLE * Math.sqrt(DETACH_DEG / 95);
-  const landAt = (k: number) => release + 7 + k * LAND_GAP;
+  const landAt = (k: number) =>
+    release + topple.beat("land") + k * topple.beat("landGap");
 
   const towerPose = (deg: number, pivot: Pt, k: number) => {
     const p = rotate({ x: geo.axis, y: geo.bases[k] }, pivot, deg);
@@ -428,6 +446,7 @@ export function StackLetters({
   const pose = (k: number) => {
     const box = boxes[k];
     const d = drop(k);
+    const FALL = fallOf(k);
     const settled = d + FALL;
     if (t < settled) {
       const u = Math.max(0, (t - d) / FALL);
@@ -448,11 +467,17 @@ export function StackLetters({
 
   const ruleH = Math.max(2, F * 0.012);
   // The light source drifts a few percent over the whole shot.
-  const drift = interpolate(t, [0, landAt(n - 1) + 30], [0, 1], {
-    ...CLAMP,
-    easing: EASE_IO,
-  });
-  const ruleIn = interpolate(t, [0, 14], [0, 1], {
+  const drift = interpolate(
+    t,
+    [0, landAt(n - 1) + topple.beat("glow")],
+    [0, 1],
+    {
+      ...CLAMP,
+      easing: EASE_IO,
+    },
+  );
+  const rule = tl.get("rule");
+  const ruleIn = interpolate(t, [rule.start, rule.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });

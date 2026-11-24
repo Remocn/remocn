@@ -8,6 +8,12 @@ import { useId } from "react";
 import { AbsoluteFill, Easing, interpolate, interpolateColors } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import {
+  type ResolvedElement,
+  type Timing,
+  useTimeline,
+} from "@/lib/remocn/timeline";
+import { type SpeedRampWordElementId, speedRampWordTimeline } from "./timeline";
 
 const { fontFamily: display } = loadDisplay("normal", {
   weights: ["500"],
@@ -62,23 +68,13 @@ export interface SpeedRampWordProps {
   delay?: number;
   theme?: "dark" | "light";
   speed?: number;
+  /**
+   * Moves, trims or stretches the ramp, the hang and the snap, by the ids in
+   * `./timeline`. Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<SpeedRampWordElementId>;
 }
 
-// Beat sheet (30fps):
-//  0–20    the phrase rushes in from the right at full speed, streaked
-//  20–48   speed ramp: a smooth velocity curve down to ~0.5% speed; the key
-//          word warms to the accent, trailing ghosts start to gather
-//  48–100  the key word hangs, drifting a few pixels; ghosts collapse into it
-//  100–110 time snaps back (accelerating curve)
-//  110–end the phrase exits left at full speed
-const RUSH_END = 20;
-const RAMP_LEN = 28;
-const HANG_LEN = 52;
-const SNAP_LEN = 10;
-const T_RAMP_END = RUSH_END + RAMP_LEN;
-const T_HANG_END = T_RAMP_END + HANG_LEN;
-const T_SNAP_END = T_HANG_END + SNAP_LEN;
-const T_MID = (T_RAMP_END + T_HANG_END) / 2;
 const R_MIN = 0.005;
 const STEP = 0.25;
 
@@ -108,27 +104,35 @@ const THEMES = {
   },
 } as const;
 
+type Phase = ResolvedElement<SpeedRampWordElementId>;
+
+/** The ramp and the snap that shape the playback rate. */
+interface Ramp {
+  ramp: Phase;
+  snap: Phase;
+}
+
 /** Playback rate of the shot at real frame t: 1 = full speed. */
-function rate(t: number) {
-  if (t <= RUSH_END) return 1;
-  if (t <= T_RAMP_END) {
-    const p = RAMP_DOWN((t - RUSH_END) / RAMP_LEN);
+function rate(t: number, { ramp, snap }: Ramp) {
+  if (t <= ramp.start) return 1;
+  if (t <= ramp.end) {
+    const p = RAMP_DOWN((t - ramp.start) / ramp.length);
     return 1 + (R_MIN - 1) * p;
   }
-  if (t <= T_HANG_END) return R_MIN;
-  if (t <= T_SNAP_END) {
-    const p = SNAP_UP((t - T_HANG_END) / SNAP_LEN);
+  if (t <= snap.start) return R_MIN;
+  if (t <= snap.end) {
+    const p = SNAP_UP((t - snap.start) / snap.length);
     return R_MIN + (1 - R_MIN) * p;
   }
   return 1;
 }
 
 /** Scene time elapsed by real frame t (integral of the rate). */
-function sceneTime(t: number) {
+function sceneTime(t: number, phases: Ramp) {
   let acc = 0;
   for (let s = 0; s < t; s += STEP) {
     const h = Math.min(STEP, t - s);
-    acc += rate(s + h / 2) * h;
+    acc += rate(s + h / 2, phases) * h;
   }
   return acc;
 }
@@ -199,25 +203,37 @@ function ScaleLayer({
   );
 }
 
-export function SpeedRampWord({
-  text = "Everything changes in an instant.",
-  keyWord = "instant",
-  hud = true,
-  ghosts: showGhosts = true,
-  fontWeight = 500,
-  accent = "#3B5BFD",
-  ink: textInk,
-  background,
-  fontFamily = display,
-  grain = true,
-  scale = 1,
-  delay = 0,
-  theme = "dark",
-  speed = 1,
-}: SpeedRampWordProps) {
+export function SpeedRampWord(props: SpeedRampWordProps) {
+  const {
+    text = "Everything changes in an instant.",
+    keyWord = "instant",
+    hud = true,
+    ghosts: showGhosts = true,
+    fontWeight = 500,
+    accent = "#3B5BFD",
+    ink: textInk,
+    background,
+    fontFamily = display,
+    grain = true,
+    scale = 1,
+    delay = 0,
+    theme = "dark",
+    speed = 1,
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H } = useSceneConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    speedRampWordTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const ramp = tl.get("ramp");
+  const hang = tl.get("hang");
+  const snap = tl.get("snap");
+  const phases: Ramp = { ramp, snap };
   const u = H / 720;
   const c = THEMES[theme];
   const fg = textInk ?? c.fg;
@@ -236,12 +252,13 @@ export function SpeedRampWord({
   // word's center lands on the frame center at the middle of the hang.
   const rest = W * 0.56;
   const startAnchor = W * 0.4 + beforeW + keyW / 2;
-  const v0 = (startAnchor - rest) / sceneTime(T_MID);
-  const anchorAt = (t: number) => startAnchor - v0 * sceneTime(t);
+  const v0 =
+    (startAnchor - rest) / sceneTime((ramp.end + hang.end) / 2, phases);
+  const anchorAt = (t: number) => startAnchor - v0 * sceneTime(t, phases);
 
-  const tau = sceneTime(frame);
+  const tau = sceneTime(frame, phases);
   const anchor = startAnchor - v0 * tau;
-  const velocity = v0 * rate(frame);
+  const velocity = v0 * rate(frame, phases);
 
   // Ghosts are lagging followers of the key word: far behind while it slows,
   // folding into it once it hangs.
@@ -261,7 +278,12 @@ export function SpeedRampWord({
   });
   const ghostEnv = interpolate(
     frame,
-    [RUSH_END + 8, T_RAMP_END - 4, T_HANG_END - 6, T_HANG_END + 2],
+    [
+      ramp.start + ramp.beat("ghostsIn"),
+      ramp.start + ramp.beat("ghostsFull"),
+      hang.start + hang.beat("ghostsFade"),
+      snap.start + snap.beat("ghostsGone"),
+    ],
     [0, 1, 1, 0],
     CLAMP,
   );
@@ -269,28 +291,38 @@ export function SpeedRampWord({
   // Look of the slow-motion moment.
   const slow = interpolate(
     frame,
-    [RUSH_END + 6, T_RAMP_END, T_HANG_END, T_HANG_END + 6],
+    [
+      ramp.start + ramp.beat("slowIn"),
+      ramp.end,
+      hang.end,
+      snap.start + snap.beat("slowOut"),
+    ],
     [0, 1, 1, 0],
     { ...CLAMP, easing: CAMERA },
   );
   const accentMix = interpolate(
     frame,
-    [RUSH_END + 10, T_RAMP_END + 2],
+    [ramp.start + ramp.beat("accentIn"), hang.start + hang.beat("accentFull")],
     [0, 1],
     { ...CLAMP, easing: Easing.bezier(0.22, 1, 0.36, 1) },
   );
-  const push = interpolate(frame, [RUSH_END, T_HANG_END], [1, 1.045], {
+  const push = interpolate(frame, [ramp.start, hang.end], [1, 1.045], {
     ...CLAMP,
     easing: CAMERA,
   });
-  const drift = interpolate(frame, [T_RAMP_END - 6, T_HANG_END], [0, -5 * u], {
-    ...CLAMP,
-    easing: CAMERA,
-  });
+  const drift = interpolate(
+    frame,
+    [ramp.start + ramp.beat("drift"), hang.end],
+    [0, -5 * u],
+    {
+      ...CLAMP,
+      easing: CAMERA,
+    },
+  );
   // The drift runs inside the push's window, so the push's progress covers
   // both.
   const pushing = midway(
-    interpolate(frame, [RUSH_END, T_HANG_END], [0, 1], CLAMP),
+    interpolate(frame, [ramp.start, hang.end], [0, 1], CLAMP),
   );
   const blur = Math.min(velocity * 0.3, 30 * u);
   const restDim = 1 - 0.62 * slow;
@@ -492,7 +524,7 @@ export function SpeedRampWord({
                 color: interpolateColors(slow, [0, 1], [c.hud, accent]),
               }}
             >
-              {`${(rate(frame) * 100).toFixed(rate(frame) < 0.1 ? 1 : 0)}%`}
+              {`${(rate(frame, phases) * 100).toFixed(rate(frame, phases) < 0.1 ? 1 : 0)}%`}
             </span>
           </div>
         )}

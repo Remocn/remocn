@@ -5,7 +5,16 @@ import { AbsoluteFill, interpolate, spring } from "remotion";
 import { Caret } from "@/components/remocn/caret";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
 import { useTypewriter } from "@/lib/remocn-ui";
+import {
+  CHAT_GPT_PROMPT,
+  type ChatGptElementId,
+  chatGptTimeline,
+  chatGptTypingLength,
+  TYPING_RATE,
+  TYPING_START_AT,
+} from "./timeline";
 
 const { fontFamily: SANS_FAMILY } = loadFont();
 
@@ -15,6 +24,12 @@ export interface ChatGptProps {
   prompt?: string;
   accentColor?: string;
   speed?: number;
+  /**
+   * Moves, trims or stretches the intro bounce, the heading, pill and chips
+   * fading up, the typing and the send button's morph, by the ids in
+   * `./timeline`. Frames on the scene timeline, after `speed`.
+   */
+  timing?: Timing<ChatGptElementId>;
 }
 
 interface Theme {
@@ -57,9 +72,9 @@ export const THEMES: Record<"light" | "dark", Theme> = {
   },
 };
 
-export const TYPING_START_FRAME = 42;
+export const TYPING_START_FRAME = TYPING_START_AT;
 
-export const TYPING_CPS = 22;
+export const TYPING_CPS = TYPING_RATE;
 
 export function morphProgressAt(
   frame: number,
@@ -279,16 +294,34 @@ function SuggestionChip({
   );
 }
 
-export function ChatGpt({
-  greeting = "What's on your mind today?",
-  placeholder = "Ask anything",
-  prompt = "Make a sunset over a calm ocean",
-  accentColor = "#2F6FED",
-  speed = 1,
-}: ChatGptProps) {
+export function ChatGpt(props: ChatGptProps) {
+  const {
+    greeting = "What's on your mind today?",
+    placeholder = "Ask anything",
+    prompt = CHAT_GPT_PROMPT,
+    accentColor = "#2F6FED",
+    speed = 1,
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = useSceneFrame();
-  const { width, height, fps } = useSceneConfig();
+  const { width, height, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    chatGptTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const introAt = tl.get("intro").start;
+  const span = (id: ChatGptElementId): [number, number] => {
+    const e = tl.get(id);
+    return [e.start, e.end];
+  };
+  const headingSpan = span("heading");
+  const pillSpan = span("pill");
+  const chipsSpan = span("chips");
+  const typing = tl.get("typing");
+  const sendAt = tl.get("send").start;
   const t = THEMES.light;
 
   const refW = 1280;
@@ -296,18 +329,22 @@ export function ChatGpt({
   const stageScale = Math.min(width / refW, height / refH);
 
   const tw = useTypewriter(prompt, {
-    cps: TYPING_CPS,
+    // A stretched or trimmed typing element types at the pace its length asks.
+    cps:
+      typing.length > 0
+        ? TYPING_CPS * (chatGptTypingLength(prompt) / typing.length)
+        : TYPING_CPS,
     speed,
-    startFrame: TYPING_START_FRAME,
+    startFrame: typing.start,
   });
   const visibleText = tw.text;
   const showText = tw.count > 0;
-  const morph = morphProgressAt(frame, { fps, speed });
+  const morph = morphProgressAt(frame, { fps, speed, startFrame: sendAt });
 
-  const intro = introBounceIn(frame * speed, fps);
-  const headingFade = fadeUpAt(frame * speed, [4, 20]);
-  const pillFade = fadeUpAt(frame * speed, [10, 26]);
-  const chipsFade = fadeUpAt(frame * speed, [16, 32]);
+  const intro = introBounceIn(frame * speed - introAt, fps);
+  const headingFade = fadeUpAt(frame * speed, headingSpan);
+  const pillFade = fadeUpAt(frame * speed, pillSpan);
+  const chipsFade = fadeUpAt(frame * speed, chipsSpan);
 
   const pillWidth = 820;
   const pillLeft = (refW - pillWidth) / 2;
@@ -319,18 +356,18 @@ export function ChatGpt({
   const chipsShift = chipsFade.translateY + 8 * morph;
 
   const headingAt = (f: number) =>
-    fadeUpAt(f * speed, [4, 20]).translateY +
-    introBounceIn(f * speed, fps).translateY * 0.4;
+    fadeUpAt(f * speed, headingSpan).translateY +
+    introBounceIn(f * speed - introAt, fps).translateY * 0.4;
   const pillAt = (f: number) =>
-    fadeUpAt(f * speed, [10, 26]).translateY +
-    introBounceIn(f * speed, fps).translateY * 0.6;
+    fadeUpAt(f * speed, pillSpan).translateY +
+    introBounceIn(f * speed - introAt, fps).translateY * 0.6;
   // The pill's scale is weighed by its half width, the furthest its text
   // sits from the origin.
   const pillScaleAt = (f: number) =>
-    introBounceIn(f * speed, fps).scale * (pillWidth / 2);
+    introBounceIn(f * speed - introAt, fps).scale * (pillWidth / 2);
   const chipsAt = (f: number) =>
-    fadeUpAt(f * speed, [16, 32]).translateY +
-    8 * morphProgressAt(f, { fps, speed });
+    fadeUpAt(f * speed, chipsSpan).translateY +
+    8 * morphProgressAt(f, { fps, speed, startFrame: sendAt });
   const headingMoving = moves(headingAt, frame);
   const pillMoving = moves(pillAt, frame) || moves(pillScaleAt, frame);
   const chipsMoving = moves(chipsAt, frame);

@@ -3,6 +3,11 @@
 import { Easing, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  type PerspectiveSqueezeElementId,
+  perspectiveSqueezeTimeline,
+} from "./timeline";
 
 type Corners = [
   [number, number],
@@ -37,6 +42,11 @@ export interface PerspectiveSqueezeProps {
   lowerScaleY?: number[];
   upperScaleY?: number[];
   fill?: string;
+  /**
+   * Moves, trims or stretches the bends and the squeezes, by the ids in
+   * `./timeline`. Frames on the scene timeline.
+   */
+  timing?: Timing<PerspectiveSqueezeElementId>;
 }
 
 function cornerPinMatrix(src: Corners, dst: Corners): string {
@@ -86,84 +96,122 @@ function lerpCorners(from: Corners, to: Corners, t: number): Corners {
   ]) as Corners;
 }
 
-export function PerspectiveSqueeze({
-  className,
-  width = 1920,
-  height = 1080,
-  blockWidth = 990,
-  blockHeight = 546,
-  lowerBlockPosition = [960, 860],
-  upperBlockPosition = [960, 314],
-  cornersRest = [
-    [0, 0],
-    [990, 0],
-    [0, 546],
-    [990, 546],
-  ],
-  cornerKeyframes = [0, 45, 70],
-  upperCornersMid = [
-    [0, -326],
-    [990, 0],
-    [0, 546],
-    [990, 546],
-  ],
-  upperCornersEnd = [
-    [0, 352],
-    [990, -428],
-    [460, 546],
-    [990, 546],
-  ],
-  lowerCornersMid = [
-    [0, 0],
-    [990, 0],
-    [0, 225],
-    [990, 546],
-  ],
-  lowerCornersEnd = [
-    [0, 0],
-    [990, 0],
-    [0, 897],
-    [990, 116],
-  ],
-  upperText = "REMOCN",
-  lowerText = "BEST",
-  upperFontFamily = "sans-serif",
-  lowerFontFamily = "sans-serif",
-  upperFontSize = 603,
-  lowerFontSize = 124,
-  capRatio = 0.65,
-  lineGap = 50,
-  scaleKeyframes = [0, 60, 118, 161, 196, 225],
-  lowerScaleY = [100, 384.8, 270, 330, 150, 100],
-  upperScaleY = [100, 35.8, 64, 45, 110, 100],
-  fill = "#ffffff",
-}: PerspectiveSqueezeProps) {
+export function PerspectiveSqueeze(props: PerspectiveSqueezeProps) {
+  const {
+    className,
+    width = 1920,
+    height = 1080,
+    blockWidth = 990,
+    blockHeight = 546,
+    lowerBlockPosition = [960, 860],
+    upperBlockPosition = [960, 314],
+    cornersRest = [
+      [0, 0],
+      [990, 0],
+      [0, 546],
+      [990, 546],
+    ],
+    upperCornersMid = [
+      [0, -326],
+      [990, 0],
+      [0, 546],
+      [990, 546],
+    ],
+    upperCornersEnd = [
+      [0, 352],
+      [990, -428],
+      [460, 546],
+      [990, 546],
+    ],
+    lowerCornersMid = [
+      [0, 0],
+      [990, 0],
+      [0, 225],
+      [990, 546],
+    ],
+    lowerCornersEnd = [
+      [0, 0],
+      [990, 0],
+      [0, 897],
+      [990, 116],
+    ],
+    upperText = "REMOCN",
+    lowerText = "BEST",
+    upperFontFamily = "sans-serif",
+    lowerFontFamily = "sans-serif",
+    upperFontSize = 603,
+    lowerFontSize = 124,
+    capRatio = 0.65,
+    lineGap = 50,
+    lowerScaleY = [100, 384.8, 270, 330, 150, 100],
+    upperScaleY = [100, 35.8, 64, 45, 110, 100],
+    fill = "#ffffff",
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = useSceneFrame();
-  const { width: compWidth, height: compHeight } = useSceneConfig();
+  const {
+    width: compWidth,
+    height: compHeight,
+    durationInFrames,
+  } = useSceneConfig();
+  const tl = useTimeline(
+    perspectiveSqueezeTimeline,
+    props,
+    durationInFrames,
+    timing,
+  );
+  const pinMid = tl.get("pin:0");
+  const pinEnd = tl.get("pin:1");
+  // The scale keyframes, back from the squeezes: each squeeze ends on the
+  // next keyframe, and a squeeze moved later holds the pose in between.
+  const squeezeCount = tl.lane("Squeeze").length;
+  const scaleKeyframes: number[] = [];
+  const scaleIndex: number[] = [];
+  for (let k = 0; k < squeezeCount; k++) {
+    const squeeze = tl.get(`squeeze:${k}`);
+    const last = scaleKeyframes[scaleKeyframes.length - 1];
+    if (k === 0 || squeeze.start > last) {
+      scaleKeyframes.push(squeeze.start);
+      scaleIndex.push(k);
+    }
+    if (squeeze.end > scaleKeyframes[scaleKeyframes.length - 1]) {
+      scaleKeyframes.push(squeeze.end);
+      scaleIndex.push(k + 1);
+    }
+  }
   const stageScale = Math.min(compWidth / width, compHeight / height);
 
   const squishEase = Easing.bezier(0.6, 0, 0.4, 1);
 
   const scaleAt = (track: number[], f = frame) =>
-    interpolate(f, scaleKeyframes, track, {
-      extrapolateLeft: "clamp",
-      extrapolateRight: "clamp",
-      easing: squishEase,
-    }) / 100;
+    interpolate(
+      f,
+      scaleKeyframes,
+      scaleIndex.map((k) => track[k]),
+      {
+        extrapolateLeft: "clamp",
+        extrapolateRight: "clamp",
+        easing: squishEase,
+      },
+    ) / 100;
 
   const cornersAt = (mid: Corners, end: Corners, f = frame): Corners => {
-    const [k0, k1, k2] = cornerKeyframes;
-    if (f <= k0) return cornersRest;
-    if (f >= k2) return end;
-    if (f <= k1) {
+    if (f <= pinMid.start) return cornersRest;
+    if (f >= pinEnd.end) return end;
+    if (f <= pinMid.end) {
       return lerpCorners(
         cornersRest,
         mid,
-        squishEase((f - k0) / Math.max(k1 - k0, 1)),
+        squishEase((f - pinMid.start) / Math.max(pinMid.length, 1)),
       );
     }
-    return lerpCorners(mid, end, squishEase((f - k1) / Math.max(k2 - k1, 1)));
+    if (f < pinEnd.start) return mid;
+    return lerpCorners(
+      mid,
+      end,
+      squishEase((f - pinEnd.start) / Math.max(pinEnd.length, 1)),
+    );
   };
 
   // On its first frame the pin is flat and the squeezed text sits on whole

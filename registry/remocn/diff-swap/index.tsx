@@ -13,6 +13,13 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_AFTER,
+  DEFAULT_BEFORE,
+  type DiffSwapElementId,
+  diffSwapTimeline,
+} from "./timeline";
 
 const sans = loadInstrumentSans("normal", {
   weights: ["400", "500"],
@@ -39,6 +46,12 @@ export interface DiffSwapProps {
   delay?: number;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches the removed line, its mark, the diff opening,
+   * the added line and the swap, by the ids in `./timeline`. Frames on the
+   * scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<DiffSwapElementId>;
 }
 
 const FLUTED = ["#1d2a8f", "#2f7bff", "#ff7a3d", "#ffe2c4"] as const;
@@ -166,24 +179,36 @@ function ScaleLayer({
   );
 }
 
-export function DiffSwap({
-  before = "Keyframe every frame by hand.",
-  after = "Install the scene. Edit the props.",
-  highlight = "Edit the props.",
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = sans.fontFamily,
-  fontWeight = 500,
-  foldAt = 72,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: DiffSwapProps) {
+export function DiffSwap(props: DiffSwapProps) {
+  const {
+    before = DEFAULT_BEFORE,
+    after = DEFAULT_AFTER,
+    highlight = "Edit the props.",
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = sans.fontFamily,
+    fontWeight = 500,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay) * speed;
   const { width, height, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    diffSwapTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const beforeEl = tl.get("before");
+  const markEl = tl.get("mark");
+  const openEl = tl.get("open");
+  const addedEl = tl.get("added");
+  const swap = tl.get("swap");
   const t = THEMES[theme];
   const fg = ink ?? t.fg;
   const measure = useMeasure(fontFamily, fontWeight);
@@ -227,21 +252,45 @@ export function DiffSwap({
     (height * (portrait ? 0.5 : 0.62)) / (rows.a.lines.length * LINE * fs),
   );
 
-  const enterAt = (f: number, i: number) => EASE_OUT(clamp01((f - i * 3) / 18));
+  const enterAt = (f: number, i: number) =>
+    EASE_OUT(
+      clamp01(
+        (f - (beforeEl.start + i * beforeEl.beat("stagger"))) /
+          beforeEl.beat("rise"),
+      ),
+    );
   const enter = (i: number) => enterAt(frame, i);
-  const mark = EASE_OUT(clamp01((frame - 30) / 14));
-  const openAt = (f: number) => EASE_IO(clamp01((f - 42) / 18));
+  const mark = EASE_OUT(clamp01((frame - markEl.start) / markEl.length));
+  const openAt = (f: number) =>
+    EASE_IO(clamp01((f - openEl.start) / openEl.length));
   const open = openAt(frame);
   const addInAt = (f: number, i: number) =>
-    EASE_OUT(clamp01((f - 53 - i * 3) / 18));
+    EASE_OUT(
+      clamp01(
+        (f - addedEl.start - i * addedEl.beat("stagger")) /
+          addedEl.beat("rise"),
+      ),
+    );
   const addIn = (i: number) => addInAt(frame, i);
-  const plusBand = EASE_OUT(clamp01((frame - 46) / 14));
-  const foldAtFrame = (f: number) => EASE_IO(clamp01((f - foldAt) / 20));
+  const plusBand = EASE_OUT(
+    clamp01(
+      (frame - (openEl.start + openEl.beat("bandAt"))) / openEl.beat("band"),
+    ),
+  );
+  const foldAtFrame = (f: number) =>
+    EASE_IO(clamp01((f - swap.start) / swap.beat("fold")));
   const fold = foldAtFrame(frame);
-  const clear = EASE_OUT(clamp01((frame - (foldAt + 6)) / 16));
-  const growAt = (f: number) => EASE_IO(clamp01((f - (foldAt + 4)) / 22));
+  const clear = EASE_OUT(
+    clamp01((frame - (swap.start + swap.beat("clearAt"))) / swap.beat("clear")),
+  );
+  const growAt = (f: number) =>
+    EASE_IO(
+      clamp01((f - (swap.start + swap.beat("growAt"))) / swap.beat("grow")),
+    );
   const grow = growAt(frame);
-  const hlT = EASE_OUT(clamp01((frame - (foldAt + 12)) / 18));
+  const hlT = EASE_OUT(
+    clamp01((frame - (swap.start + swap.beat("lightAt"))) / swap.beat("light")),
+  );
   const drift = interpolate(
     frame,
     [0, durationInFrames * speed],

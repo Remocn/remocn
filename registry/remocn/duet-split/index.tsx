@@ -10,6 +10,15 @@ import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_ROWS,
+  type DuetRow,
+  type DuetSplitElementId,
+  duetSplitTimeline,
+} from "./timeline";
+
+export type { DuetRow };
 
 const { fontFamily: sans } = loadSans("normal", {
   weights: ["300", "400"],
@@ -53,11 +62,6 @@ function RemocnLogo({ fontSize, color }: { fontSize: number; color: string }) {
   );
 }
 
-export interface DuetRow {
-  before: string;
-  after: string;
-}
-
 export interface DuetSplitProps {
   beforeLabel?: string;
   afterLabel?: string;
@@ -83,15 +87,13 @@ export interface DuetSplitProps {
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
   speed?: number;
+  /**
+   * Moves, trims or stretches the split opening, the labels, each row, the
+   * push and the mark, by the ids in `./timeline`. Frames on the scene
+   * timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<DuetSplitElementId>;
 }
-
-const LABEL_AT = 6;
-const ROW_AT = 18;
-const ROW_GAP = 16;
-const TRICKLE = 3;
-const GLYPH_LEN = 14;
-const PUSH_DELAY = 24;
-const PUSH_LEN = 16;
 
 const HEAVY = { mass: 1, damping: 26, stiffness: 120 };
 const CARD = { mass: 0.8, damping: 18, stiffness: 160 };
@@ -148,6 +150,8 @@ function kick(d: number) {
 function Wobbly({
   text,
   at,
+  trickle,
+  glyph,
   t,
   fontSize,
   color,
@@ -155,6 +159,9 @@ function Wobbly({
 }: {
   text: string;
   at: number;
+  /** Frames between letters, and frames each letter takes. */
+  trickle: number;
+  glyph: number;
   t: number;
   fontSize: number;
   color: string;
@@ -174,7 +181,7 @@ function Wobbly({
       }}
     >
       {[...text].map((ch, k) => {
-        const p = MOVE(ramp(t, at + k * TRICKLE, GLYPH_LEN));
+        const p = MOVE(ramp(t, at + k * trickle, glyph));
         const ph = seed * 2.3 + k * 1.1;
         const wy = Math.sin(t * 0.13 + ph) * 0.035 * fontSize;
         const rot = Math.sin(t * 0.09 + ph * 0.7) * 3;
@@ -256,31 +263,39 @@ function ScaleLayer({
   );
 }
 
-export function DuetSplit({
-  beforeLabel = "Before",
-  afterLabel = "With remocn",
-  rows = [
-    { before: "3 weeks", after: "1 day" },
-    { before: "an agency", after: "you" },
-    { before: "$12K", after: "$0" },
-  ],
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = sans,
-  stagger = ROW_GAP,
-  hold = PUSH_DELAY,
-  logo,
-  scale = 1,
-  delay = 0,
-  theme = "dark",
-  ground,
-  groundParams,
-  speed = 1,
-}: DuetSplitProps) {
+export function DuetSplit(props: DuetSplitProps) {
+  const {
+    beforeLabel = "Before",
+    afterLabel = "With remocn",
+    rows = DEFAULT_ROWS,
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = sans,
+    logo,
+    scale = 1,
+    delay = 0,
+    theme = "dark",
+    ground,
+    groundParams,
+    speed = 1,
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H, fps } = useSceneConfig();
+  const { width: W, height: H, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    duetSplitTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const cameraEl = tl.get("camera");
+  const openEl = tl.get("open");
+  const labelsEl = tl.get("labels");
+  const rowEls = rows.map((_, i) => tl.get(`row:${i}`));
+  const pushEl = tl.get("push");
+  const logoEl = tl.get("logo");
   const c = THEMES[theme];
   const fg = ink ?? c.ink;
   const tall = H > W;
@@ -293,11 +308,10 @@ export function DuetSplit({
       ...(durationInFrames ? { durationInFrames } : {}),
     });
 
-  const open = sp(-5, HEAVY);
-  const lastRowAt = ROW_AT + (rows.length - 1) * stagger;
-  const pushAt = lastRowAt + hold;
-  const push = sp(pushAt, MORPH, PUSH_LEN);
-  const logoAt = pushAt + PUSH_LEN - 4;
+  const open = sp(openEl.start + openEl.beat("slab"), HEAVY);
+  const pushAt = pushEl.start;
+  const push = sp(pushAt, MORPH, pushEl.length);
+  const logoAt = logoEl.start;
   const pLogo = sp(logoAt, CARD);
   // The logo's spring overshoots and has a long tail, so it counts as moving
   // while its lift still changes between neighbouring frames.
@@ -352,10 +366,14 @@ export function DuetSplit({
 
   const camAt = (at: number) => {
     const bump = Math.max(
-      ...rows.map((_, i) => 0.6 * kick(at - ROW_AT - i * stagger - 3)),
-      kick(at - pushAt - PUSH_LEN + 4),
+      ...rowEls.map((row) => 0.6 * kick(at - row.start - row.beat("kick"))),
+      kick(at - pushAt - pushEl.length + 4),
     );
-    return 1 + 0.016 * bump + interpolate(at, [0, 160], [0, 0.02], CLAMP);
+    return (
+      1 +
+      0.016 * bump +
+      interpolate(at, [cameraEl.start, cameraEl.end], [0, 0.02], CLAMP)
+    );
   };
   const camScale = camAt(t);
   const camStep = (at: number) =>
@@ -365,11 +383,11 @@ export function DuetSplit({
   const camTilt =
     camScale > 1.0008 && Math.max(camStep(t), camStep(t + speed)) > 1e-3;
 
-  const afterOpen = sp(2, HEAVY);
-  const labelIn = ENTER(ramp(t, LABEL_AT, 12));
-  const labelOut = EXIT(ramp(t, pushAt, 8));
+  const afterOpen = sp(openEl.start + openEl.beat("after"), HEAVY);
+  const labelIn = ENTER(ramp(t, labelsEl.start, labelsEl.length));
+  const labelOut = EXIT(ramp(t, pushAt, pushEl.beat("label")));
 
-  const crisp = (text: string, at: number) => {
+  const crisp = (text: string, at: number, fade: number) => {
     const p = sp(at, CHIP);
     return (
       <div
@@ -382,7 +400,7 @@ export function DuetSplit({
           whiteSpace: "nowrap",
           color: fg,
           textShadow: c.shadow,
-          opacity: ENTER(ramp(t, at, 3)),
+          opacity: ENTER(ramp(t, at, fade)),
           transform: `translateY(${(1 - p) * 0.22 * fs}px) scale(${1.1 - 0.1 * p})`,
         }}
       >
@@ -483,12 +501,13 @@ export function DuetSplit({
             }}
           >
             {rows.map((r, i) => {
-              const at = ROW_AT + i * stagger;
+              const row = rowEls[i];
+              const at = row.start;
               return t >= at
                 ? place(
                     afterStart.x,
                     afterStart.y + rowY(i),
-                    crisp(r.after, at),
+                    crisp(r.after, at, row.beat("fade")),
                     `a-${i}`,
                     travel,
                   )
@@ -530,7 +549,9 @@ export function DuetSplit({
                 beforeC.y + rowY(i),
                 <Wobbly
                   text={r.before}
-                  at={ROW_AT + i * stagger}
+                  at={rowEls[i].start}
+                  trickle={rowEls[i].beat("trickle")}
+                  glyph={rowEls[i].beat("glyph")}
                   t={t}
                   fontSize={fs * 1.04}
                   color={c.grey}
@@ -550,7 +571,7 @@ export function DuetSplit({
             bottom: tall ? 0.08 * H : 0.085 * H,
             display: "flex",
             justifyContent: "center",
-            opacity: ENTER(ramp(t, logoAt, 6)),
+            opacity: ENTER(ramp(t, logoAt, logoEl.beat("fade"))),
             transform: `translateY(${(1 - pLogo) * 0.05 * H}px)${glide(logoMoving)}`,
           }}
         >

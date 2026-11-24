@@ -6,6 +6,14 @@ import { useId, useMemo } from "react";
 import { AbsoluteFill, Easing, interpolate, spring } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  buildCells,
+  type HexFillElementId,
+  hexFillTimeline,
+  pickFill,
+  ringCount,
+} from "./timeline";
 
 const { fontFamily: brico } = loadFont("normal", {
   weights: ["300", "400"],
@@ -42,11 +50,14 @@ export interface HexFillProps {
   grain?: boolean;
   theme?: "dark" | "light";
   speed?: number;
+  /**
+   * Moves, trims or stretches the rings appearing, the copy, the fill sweep
+   * and the settle, by the ids in `./timeline`. Frames on the scene timeline,
+   * after `delay` and `speed`.
+   */
+  timing?: Timing<HexFillElementId>;
 }
 
-const FILL0 = 14;
-const FILL_LEN = 70;
-const RING_LAG = 1.2;
 const CELL = 0.88;
 
 const EASE_IO = Easing.bezier(0.65, 0, 0.35, 1);
@@ -74,71 +85,6 @@ const THEMES = {
     grain: 0.045,
   },
 } as const;
-
-interface Cell {
-  q: number;
-  r: number;
-  x: number;
-  y: number;
-  ring: number;
-  ang: number;
-}
-
-function buildCells(rings: number): Cell[] {
-  const out: Cell[] = [];
-  for (let q = -rings; q <= rings; q++) {
-    for (let r = -rings; r <= rings; r++) {
-      const s = -q - r;
-      const ring = Math.max(Math.abs(q), Math.abs(r), Math.abs(s));
-      if (ring > rings) continue;
-      const x = Math.sqrt(3) * (q + r / 2);
-      const y = 1.5 * r;
-      let ang = ring === 0 ? -1 : Math.atan2(x, -y);
-      if (ring > 0 && ang < -1e-6) ang += Math.PI * 2;
-      out.push({ q, r, x, y, ring, ang: ring === 0 ? 0 : ang / (Math.PI * 2) });
-    }
-  }
-  out.sort((a, b) => a.ang - b.ang || a.ring - b.ring);
-  return out;
-}
-
-const NB = [
-  [1, 0],
-  [-1, 0],
-  [0, 1],
-  [0, -1],
-  [1, -1],
-  [-1, 1],
-];
-
-function pickFill(cells: Cell[], F: number) {
-  const index = new Map<string, number>();
-  cells.forEach((c, i) => {
-    index.set(`${c.q},${c.r}`, i);
-  });
-  const nbs = cells.map((c) =>
-    NB.map(([dq, dr]) => index.get(`${c.q + dq},${c.r + dr}`)).filter(
-      (v): v is number => v !== undefined,
-    ),
-  );
-  const on = cells.map((_, i) => i < F);
-  const score = (i: number) =>
-    nbs[i].reduce((sum, j) => sum + (on[j] ? 1 : 0), 0) / nbs[i].length;
-  for (let it = 0; it < 40; it++) {
-    let worst = -1;
-    let best = -1;
-    for (let i = 1; i < cells.length; i++) {
-      if (on[i] && (worst < 0 || score(i) < score(worst))) worst = i;
-      if (!on[i] && (best < 0 || score(i) > score(best))) best = i;
-    }
-    if (worst < 0 || best < 0 || score(best) - score(worst) < 0.34) break;
-    on[worst] = false;
-    on[best] = true;
-  }
-  const chosen = cells.filter((_, i) => on[i]);
-  const rest = cells.filter((_, i) => !on[i]);
-  return [...chosen, ...rest];
-}
 
 function hexPath(cx: number, cy: number, r: number) {
   let d = "";
@@ -189,30 +135,37 @@ function ScaleLayer({
   );
 }
 
-export function HexFill({
-  value = 86,
-  label = "of renders served from cache",
-  rings = 7,
-  unit = "%",
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = brico,
-  fontWeight = 300,
-  fillLength = FILL_LEN,
-  scale = 1,
-  delay = 0,
-  grain = true,
-  theme = "dark",
-  speed = 1,
-}: HexFillProps) {
+export function HexFill(props: HexFillProps) {
+  const {
+    value = 86,
+    label = "of renders served from cache",
+    rings = 7,
+    unit = "%",
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = brico,
+    fontWeight = 300,
+    scale = 1,
+    delay = 0,
+    grain = true,
+    theme = "dark",
+    speed = 1,
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width, height, fps } = useSceneConfig();
+  const { width, height, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    hexFillTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const u = Math.min(width / 1280, height / 720);
   const p = THEMES[theme];
   const fg = ink ?? p.fg;
-  const N = Math.max(3, Math.min(10, Math.round(rings)));
+  const N = ringCount(rings);
   const pct = Math.max(0, Math.min(100, value));
   const all = useMemo(() => buildCells(N), [N]);
   const F = Math.round((pct / 100) * all.length);
@@ -240,28 +193,27 @@ export function HexFill({
   const gcy = height / 2;
   const textX = left + gridW + gap;
 
+  const fill = tl.get("fill");
   const angMax = F > 0 ? cells[F - 1].ang : 1;
   const fillAt = (i: number) => {
     const k = Math.min(1, cells[i].ang / Math.max(1e-3, angMax));
     return (
-      FILL0 +
-      (fillLength * Math.acos(1 - 2 * k)) / Math.PI +
-      cells[i].ring * RING_LAG
+      fill.start +
+      (fill.beat("sweep") * Math.acos(1 - 2 * k)) / Math.PI +
+      cells[i].ring * fill.beat("lag")
     );
   };
-  let fillEnd = FILL0;
+  const fillEnd = fill.end;
   let filled = 0;
   for (let i = 0; i < F; i++) {
-    const at = fillAt(i);
-    fillEnd = Math.max(fillEnd, at);
-    if (t >= at) filled++;
+    if (t >= fillAt(i)) filled++;
   }
   const shown = F > 0 ? Math.round((pct * filled) / F) : 0;
 
   const camAt = (tt: number) =>
     0.985 +
     0.025 *
-      interpolate(tt, [0, fillEnd + 40], [0, 1], {
+      interpolate(tt, [0, fillEnd + fill.beat("cameraTail")], [0, 1], {
         ...CLAMP,
         easing: EASE_IO,
       });
@@ -271,22 +223,25 @@ export function HexFill({
   const camMoving =
     Math.abs(camAt(t + speed) - camScale) * width > 1e-3 ||
     Math.abs(camScale - camAt(Math.max(0, t - speed))) * width > 1e-3;
-  const textIn = interpolate(t, [4, 22], [0, 1], {
+  const figureEl = tl.get("figure");
+  const labelEl = tl.get("label");
+  const doneEl = tl.get("done");
+  const textIn = interpolate(t, [figureEl.start, figureEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
-  const labelIn = interpolate(t, [10, 28], [0, 1], {
+  const labelIn = interpolate(t, [labelEl.start, labelEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
-  const done = interpolate(t, [fillEnd + 2, fillEnd + 18], [0, 1], {
+  const done = interpolate(t, [doneEl.start, doneEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
   const hexR = s * CELL;
   const gradId = `hf${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
   const gR = (gridH * s) / 2;
-  const drift = interpolate(t, [0, fillEnd + 40], [0, 1], {
+  const drift = interpolate(t, [0, fillEnd + fill.beat("cameraTail")], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
@@ -331,15 +286,11 @@ export function HexFill({
             {cells.map((c, i) => {
               const x = gcx + c.x * s;
               const y = gcy + c.y * s;
-              const ringIn = interpolate(
-                t,
-                [c.ring * 1.4, c.ring * 1.4 + 10],
-                [0, 1],
-                {
-                  ...CLAMP,
-                  easing: EASE_OUT,
-                },
-              );
+              const ring = tl.get(`ring:${c.ring}`);
+              const ringIn = interpolate(t, [ring.start, ring.end], [0, 1], {
+                ...CLAMP,
+                easing: EASE_OUT,
+              });
               const isFill = i < F;
               const local = isFill ? t - fillAt(i) : -1;
               const pop =
@@ -360,7 +311,8 @@ export function HexFill({
                     strokeWidth={sw}
                     opacity={
                       local >= 0
-                        ? outlineA * (1 - Math.min(1, local / 4))
+                        ? outlineA *
+                          (1 - Math.min(1, local / fill.beat("fade")))
                         : outlineA
                     }
                   />

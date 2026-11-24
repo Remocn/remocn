@@ -12,6 +12,12 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_ENTRIES,
+  type WeekShippedElementId,
+  weekShippedTimeline,
+} from "./timeline";
 
 const unbounded = loadFont("normal", {
   weights: ["400", "500"],
@@ -41,17 +47,12 @@ export interface WeekShippedProps {
   delay?: number;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches each day's entry, by the ids in `./timeline`.
+   * Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<WeekShippedElementId>;
 }
-
-const DEFAULT_ENTRIES: WeekShippedEntry[] = [
-  { day: "Monday,", item: "captions that keep up." },
-  { day: "Tuesday,", item: "shaders you can scrub." },
-  { day: "Wednesday,", item: "icons that draw themselves." },
-  { day: "Thursday,", item: "vertical, from the same file." },
-  { day: "Friday,", item: "renders on your own server." },
-  { day: "Saturday,", item: "one tiny fix." },
-  { day: "Sunday,", item: "we rested." },
-];
 
 const FONT_PX = 200;
 const TRACK = -0.03;
@@ -64,13 +65,7 @@ const CLAMP = {
   extrapolateRight: "clamp",
 } as const;
 
-const FIRST = 24;
-const BEAT = 13;
-const BREATH = 26;
-const ROLL = 7;
-const LAST_ROLL = 13;
 const STAGGER = 1;
-const HOLD_MIN = 36;
 
 interface Metrics {
   days: number[];
@@ -184,22 +179,29 @@ function ScaleLayer({
   );
 }
 
-export function WeekShipped({
-  entries = DEFAULT_ENTRIES,
-  accent,
-  ink,
-  background,
-  fontFamily = unbounded.fontFamily,
-  beat = BEAT,
-  hold = HOLD_MIN,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: WeekShippedProps) {
+export function WeekShipped(props: WeekShippedProps) {
+  const {
+    entries = DEFAULT_ENTRIES,
+    accent,
+    ink,
+    background,
+    fontFamily = unbounded.fontFamily,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
   const { width: W, height: H, durationInFrames } = useSceneConfig();
+  // The days are fitted to what is left of the scene after `delay`.
+  const tl = useTimeline(
+    weekShippedTimeline,
+    props,
+    Math.max(0, durationInFrames - delay) * speed,
+    timing,
+  );
   const dark = theme === "dark";
   const field = dark ? (accent ?? "#FF5A1F") : "#FFFFFF";
   const stage =
@@ -217,15 +219,7 @@ export function WeekShipped({
   }
 
   const n = list.length;
-  const total = Math.max(0, durationInFrames - delay) * speed;
-  const natural = Array.from({ length: n - 1 }, (_, k) =>
-    k === 0 ? FIRST : k === n - 2 && n > 2 ? BREATH : beat,
-  );
-  const sum = natural.reduce((s, d) => s + d, 0);
-  const fit = sum > 0 ? Math.min(1, (total - hold - LAST_ROLL) / sum) : 1;
-  const starts: number[] = [0];
-  for (let k = 0; k < n - 1; k++)
-    starts.push(starts[k] + Math.max(8, Math.round(natural[k] * fit)));
+  const days = tl.lane("Days");
 
   const portrait = H > W * 1.1;
   const marginX = W * (portrait ? 0.09 : 0.075);
@@ -260,28 +254,35 @@ export function WeekShipped({
   };
 
   let cur = 0;
-  for (let k = 0; k < n; k++) if (t >= starts[k]) cur = k;
+  for (let k = 0; k < n; k++) if (t >= days[k].start) cur = k;
   const last = cur === n - 1 && n > 1;
-  const roll = last ? LAST_ROLL : ROLL;
-  const s0 = starts[cur];
+  const e = days[cur];
+  const s0 = e.start;
 
   const outP =
     cur === 0
       ? 1
-      : interpolate(t, [s0, s0 + roll * 0.5], [0, 1], {
+      : interpolate(t, [s0, s0 + e.beat("out")], [0, 1], {
           ...CLAMP,
           easing: Easing.bezier(0.55, 0, 1, 0.45),
         });
   const inP = (order: number) =>
     cur === 0
-      ? interpolate(t, [order * STAGGER - 3, order * STAGGER + 11], [0, 1], {
-          ...CLAMP,
-          easing: EASE_OUT,
-        })
-      : interpolate(t, [s0 + roll * 0.35 + order, s0 + roll + order], [0, 1], {
-          ...CLAMP,
-          easing: last ? EASE_OUT : EASE_ROLL,
-        });
+      ? interpolate(
+          t,
+          [
+            s0 + order * STAGGER + e.beat("lead"),
+            s0 + order * STAGGER + e.beat("rise"),
+          ],
+          [0, 1],
+          { ...CLAMP, easing: EASE_OUT },
+        )
+      : interpolate(
+          t,
+          [s0 + e.beat("enter") + order, s0 + e.beat("roll") + order],
+          [0, 1],
+          { ...CLAMP, easing: last ? EASE_OUT : EASE_ROLL },
+        );
 
   const line = (
     key: string,

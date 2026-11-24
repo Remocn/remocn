@@ -13,6 +13,17 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  type BlockSwapElementId,
+  blockSwapTimeline,
+  DEFAULT_LINES,
+  END_HOLD,
+  HOLD,
+  linesOf,
+  planSwaps,
+  wordCount,
+} from "./timeline";
 
 const space = loadSpace("normal", {
   weights: ["400", "500"],
@@ -38,6 +49,11 @@ export interface BlockSwapProps {
   delay?: number;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches single line swaps, by the ids in
+   * `./timeline`. Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<BlockSwapElementId>;
 }
 
 const FLUTED = ["#1d2a8f", "#2f7bff", "#ff7a3d", "#ffe2c4"] as const;
@@ -53,15 +69,6 @@ const BLOCK_TOP = 0.86;
 const BLOCK_BOT = 0.24;
 const PAD_X = 0.08;
 const RADIUS = 0.2;
-
-const STAGGER = 2;
-const RUN = 10;
-const MORPH = 20;
-const MORPH_STAGGER = 1;
-const TEXT_IN = 6;
-const HOLD = 14;
-const OPEN_SPAWN = 2;
-const END_HOLD = 30;
 
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
 const EASE_IN_OUT = Easing.bezier(0.65, 0, 0.35, 1);
@@ -224,62 +231,21 @@ interface Swap {
   textAt: number;
   uncoverAt: number;
   end: number;
-}
-
-function plan(counts: number[], hold: number): Swap[] {
-  const out: Swap[] = [];
-  let at = 0;
-  counts.forEach((n, i) => {
-    if (i === 0) {
-      const covered = OPEN_SPAWN + (n - 1) * STAGGER + RUN + 2;
-      const textAt = covered;
-      const uncoverAt = textAt + TEXT_IN;
-      const end = uncoverAt + (n - 1) * STAGGER + RUN;
-      out.push({
-        to: 0,
-        from: null,
-        start: 0,
-        covered,
-        morphAt: 0,
-        textAt,
-        uncoverAt,
-        end,
-      });
-      at = end + hold;
-      return;
-    }
-    const m = counts[i - 1];
-    const k = Math.max(m, n);
-    const covered = at + (m - 1) * STAGGER + RUN;
-    const morphAt = covered - 2;
-    const textAt = morphAt + MORPH + (k - 1) * MORPH_STAGGER;
-    const uncoverAt = textAt + TEXT_IN;
-    const end = uncoverAt + (n - 1) * STAGGER + RUN;
-    out.push({
-      to: i,
-      from: i - 1,
-      start: at,
-      covered,
-      morphAt,
-      textAt,
-      uncoverAt,
-      end,
-    });
-    at = end + hold;
-  });
-  return out;
+  spawn: number;
+  stagger: number;
+  run: number;
+  morph: number;
+  morphStagger: number;
+  textIn: number;
 }
 
 export function blockSwapDuration(
   lines: string[] = DEFAULT_LINES,
   hold = HOLD,
 ) {
-  const counts = lines.map((l) => l.split(/\s+/).filter(Boolean).length);
-  const p = plan(counts, hold);
+  const p = planSwaps(lines.map(wordCount), hold);
   return p[p.length - 1].end + END_HOLD;
 }
-
-const DEFAULT_LINES = ["Pick the beats you need.", "Render the launch."];
 
 const lerpRect = (a: Rect, b: Rect, k: number): Rect => ({
   x: a.x + (b.x - a.x) * k,
@@ -308,38 +274,57 @@ function ScaleLayer({
   );
 }
 
-export function BlockSwap({
-  lines = DEFAULT_LINES,
-  highlight = "launch",
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = space.fontFamily,
-  hold = HOLD,
-  radius = RADIUS,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: BlockSwapProps) {
+export function BlockSwap(props: BlockSwapProps) {
+  const {
+    lines = DEFAULT_LINES,
+    highlight = "launch",
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = space.fontFamily,
+    radius = RADIUS,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H } = useSceneConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    blockSwapTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const c = THEMES[theme];
   const fg = ink ?? c.ink;
   const bg = background ?? c.bg;
-  const safeLines = useMemo(
-    () => (lines.length > 0 ? lines : DEFAULT_LINES),
-    [lines],
-  );
+  const safeLines = useMemo(() => linesOf(lines), [lines]);
   const layout = useLayout(safeLines, W, H, fontFamily);
   const swaps = useMemo(
     () =>
-      plan(
-        safeLines.map((l) => l.split(/\s+/).filter(Boolean).length),
-        hold,
-      ),
-    [safeLines, hold],
+      safeLines.map((_, i): Swap => {
+        const e = tl.get(`line:${i}`);
+        return {
+          to: i,
+          from: i > 0 ? i - 1 : null,
+          start: e.start,
+          covered: e.start + e.beat("covered"),
+          morphAt: e.start + e.beat("morphAt"),
+          textAt: e.start + e.beat("textAt"),
+          uncoverAt: e.start + e.beat("uncoverAt"),
+          end: e.end,
+          spawn: e.beat("spawn"),
+          stagger: e.beat("stagger"),
+          run: e.beat("run"),
+          morph: e.beat("morph"),
+          morphStagger: e.beat("morphStagger"),
+          textIn: e.beat("textIn"),
+        };
+      }),
+    [safeLines, tl],
   );
 
   if (!layout) {
@@ -390,13 +375,13 @@ export function BlockSwap({
 
   if (prev) {
     prev.forEach((w, i) => {
-      const done = sw.start + i * STAGGER + RUN;
+      const done = sw.start + i * sw.stagger + sw.run;
       if (t < done) nodes.push(<div key={`old-${i}`}>{wordAt(w, fg)}</div>);
     });
   }
   next.forEach((w, i) => {
     if (i === hiIndex) return;
-    const off = sw.uncoverAt + i * STAGGER;
+    const off = sw.uncoverAt + i * sw.stagger;
     if (t >= off) nodes.push(<div key={`new-${i}`}>{wordAt(w, fg)}</div>);
   });
 
@@ -422,7 +407,7 @@ export function BlockSwap({
         ? 1
         : interpolate(
             t,
-            [sw.start + j * STAGGER, sw.start + j * STAGGER + RUN],
+            [sw.start + j * sw.stagger, sw.start + j * sw.stagger + sw.run],
             [0, 1],
             { ...CLAMP, easing: EASE_OUT },
           );
@@ -434,8 +419,8 @@ export function BlockSwap({
       const mk = interpolate(
         t,
         [
-          sw.morphAt + j * MORPH_STAGGER,
-          sw.morphAt + j * MORPH_STAGGER + MORPH,
+          sw.morphAt + j * sw.morphStagger,
+          sw.morphAt + j * sw.morphStagger + sw.morph,
         ],
         [0, 1],
         { ...CLAMP, easing: EASE_IN_OUT },
@@ -444,7 +429,7 @@ export function BlockSwap({
       land = target.block;
       moving = midway(mk);
       if (splitting && t < sw.morphAt) alpha = 0;
-      if (!splitting && t < sw.start + j * STAGGER) alpha = 0;
+      if (!splitting && t < sw.start + j * sw.stagger) alpha = 0;
       if (merging && mk >= 1) alpha = 0;
       fill =
         interpolate(t, [sw.morphAt, sw.morphAt + 6], [0, 1], CLAMP) *
@@ -456,8 +441,8 @@ export function BlockSwap({
         };
       }
     } else {
-      const at = OPEN_SPAWN + j * STAGGER;
-      const run = interpolate(t, [at, at + RUN + 2], [0, 1], {
+      const at = sw.start + sw.spawn + j * sw.stagger;
+      const run = interpolate(t, [at, at + sw.run + 2], [0, 1], {
         ...CLAMP,
         easing: EASE_OUT,
       });
@@ -470,13 +455,13 @@ export function BlockSwap({
     if (!merging && t >= sw.textAt) {
       inner = {
         w: target,
-        o: interpolate(t, [sw.textAt, sw.textAt + TEXT_IN], [0, 1], CLAMP),
+        o: interpolate(t, [sw.textAt, sw.textAt + sw.textIn], [0, 1], CLAMP),
       };
     }
     const keep = j === hiIndex;
     if (!merging && !keep && t >= sw.uncoverAt) {
-      const off = sw.uncoverAt + j * STAGGER;
-      const u = interpolate(t, [off, off + RUN], [0, 1], {
+      const off = sw.uncoverAt + j * sw.stagger;
+      const u = interpolate(t, [off, off + sw.run], [0, 1], {
         ...CLAMP,
         easing: EASE_WIPE,
       });

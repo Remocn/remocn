@@ -7,6 +7,8 @@ import { useId, useMemo } from "react";
 import { AbsoluteFill, Easing, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import { type MacroPanElementId, macroPanTimeline } from "./timeline";
 
 const { fontFamily: display } = loadFont("normal", {
   weights: ["400"],
@@ -44,6 +46,12 @@ export interface MacroPanProps {
   logo?: React.ReactNode;
   theme?: "dark" | "light";
   speed?: number;
+  /**
+   * Moves, trims or stretches the pan, the pull-back, the push and the
+   * label, by the ids in `./timeline`. Frames on the scene timeline, after
+   * `delay` and `speed`.
+   */
+  timing?: Timing<MacroPanElementId>;
 }
 
 /** Fraunces 400 advance widths (per mille) for ASCII 32–126. */
@@ -86,9 +94,6 @@ const TRACK = -0.022;
 const WORD_SPACE = 0.05;
 const CAP = 0.7;
 const X_HEIGHT = 0.47;
-
-const PAN_END = 100;
-const PULL_LEN = 34;
 
 const PAN = Easing.bezier(0.38, 0.08, 0.78, 1);
 const PULL = Easing.bezier(0.55, 0, 0.12, 1);
@@ -193,26 +198,36 @@ function ScaleLayer({
   );
 }
 
-export function MacroPan({
-  title = "Built to move.",
-  label = "remocn",
-  index = "01",
-  panLen = PAN_END,
-  pullLen = PULL_LEN,
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = display,
-  scale = 1,
-  delay = 0,
-  grain = true,
-  logo,
-  theme = "dark",
-  speed = 1,
-}: MacroPanProps) {
+export function MacroPan(props: MacroPanProps) {
+  const {
+    title = "Built to move.",
+    label = "remocn",
+    index = "01",
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = display,
+    scale = 1,
+    delay = 0,
+    grain = true,
+    logo,
+    theme = "dark",
+    speed = 1,
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H } = useSceneConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    macroPanTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const panEl = tl.get("pan");
+  const pullEl = tl.get("pull");
+  const pushEl = tl.get("push");
+  const labelEl = tl.get("label");
   const u = H / 720;
   const c = THEMES[theme];
 
@@ -252,17 +267,18 @@ export function MacroPan({
   const py = (H / 2 - fy1 * sEnd) / (1 - sEnd);
   /** The camera at time `tt`, and where the two ends of the line land. */
   const camera = (tt: number) => {
-    const pan = interpolate(tt, [0, panLen], [0, 1], { ...CLAMP, easing: PAN });
-    const pull = interpolate(tt, [panLen, panLen + pullLen], [0, 1], {
+    const pan = interpolate(tt, [panEl.start, panEl.end], [0, 1], {
+      ...CLAMP,
+      easing: PAN,
+    });
+    const pull = interpolate(tt, [pullEl.start, pullEl.end], [0, 1], {
       ...CLAMP,
       easing: PULL,
     });
-    const push = interpolate(
-      tt,
-      [panLen + pullLen, panLen + pullLen + 50],
-      [0, 1],
-      { ...CLAMP, easing: Easing.bezier(0.33, 0, 0.67, 1) },
-    );
+    const push = interpolate(tt, [pushEl.start, pushEl.end], [0, 1], {
+      ...CLAMP,
+      easing: Easing.bezier(0.33, 0, 0.67, 1),
+    });
     if (pull <= 0) {
       const sPan = s0 * (1 - 0.12 * pan);
       const fx = fx0 + (fx1 - fx0) * pan;
@@ -297,7 +313,7 @@ export function MacroPan({
     ),
   );
 
-  const labelIn = interpolate(t, [4, 22], [0, 1], {
+  const labelIn = interpolate(t, [labelEl.start, labelEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });

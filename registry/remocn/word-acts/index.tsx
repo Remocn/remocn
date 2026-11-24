@@ -6,13 +6,20 @@ import { useId } from "react";
 import { AbsoluteFill, Easing, interpolate, spring } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_ACTS,
+  type WordActKind,
+  type WordActsElementId,
+  wordActsTimeline,
+} from "./timeline";
 
 const { fontFamily: display } = loadDisplay("normal", {
   weights: ["100", "200", "300", "400", "500"],
   subsets: ["latin"],
 });
 
-export type WordAct = "stretch" | "split" | "heavy" | "faster" | "rebuilt";
+export type WordAct = WordActKind;
 
 export interface WordActBeat {
   word: string;
@@ -44,23 +51,12 @@ export interface WordActsProps {
   /** Playback multiplier. */
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches single acts, by the ids in `./timeline`.
+   * Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<WordActsElementId>;
 }
-
-const DEFAULT_FRAMES: Record<WordAct, number> = {
-  stretch: 26,
-  split: 26,
-  heavy: 28,
-  faster: 22,
-  rebuilt: 42,
-};
-
-const DEFAULT_ACTS: WordActBeat[] = [
-  { word: "stretch", act: "stretch" },
-  { word: "split", act: "split" },
-  { word: "heavy", act: "heavy" },
-  { word: "faster", act: "faster" },
-  { word: "rebuilt", act: "rebuilt" },
-];
 
 const THEMES = {
   dark: { bg: "#0A0A0B", fg: "#F5F4F0", guide: "rgba(245,244,240,0.14)" },
@@ -103,6 +99,8 @@ interface ActProps {
   guide: string;
   fps: number;
   fontFamily: string;
+  /** A beat of the act's element, stretched with it. */
+  beat: (name: string) => number;
 }
 
 const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
@@ -123,10 +121,15 @@ const wordStyle = (
   whiteSpace: "nowrap",
 });
 
-function Stretch({ word, t, W, H, fg, fontFamily }: ActProps) {
+function Stretch({ word, t, W, H, fg, fontFamily, beat }: ActProps) {
   const glide = useGlide();
   const size = fitSize(word, H * 0.3, W * 0.42);
-  const p = interpolate(t, [2, 17], [0, 1], { ...CLAMP, easing: EASE_IO });
+  const p = interpolate(
+    t,
+    [beat("pullAt"), beat("pullAt") + beat("pull")],
+    [0, 1],
+    { ...CLAMP, easing: EASE_IO },
+  );
   const sx = 1 + p * 0.95;
   const sy = 1 - p * 0.06;
   // The stems thin out as the word is pulled, like taffy, so the stretched
@@ -148,12 +151,24 @@ function Stretch({ word, t, W, H, fg, fontFamily }: ActProps) {
   );
 }
 
-function Split({ word, t, W, H, fg, ink, fontFamily }: ActProps) {
+function Split({ word, t, W, H, fg, ink, fontFamily, beat }: ActProps) {
   const glide = useGlide();
   const size = fitSize(word, H * 0.4, W * 0.6);
-  const draw = interpolate(t, [2, 8], [0, 1], { ...CLAMP, easing: EASE_OUT });
-  const open = interpolate(t, [8, 19], [0, 1], { ...CLAMP, easing: EASE_OUT });
-  const lineFade = interpolate(t, [9, 15], [1, 0], CLAMP);
+  const drawn = beat("drawAt") + beat("draw");
+  const draw = interpolate(t, [beat("drawAt"), drawn], [0, 1], {
+    ...CLAMP,
+    easing: EASE_OUT,
+  });
+  const open = interpolate(t, [drawn, drawn + beat("open")], [0, 1], {
+    ...CLAMP,
+    easing: EASE_OUT,
+  });
+  const lineFade = interpolate(
+    t,
+    [beat("fadeAt"), beat("fadeAt") + beat("fade")],
+    [1, 0],
+    CLAMP,
+  );
   const dx = open * W * 0.034;
   const dy = open * size * 0.035;
   const width = word.length * ADVANCE * size;
@@ -202,10 +217,10 @@ function Split({ word, t, W, H, fg, ink, fontFamily }: ActProps) {
   );
 }
 
-function Heavy({ word, t, W, H, fg, ink, fps, fontFamily }: ActProps) {
+function Heavy({ word, t, W, H, fg, ink, fps, fontFamily, beat }: ActProps) {
   const glide = useGlide();
   const size = fitSize(word, H * 0.36, W * 0.58);
-  const LAND = 9;
+  const LAND = beat("land");
   const fall = interpolate(t, [0, LAND], [0, 1], {
     ...CLAMP,
     easing: Easing.bezier(0.55, 0, 1, 0.45),
@@ -275,9 +290,9 @@ function Heavy({ word, t, W, H, fg, ink, fps, fontFamily }: ActProps) {
   );
 }
 
-function Faster({ word, t, W, H, fg, ink, fontFamily }: ActProps) {
+function Faster({ word, t, W, H, fg, ink, fontFamily, beat }: ActProps) {
   const size = fitSize(word, H * 0.34, W * 0.6);
-  const SNAP = 7;
+  const SNAP = beat("snap");
   const overshoot = -W * 0.018;
   const posAt = (f: number) => {
     if (f < SNAP) {
@@ -287,7 +302,7 @@ function Faster({ word, t, W, H, fg, ink, fontFamily }: ActProps) {
       });
       return W * 0.95 * (1 - run) + overshoot * run;
     }
-    const settle = interpolate(f, [SNAP, SNAP + 5], [0, 1], {
+    const settle = interpolate(f, [SNAP, SNAP + beat("settle")], [0, 1], {
       ...CLAMP,
       easing: EASE_OUT,
     });
@@ -296,7 +311,12 @@ function Faster({ word, t, W, H, fg, ink, fontFamily }: ActProps) {
   const x = posAt(t);
   const v = Math.min(1, Math.max(0, posAt(t - 1) - x) / (W * 0.12));
   // Leans into the rush, then rocks back past upright as it snaps.
-  const rock = interpolate(t, [SNAP, SNAP + 2, SNAP + 6], [0, 4, 0], CLAMP);
+  const rock = interpolate(
+    t,
+    [SNAP, SNAP + beat("rockPeak"), SNAP + beat("rock")],
+    [0, 4, 0],
+    CLAMP,
+  );
   const skew = -14 * v + rock;
   const width = word.length * ADVANCE * size;
   const lines = [0.42, 0.56, 0.68, 0.8];
@@ -482,7 +502,7 @@ const hash = (n: number) => {
   return x - Math.floor(x);
 };
 
-function Rebuilt({ word, t, W, H, ink, guide }: ActProps) {
+function Rebuilt({ word, t, W, H, ink, guide, beat }: ActProps) {
   const gradId = `wa-ink-${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
   const letters = word.toLowerCase().split("");
   let cursor = 0;
@@ -502,13 +522,18 @@ function Rebuilt({ word, t, W, H, ink, guide }: ActProps) {
   const midY = -XH / 2;
 
   const n = placed.length;
-  const OUT0 = 5;
-  const OUT1 = 16;
-  const IN0 = 22;
-  const IN1 = 36;
+  const OUT0 = beat("out0");
+  const OUT1 = beat("out1");
+  const IN0 = beat("in0");
+  const IN1 = beat("in1");
   const guides = Math.min(
     interpolate(t, [OUT0, OUT1], [0, 1], CLAMP),
-    interpolate(t, [IN1 - 4, IN1 + 6], [1, 0], CLAMP),
+    interpolate(
+      t,
+      [IN1 - beat("inTrim"), IN1 + beat("guidesOut")],
+      [1, 0],
+      CLAMP,
+    ),
   );
 
   return (
@@ -560,13 +585,19 @@ function Rebuilt({ word, t, W, H, ink, guide }: ActProps) {
           const order = i / Math.max(1, n - 1);
           const out = interpolate(
             t,
-            [OUT0 + order * 3, OUT1 + order * 3],
+            [
+              OUT0 + order * beat("outStagger"),
+              OUT1 + order * beat("outStagger"),
+            ],
             [0, 1],
             { ...CLAMP, easing: EASE_IO },
           );
           const back = interpolate(
             t,
-            [IN0 + order * 5, IN1 + order * 5 - 4],
+            [
+              IN0 + order * beat("inStagger"),
+              IN1 + order * beat("inStagger") - beat("inTrim"),
+            ],
             [0, 1],
             { ...CLAMP, easing: Easing.bezier(0.2, 1.25, 0.4, 1) },
           );
@@ -635,47 +666,47 @@ function ScaleLayer({
   );
 }
 
-export function WordActs({
-  acts = DEFAULT_ACTS,
-  words,
-  hold = 32,
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = display,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: WordActsProps) {
+export function WordActs(props: WordActsProps) {
+  const {
+    acts = DEFAULT_ACTS,
+    words,
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = display,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const frame = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H, fps } = useSceneConfig();
+  const { width: W, height: H, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    wordActsTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const c = THEMES[theme];
   const stage =
     background === "transparent" ? "transparent" : (background ?? c.bg);
 
-  let start = 0;
-  let index = acts.length - 1;
-  let local = 0;
-  let dur = 1;
-  for (let i = 0; i < acts.length; i++) {
-    const len = acts[i].frames ?? DEFAULT_FRAMES[acts[i].act];
-    const last = i === acts.length - 1;
-    if (frame < start + len || last) {
-      index = i;
-      local = frame - start;
-      dur = len + (last ? hold : 0);
-      break;
-    }
-    start += len;
-  }
+  // The act on screen: the last one cut to.
+  let index = 0;
+  tl.elements.forEach((e, i) => {
+    if (frame >= e.start) index = i;
+  });
   const beat = acts[index];
-  const Act = ACTS[beat.act];
+  const el = tl.elements[index];
+  const local = frame - (el?.start ?? 0);
+  const dur = el?.length ?? 1;
+  const Act = beat ? ACTS[beat.act] : null;
 
   return (
     <AbsoluteFill style={{ backgroundColor: stage, overflow: "hidden" }}>
       <ScaleLayer scale={scale}>
-        {beat ? (
+        {beat && Act && el ? (
           <Act
             word={words?.[index] ?? beat.word}
             t={local}
@@ -688,6 +719,7 @@ export function WordActs({
             guide={c.guide}
             fps={fps}
             fontFamily={fontFamily}
+            beat={el.beat}
           />
         ) : null}
       </ScaleLayer>

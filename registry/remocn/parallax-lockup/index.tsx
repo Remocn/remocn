@@ -13,6 +13,11 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  type ParallaxLockupElementId,
+  parallaxLockupTimeline,
+} from "./timeline";
 
 /** Variable cut, so display sizes pick up the tight, ink-trapped optical size. */
 const display = loadVariableFont("normal", { subsets: ["latin"] });
@@ -43,6 +48,12 @@ export interface ParallaxLockupProps {
   /** Playback multiplier. */
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches the scroll, the push and the accent, by the
+   * ids in `./timeline`. Frames on the scene timeline, after `delay` and
+   * `speed`.
+   */
+  timing?: Timing<ParallaxLockupElementId>;
 }
 
 // Beat sheet (30fps):
@@ -53,10 +64,6 @@ export interface ParallaxLockupProps {
 //          same frame
 //  80–98   the accent line takes its gradient as the block locks
 //  94–150  poster: a solid justified block, slow push
-const SCROLL_END = 94;
-const ACCENT_AT = 80;
-const ACCENT_END = 98;
-
 const SCROLL = Easing.bezier(0.3, 0.42, 0.1, 1);
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
 const CLAMP = {
@@ -177,29 +184,37 @@ function ScaleLayer({
   );
 }
 
-export function ParallaxLockup({
-  lines = ["Every launch", "deserves", "a film"],
-  accentLine = 2,
-  accent = "#3B5BFD",
-  ink: inkColor,
-  background,
-  fontFamily = display.fontFamily,
-  fontWeight = WEIGHT,
-  lockAt = SCROLL_END,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: ParallaxLockupProps) {
+export function ParallaxLockup(props: ParallaxLockupProps) {
+  const {
+    lines = ["Every launch", "deserves", "a film"],
+    accentLine = 2,
+    accent = "#3B5BFD",
+    ink: inkColor,
+    background,
+    fontFamily = display.fontFamily,
+    fontWeight = WEIGHT,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H } = useSceneConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    parallaxLockupTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const scrollEl = tl.get("scroll");
+  const pushEl = tl.get("push");
+  const accentEl = tl.get("accent");
   const c = THEMES[theme];
   const fg = inkColor ?? c.fg;
   const stage =
     background === "transparent" ? "transparent" : (background ?? c.bg);
-  const accentAt = lockAt - (SCROLL_END - ACCENT_AT);
-  const accentEnd = lockAt + (ACCENT_END - SCROLL_END);
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
 
   const key = lines.join("\n");
@@ -247,9 +262,12 @@ export function ParallaxLockup({
   }, [ink, W, H]);
 
   const scrollAt = (f: number) =>
-    interpolate(f, [0, lockAt], [0, 1], { ...CLAMP, easing: SCROLL });
+    interpolate(f, [scrollEl.start, scrollEl.end], [0, 1], {
+      ...CLAMP,
+      easing: SCROLL,
+    });
   const pushAt = (f: number) =>
-    interpolate(f, [lockAt - 30, lockAt + 56], [1, 1.018], {
+    interpolate(f, [pushEl.start, pushEl.end], [1, 1.018], {
       ...CLAMP,
       easing: Easing.bezier(0.33, 0, 0.67, 1),
     });
@@ -266,7 +284,7 @@ export function ParallaxLockup({
       Math.abs(pushAt(f) - pushAt(f - 1)) * W * 0.5,
     );
   const moving = Math.max(step(frame), step(frame + 1)) > 1e-3;
-  const accentIn = interpolate(frame, [accentAt, accentEnd], [0, 1], {
+  const accentIn = interpolate(frame, [accentEl.start, accentEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });

@@ -6,6 +6,18 @@ import type React from "react";
 import { AbsoluteFill, Easing, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  type BlinkCutElementId,
+  type BlinkGround,
+  type BlinkLayout,
+  type BlinkWord,
+  blinkCutsOf,
+  blinkCutTimeline,
+  DEFAULT_WORDS,
+} from "./timeline";
+
+export type { BlinkGround, BlinkLayout, BlinkWord };
 
 const { fontFamily: display } = loadDisplay("normal", {
   weights: ["400", "500"],
@@ -15,29 +27,6 @@ const manrope = loadManrope("normal", {
   weights: ["600"],
   subsets: ["latin"],
 });
-
-export type BlinkLayout =
-  | "giant"
-  | "center"
-  | "dot"
-  | "corner"
-  | "top-left"
-  | "low-right"
-  | "crop-right"
-  | "crop-left"
-  | "crop-bottom";
-
-export type BlinkGround = "base" | "invert" | "accent";
-
-export interface BlinkWord {
-  text: string;
-  /** Where and how big the word sits. Defaults cycle through a fixed rhythm. */
-  layout?: BlinkLayout;
-  /** Background for this cut. */
-  ground?: BlinkGround;
-  /** How many beats (of `framesPerWord`) this word stays on screen. */
-  beats?: number;
-}
 
 export interface BlinkCutProps {
   /** One- or two-syllable words, one per cut. Strings or per-word overrides. */
@@ -68,46 +57,12 @@ export interface BlinkCutProps {
   /** Playback multiplier. */
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches single cuts and the lockup, by the ids in
+   * `./timeline`. Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<BlinkCutElementId>;
 }
-
-const DEFAULT_WORDS: BlinkWord[] = [
-  { text: "Cut", layout: "giant", ground: "base" },
-  { text: "Fast", layout: "crop-right", ground: "base" },
-  { text: "small", layout: "corner", ground: "base" },
-  { text: "Loud", layout: "crop-bottom", ground: "invert" },
-  { text: "Bold", layout: "top-left", ground: "base" },
-  { text: "Sharp", layout: "center", ground: "accent" },
-  { text: "Clean", layout: "low-right", ground: "base" },
-  { text: "Snap", layout: "crop-left", ground: "invert" },
-  { text: "Beat", layout: "giant", ground: "base" },
-  { text: "quiet", layout: "dot", ground: "base" },
-  { text: "Type", layout: "crop-bottom", ground: "accent" },
-  { text: "Move", layout: "top-left", ground: "invert" },
-  { text: "Hold", layout: "center", ground: "base" },
-  { text: "Ship", layout: "giant", ground: "invert" },
-  { text: "Now", layout: "crop-right", ground: "accent" },
-];
-
-const LAYOUT_CYCLE: BlinkLayout[] = [
-  "giant",
-  "crop-right",
-  "corner",
-  "crop-bottom",
-  "top-left",
-  "center",
-  "low-right",
-  "crop-left",
-  "dot",
-];
-const GROUND_CYCLE: BlinkGround[] = [
-  "base",
-  "base",
-  "invert",
-  "base",
-  "accent",
-  "base",
-  "invert",
-];
 
 const THEMES = {
   dark: { bg: "#0A0A0B", fg: "#F5F4F0", muted: "#8A8984" },
@@ -292,55 +247,57 @@ const CENTERED: BlinkLayout[] = [
 
 const midway = (q: number) => q > 5e-4 && q < 1 - 5e-4;
 
-export function BlinkCut({
-  words = DEFAULT_WORDS,
-  framesPerWord = 6,
-  brand = "remocn",
-  line = "Launch films, built in Remotion.",
-  logo,
-  accent = "#3B5BFD",
-  ink: inkProp,
-  background: backgroundProp,
-  fontFamily = display,
-  fontWeight = 500,
-  drift: driftOn = true,
-  scale: zoom = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: BlinkCutProps) {
+export function BlinkCut(props: BlinkCutProps) {
+  const {
+    words = DEFAULT_WORDS,
+    framesPerWord = 6,
+    brand = "remocn",
+    line = "Launch films, built in Remotion.",
+    logo,
+    accent = "#3B5BFD",
+    ink: inkProp,
+    background: backgroundProp,
+    fontFamily = display,
+    fontWeight = 500,
+    drift: driftOn = true,
+    scale: zoom = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H } = useSceneConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    blinkCutTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const lockup = tl.get("lockup");
   const c = THEMES[theme];
   const fg = inkProp ?? c.fg;
   const stage =
     backgroundProp === "transparent" ? "transparent" : (backgroundProp ?? c.bg);
-  const beat = Math.max(1, Math.round(framesPerWord));
-
-  const cuts = words.map((w, i) => {
-    const word = typeof w === "string" ? { text: w } : w;
-    return {
-      text: word.text,
-      layout: word.layout ?? LAYOUT_CYCLE[i % LAYOUT_CYCLE.length],
-      ground: word.ground ?? GROUND_CYCLE[i % GROUND_CYCLE.length],
-      length: beat * Math.max(1, Math.round(word.beats ?? 1)),
-    };
+  const cuts = blinkCutsOf(words, framesPerWord).map((cut, i) => {
+    const { start, length } = tl.get(`cut:${i}`);
+    return { ...cut, start, length };
   });
 
-  let start = 0;
-  let active = -1;
-  let local = 0;
-  let activeLength = beat;
-  for (let i = 0; i < cuts.length; i++) {
-    if (frame >= start && frame < start + cuts[i].length) {
+  // On screen: the cut, or the lockup (-1), that started last.
+  let active = cuts.length > 0 ? 0 : -1;
+  let at = Number.NEGATIVE_INFINITY;
+  cuts.forEach((cut, i) => {
+    if (frame >= cut.start && cut.start >= at) {
       active = i;
-      local = frame - start;
-      activeLength = cuts[i].length;
+      at = cut.start;
     }
-    start += cuts[i].length;
-  }
-  const lockupStart = start;
+  });
+  if (frame >= lockup.start && lockup.start >= at) active = -1;
+  const local = active === -1 ? 0 : frame - cuts[active].start;
+  const activeLength = active === -1 ? 0 : cuts[active].length;
+  const lockupStart = lockup.start;
   let background: string = stage;
   let content: React.ReactNode = null;
 
@@ -348,14 +305,19 @@ export function BlinkCut({
 
   if (active === -1) {
     const t = Math.max(0, frame - lockupStart);
-    const lineIn = interpolate(t, [6, 18], [0, 1], {
-      ...CLAMP,
-      easing: EASE_OUT,
-    });
+    const lineIn = interpolate(
+      t,
+      [lockup.beat("line"), lockup.beat("lineEnd")],
+      [0, 1],
+      {
+        ...CLAMP,
+        easing: EASE_OUT,
+      },
+    );
     // The beam glow rises a touch under the lockup and keeps drifting.
     const rise =
       6 -
-      interpolate(t, [0, 24], [0, 6], {
+      interpolate(t, [0, lockup.beat("rise")], [0, 6], {
         ...CLAMP,
         easing: EASE_OUT,
       }) -

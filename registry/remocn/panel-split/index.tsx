@@ -17,6 +17,12 @@ import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_HEADLINE,
+  type PanelSplitElementId,
+  panelSplitTimeline,
+} from "./timeline";
 
 const sans = loadFont("normal", {
   weights: ["400"],
@@ -54,6 +60,12 @@ export interface PanelSplitProps {
   /** Frames to hold the first frame before anything moves. */
   delay?: number;
   speed?: number;
+  /**
+   * Moves, trims or stretches the copy, the camera, each split, the panels
+   * and cards and the payoff, by the ids in `./timeline`. Frames on the
+   * scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<PanelSplitElementId>;
 }
 
 const THEMES = {
@@ -88,18 +100,6 @@ const DEFAULT_IMAGES = [
   "templates/brand-guidelines/ceramics.jpg",
   "templates/product-showcase/courtyard.jpg",
 ];
-
-const BEATS = [
-  { name: "open", at: 0 },
-  { name: "dolly", at: 18 },
-  { name: "split1", at: 30 },
-  { name: "split2", at: 54 },
-  { name: "reflow", at: 72 },
-  { name: "payoff", at: 96 },
-  { name: "end", at: 144 },
-] as const;
-type BeatName = (typeof BEATS)[number]["name"];
-const beat = (n: BeatName) => BEATS.find((b) => b.name === n)?.at ?? 0;
 
 const HEAVY = { mass: 1, damping: 26, stiffness: 120 };
 const CARD = { mass: 0.8, damping: 18, stiffness: 160 };
@@ -228,32 +228,44 @@ function ScaleLayer({
   );
 }
 
-export function PanelSplit({
-  images,
-  name = "Mara Okafor",
-  role = "Motion designer",
-  headline = ["Driven by motion,", "obsessed with", "the seamless."],
-  question = "What if every launch felt this good?",
-  body = "A studio practice built on timing, rhythm and the frames in between.",
-  caption = "Horizon, brand film",
-  labels = ["Portfolio", "Case 01", "Notes", "Reel"],
-  location = "Lisbon",
-  ctaLabel = "Play reel",
-  theme = "dark",
-  accent = "#3B5BFD",
-  panel,
-  ink,
-  background,
-  fontFamily = sans.fontFamily,
-  ground,
-  groundParams,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-}: PanelSplitProps) {
+export function PanelSplit(props: PanelSplitProps) {
+  const {
+    images,
+    name = "Mara Okafor",
+    role = "Motion designer",
+    headline = DEFAULT_HEADLINE,
+    question = "What if every launch felt this good?",
+    body = "A studio practice built on timing, rhythm and the frames in between.",
+    caption = "Horizon, brand film",
+    labels = ["Portfolio", "Case 01", "Notes", "Reel"],
+    location = "Lisbon",
+    ctaLabel = "Play reel",
+    theme = "dark",
+    accent = "#3B5BFD",
+    panel,
+    ink,
+    background,
+    fontFamily = sans.fontFamily,
+    ground,
+    groundParams,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H, fps } = useSceneConfig();
+  const { width: W, height: H, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    panelSplitTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const split1 = tl.get("split:1");
+  const split2 = tl.get("split:2");
+  const pay = tl.get("payoff");
+  const push = tl.get("push");
   const t = THEMES[theme];
   const portrait = H > W;
   const srcs =
@@ -271,10 +283,10 @@ export function PanelSplit({
   const G = portrait ? W * 0.022 : W * 0.011;
   const radius = portrait ? W * 0.03 : W * 0.014;
 
-  const s1 = sp(beat("split1"), HEAVY);
-  const s2 = sp(beat("split2"), HEAVY);
-  const s2b = sp(beat("split2") + 3, HEAVY);
-  const s3 = sp(beat("reflow"), HEAVY);
+  const s1 = sp(split1.start, HEAVY);
+  const s2 = sp(split2.start, HEAVY);
+  const s2b = sp(split2.start + split2.beat("second"), HEAVY);
+  const s3 = sp(tl.get("reflow").start, HEAVY);
   const F = portrait
     ? { c1: 0.58, c3: 0.52, l2: 0.66, l3: 0.58, r2: 0.5, r3: 0.42 }
     : { c1: 0.6, c3: 0.44, l2: 0.64, l3: 0.56, r2: 0.5, r3: 0.62 };
@@ -317,16 +329,16 @@ export function PanelSplit({
   // Where the split settles; the panels are laid out there.
   const rest = panelsAt(1, 1, 1, 1);
 
-  const openIn = sp(-10, HEAVY);
+  const openIn = sp(tl.get("open").start, HEAVY);
   const cam =
-    (0.84 + 0.16 * sp(beat("dolly"), HEAVY)) *
-    interpolate(frame, [0, beat("end")], [1, 1.025]);
+    (0.84 + 0.16 * sp(tl.get("dolly").start, HEAVY)) *
+    interpolate(frame, [push.start, push.end], [1, 1.025]);
   // The camera never stops pushing in, and it carries every panel, so one
   // tilt on it covers all the text that scales or rises inside them.
-  const camMoving = frame < beat("end");
+  const camMoving = frame < push.end;
   const payPunch = interpolate(
     frame,
-    [beat("payoff"), beat("payoff") + 3, beat("payoff") + 12],
+    [pay.start, pay.start + pay.beat("peak"), pay.start + pay.beat("punch")],
     [0, 1, 0],
     { ...CLAMP, easing: Easing.bezier(0.65, 0, 0.35, 1) },
   );
@@ -367,34 +379,34 @@ export function PanelSplit({
   const innerHRest = rest[0].h / k1Of(rest[0]);
   const dH1 = innerH - innerHRest;
   const heroFont = (portrait ? 46 : 44) * u;
-  const lineIn = (i: number) =>
-    interpolate(frame, [-12 + i * 3, 1 + i * 3], [0, 1], {
+  const lineIn = (i: number) => {
+    const e = tl.get(i === 0 ? "name" : `line:${i - 1}`);
+    return interpolate(frame, [e.start, e.end], [0, 1], {
       ...CLAMP,
       easing: TYPE_IN,
     });
+  };
   const tile = Math.min((P1.h / k1) * 0.4, 200 * u);
   const tileRest = Math.min(innerHRest * 0.4, 200 * u);
   const tileLeft = innerWRest - pad - tileRest;
   const tileDx = innerW - pad - innerW * 0.16 * (1 - s1) - tile - tileLeft;
-  const tileIn = sp(-4, CARD);
+  const tileIn = sp(tl.get("tile").start, CARD);
 
-  const p2In = sp(beat("split1") + 6, CARD);
-  const p3In = sp(beat("split2") + 8, CARD);
-  const p4In = (i: number) => sp(beat("split2") + 10 + i * 3, CARD);
+  const p2In = sp(tl.get("panel:2").start, CARD);
+  const p3In = sp(tl.get("panel:3").start, CARD);
+  const p4In = (i: number) => sp(tl.get(`card:${i}`).start, CARD);
 
-  const floodR = interpolate(
-    frame,
-    [beat("payoff"), beat("payoff") + 14],
-    [0, 1],
-    { ...CLAMP, easing: BURST },
-  );
+  const floodR = interpolate(frame, [pay.start, pay.end], [0, 1], {
+    ...CLAMP,
+    easing: BURST,
+  });
   const playX = pad;
   const playY = P4.h - pad - 40 * u;
   const playYRest = rest[3].h - pad - 40 * u;
   const dH2 = P2.h - rest[1].h;
   const dH3 = P3.h - rest[2].h;
   const floodMax = Math.hypot(P4.w, P4.h) * 1.05;
-  const pillPop = sp(beat("payoff") - 2, CHIP);
+  const pillPop = sp(pay.start + pay.beat("pill"), CHIP);
 
   return (
     <AbsoluteFill style={{ overflow: "hidden" }}>
@@ -700,7 +712,7 @@ export function PanelSplit({
               />
               {[2, 4, 3].map((ii, i) => {
                 const e = p4In(i);
-                const fan = sp(beat("payoff") + 2 + i * 2, CARD);
+                const fan = sp(pay.start + pay.beat("fan") + i * 2, CARD);
                 const cw = Math.min(P4.w * 0.36, P4.h * 0.6);
                 const ch = cw * 1.28;
                 const off = [-1, 1, 0][i] as number;

@@ -18,6 +18,13 @@ import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_STATS,
+  DEFAULT_TAGLINE,
+  type StatRailElementId,
+  statRailTimeline,
+} from "./timeline";
 
 const sans = loadFont("normal", {
   weights: ["300", "400"],
@@ -89,6 +96,12 @@ export interface StatRailProps {
   speed?: number;
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
+  /**
+   * Moves, trims or stretches the logo, the tagline words, the photo push,
+   * the shrink, the rail, each step and the payoff, by the ids in
+   * `./timeline`. Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<StatRailElementId>;
 }
 
 const THEMES = {
@@ -135,28 +148,6 @@ const THEMES = {
   },
 };
 
-const DEFAULT_STATS: Stat[] = [
-  { value: "120", label: "components ready to install" },
-  { value: "38", label: "motion design primitives" },
-  { value: "12", label: "launch templates, ready as-is" },
-  { value: "4", label: "minutes from install to first render" },
-];
-
-const BEATS = [
-  { name: "tagline", at: 0 },
-  { name: "shrink", at: 30 },
-  { name: "railIn", at: 36 },
-  { name: "step0", at: 42 },
-  { name: "step1", at: 66 },
-  { name: "step2", at: 84 },
-  { name: "step3", at: 96 },
-  { name: "end", at: 144 },
-] as const;
-
-type BeatName = (typeof BEATS)[number]["name"];
-const beatAt = (n: BeatName) => BEATS.find((b) => b.name === n)?.at ?? 0;
-const STEPS: BeatName[] = ["step0", "step1", "step2", "step3"];
-
 const HEAVY = { mass: 1, damping: 26, stiffness: 120 };
 const CARD = { mass: 0.8, damping: 18, stiffness: 160 };
 const CHIP = { mass: 0.5, damping: 12, stiffness: 200 };
@@ -169,13 +160,12 @@ const CLAMP = {
 function Tagline({
   text,
   frame,
-  start,
-  stagger,
+  spans,
 }: {
   text: string;
   frame: number;
-  start: number;
-  stagger: number;
+  /** Each word's rise, `[start, end]`. */
+  spans: number[][];
 }) {
   const parts = text.split(" ");
   return (
@@ -190,12 +180,10 @@ function Tagline({
       {parts.map((raw, i) => {
         const isAccent = raw.startsWith("*") && raw.endsWith("*");
         const word = isAccent ? raw.slice(1, -1) : raw;
-        const p = interpolate(
-          frame,
-          [start + i * stagger, start + i * stagger + 13],
-          [0, 1],
-          { ...CLAMP, easing: TYPE_IN },
-        );
+        const p = interpolate(frame, spans[i], [0, 1], {
+          ...CLAMP,
+          easing: TYPE_IN,
+        });
         return (
           <span
             key={`${raw}-${i}`}
@@ -242,31 +230,40 @@ function ScaleLayer({
   );
 }
 
-export function StatRail({
-  stats = DEFAULT_STATS,
-  image,
-  tagline = "The *future* of launch video is code",
-  theme = "dark",
-  background,
-  accent,
-  card,
-  faded,
-  ink,
-  fontFamily = sans.fontFamily,
-  hold = 30,
-  stagger = 2,
-  logo,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  ground,
-  groundParams,
-}: StatRailProps) {
+export function StatRail(props: StatRailProps) {
+  const {
+    stats = DEFAULT_STATS,
+    image,
+    tagline = DEFAULT_TAGLINE,
+    theme = "dark",
+    background,
+    accent,
+    card,
+    faded,
+    ink,
+    fontFamily = sans.fontFamily,
+    logo,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    ground,
+    groundParams,
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay) * speed;
-  const beat = (n: BeatName) =>
-    beatAt(n) + (n === "tagline" ? 0 : hold - beatAt("shrink"));
-  const { width: W, height: H, fps } = useSceneConfig();
+  const { width: W, height: H, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    statRailTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const logoEl = tl.get("logo");
+  const driftEl = tl.get("drift");
+  const shrinkEl = tl.get("shrink");
+  const railEl = tl.get("rail");
+  const payEl = tl.get("pay");
   const t = THEMES[theme];
   const acc = accent ?? t.accent;
   const cardBg = card ?? t.card;
@@ -284,9 +281,9 @@ export function StatRail({
   const endRect = portrait
     ? { x: W * 0.06, y: H * 0.035, w: W * 0.88, h: H * 0.43 }
     : { x: W * 0.405, y: H * 0.06, w: W * 0.555, h: H * 0.88 };
-  const shrink = sp(beat("shrink"), HEAVY);
+  const shrink = sp(shrinkEl.start, HEAVY);
   const shrinkPrev = spring({
-    frame: frame - 1 - beat("shrink"),
+    frame: frame - 1 - shrinkEl.start,
     fps,
     config: HEAVY,
   });
@@ -300,9 +297,14 @@ export function StatRail({
   const shrinkBlur = Math.min(5, Math.abs(shrink - shrinkPrev) * 50);
   const contentScale = lerp(1, portrait ? 0.82 : 0.64);
   const radius = portrait ? W * 0.032 : W * 0.016;
-  const imgScale = interpolate(frame, [0, beat("end")], [1.14, 1.02], {
-    easing: Easing.bezier(0.65, 0, 0.35, 1),
-  });
+  const imgScale = interpolate(
+    frame,
+    [driftEl.start, driftEl.end],
+    [1.14, 1.02],
+    {
+      easing: Easing.bezier(0.65, 0, 0.35, 1),
+    },
+  );
   const tagSize = portrait ? W * 0.1 : W * 0.062;
   const logoSize = portrait ? W * 0.044 : W * 0.023;
 
@@ -319,18 +321,15 @@ export function StatRail({
 
   const idx =
     -1 +
-    STEPS.slice(0, last + 1).reduce((acc2, s) => acc2 + sp(beat(s), CARD), 0);
-  const pay = sp(beat(STEPS[Math.min(last, 3)] as BeatName) + 2, CHIP);
-  const payColor = interpolate(
-    frame,
-    [
-      beat(STEPS[Math.min(last, 3)] as BeatName) + 1,
-      beat(STEPS[Math.min(last, 3)] as BeatName) + 9,
-    ],
-    [0, 1],
-    { ...CLAMP, easing: TYPE_IN },
-  );
-  const push = interpolate(frame, [0, beat("end")], [1, 1.03]);
+    Array.from({ length: Math.min(4, last + 1) }, (_, k) =>
+      tl.get(`step:${k}`),
+    ).reduce((acc2, e) => acc2 + sp(e.start, CARD), 0);
+  const pay = sp(payEl.start + payEl.beat("chip"), CHIP);
+  const payColor = interpolate(frame, [payEl.start, payEl.end], [0, 1], {
+    ...CLAMP,
+    easing: TYPE_IN,
+  });
+  const push = interpolate(frame, [driftEl.start, driftEl.end], [1, 1.03]);
   const fadeMask = portrait
     ? "linear-gradient(180deg, transparent 0%, black 9%, black 90%, transparent 100%)"
     : "linear-gradient(180deg, transparent 0%, black 14%, black 86%, transparent 100%)";
@@ -369,7 +368,7 @@ export function StatRail({
             }}
           >
             {stats.map((s, i) => {
-              const enter = sp(beat("railIn") + i * 3, CARD);
+              const enter = sp(railEl.start + i * railEl.beat("stagger"), CARD);
               // Laid out in the slot the rail settles on; the scroll there is
               // a transform, since layout rounds a baseline to whole pixels
               // and `top` would click the cards along pixel by pixel.
@@ -540,8 +539,13 @@ export function StatRail({
             >
               <div
                 style={{
-                  opacity: interpolate(frame, [0, 8], [0.2, 1], CLAMP),
-                  transform: `translateY(${(1 - sp(-4, CARD)) * logoSize}px)`,
+                  opacity: interpolate(
+                    frame,
+                    [logoEl.start + logoEl.beat("fadeAt"), logoEl.end],
+                    [0.2, 1],
+                    CLAMP,
+                  ),
+                  transform: `translateY(${(1 - sp(logoEl.start, CARD)) * logoSize}px)`,
                 }}
               >
                 {logo ?? <RemocnLogo fontSize={logoSize} color="#ffffff" />}
@@ -550,8 +554,10 @@ export function StatRail({
                 <Tagline
                   text={tagline}
                   frame={frame}
-                  start={-3}
-                  stagger={stagger}
+                  spans={tagline.split(" ").map((_, i) => {
+                    const e = tl.get(`word:${i}`);
+                    return [e.start, e.end];
+                  })}
                 />
               </div>
             </div>

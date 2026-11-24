@@ -7,6 +7,12 @@ import { useId } from "react";
 import { AbsoluteFill, Easing, interpolate, spring } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_VALUES,
+  type SparklineThreadElementId,
+  sparklineThreadTimeline,
+} from "./timeline";
 
 const { fontFamily: mono } = loadMono("normal", {
   weights: ["400"],
@@ -38,9 +44,13 @@ export interface SparklineThreadProps {
   grain?: boolean;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches the points, the axis, the thread, the thick
+   * line, the bloom, the leader, the metric and the label, by the ids in
+   * `./timeline`. Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<SparklineThreadElementId>;
 }
-
-const DEFAULT_VALUES = [20, 26, 24, 29, 35, 34, 41, 38, 49, 56, 53, 64, 70, 77];
 
 const EASE_IO = Easing.bezier(0.65, 0, 0.35, 1);
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
@@ -85,12 +95,6 @@ const THEMES = {
     grain: 0.045,
   },
 } as const;
-
-const POP = -6;
-const POP_STAGGER = 2;
-const THREAD = [22, 64] as const;
-const THICKEN = [62, 84] as const;
-const BLOOM = 82;
 
 function Grain({ opacity }: { opacity: number }) {
   const id = `g${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
@@ -198,36 +202,50 @@ function ScaleLayer({
   );
 }
 
-export function SparklineThread({
-  values = DEFAULT_VALUES,
-  metric = "+212%",
-  label = "weekly renders",
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = display,
-  stagger = POP_STAGGER,
-  drawDuration = THREAD[1] - THREAD[0],
-  scale = 1,
-  delay = 0,
-  grain = true,
-  speed = 1,
-  theme = "dark",
-}: SparklineThreadProps) {
+export function SparklineThread(props: SparklineThreadProps) {
+  const {
+    values = DEFAULT_VALUES,
+    metric = "+212%",
+    label = "weekly renders",
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = display,
+    scale = 1,
+    delay = 0,
+    grain = true,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width, height, fps } = useSceneConfig();
+  const { width, height, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    sparklineThreadTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const pointsEl = tl.get("points");
+  const axisEl = tl.get("axis");
+  const threadEl = tl.get("thread");
+  const thickEl = tl.get("thicken");
+  const bloomEl = tl.get("bloom");
+  const leaderEl = tl.get("leader");
+  const metricEl = tl.get("metric");
+  const labelEl = tl.get("label");
   const u = height / 720;
   const p = THEMES[theme];
   const fg = ink ?? p.fg;
   const stage = background ?? p.bg;
   const solid = background !== "transparent";
   const hole = background && solid ? background : p.bg;
-  const stretch = drawDuration / (THREAD[1] - THREAD[0]);
-  const at = (f: number) => THREAD[0] + (f - THREAD[0]) * stretch;
-  const thread = [THREAD[0], at(THREAD[1])] as const;
-  const thicken = [at(THICKEN[0]), at(THICKEN[1])] as const;
-  const bloomAt = at(BLOOM);
+  const thread = [threadEl.start, threadEl.end] as const;
+  const thicken = [thickEl.start, thickEl.end] as const;
+  const bloomAt = bloomEl.start;
+  const popAt = pointsEl.start;
+  const stagger = pointsEl.beat("stagger");
   const id = useId().replace(/[^a-zA-Z0-9_-]/g, "");
 
   const L = width * 0.07;
@@ -255,37 +273,58 @@ export function SparklineThread({
   const thickPts = cut(curve, thickX);
   const head = threadPts[threadPts.length - 1] ?? pts[0];
   const headO =
-    interpolate(t, [thread[0], thread[0] + 4], [0, 1], CLAMP) *
-    interpolate(t, [thread[1] - 4, thread[1] + 2], [1, 0], CLAMP);
+    interpolate(
+      t,
+      [thread[0], thread[0] + threadEl.beat("headIn")],
+      [0, 1],
+      CLAMP,
+    ) *
+    interpolate(
+      t,
+      [
+        thread[1] - threadEl.beat("headOut"),
+        thread[1] + threadEl.beat("headGone"),
+      ],
+      [1, 0],
+      CLAMP,
+    );
 
   const bloom = spring({
     frame: t - bloomAt,
     fps,
     config: { damping: 14, stiffness: 160, mass: 0.7 },
   });
-  const ring = interpolate(t, [bloomAt, bloomAt + 28], [0, 1], {
+  const ring = interpolate(t, [bloomEl.start, bloomEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
-  const leader = interpolate(t, [bloomAt + 2, bloomAt + 16], [0, 1], {
+  const leader = interpolate(t, [leaderEl.start, leaderEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
-  const numIn = interpolate(t, [bloomAt + 6, bloomAt + 24], [0, 1], {
+  const numIn = interpolate(t, [metricEl.start, metricEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
-  const count = interpolate(t, [bloomAt + 6, bloomAt + 30], [0, 1], {
-    ...CLAMP,
-    easing: EASE_OUT,
-  });
-  const labIn = interpolate(t, [bloomAt + 16, bloomAt + 34], [0, 1], {
+  const count = interpolate(
+    t,
+    [metricEl.start, metricEl.start + metricEl.beat("count")],
+    [0, 1],
+    {
+      ...CLAMP,
+      easing: EASE_OUT,
+    },
+  );
+  const labIn = interpolate(t, [labelEl.start, labelEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
   const fillIn = interpolate(
     t,
-    [thicken[0] + 6, thicken[1] + 10],
+    [
+      thicken[0] + thickEl.beat("fillAt"),
+      thicken[1] + thickEl.beat("fillAfter"),
+    ],
     [0, 1],
     CLAMP,
   );
@@ -363,10 +402,15 @@ export function SparklineThread({
           <line
             x1={L}
             y1={base}
-            x2={interpolate(t, [0, 26], [lerp(L, R, 0.3), R], {
-              ...CLAMP,
-              easing: EASE_OUT,
-            })}
+            x2={interpolate(
+              t,
+              [axisEl.start, axisEl.end],
+              [lerp(L, R, 0.3), R],
+              {
+                ...CLAMP,
+                easing: EASE_OUT,
+              },
+            )}
             y2={base}
             stroke={p.axis}
             strokeWidth={Math.max(1, u)}
@@ -374,7 +418,10 @@ export function SparklineThread({
           {pts.map(([x], i) => {
             const a = interpolate(
               t,
-              [POP + i * stagger, POP + i * stagger + 8],
+              [
+                popAt + i * stagger,
+                popAt + i * stagger + pointsEl.beat("tick"),
+              ],
               [0, 1],
               CLAMP,
             );
@@ -419,13 +466,16 @@ export function SparklineThread({
           {pts.map(([x, y], i) => {
             const isLast = i === pts.length - 1;
             const pop = spring({
-              frame: t - POP - i * stagger,
+              frame: t - popAt - i * stagger,
               fps,
               config: { damping: 12, stiffness: 200, mass: 0.6 },
             });
             const o = interpolate(
               t,
-              [POP + i * stagger, POP + i * stagger + 5],
+              [
+                popAt + i * stagger,
+                popAt + i * stagger + pointsEl.beat("fade"),
+              ],
               [0, 1],
               CLAMP,
             );

@@ -12,6 +12,16 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_AFTER,
+  DEFAULT_BEFORE,
+  DEFAULT_WORDS,
+  type RubyPressElementId,
+  rubyPressTimeline,
+  slotsOf,
+  tokensOf,
+} from "./timeline";
 
 const kaku = loadZenKaku("normal", {
   weights: ["500"],
@@ -39,6 +49,12 @@ export interface RubyPressProps {
   delay?: number;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches single words of the line and single glosses,
+   * by the ids in `./timeline`. Frames on the scene timeline, after `delay`
+   * and `speed`.
+   */
+  timing?: Timing<RubyPressElementId>;
 }
 
 const VERMILION = "#E03C31";
@@ -51,14 +67,6 @@ const THEMES = {
 const TRACK = -0.02;
 const RUBY = 0.4;
 const RUBY_GAP = 0.1;
-
-const RISE_AT = 0;
-const RISE_LEN = 18;
-const RISE_GAP = 3;
-const FIRST_GLOSS = 28;
-const GLOSS_IN = 12;
-const GLOSS_WAIT = 12;
-const PRESS = 22;
 
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
 const EASE_PRESS = Easing.bezier(0.6, 0, 0.25, 1);
@@ -155,39 +163,38 @@ function ScaleLayer({
   );
 }
 
-export function RubyPress({
-  before = "Subtitles for every market in",
-  words = ["a fortnight", "a morning", "one render"],
-  after = ".",
-  hold = 14,
-  stagger = RISE_GAP,
-  press = PRESS,
-  accent,
-  ink,
-  background,
-  fontFamily = kaku.fontFamily,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: RubyPressProps) {
+export function RubyPress(props: RubyPressProps) {
+  const {
+    before = DEFAULT_BEFORE,
+    words = DEFAULT_WORDS,
+    after = DEFAULT_AFTER,
+    accent,
+    ink,
+    background,
+    fontFamily = kaku.fontFamily,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H } = useSceneConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    rubyPressTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const c = THEMES[theme];
   const bg = background ?? c.bg;
   const red = accent ?? VERMILION;
   const fg = ink ?? c.ink;
 
-  const slots = words.length ? words : [""];
-  const beforeTokens = useMemo(
-    () => before.split(/\s+/).filter(Boolean),
-    [before],
-  );
-  const afterTokens = useMemo(
-    () => after.split(/\s+/).filter(Boolean),
-    [after],
-  );
+  const slots = slotsOf(words);
+  const beforeTokens = useMemo(() => tokensOf(before), [before]);
+  const afterTokens = useMemo(() => tokensOf(after), [after]);
   const tokens = useMemo(
     () => [...beforeTokens, ...afterTokens],
     [beforeTokens, afterTokens],
@@ -199,14 +206,15 @@ export function RubyPress({
   }
 
   const swaps = slots.length - 1;
-  const swapAt = (i: number) =>
-    FIRST_GLOSS + i * (GLOSS_IN + GLOSS_WAIT + press + hold);
-  const pressAt = (i: number) => swapAt(i) + GLOSS_IN + GLOSS_WAIT;
-  const pressP = (i: number) =>
-    interpolate(t, [pressAt(i), pressAt(i) + press], [0, 1], {
+  const glossEl = (i: number) => tl.get(`gloss:${i}`);
+  const swapAt = (i: number) => glossEl(i).start;
+  const pressP = (i: number) => {
+    const g = glossEl(i);
+    return interpolate(t, [g.start + g.beat("pressAt"), g.end], [0, 1], {
       ...CLAMP,
       easing: EASE_PRESS,
     });
+  };
   let landed = 0;
   while (landed < swaps && pressP(landed) >= 1) landed++;
   const active = landed < swaps;
@@ -303,13 +311,17 @@ export function RubyPress({
     hx += heroWs[k];
   });
 
-  const riseOf = (i: number) =>
-    interpolate(
-      t,
-      [RISE_AT + i * stagger, RISE_AT + i * stagger + RISE_LEN],
-      [0, 1],
-      { ...CLAMP, easing: EASE_OUT },
+  // The lead words rise first, then the hero line, the slot first.
+  const nb = beforeTokens.length;
+  const riseOf = (o: number) => {
+    const e = tl.get(
+      o < nb ? `word:${o}` : o === nb + 1 ? "slot" : `tail:${o - nb - 2}`,
     );
+    return interpolate(t, [e.start, e.end], [0, 1], {
+      ...CLAMP,
+      easing: EASE_OUT,
+    });
+  };
 
   const textStyle = (size: number): React.CSSProperties => ({
     position: "absolute",
@@ -376,7 +388,7 @@ export function RubyPress({
       const gBase = topBase + (pl.base - topBase) * p;
       const gIn = interpolate(
         t,
-        [swapAt(landed), swapAt(landed) + GLOSS_IN],
+        [swapAt(landed), swapAt(landed) + glossEl(landed).beat("in")],
         [0, 1],
         { ...CLAMP, easing: EASE_OUT },
       );

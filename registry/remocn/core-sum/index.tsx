@@ -12,6 +12,8 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import { type CoreSumElementId, coreSumTimeline, partCount } from "./timeline";
 
 const saira = loadSaira("normal", {
   weights: ["400", "500"],
@@ -41,6 +43,12 @@ export interface CoreSumProps {
   delay?: number;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches the rules, each row, each merge step and the
+   * fill, by the ids in `./timeline`.
+   * Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<CoreSumElementId>;
 }
 
 const THEMES = {
@@ -62,12 +70,6 @@ const THEMES = {
 
 const FONT_PX = 200;
 const TRACK = -0.02;
-
-const COUNT_LEN = 36;
-const STAGGER = 2;
-const FIRST_MERGE = 48;
-const MERGE_GAP = 16;
-const MERGE_LEN = 15;
 
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
 const EASE_IO = Easing.bezier(0.65, 0, 0.35, 1);
@@ -172,36 +174,41 @@ function ScaleLayer({
   );
 }
 
-export function CoreSum({
-  value = 2097152,
-  parts = 8,
-  prefix = "",
-  suffix = "",
-  label = "frames per night, every core busy",
-  partLabel = "core",
-  accent,
-  ink,
-  background,
-  fontFamily = saira.fontFamily,
-  stagger = STAGGER,
-  mergeGap = MERGE_GAP,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: CoreSumProps) {
+export function CoreSum(props: CoreSumProps) {
+  const {
+    value = 2097152,
+    parts = 8,
+    prefix = "",
+    suffix = "",
+    label = "frames per night, every core busy",
+    partLabel = "core",
+    accent,
+    ink,
+    background,
+    fontFamily = saira.fontFamily,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H } = useSceneConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    coreSumTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const rulesEl = tl.get("rules");
+  const fillEl = tl.get("fill");
   const c = THEMES[theme];
   const bg = background ?? c.bg;
   const hue = accent ?? c.accent;
   const fg = ink ?? c.ink;
 
-  const count = useMemo(() => {
-    const p = Math.round(Math.log2(Math.max(2, parts)));
-    return 2 ** Math.max(1, Math.min(4, p));
-  }, [parts]);
+  const count = useMemo(() => partCount(parts), [parts]);
   const levels = Math.round(Math.log2(count));
 
   const leaves = useMemo(() => {
@@ -251,23 +258,23 @@ export function CoreSum({
     return top + (i + 0.5) * pitch;
   };
 
-  const mergeAt = (l: number) => FIRST_MERGE + (l - 1) * mergeGap;
-  const mergeP = (l: number) =>
-    interpolate(t, [mergeAt(l), mergeAt(l) + MERGE_LEN], [0, 1], {
+  const mergeAt = (l: number) => tl.get(`merge:${l}`).start;
+  const mergeP = (l: number) => {
+    const e = tl.get(`merge:${l}`);
+    return interpolate(t, [e.start, e.end], [0, 1], {
       ...CLAMP,
       easing: EASE_MERGE,
     });
+  };
   let level = 0;
   for (let l = 1; l <= levels; l++) if (t >= mergeAt(l)) level = l;
   const lActive = Math.max(1, level === 0 ? 1 : level);
   const p = level === 0 ? 0 : mergeP(lActive);
 
-  const fillP = interpolate(
-    t,
-    [mergeAt(levels) + 4, mergeAt(levels) + MERGE_LEN + 10],
-    [0, 1],
-    { ...CLAMP, easing: EASE_IO },
-  );
+  const fillP = interpolate(t, [fillEl.start, fillEl.end], [0, 1], {
+    ...CLAMP,
+    easing: EASE_IO,
+  });
 
   const topOf = (cy: number, F: number) => cy - m.base * F + (m.cap * F) / 2;
   // Layout rounds a baseline to whole pixels, so a number eased by `top` and
@@ -361,15 +368,20 @@ export function CoreSum({
   if (level === 0) {
     const F = sizeAt(0);
     leaves.forEach((v, i) => {
-      const start = i * stagger;
-      const cp = interpolate(t, [start, start + COUNT_LEN], [0, 1], {
+      const row = tl.get(`row:${i}`);
+      const cp = interpolate(t, [row.start, row.end], [0, 1], {
         ...CLAMP,
         easing: EASE_OUT,
       });
-      const rise = interpolate(t, [start, start + 14], [0, 1], {
-        ...CLAMP,
-        easing: EASE_OUT,
-      });
+      const rise = interpolate(
+        t,
+        [row.start, row.start + row.beat("rise")],
+        [0, 1],
+        {
+          ...CLAMP,
+          easing: EASE_OUT,
+        },
+      );
       const y = rowY(0, i);
       const capH = m.cap * F;
       nodes.push(
@@ -495,7 +507,7 @@ export function CoreSum({
   const rows = count / 2 ** shownLevel;
   const pitch = regionH / rows;
   const rules: React.ReactNode[] = [];
-  const drawIn = interpolate(t, [0, 20], [0, 1], {
+  const drawIn = interpolate(t, [rulesEl.start, rulesEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });

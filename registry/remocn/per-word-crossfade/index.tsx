@@ -1,8 +1,13 @@
 "use client";
 
 import { Easing, interpolate } from "remotion";
-import { useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  type PerWordCrossfadeElementId,
+  perWordCrossfadeTimeline,
+} from "./timeline";
 
 export interface PerWordCrossfadeProps {
   fromText: string;
@@ -12,6 +17,11 @@ export interface PerWordCrossfadeProps {
   fontWeight?: number;
   speed?: number;
   className?: string;
+  /**
+   * Moves, trims or stretches single words, by the ids in `./timeline`.
+   * Frames on the scene timeline, after `speed`.
+   */
+  timing?: Timing<PerWordCrossfadeElementId>;
 }
 
 // Chrome parks a glyph raster on a whole pixel vertically for as long as the
@@ -20,35 +30,32 @@ export interface PerWordCrossfadeProps {
 // moves.
 const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
 
-export function PerWordCrossfade({
-  fromText,
-  toText,
-  fontSize = 72,
-  color = "#171717",
-  fontWeight = 600,
-  speed = 1,
-  className,
-}: PerWordCrossfadeProps) {
+export function PerWordCrossfade(props: PerWordCrossfadeProps) {
+  const {
+    fromText,
+    toText,
+    fontSize = 72,
+    color = "#171717",
+    fontWeight = 600,
+    speed = 1,
+    className,
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = useSceneFrame() * speed;
+  const { durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    perWordCrossfadeTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
 
   const fromWords = fromText.split(" ");
   const toWords = toText.split(" ");
 
-  const enterDur = 21;
-  const enterTravel = 5;
-  const exitDur = 15;
-  const exitTravelFrom = 6;
-  const enterStagger = 2;
-  const exitStagger = 1;
-  const overlapF = 5;
-  const microDelayF = 2;
-
   const enterEasing = Easing.bezier(0.16, 1, 0.3, 1);
   const exitEasing = Easing.bezier(0.7, 0, 0.84, 0);
-
-  const exitTotal = exitDur + (fromWords.length - 1) * exitStagger;
-  const newStart = Math.max(0, exitTotal - overlapF + microDelayF);
 
   const fontStack =
     "var(--font-geist-sans), -apple-system, BlinkMacSystemFont, sans-serif";
@@ -81,17 +88,23 @@ export function PerWordCrossfade({
           }}
         >
           {fromWords.map((word, i) => {
-            const local = frame - i * exitStagger;
-            const opacity = interpolate(local, [0, exitDur], [1, 0], {
+            const out = tl.get(`out:${i}`);
+            const local = frame - out.start;
+            const opacity = interpolate(local, [0, out.length], [1, 0], {
               extrapolateLeft: "clamp",
               extrapolateRight: "clamp",
               easing: exitEasing,
             });
-            const y = interpolate(local, [exitTravelFrom, exitDur], [0, -6], {
-              extrapolateLeft: "clamp",
-              extrapolateRight: "clamp",
-              easing: exitEasing,
-            });
+            const y = interpolate(
+              local,
+              [out.beat("travelFrom"), out.length],
+              [0, -6],
+              {
+                extrapolateLeft: "clamp",
+                extrapolateRight: "clamp",
+                easing: exitEasing,
+              },
+            );
             return (
               <span
                 key={i}
@@ -129,13 +142,14 @@ export function PerWordCrossfade({
           }}
         >
           {toWords.map((word, j) => {
-            const local = frame - newStart - j * enterStagger;
-            const opacity = interpolate(local, [0, enterDur], [0, 1], {
+            const arrival = tl.get(`in:${j}`);
+            const local = frame - arrival.start;
+            const opacity = interpolate(local, [0, arrival.length], [0, 1], {
               extrapolateLeft: "clamp",
               extrapolateRight: "clamp",
               easing: enterEasing,
             });
-            const y = interpolate(local, [0, enterTravel], [8, 0], {
+            const y = interpolate(local, [0, arrival.beat("travel")], [8, 0], {
               extrapolateLeft: "clamp",
               extrapolateRight: "clamp",
               easing: enterEasing,

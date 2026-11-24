@@ -7,6 +7,8 @@ import { useId } from "react";
 import { AbsoluteFill, Easing, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import { type ThinSlabElementId, thinSlabTimeline } from "./timeline";
 
 const display = loadInterTight("normal", {
   weights: ["400", "500"],
@@ -44,6 +46,12 @@ export interface ThinSlabProps {
   delay?: number;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches the wipe, the title, the number, the ghost, the
+   * label swap, the squeeze, the callout and the sheen, by the ids in
+   * `./timeline`. Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<ThinSlabElementId>;
 }
 
 const BEAM = ["#f4f7ff", "#8fb4ff", "#3d5bff", "#1a1660"] as const;
@@ -197,28 +205,38 @@ const DEFAULT_AFTER: ThinSlabSide = {
   unit: "day",
 };
 
-export function ThinSlab({
-  title = "Time to your first launch video",
-  before = DEFAULT_BEFORE,
-  after = DEFAULT_AFTER,
-  callout,
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = display.fontFamily,
-  radius: corner = 14,
-  squeezeDuration = 36,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: ThinSlabProps) {
+export function ThinSlab(props: ThinSlabProps) {
+  const {
+    title = "Time to your first launch video",
+    before = DEFAULT_BEFORE,
+    after = DEFAULT_AFTER,
+    callout,
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = display.fontFamily,
+    radius: corner = 14,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width, height } = useSceneConfig();
+  const { width, height, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    thinSlabTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const span = (id: ThinSlabElementId) => {
+    const e = tl.get(id);
+    return [e.start, e.end];
+  };
   const t = THEMES[theme];
   const fg = ink ?? t.fg;
-  const lag = squeezeDuration - 36;
   const gid = `ts${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
 
   const defaultSides = before === DEFAULT_BEFORE && after === DEFAULT_AFTER;
@@ -227,36 +245,36 @@ export function ThinSlab({
     ? (width / 1280) * 1.5
     : Math.min(width / 1280, height / 720);
 
-  const wipe = interpolate(frame, [-5, 20], [0, 1], {
+  const wipe = interpolate(frame, span("wipe"), [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
-  const titleIn = interpolate(frame, [-4, 14], [0, 1], {
+  const titleIn = interpolate(frame, span("title"), [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
-  const numIn = interpolate(frame, [3, 22], [0, 1], {
+  const numIn = interpolate(frame, span("number"), [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
-  const ghostIn = interpolate(frame, [40, 52], [0, 1], {
+  const ghostIn = interpolate(frame, span("ghost"), [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
-  const labelSwap = interpolate(frame, [42, 56], [0, 1], {
+  const labelSwap = interpolate(frame, span("labels"), [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
-  const squeeze = interpolate(frame, [46, 46 + squeezeDuration], [0, 1], {
+  const squeeze = interpolate(frame, span("squeeze"), [0, 1], {
     ...CLAMP,
     easing: EASE_SQUEEZE,
   });
   const count = Math.min(1, Math.max(0, squeeze));
-  const calloutIn = interpolate(frame, [70 + lag, 88 + lag], [0, 1], {
+  const calloutIn = interpolate(frame, span("callout"), [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
-  const sheen = interpolate(frame, [84 + lag, 108 + lag], [0, 1], {
+  const sheen = interpolate(frame, span("sheen"), [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });

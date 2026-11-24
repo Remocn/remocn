@@ -12,6 +12,13 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_QUESTIONS,
+  questionsOf,
+  type YesRunElementId,
+  yesRunTimeline,
+} from "./timeline";
 
 const unbounded = loadFont("normal", {
   weights: ["400", "500"],
@@ -37,18 +44,13 @@ export interface YesRunProps {
   delay?: number;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches single questions with their answers, by the
+   * ids in `./timeline`. Frames on the scene timeline, after `delay` and
+   * `speed`.
+   */
+  timing?: Timing<YesRunElementId>;
 }
-
-const DEFAULT_QUESTIONS = [
-  "Vertical?",
-  "Captions?",
-  "Your fonts?",
-  "Dark mode?",
-  "Transitions?",
-  "Renders in CI?",
-  "In your repo?",
-  "Free?",
-];
 
 const FONT_PX = 200;
 const WGHT = 500;
@@ -64,12 +66,6 @@ const CLAMP = {
   extrapolateLeft: "clamp",
   extrapolateRight: "clamp",
 } as const;
-
-const FIRST_DWELL = 32;
-const RATIO = 0.8;
-const MIN_DWELL = 10;
-const LAST_PUSH = 11;
-const LAST_MIN = 44;
 
 interface Split {
   head: string;
@@ -159,9 +155,6 @@ interface Row {
 
 interface Exchange {
   start: number;
-  push: number;
-  yesAt: number;
-  yesLen: number;
   size: number;
   rows: Row[];
   h: number;
@@ -229,23 +222,30 @@ function ScaleLayer({
   );
 }
 
-export function YesRun({
-  questions = DEFAULT_QUESTIONS,
-  answer = "Yes.",
-  accent,
-  ink,
-  background,
-  fontFamily = unbounded.fontFamily,
-  dwell: firstDwell = FIRST_DWELL,
-  hold = LAST_MIN,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: YesRunProps) {
+export function YesRun(props: YesRunProps) {
+  const {
+    questions = DEFAULT_QUESTIONS,
+    answer = "Yes.",
+    accent,
+    ink,
+    background,
+    fontFamily = unbounded.fontFamily,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
   const { width: W, height: H, durationInFrames } = useSceneConfig();
+  // The dwells fit the clip after `delay`, as before.
+  const tl = useTimeline(
+    yesRunTimeline,
+    props,
+    Math.max(0, durationInFrames - delay) * speed,
+    timing,
+  );
   const dark = theme === "dark";
   const field = dark ? (accent ?? "#FF5A1F") : "#FFFFFF";
   const stage =
@@ -254,7 +254,7 @@ export function YesRun({
   const block = dark ? fg : (accent ?? "#E8480F");
   const blockInk = dark ? field : "#FFFFFF";
 
-  const qs = questions.length > 0 ? questions : DEFAULT_QUESTIONS;
+  const qs = questionsOf(questions);
   const m = useMetrics(qs, answer, fontFamily);
 
   if (!m) {
@@ -264,13 +264,6 @@ export function YesRun({
   }
 
   const n = qs.length;
-  const total = Math.max(0, durationInFrames - delay) * speed;
-  const natural = Array.from({ length: n - 1 }, (_, k) =>
-    Math.max(MIN_DWELL, firstDwell * RATIO ** k),
-  );
-  const sum = natural.reduce((s, d) => s + d, 0);
-  const fit = sum > 0 ? Math.min(1, (total - hold) / sum) : 1;
-  const dwells = natural.map((d) => Math.max(7, Math.round(d * fit)));
 
   const portrait = H > W * 1.1;
   const fMax = Math.min(
@@ -281,19 +274,7 @@ export function YesRun({
   const bwEm = m.a + PAD_X * 2;
 
   const exchanges: Exchange[] = [];
-  let at = 0;
   for (let k = 0; k < n; k++) {
-    const last = k === n - 1;
-    const dwell = last ? total - at : dwells[k];
-    const push = last
-      ? LAST_PUSH
-      : Math.max(4, Math.min(9, Math.round(dwell * 0.4)));
-    const yesAt = last
-      ? push + 5
-      : push + Math.round((dwell - push) * (k === 0 ? 0.3 : 0.18));
-    const yesLen = last
-      ? 8
-      : Math.max(3, Math.min(6, Math.round(dwell * 0.22)));
     const { rows, size } = chooseRows(
       qs[k],
       m.q[k],
@@ -304,18 +285,23 @@ export function YesRun({
       portrait ? 0.82 : 0.6,
     );
     const h = (rows.length * LINE + (rows.length - 1) * ROW_GAP) * size;
-    exchanges.push({ start: at, push, yesAt, yesLen, size, rows, h });
-    at += dwell;
+    exchanges.push({ start: tl.get(`question:${k}`).start, size, rows, h });
   }
 
   let cur = 0;
   for (let k = 0; k < n; k++) if (t >= exchanges[k].start) cur = k;
   const e = exchanges[cur];
+  const q = tl.get(`question:${cur}`);
   const prev = cur > 0 ? exchanges[cur - 1] : null;
-  const p = interpolate(t, [e.start - 2, e.start + e.push], [0, 1], {
-    ...CLAMP,
-    easing: EASE_PUSH,
-  });
+  const p = interpolate(
+    t,
+    [q.start + q.beat("lead"), q.start + q.beat("push")],
+    [0, 1],
+    {
+      ...CLAMP,
+      easing: EASE_PUSH,
+    },
+  );
 
   const cy = H / 2;
   const gapV = Math.max(e.size, prev?.size ?? 0) * 0.5;
@@ -428,7 +414,7 @@ export function YesRun({
 
   const reveal = interpolate(
     t,
-    [e.start + e.yesAt, e.start + e.yesAt + e.yesLen],
+    [q.start + q.beat("yes"), q.start + q.beat("yes") + q.beat("reveal")],
     [0, 1],
     { ...CLAMP, easing: EASE_OUT },
   );

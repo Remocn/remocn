@@ -4,6 +4,8 @@ import type React from "react";
 import { useId } from "react";
 import { AbsoluteFill, Easing, interpolate, spring } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import { type SpotlightElementId, spotlightTimeline } from "./timeline";
 
 export type SpotlightProps = {
   /** Lockup the beam lands on. Falls back to a placeholder "remocn" lockup. */
@@ -15,6 +17,12 @@ export type SpotlightProps = {
   /** Brightness of the unlit lockup, 0 to 1. */
   dim?: number;
   speed?: number;
+  /**
+   * Moves, trims or stretches the beam's search, swing and landing and the
+   * house lights, by the ids in `./timeline`. Frames on the scene timeline,
+   * after `speed`.
+   */
+  timing?: Timing<SpotlightElementId>;
 };
 
 export const spotlightDefaults = {
@@ -24,9 +32,6 @@ export const spotlightDefaults = {
   speed: 1,
 };
 
-const SEARCH = 12;
-const SWING = 26;
-const HOUSE = 38;
 const clamp = {
   extrapolateLeft: "clamp" as const,
   extrapolateRight: "clamp" as const,
@@ -85,30 +90,40 @@ function PlaceholderLockup({
 }
 
 export function Spotlight(props: SpotlightProps) {
-  const { children, beamColor, stageColor, dim, speed } = {
+  const { children, beamColor, stageColor, dim, speed, timing } = {
     ...spotlightDefaults,
     ...props,
   };
   const uid = `spotlight-${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
   const frame = useSceneFrame();
-  const { width, height, fps } = useSceneConfig();
+  const { width, height, fps, durationInFrames } = useSceneConfig();
   const t = frame * Math.max(0, speed);
+  const tl = useTimeline(
+    spotlightTimeline,
+    props,
+    durationInFrames * Math.max(0, speed),
+    timing,
+  );
+  const search = tl.get("search");
+  const swing = tl.get("swing");
+  const landEl = tl.get("land");
+  const houseEl = tl.get("house");
 
   // Beam target, as a fraction of the width: search left, overshoot right, land.
   let target: number;
-  if (t < SEARCH) {
-    target = interpolate(t, [0, SEARCH], [0.14, 0.27], {
+  if (t < swing.start) {
+    target = interpolate(t, [search.start, search.end], [0.14, 0.27], {
       ...clamp,
       easing: Easing.inOut(Easing.sin),
     });
-  } else if (t < SWING) {
-    target = interpolate(t, [SEARCH, SWING], [0.27, 0.74], {
+  } else if (t < landEl.start) {
+    target = interpolate(t, [swing.start, swing.end], [0.27, 0.74], {
       ...clamp,
       easing: Easing.inOut(Easing.cubic),
     });
   } else {
     const land = spring({
-      frame: t - SWING,
+      frame: t - landEl.start,
       fps,
       config: { damping: 11, stiffness: 120, mass: 0.8 },
     });
@@ -122,11 +137,16 @@ export function Spotlight(props: SpotlightProps) {
   const spread = width * 0.27;
   const apexHalf = width * 0.012;
 
-  const beamOn = interpolate(t, [0, 5], [0, 1], {
-    ...clamp,
-    easing: Easing.out(Easing.quad),
-  });
-  const house = interpolate(t, [HOUSE, HOUSE + 12], [0, 1], {
+  const beamOn = interpolate(
+    t,
+    [search.start, search.start + search.beat("on")],
+    [0, 1],
+    {
+      ...clamp,
+      easing: Easing.out(Easing.quad),
+    },
+  );
+  const house = interpolate(t, [houseEl.start, houseEl.end], [0, 1], {
     ...clamp,
     easing: Easing.inOut(Easing.sin),
   });
@@ -136,7 +156,9 @@ export function Spotlight(props: SpotlightProps) {
     dim + (1 - dim) * Easing.inOut(Easing.quad)(coverage) * beamOn,
   );
   const brightness =
-    t >= SWING + 10 ? Math.max(lit, Math.min(1, lit + house)) : lit;
+    t >= landEl.start + landEl.beat("lift")
+      ? Math.max(lit, Math.min(1, lit + house))
+      : lit;
   const blur = width * 0.012;
 
   return (

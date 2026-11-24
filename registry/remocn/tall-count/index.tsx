@@ -14,6 +14,8 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import { type TallCountElementId, tallCountTimeline } from "./timeline";
 
 const flex = loadVariableFont("oblique 0deg 10deg", { subsets: ["latin"] });
 const instrument = loadInstrument("normal", {
@@ -45,6 +47,12 @@ export interface TallCountProps {
   grain?: boolean;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches the fade-in, the label, the grow and the lift,
+   * by the ids in `./timeline`.
+   * Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<TallCountElementId>;
 }
 
 const RISE = ["#fff1e2", "#ff8a3d", "#a3301a", "#2a0d0a"] as const;
@@ -81,11 +89,6 @@ const SAMPLES = [25, 35, 50, 70, 90, 110, 130, 151];
 const WGHT = 460;
 const TRACK = -0.01;
 const YTFI = [738, 788] as const;
-
-const GROW_AT = 8;
-const GROW_END = 66;
-const LIFT_AT = 54;
-const LABEL_AT = 2;
 
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
 const EASE_GROW = Easing.bezier(0.33, 0, 0.16, 1);
@@ -263,28 +266,35 @@ function ScaleLayer({
   );
 }
 
-export function TallCount({
-  value = 240,
-  from = 0,
-  decimals = 0,
-  prefix = "+",
-  suffix = "%",
-  label = "more watch time on launch posts that move",
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = instrument.fontFamily,
-  growDuration = GROW_END - GROW_AT,
-  stretch = 0.16,
-  scale = 1,
-  delay = 0,
-  grain = true,
-  speed = 1,
-  theme = "dark",
-}: TallCountProps) {
+export function TallCount(props: TallCountProps) {
+  const {
+    value = 240,
+    from = 0,
+    decimals = 0,
+    prefix = "+",
+    suffix = "%",
+    label = "more watch time on launch posts that move",
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = instrument.fontFamily,
+    stretch = 0.16,
+    scale = 1,
+    delay = 0,
+    grain = true,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H, fps } = useSceneConfig();
+  const { width: W, height: H, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    tallCountTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const c = THEMES[theme];
   const m = useMetrics(prefix, suffix);
   const finalText = useMemo(() => format(value, decimals), [value, decimals]);
@@ -320,7 +330,11 @@ export function TallCount({
   const baseY = portrait ? H * 0.6 : H * 0.84;
 
   const STRETCH = stretch;
-  const growEnd = GROW_AT + growDuration;
+  const growEl = tl.get("grow");
+  const liftEl = tl.get("lift");
+  const enterEl = tl.get("enter");
+  const labelEl = tl.get("label");
+  const growEnd = growEl.end;
   const maxInk = portrait ? H * 0.36 : H * 0.7;
   const finalCurve = curveOf(finalText);
   const F1 = Math.min(
@@ -331,7 +345,7 @@ export function TallCount({
   const F0 = F1 * 0.3;
   const finalW = widthAt(finalCurve, solveWdth(finalCurve, measureW / F1)) * F1;
 
-  const g = interpolate(t, [GROW_AT, growEnd], [0, 1], {
+  const g = interpolate(t, [growEl.start, growEnd], [0, 1], {
     ...CLAMP,
     easing: EASE_GROW,
   });
@@ -349,7 +363,7 @@ export function TallCount({
       1 +
       STRETCH *
         spring({
-          frame: f - (growEnd - (GROW_END - LIFT_AT)),
+          frame: f - liftEl.start,
           fps,
           config: { damping: 11, stiffness: 110, mass: 0.9 },
         })
@@ -365,7 +379,7 @@ export function TallCount({
   const k = g === 1 ? 1 : F / F1;
   const numW = widthAt(curve, wdth) * F;
 
-  const enter = interpolate(t, [0, 12], [0, 1], {
+  const enter = interpolate(t, [enterEl.start, enterEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
@@ -375,7 +389,7 @@ export function TallCount({
   const restTop = baseY - m.baseline * F1;
   const fill = `linear-gradient(0deg, ${c.fill[0]} ${(100 - (baseY / H) * 100).toFixed(1)}%, ${c.fill[1]} ${(100 - ((baseY - maxInk * 0.35) / H) * 100).toFixed(1)}%, ${c.fill[2]} ${(100 - ((baseY - maxInk * 0.7) / H) * 100).toFixed(1)}%, ${c.fill[3]} ${(100 - ((baseY - maxInk * 1.02) / H) * 100).toFixed(1)}%, ${c.fill[4]} 100%)`;
 
-  const labelP = interpolate(t, [LABEL_AT, LABEL_AT + 18], [0, 1], {
+  const labelP = interpolate(t, [labelEl.start, labelEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
@@ -389,7 +403,7 @@ export function TallCount({
             position: "absolute",
             inset: 0,
             background: c.glow(accent),
-            opacity: interpolate(t, [GROW_AT, growEnd], [0.35, 1], CLAMP),
+            opacity: interpolate(t, [growEl.start, growEnd], [0.35, 1], CLAMP),
           }}
         />
       )}

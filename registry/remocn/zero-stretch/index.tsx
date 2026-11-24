@@ -13,6 +13,13 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_LABEL,
+  DEFAULT_VALUE,
+  type ZeroStretchElementId,
+  zeroStretchTimeline,
+} from "./timeline";
 
 const outfit = loadOutfit("normal", {
   weights: ["300", "400", "500"],
@@ -41,6 +48,12 @@ export interface ZeroStretchProps {
   delay?: number;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches the characters, the zero's stretch, the label
+   * words and the caption, by the ids in `./timeline`.
+   * Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<ZeroStretchElementId>;
 }
 
 const THEMES = {
@@ -56,13 +69,6 @@ const MESH = {
 const TRACK = -0.03;
 const LABEL_TRACK = -0.015;
 const LABEL_SIZE = 0.36;
-
-const RISE_AT = 2;
-const RISE_LEN = 18;
-const RISE_GAP = 3;
-const STRETCH_AT = 34;
-const LABEL_AT = 50;
-const CAPTION_AT = 72;
 
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
 const CLAMP = {
@@ -266,25 +272,34 @@ function ScaleLayer({
   );
 }
 
-export function ZeroStretch({
-  value = "200",
-  label = "components",
-  caption = "Ready to ship. Copy one in, own every frame.",
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = outfit.fontFamily,
-  fontWeight = 500,
-  stagger = RISE_GAP,
-  grain = true,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: ZeroStretchProps) {
+export function ZeroStretch(props: ZeroStretchProps) {
+  const {
+    value = DEFAULT_VALUE,
+    label = DEFAULT_LABEL,
+    caption = "Ready to ship. Copy one in, own every frame.",
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = outfit.fontFamily,
+    fontWeight = 500,
+    grain = true,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H, fps } = useSceneConfig();
+  const { width: W, height: H, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    zeroStretchTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const stretchEl = tl.get("stretch");
+  const captionEl = tl.get("caption");
   const c = THEMES[theme];
   const fg = ink ?? c.ink;
   const stage =
@@ -330,7 +345,7 @@ export function ZeroStretch({
   const F = Math.min(H * 0.5, (W * 0.86) / (restEm + gapEm));
 
   const open = spring({
-    frame: t - STRETCH_AT,
+    frame: t - stretchEl.start,
     fps,
     config: { damping: 14, stiffness: 70, mass: 1 },
   });
@@ -342,10 +357,15 @@ export function ZeroStretch({
   const baseY = centerY - midEm * F;
   const left0 = (W - totalW) / 2;
 
-  const fillOn = interpolate(t, [STRETCH_AT + 2, STRETCH_AT + 16], [0, 1], {
-    ...CLAMP,
-    easing: EASE_OUT,
-  });
+  const fillOn = interpolate(
+    t,
+    [
+      stretchEl.start + stretchEl.beat("fillAt"),
+      stretchEl.start + stretchEl.beat("fillEnd"),
+    ],
+    [0, 1],
+    { ...CLAMP, easing: EASE_OUT },
+  );
 
   const drift = t / 30;
   const blob = (bx: number, by: number, k: number) =>
@@ -378,8 +398,12 @@ export function ZeroStretch({
   const pieces = glyphs.map((g, i) => {
     const gx = x + g.lead * F;
     x = gx + g.adv * F + (g.zero ? gap : 0);
-    const riseAt = g.lead > 0 ? STRETCH_AT - 6 : RISE_AT + i * stagger;
-    const p = interpolate(t, [riseAt, riseAt + RISE_LEN], [0, 1], {
+    const riseEl = g.lead > 0 ? null : tl.get(`char:${i}`);
+    const riseAt = riseEl
+      ? riseEl.start
+      : stretchEl.start + stretchEl.beat("zeroAt");
+    const riseEnd = riseEl ? riseEl.end : riseAt + stretchEl.beat("rise");
+    const p = interpolate(t, [riseAt, riseEnd], [0, 1], {
       ...CLAMP,
       easing: EASE_OUT,
     });
@@ -464,15 +488,11 @@ export function ZeroStretch({
           }}
         >
           {words.map((w, k) => {
-            const lp = interpolate(
-              t,
-              [LABEL_AT + k * 3, LABEL_AT + k * 3 + 16],
-              [0, 1],
-              {
-                ...CLAMP,
-                easing: EASE_OUT,
-              },
-            );
+            const wordEl = tl.get(`word:${k}`);
+            const lp = interpolate(t, [wordEl.start, wordEl.end], [0, 1], {
+              ...CLAMP,
+              easing: EASE_OUT,
+            });
             return (
               <span
                 key={`${w}-${k}`}
@@ -523,7 +543,7 @@ export function ZeroStretch({
     H * 0.046,
     (W * 0.86) / Math.max(0.1, m.caption),
   );
-  const capP = interpolate(t, [CAPTION_AT, CAPTION_AT + 18], [0, 1], {
+  const capP = interpolate(t, [captionEl.start, captionEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });

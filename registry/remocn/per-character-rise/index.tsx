@@ -1,8 +1,13 @@
 "use client";
 
 import { Easing, interpolate } from "remotion";
-import { useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  type PerCharacterRiseElementId,
+  perCharacterRiseTimeline,
+} from "./timeline";
 
 export interface PerCharacterRiseProps {
   text: string;
@@ -12,6 +17,11 @@ export interface PerCharacterRiseProps {
   fontWeight?: number;
   speed?: number;
   className?: string;
+  /**
+   * Moves, trims or stretches single letters, by the ids in `./timeline`.
+   * Frames on the scene timeline, after `speed`.
+   */
+  timing?: Timing<PerCharacterRiseElementId>;
 }
 
 // Chrome parks a glyph raster on a whole pixel vertically for as long as the
@@ -19,22 +29,28 @@ export interface PerCharacterRiseProps {
 // steps come out uneven. Each letter's transform is marked so it leans off
 // that grid while it rises.
 
-export function PerCharacterRise({
-  text,
-  distance = 32,
-  fontSize = 72,
-  color = "#171717",
-  fontWeight = 600,
-  speed = 1,
-  className,
-}: PerCharacterRiseProps) {
+export function PerCharacterRise(props: PerCharacterRiseProps) {
+  const {
+    text,
+    distance = 32,
+    fontSize = 72,
+    color = "#171717",
+    fontWeight = 600,
+    speed = 1,
+    className,
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = useSceneFrame() * speed;
+  const { durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    perCharacterRiseTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
 
   const chars = Array.from(text);
-  const charDurationFrames = 21;
-  const charTravelFrames = 10;
-  const staggerFrames = 1;
 
   return (
     <div
@@ -59,7 +75,10 @@ export function PerCharacterRise({
         }}
       >
         {chars.map((char, i) => {
-          const local = frame - i * staggerFrames;
+          const letter = tl.get(`char:${i}`);
+          const local = frame - letter.start;
+          const charDurationFrames = letter.length;
+          const charTravelFrames = letter.beat("travel");
           const easing = Easing.bezier(0.2, 0.8, 0.2, 1);
           const travelEasing = Easing.bezier(0.2, 0.8, 0.6, 0.85);
           const opacity = interpolate(local, [0, charDurationFrames], [0, 1], {

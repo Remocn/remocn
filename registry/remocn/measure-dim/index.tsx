@@ -7,6 +7,8 @@ import { useId } from "react";
 import { AbsoluteFill, Easing, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import { type MeasureDimElementId, measureDimTimeline } from "./timeline";
 
 const manrope = loadManrope("normal", {
   weights: ["400", "500", "600"],
@@ -73,6 +75,12 @@ export interface MeasureDimProps {
   delay?: number;
   theme?: "dark" | "light";
   speed?: number;
+  /**
+   * Moves, trims or stretches the push, the hero bar and its dimension, and
+   * the "before" bar and its dimension, by the ids in `./timeline`. Frames
+   * on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<MeasureDimElementId>;
 }
 
 const CLAMP = {
@@ -83,14 +91,6 @@ const CLAMP = {
 const EASE_IO = Easing.bezier(0.65, 0, 0.35, 1);
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
 const SLIDE = Easing.bezier(0.45, 0, 0.12, 1);
-
-const BAR_AT = 2;
-const EXT_A = 16;
-const ARR_A = 24;
-const ARR_LEN = 26;
-const GHOST_AT = ARR_A + ARR_LEN - 4;
-const EXT_B = GHOST_AT + 10;
-const ARR_B = GHOST_AT + 16;
 
 const THEMES = {
   dark: {
@@ -386,28 +386,36 @@ function ScaleLayer({
   );
 }
 
-export function MeasureDim({
-  subject,
-  label = "remocn",
-  value = "184 fps",
-  before = "60 fps",
-  beforeLabel = "Before",
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = display,
-  fontWeight = 500,
-  radius = 8,
-  logo,
-  grain = true,
-  scale = 1,
-  delay = 0,
-  theme = "dark",
-  speed = 1,
-}: MeasureDimProps) {
+export function MeasureDim(props: MeasureDimProps) {
+  const {
+    subject,
+    label = "remocn",
+    value = "184 fps",
+    before = "60 fps",
+    beforeLabel = "Before",
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = display,
+    fontWeight = 500,
+    radius = 8,
+    logo,
+    grain = true,
+    scale = 1,
+    delay = 0,
+    theme = "dark",
+    speed = 1,
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H } = useSceneConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    measureDimTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const u = Math.min(W / 1280, H / 720);
   const p = THEMES[theme];
   const fg = ink ?? p.fg;
@@ -432,22 +440,48 @@ export function MeasureDim({
   const ghostTop = heroTop + barH + 28 * u;
   const dimB = ghostTop + barH + 46 * u;
 
-  const bar = EASE_IO(interpolate(t, [BAR_AT, BAR_AT + 18], [0, 1], CLAMP));
-  const extA = EASE_OUT(interpolate(t, [EXT_A, EXT_A + 12], [0, 1], CLAMP));
-  const arrA = SLIDE(interpolate(t, [ARR_A, ARR_A + ARR_LEN], [0, 1], CLAMP));
-  const ghost = EASE_IO(
-    interpolate(t, [GHOST_AT, GHOST_AT + 16], [0, 1], CLAMP),
-  );
-  const extB = EASE_OUT(interpolate(t, [EXT_B, EXT_B + 12], [0, 1], CLAMP));
-  const arrB = SLIDE(interpolate(t, [ARR_B, ARR_B + 22], [0, 1], CLAMP));
+  const span = (e: { start: number; end: number }) => [e.start, e.end];
+  const barEl = tl.get("bar");
+  const pushEl = tl.get("push");
+  const bar = EASE_IO(interpolate(t, span(barEl), [0, 1], CLAMP));
+  const extA = EASE_OUT(interpolate(t, span(tl.get("extend")), [0, 1], CLAMP));
+  const arrA = SLIDE(interpolate(t, span(tl.get("measure")), [0, 1], CLAMP));
   const labelIn = EASE_OUT(
-    interpolate(t, [BAR_AT + 14, BAR_AT + 28], [0, 1], CLAMP),
+    interpolate(
+      t,
+      [
+        barEl.start + barEl.beat("labelAt"),
+        barEl.start + barEl.beat("labelEnd"),
+      ],
+      [0, 1],
+      CLAMP,
+    ),
   );
-  const ghostLabelIn = EASE_OUT(
-    interpolate(t, [GHOST_AT + 10, GHOST_AT + 24], [0, 1], CLAMP),
-  );
+  let ghost = 0;
+  let extB = 0;
+  let arrB = 0;
+  let ghostLabelIn = 0;
+  if (hasGhost) {
+    const ghostEl = tl.get("ghost");
+    ghost = EASE_IO(interpolate(t, span(ghostEl), [0, 1], CLAMP));
+    extB = EASE_OUT(
+      interpolate(t, span(tl.get("ghost-extend")), [0, 1], CLAMP),
+    );
+    arrB = SLIDE(interpolate(t, span(tl.get("ghost-measure")), [0, 1], CLAMP));
+    ghostLabelIn = EASE_OUT(
+      interpolate(
+        t,
+        [
+          ghostEl.start + ghostEl.beat("labelAt"),
+          ghostEl.start + ghostEl.beat("labelEnd"),
+        ],
+        [0, 1],
+        CLAMP,
+      ),
+    );
+  }
   const pushAt = (tt: number) =>
-    0.985 + 0.015 * EASE_IO(interpolate(tt, [0, ARR_B + 60], [0, 1], CLAMP));
+    0.985 + 0.015 * EASE_IO(interpolate(tt, span(pushEl), [0, 1], CLAMP));
   const push = pushAt(t);
   // The push carries everything but the background, so it takes the tilt
   // while its scale still moves text at the frame's edge.

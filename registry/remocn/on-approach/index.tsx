@@ -12,6 +12,13 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_STEPS,
+  type OnApproachElementId,
+  onApproachTimeline,
+  stepsOf,
+} from "./timeline";
 
 const redHat = loadFont("normal", {
   weights: ["400", "500"],
@@ -36,6 +43,11 @@ export interface OnApproachProps {
   delay?: number;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches the intro and single swaps, by the ids in
+   * `./timeline`. Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<OnApproachElementId>;
 }
 
 const THEMES = {
@@ -54,10 +66,6 @@ const CLAMP = {
   extrapolateLeft: "clamp",
   extrapolateRight: "clamp",
 } as const;
-
-const IN = 2;
-const FIRST = 36;
-const GROW = 18;
 
 interface Metrics {
   w: Record<string, number>;
@@ -133,29 +141,35 @@ function ScaleLayer({
   );
 }
 
-export function OnApproach({
-  lead = "Wheels up",
-  steps = ["in June.", "next week.", "tomorrow.", "today."],
-  interval = 30,
-  swapAt = FIRST,
-  accent,
-  ink,
-  background,
-  fontFamily = redHat.fontFamily,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: OnApproachProps) {
+export function OnApproach(props: OnApproachProps) {
+  const {
+    lead = "Wheels up",
+    steps = DEFAULT_STEPS,
+    accent,
+    ink,
+    background,
+    fontFamily = redHat.fontFamily,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H } = useSceneConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    onApproachTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const c = THEMES[theme];
   const hi = accent ?? c.accent;
   const stage =
     background === "transparent" ? "transparent" : (background ?? c.bg);
 
-  const list = steps.length > 0 ? steps : ["today."];
+  const list = stepsOf(steps);
   const leadSp = `${lead} `;
   const m = useMetrics(
     [leadSp, lead, ...list, ...list.map((s) => leadSp + s)],
@@ -190,17 +204,15 @@ export function OnApproach({
     return Math.min(geo, measureW / Math.max(0.1, m.w[leadSp + s]));
   });
 
-  const stepAt = (k: number) => swapAt + (k - 1) * Math.max(16, interval);
-
   let k = 0;
-  for (let i = 1; i <= last; i++) if (t >= stepAt(i)) k = i;
-  const g =
-    k > 0
-      ? interpolate(t, [stepAt(k), stepAt(k) + GROW], [0, 1], {
-          ...CLAMP,
-          easing: EASE_GROW,
-        })
-      : 1;
+  for (let i = 1; i <= last; i++) if (t >= tl.get(`step:${i}`).start) k = i;
+  const swap = k > 0 ? tl.get(`step:${k}`) : undefined;
+  const g = swap
+    ? interpolate(t, [swap.start, swap.end], [0, 1], {
+        ...CLAMP,
+        easing: EASE_GROW,
+      })
+    : 1;
   const moving = k > 0 && g < 1;
   const growing = moving && g > 0;
   const from = Math.max(0, k - 1);
@@ -224,7 +236,8 @@ export function OnApproach({
     color,
   });
 
-  const intro = interpolate(t, [IN, IN + 18], [0, 1], {
+  const introEl = tl.get("intro");
+  const intro = interpolate(t, [introEl.start, introEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });

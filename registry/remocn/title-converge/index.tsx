@@ -5,6 +5,13 @@ import { useId, useMemo } from "react";
 import { AbsoluteFill, Easing, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  hash,
+  lettersOf,
+  type TitleConvergeElementId,
+  titleConvergeTimeline,
+} from "./timeline";
 
 const { fontFamily: display } = loadFont("normal", {
   weights: ["500", "600"],
@@ -33,6 +40,12 @@ export interface TitleConvergeProps {
   grain?: boolean;
   theme?: "dark" | "light";
   speed?: number;
+  /**
+   * Moves, trims or stretches the camera, single letters and the rules, by
+   * the ids in `./timeline`. Frames on the scene timeline, after `delay` and
+   * `speed`.
+   */
+  timing?: Timing<TitleConvergeElementId>;
 }
 
 /** Manrope 500 advance widths (per mille) for ASCII 32–126. */
@@ -96,10 +109,6 @@ const LOGO_ADV: Record<string, number> = {
 const LOGO_KERN: Record<string, number> = { em: -0.015, mo: -0.006 };
 const LOGO_TRACK = -0.025;
 
-/** Frame the camera finishes easing out and the last letter locks. */
-const LOCK = 128;
-const RULES = 116;
-
 const DRIFT = Easing.bezier(0.3, 0.3, 0.2, 1);
 const CAMERA = Easing.bezier(0.4, 0, 0.3, 1);
 const SLIDE = Easing.bezier(0.22, 1, 0.36, 1);
@@ -123,11 +132,6 @@ const THEMES = {
     grain: 0.045,
   },
 } as const;
-
-function hash(i: number, salt: number) {
-  const s = Math.sin(i * 127.1 + salt * 311.7) * 43758.5453;
-  return s - Math.floor(s);
-}
 
 function advance(ch: string) {
   const code = ch.charCodeAt(0);
@@ -187,31 +191,39 @@ interface Letter {
   width: number;
 }
 
-export function TitleConverge({
-  word = "remocn",
-  accent = "#3B5BFD",
-  ink,
-  background,
-  converge = LOCK,
-  zoom = 5,
-  scale = 1,
-  delay = 0,
-  grain = true,
-  theme = "dark",
-  speed = 1,
-}: TitleConvergeProps) {
+export function TitleConverge(props: TitleConvergeProps) {
+  const {
+    word = "remocn",
+    accent = "#3B5BFD",
+    ink,
+    background,
+    zoom = 5,
+    scale = 1,
+    delay = 0,
+    grain = true,
+    theme = "dark",
+    speed = 1,
+    timing,
+  } = props;
   const t = Math.max(0, useSceneFrame() - delay) * speed;
   const glide = useGlide();
-  const { width: W, height: H } = useSceneConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    titleConvergeTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const camera = tl.get("camera");
+  const rules = tl.get("rules");
   const u = H / 720;
   const c = THEMES[theme];
   const fg = ink ?? c.fg;
-  const rulesAt = converge - (LOCK - RULES);
+  const rulesAt = rules.start;
 
   // Kerned layout in em. The logo word swaps its "r" for the R mark.
   const layout = useMemo(() => {
-    const isLogo = word.trim().toLowerCase() === "remocn";
-    const chars = Array.from(isLogo ? "Remocn" : word);
+    const { isLogo, chars } = lettersOf(word);
     const letters: Letter[] = [];
     let x = 0;
     let top = 0;
@@ -251,21 +263,27 @@ export function TitleConverge({
         const outer = Math.abs(side);
         const dx = side * (0.12 + outer * 0.6 + hash(i, 1) * 0.15);
         const dy = vertical * (0.2 + hash(i, 2) * 0.18 + outer * 0.25);
-        return {
-          dx,
-          dy,
-          end: converge - 30 + outer * 26 + hash(i, 3) * 6,
-        };
+        return { dx, dy, el: tl.get(`letter:${i}`) };
       }),
-    [letters, n, converge],
+    [letters, n, tl],
   );
 
   const s0 = zoom;
   const camAt = (tt: number) =>
-    interpolate(tt, [0, converge], [0, 1], { ...CLAMP, easing: CAMERA });
+    interpolate(tt, [camera.start, camera.end], [0, 1], {
+      ...CLAMP,
+      easing: CAMERA,
+    });
   const scaleAt = (tt: number) =>
     Math.exp(Math.log(s0) * (1 - camAt(tt))) *
-    (1 + interpolate(tt, [converge, converge + 70], [0, 1], CLAMP) * 0.014);
+    (1 +
+      interpolate(
+        tt,
+        [camera.end, camera.end + camera.beat("creep")],
+        [0, 1],
+        CLAMP,
+      ) *
+        0.014);
   const cam = camAt(t);
   const s = scaleAt(t);
   // The drawing is marked as moving while the camera moves. The step is
@@ -280,12 +298,12 @@ export function TitleConverge({
   const ruleH = Math.max(1.5, 2.5 * u);
   const ruleW = layout.total * F + 0.02 * F;
   const slide = (d: number) =>
-    interpolate(t, [rulesAt + d, rulesAt + d + 26], [0, 1], {
+    interpolate(t, [rulesAt + d, rulesAt + d + rules.beat("slide")], [0, 1], {
       ...CLAMP,
       easing: SLIDE,
     });
   const topIn = slide(0);
-  const bottomIn = slide(5);
+  const bottomIn = slide(rules.beat("bottom"));
   const travel = W / (2 * s) + ruleW / 2 + 8 * u;
   const uid = `tc${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
 
@@ -317,15 +335,28 @@ export function TitleConverge({
             <g transform={`translate(0 ${-focusY})`}>
               {letters.map((l, i) => {
                 const p = paths[i];
-                const k = DRIFT(Math.min(1, Math.max(0, t / p.end)));
+                const e = p.el;
+                const k = DRIFT(
+                  Math.min(1, Math.max(0, (t - e.start) / e.length)),
+                );
                 const off = (1 - k) * F;
                 const ox = left(i) + p.dx * off;
                 const oy = baseline + p.dy * off;
-                const flood = interpolate(t, [p.end - 16, p.end + 2], [0, 1], {
-                  ...CLAMP,
-                  easing: Easing.bezier(0.45, 0, 0.25, 1),
-                });
-                const line = interpolate(t, [p.end, p.end + 10], [1, 0], CLAMP);
+                const flood = interpolate(
+                  t,
+                  [e.end + e.beat("flood"), e.end + e.beat("lock")],
+                  [0, 1],
+                  {
+                    ...CLAMP,
+                    easing: Easing.bezier(0.45, 0, 0.25, 1),
+                  },
+                );
+                const line = interpolate(
+                  t,
+                  [e.end, e.end + e.beat("line")],
+                  [1, 0],
+                  CLAMP,
+                );
                 const glyphTop = -(l.mark ? MARK_H : heightOf(l.ch)) * F;
                 const top = glyphTop - 0.04 * F;
                 const bottom = 0.04 * F;

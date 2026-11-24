@@ -8,6 +8,12 @@ import { useId } from "react";
 import { AbsoluteFill, Easing, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_STATS,
+  type StatSequenceElementId,
+  statSequenceTimeline,
+} from "./timeline";
 
 const { fontFamily: sans } = loadFont("normal", {
   weights: ["400", "500"],
@@ -93,23 +99,13 @@ export interface StatSequenceProps {
   /** Playback multiplier. */
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches the lockup, single stats and the summary row,
+   * by the ids in `./timeline`. Frames on the scene timeline, after `delay`
+   * and `speed`.
+   */
+  timing?: Timing<StatSequenceElementId>;
 }
-
-const DEFAULT_STATS: Stat[] = [
-  {
-    value: "10,000",
-    unit: "+",
-    label: "builders",
-    detail: "shipping videos every week",
-  },
-  {
-    value: "99.9",
-    unit: "%",
-    label: "uptime",
-    detail: "render API, last 12 months",
-  },
-  { value: "4.9", unit: "★", label: "rating", detail: "from 1,200 reviews" },
-];
 
 const EASE_IO = Easing.bezier(0.65, 0, 0.35, 1);
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
@@ -456,38 +452,46 @@ function ScaleLayer({
   );
 }
 
-export function StatSequence({
-  stats = DEFAULT_STATS,
-  name = "remocn",
-  eyebrow = "in numbers",
-  logo,
-  beat = 26,
-  hold = 42,
-  stagger = 1.6,
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = sans,
-  grain = true,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: StatSequenceProps) {
+export function StatSequence(props: StatSequenceProps) {
+  const {
+    stats = DEFAULT_STATS,
+    name = "remocn",
+    eyebrow = "in numbers",
+    logo,
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = sans,
+    grain = true,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay);
-  const { width, height } = useSceneConfig();
+  const { width, height, durationInFrames } = useSceneConfig();
   const t = frame * speed;
+  const tl = useTimeline(
+    statSequenceTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const u = Math.min(width / 1280, height / 720);
   const c = THEMES[theme];
   const fg = ink ?? c.fg;
   const n = Math.max(1, stats.length);
 
-  const START = 8;
-  const inAt = (i: number) => START + i * beat;
-  const lastIn = inAt(n - 1);
-  const M = lastIn + hold; // the hero stat starts moving into the summary row
-  const MORPH = 24;
+  const intro = tl.get("intro");
+  const statEls = Array.from({ length: n }, (_, i) => tl.get(`stat:${i}`));
+  const inAt = (i: number) => statEls[i].start;
+  // A stat leaves as the next one cuts in.
+  const exitOf = (i: number) =>
+    i === n - 1 ? 1e9 : inAt(i + 1) + statEls[i + 1].beat("cutAt");
+  const summary = tl.get("summary");
+  const M = summary.start; // the hero stat starts moving into the summary row
 
   const F = 196 * u; // monumental size
   const L = width * 0.08; // left rule of the frame
@@ -497,41 +501,51 @@ export function StatSequence({
   const bigTop = height / 2 - F * 0.6;
   const rowTop = height / 2 - (F * S * 1.12 + 70 * u) / 2;
 
-  const mp = interpolate(t, [M, M + MORPH], [0, 1], {
+  const mp = interpolate(t, [M, summary.end], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
 
   // slow camera drift over the whole shot
-  const drift = interpolate(t, [0, M + MORPH + 40], [0, 1], CLAMP);
+  const drift = interpolate(t, [0, M + summary.beat("drift")], [0, 1], CLAMP);
 
   // accent bar: the cut marker. Grows from below on the first stat, swipes
   // up-and-out / up-and-in on every cut, retires as the row assembles.
   const barTop = bigTop + 0.18 * F;
   const barH = 0.72 * F;
-  let barScale = interpolate(t, [inAt(0) - 2, inAt(0) + 10], [0, 1], {
-    ...CLAMP,
-    easing: EASE_OUT,
-  });
+  const first = statEls[0];
+  let barScale = interpolate(
+    t,
+    [inAt(0) + first.beat("barAt"), inAt(0) + first.beat("barTo")],
+    [0, 1],
+    {
+      ...CLAMP,
+      easing: EASE_OUT,
+    },
+  );
   let barOrigin = "bottom";
   for (let i = 1; i < n; i++) {
     const cut = inAt(i);
-    if (t >= cut - 4 && t < cut + 1) {
-      barScale = interpolate(t, [cut - 4, cut + 1], [1, 0], {
+    const outAt = cut + statEls[i].beat("barOutAt");
+    const backAt = cut + statEls[i].beat("barInAt");
+    const backTo = cut + statEls[i].beat("barTo");
+    if (t >= outAt && t < backAt) {
+      barScale = interpolate(t, [outAt, backAt], [1, 0], {
         ...CLAMP,
         easing: EASE_IN,
       });
       barOrigin = "top";
-    } else if (t >= cut + 1 && t < cut + 10) {
-      barScale = interpolate(t, [cut + 1, cut + 10], [0, 1], {
+    } else if (t >= backAt && t < backTo) {
+      barScale = interpolate(t, [backAt, backTo], [0, 1], {
         ...CLAMP,
         easing: EASE_OUT,
       });
       barOrigin = "bottom";
     }
   }
-  if (t >= M - 2) {
-    barScale = interpolate(t, [M - 2, M + 8], [1, 0], {
+  const retireAt = M + summary.beat("barAt");
+  if (t >= retireAt) {
+    barScale = interpolate(t, [retireAt, M + summary.beat("barTo")], [1, 0], {
       ...CLAMP,
       easing: EASE_IN,
     });
@@ -578,8 +592,13 @@ export function StatSequence({
               fontFamily,
               fontSize: 17 * u,
               lineHeight: 1,
-              opacity: interpolate(t, [0, 12], [0, 1], CLAMP),
-              transform: `translateY(${interpolate(t, [0, 16], [8, 0], { ...CLAMP, easing: EASE_OUT }) * u}px)`,
+              opacity: interpolate(
+                t,
+                [intro.start, intro.start + intro.beat("fade")],
+                [0, 1],
+                CLAMP,
+              ),
+              transform: `translateY(${interpolate(t, [intro.start, intro.end], [8, 0], { ...CLAMP, easing: EASE_OUT }) * u}px)`,
             }}
           >
             {logo ??
@@ -626,8 +645,9 @@ export function StatSequence({
           {/* one monumental stat at a time */}
           {stats.map((stat, i) => {
             const isLast = i === n - 1;
+            const el = statEls[i];
             const enter = inAt(i);
-            const exit = isLast ? 1e9 : inAt(i + 1) - 5;
+            const exit = exitOf(i);
             if (t < enter - 1 || t > exit + 14) return null;
             const tx = isLast ? (n - 1) * colW * mp : 0;
             const ty = isLast ? (rowTop - bigTop) * mp : 0;
@@ -658,14 +678,14 @@ export function StatSequence({
                   fg={fg}
                   solid={ink !== undefined}
                   font={fontFamily}
-                  stagger={stagger}
+                  stagger={el.beat("stagger")}
                 />
                 <div style={{ paddingBottom: 0.2 * F }}>
                   <Caption
                     stat={stat}
                     t={t}
-                    enter={enter + 5}
-                    exit={isLast ? M - 6 : exit}
+                    enter={enter + el.beat("captionAt")}
+                    exit={isLast ? M + summary.beat("captionOut") : exit}
                     labelSize={34 * u}
                     c={c}
                     fg={fg}
@@ -681,12 +701,16 @@ export function StatSequence({
             const colLeft = L + i * colW;
             const ruleP = interpolate(
               t,
-              [M + 6 + i * 3, M + 24 + i * 3],
+              [
+                M + summary.beat("ruleAt") + i * summary.beat("ruleGap"),
+                M + summary.beat("ruleTo") + i * summary.beat("ruleGap"),
+              ],
               [0, 1],
               { ...CLAMP, easing: EASE_OUT },
             );
             const isLast = i === n - 1;
-            const figEnter = M + 8 + i * 4;
+            const figEnter =
+              M + summary.beat("figAt") + i * summary.beat("figGap");
             return (
               <div key={`row-${i}`}>
                 <div
@@ -723,7 +747,7 @@ export function StatSequence({
                       fg={fg}
                       solid={ink !== undefined}
                       font={fontFamily}
-                      stagger={stagger}
+                      stagger={statEls[i].beat("stagger")}
                     />
                   </div>
                 ) : null}
@@ -737,7 +761,9 @@ export function StatSequence({
                   <Caption
                     stat={stat}
                     t={t}
-                    enter={M + 16 + i * 4}
+                    enter={
+                      M + summary.beat("labelAt") + i * summary.beat("figGap")
+                    }
                     exit={1e9}
                     labelSize={22 * u}
                     detailSize={15 * u}
@@ -766,8 +792,16 @@ export function StatSequence({
               fontVariantNumeric: "tabular-nums",
               color: c.muted,
               opacity:
-                interpolate(t, [2, 12], [0, 1], CLAMP) *
-                interpolate(t, [M, M + 10], [1, 0], CLAMP),
+                interpolate(
+                  t,
+                  [
+                    intro.start + intro.beat("indexAt"),
+                    intro.start + intro.beat("indexAt") + intro.beat("index"),
+                  ],
+                  [0, 1],
+                  CLAMP,
+                ) *
+                interpolate(t, [M, M + summary.beat("index")], [1, 0], CLAMP),
             }}
           >
             <span
@@ -788,8 +822,10 @@ export function StatSequence({
                   <SlotText
                     text={String(i + 1).padStart(2, "0")}
                     t={t}
-                    enter={i === 0 ? 2 : inAt(i)}
-                    exit={i === n - 1 ? 1e9 : inAt(i + 1) - 5}
+                    enter={
+                      i === 0 ? intro.start + intro.beat("indexAt") : inAt(i)
+                    }
+                    exit={exitOf(i)}
                     stagger={1}
                     u={u * 0.3}
                   />

@@ -6,6 +6,8 @@ import { useId } from "react";
 import { AbsoluteFill, Easing, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import { startOf, type TMinusElementId, tMinusTimeline } from "./timeline";
 
 const { fontFamily: mono } = loadFont("normal", {
   weights: ["400", "500"],
@@ -43,6 +45,13 @@ export interface TMinusProps {
   grain?: boolean;
   theme?: "dark" | "light";
   speed?: number;
+  /**
+   * Moves, trims or stretches the count rising in, the telemetry boot,
+   * single counted seconds, the warmth, T–0, the title and the subtitle, by
+   * the ids in `./timeline`. Frames on the scene timeline, after `delay` and
+   * `speed`.
+   */
+  timing?: Timing<TMinusElementId>;
 }
 
 // Beat sheet (30fps, speed 1, from 10, beat 8):
@@ -54,7 +63,6 @@ export interface TMinusProps {
 //   89     LIFTOFF slams in where the number was; the clock flips to
 //          T+00:00:01 and keeps counting up in real seconds
 //  100–    poster: clock, LIFTOFF, subtitle, the bloom breathing at the bottom
-const FIRST = 14;
 const SLAM = Easing.bezier(0.22, 1, 0.36, 1);
 const CLAMP = {
   extrapolateLeft: "clamp",
@@ -218,41 +226,59 @@ function ScaleLayer({
   );
 }
 
-export function TMinus({
-  from = 10,
-  beat = 8,
-  title = "Liftoff",
-  subtitle = "remocn 2.0 is live",
-  stage = "Stage 1",
-  status = "Go",
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = mono,
-  bloom: bloomK = 1,
-  flash = true,
-  scale = 1,
-  delay = 0,
-  grain = true,
-  theme = "dark",
-  speed = 1,
-}: TMinusProps) {
+export function TMinus(props: TMinusProps) {
+  const {
+    from = 10,
+    title = "Liftoff",
+    subtitle = "remocn 2.0 is live",
+    stage = "Stage 1",
+    status = "Go",
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = mono,
+    bloom: bloomK = 1,
+    flash = true,
+    scale = 1,
+    delay = 0,
+    grain = true,
+    theme = "dark",
+    speed = 1,
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H, fps } = useSceneConfig();
+  const { width: W, height: H, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    tMinusTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const introEl = tl.get("intro");
+  const bootEl = tl.get("telemetry");
+  const warmEl = tl.get("warm");
+  const zeroEl = tl.get("zero");
+  const liftEl = tl.get("liftoff");
+  const subEl = tl.get("subtitle");
+  const bootAt = (k: number) => bootEl.start + k * bootEl.beat("stagger");
+  // The counted seconds and T–0, in order: the shown value is the last one
+  // started.
+  const counts = tl.lane("Count");
   const c = THEMES[theme];
   const fg = ink ?? c.ink;
   const u = Math.min(W / 1280, H / 720);
 
-  const start = Math.max(1, Math.floor(from));
-  const zeroAt = FIRST + (start - 1) * beat;
-  const liftAt = zeroAt + 3;
+  const start = startOf(from);
+  const zeroAt = zeroEl.start;
+  const liftAt = liftEl.start;
 
   // Countdown value and the frame the current value appeared.
-  const ticks =
-    t < FIRST ? 0 : Math.min(start, 1 + Math.floor((t - FIRST) / beat));
+  let ticks = 0;
+  for (const e of counts) if (t >= e.start) ticks++;
   const n = start - ticks;
-  const tickAt = ticks === 0 ? 0 : FIRST + (ticks - 1) * beat;
+  const current = ticks === 0 ? undefined : counts[ticks - 1];
+  const tickAt = current ? current.start : 0;
   const lifted = t >= liftAt;
 
   // Small clock: counts down with the big one, then up in real seconds.
@@ -269,24 +295,28 @@ export function TMinus({
   const rollP = SLAM(ramp(t, upAt - 1.5, lifted && upS === 1 ? 7 : 4));
 
   // ── Motion ────────────────────────────────────────────────────────────────
-  const snap = ticks === 0 ? 0 : kick(t - tickAt, 5);
+  const snapLen = current ? current.beat("snap") : 0;
+  const zeroSnap = zeroEl.beat("zeroSnap");
+  const snap = ticks === 0 ? 0 : kick(t - tickAt, snapLen);
   const numScale =
-    (1 + 0.045 * snap) * (n === 0 ? 1 + 0.03 * kick(t - zeroAt, 3) : 1);
-  const intro = SLAM(ramp(t, -4, 10));
+    (1 + 0.045 * snap) * (n === 0 ? 1 + 0.03 * kick(t - zeroAt, zeroSnap) : 1);
+  const intro = SLAM(ramp(t, introEl.start, introEl.length));
 
   const warm = Easing.bezier(
     0.65,
     0,
     0.35,
     1,
-  )(ramp(t, FIRST + (start - 3) * beat, 3 * beat));
-  const fire = SLAM(ramp(t, zeroAt, 16));
-  const hit = kick(t - zeroAt - 1, 7);
+  )(ramp(t, warmEl.start, warmEl.length));
+  const fire = SLAM(ramp(t, zeroAt, zeroEl.beat("fire")));
+  const hit = kick(t - zeroAt - zeroEl.beat("hitAt"), zeroEl.beat("hit"));
   const breathe = lifted ? Math.sin((t - liftAt) / 14) * 0.5 + 0.5 : 0;
 
-  const titleIn = SLAM(ramp(t, liftAt, 8));
-  const titleHit = kick(t - (liftAt + 4), 8);
-  const subIn = SLAM(ramp(t, liftAt + 9, 10));
+  const titleIn = SLAM(ramp(t, liftAt, liftEl.length));
+  const titleHitAt = liftAt + liftEl.beat("hitAt");
+  const titleHitLen = liftEl.beat("hit");
+  const titleHit = kick(t - titleHitAt, titleHitLen);
+  const subIn = SLAM(ramp(t, subEl.start, subEl.length));
 
   // ── Layout ────────────────────────────────────────────────────────────────
   const numFs = 330 * u;
@@ -375,7 +405,7 @@ export function TMinus({
             position: "absolute",
             left: margin,
             top: margin - 8 * u,
-            opacity: boot(t, 2),
+            opacity: boot(t, bootAt(0)),
           }}
         >
           <div>{stage}</div>
@@ -390,7 +420,7 @@ export function TMinus({
             right: margin,
             top: margin - 8 * u,
             textAlign: "right",
-            opacity: boot(t, 4),
+            opacity: boot(t, bootAt(1)),
           }}
         >
           <div
@@ -421,7 +451,7 @@ export function TMinus({
             position: "absolute",
             left: margin,
             bottom: margin - 8 * u,
-            opacity: boot(t, 6),
+            opacity: boot(t, bootAt(2)),
           }}
         >
           {lifted ? (
@@ -451,7 +481,7 @@ export function TMinus({
             right: margin,
             bottom: margin - 8 * u,
             textAlign: "right",
-            opacity: boot(t, 8),
+            opacity: boot(t, bootAt(3)),
           }}
         >
           <div>
@@ -514,8 +544,8 @@ export function TMinus({
               whiteSpace: "nowrap",
               transform: `translateY(${(1 - intro) * 40 * u}px) scale(${numScale})${glide(
                 midway(intro) ||
-                  (ticks > 0 && kicking(t - tickAt, 5)) ||
-                  (n === 0 && kicking(t - zeroAt, 3)),
+                  (ticks > 0 && kicking(t - tickAt, snapLen)) ||
+                  (n === 0 && kicking(t - zeroAt, zeroSnap)),
               )}`,
               opacity: intro,
             }}
@@ -546,7 +576,7 @@ export function TMinus({
             color: ink ?? c.title,
             opacity: lifted ? ramp(titleIn, 0, 0.2) : 0,
             transform: `scale(${(1.24 - 0.24 * titleIn) * (1 + 0.02 * titleHit)})${glide(
-              midway(titleIn) || kicking(t - (liftAt + 4), 8),
+              midway(titleIn) || kicking(t - titleHitAt, titleHitLen),
             )}`,
           }}
         >

@@ -12,6 +12,8 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import { countFrom, type NonstopElementId, nonstopTimeline } from "./timeline";
 
 const redHat = loadFont("normal", {
   weights: ["400", "500"],
@@ -38,6 +40,12 @@ export interface NonstopProps {
   delay?: number;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches the entry, single counts, the shrink, the "N"
+   * and the close, by the ids in `./timeline`. Frames on the scene timeline,
+   * after `delay` and `speed`.
+   */
+  timing?: Timing<NonstopElementId>;
 }
 
 const THEMES = {
@@ -55,16 +63,6 @@ const CLAMP = {
   extrapolateLeft: "clamp",
   extrapolateRight: "clamp",
 } as const;
-
-const IN = 4;
-const FIRST_STEP = 34;
-const STEP = 20;
-const ROLL = 10;
-const ZERO_HOLD = 26;
-const SHRINK = 14;
-const BOARD_GAP = 6;
-const CLOSE_GAP = 26;
-const CLOSE = 13;
 
 type Token = { id: string; ch: string };
 
@@ -190,31 +188,37 @@ function ScaleLayer({
   );
 }
 
-export function Nonstop({
-  label = "From idea to export",
-  from = 3,
-  unit = "stops",
-  interval = STEP,
-  hold = ZERO_HOLD,
-  accent,
-  ink,
-  background,
-  fontFamily = redHat.fontFamily,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: NonstopProps) {
+export function Nonstop(props: NonstopProps) {
+  const {
+    label = "From idea to export",
+    from = 3,
+    unit = "stops",
+    accent,
+    ink,
+    background,
+    fontFamily = redHat.fontFamily,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H } = useSceneConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    nonstopTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const c = THEMES[theme];
   const hi = accent ?? c.accent;
   const fg = ink ?? c.ink;
   const stage =
     background === "transparent" ? "transparent" : (background ?? c.bg);
 
-  const start = Math.max(1, Math.min(9, Math.round(from)));
+  const start = countFrom(from);
   const states = buildStates(start, unit);
   const m = useMetrics(states, label, fontFamily);
 
@@ -225,31 +229,26 @@ export function Nonstop({
   }
 
   const countSteps = start;
-  const stepAt = (k: number) => FIRST_STEP + (k - 1) * interval;
-  const zeroAt = stepAt(countSteps);
-  const shrinkAt = zeroAt + ROLL + hold;
-  const boardAt = shrinkAt + BOARD_GAP;
-  const closeAt = boardAt + SHRINK + CLOSE_GAP;
-  const changeAt = [
-    ...Array.from({ length: countSteps }, (_, i) => stepAt(i + 1)),
-    shrinkAt,
-    closeAt,
+  // Each change of the line: the counts, the shrink, the close.
+  const changes = [
+    ...Array.from({ length: countSteps }, (_, i) => tl.get(`count:${i}`)),
+    tl.get("shrink"),
+    tl.get("close"),
   ];
-  const durOf = (k: number) =>
-    k < countSteps ? ROLL : k === countSteps ? SHRINK + 4 : CLOSE;
+  const board = tl.get("board");
 
   let cur = 0;
   let mix = 0;
-  for (let k = 0; k < changeAt.length; k++) {
-    if (t >= changeAt[k]) {
+  for (let k = 0; k < changes.length; k++) {
+    if (t >= changes[k].start) {
       cur = k;
-      mix = interpolate(t, [changeAt[k], changeAt[k] + durOf(k)], [0, 1], {
+      mix = interpolate(t, [changes[k].start, changes[k].end], [0, 1], {
         ...CLAMP,
         easing: EASE_IO,
       });
     }
   }
-  const before = t < changeAt[0];
+  const before = t < changes[0].start;
   const prevIdx = before ? 0 : cur;
   const nextIdx = before ? 0 : cur + 1;
   const p = before ? 0 : mix;
@@ -264,7 +263,8 @@ export function Nonstop({
   const boxTop = base - ((1 - m.asc - m.desc) / 2 + m.asc) * F;
   const L = Math.max(16, F * 0.17);
 
-  const lineIn = interpolate(t, [IN, IN + 18], [0, 1], {
+  const enter = tl.get("enter");
+  const lineIn = interpolate(t, [enter.start, enter.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
@@ -419,7 +419,7 @@ export function Nonstop({
       let moving = midway(p);
       if (id === "N") {
         const qAt = (f: number) =>
-          interpolate(f, [boardAt, boardAt + SHRINK], [0, 1], {
+          interpolate(f, [board.start, board.end], [0, 1], {
             ...CLAMP,
             easing: EASE_OUT,
           });

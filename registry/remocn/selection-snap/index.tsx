@@ -11,6 +11,17 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import {
+  type ResolvedTimeline,
+  resolve,
+  type Timing,
+  useTimeline,
+} from "@/lib/remocn/timeline";
+import {
+  HANDLES,
+  type SelectionSnapElementId,
+  selectionSnapTimeline,
+} from "./timeline";
 
 const { fontFamily: INTER } = loadFont("normal", {
   weights: ["100", "900"],
@@ -29,6 +40,12 @@ export interface SelectionSnapProps {
   badge?: boolean;
   speed?: number;
   className?: string;
+  /**
+   * Moves, trims or stretches the intro, the snap, the weight, the colour,
+   * the edges, each handle, the badge and its count, by the ids in
+   * `./timeline`. Frames on the scene timeline, after `speed`.
+   */
+  timing?: Timing<SelectionSnapElementId>;
 }
 
 export const selectionSnapDefaults = {
@@ -42,7 +59,7 @@ export const selectionSnapDefaults = {
   selectionColor: "#0d99ff",
   badge: true,
   speed: 1,
-} satisfies Required<Omit<SelectionSnapProps, "className">>;
+} satisfies Required<Omit<SelectionSnapProps, "className" | "timing">>;
 
 /** Frame on the 30 fps timeline where every channel has come to rest. */
 export const selectionSnapLength = 38;
@@ -54,16 +71,7 @@ export const selectionSnapPadding = {
 } as const;
 
 /** Corners first, then edge midpoints, as fractions of the box. */
-export const selectionSnapHandles = [
-  [0, 0],
-  [1, 0],
-  [1, 1],
-  [0, 1],
-  [0.5, 0],
-  [1, 0.5],
-  [0.5, 1],
-  [0, 0.5],
-] as const;
+export const selectionSnapHandles = HANDLES;
 
 const CLAMP = {
   extrapolateLeft: "clamp",
@@ -121,29 +129,57 @@ export interface SelectionSnapState {
   count: number;
 }
 
-export function getSelectionSnapState(t: number): SelectionSnapState {
+const DEFAULT_SCHEDULE = resolve(selectionSnapTimeline({}, { length: 0 }));
+
+/**
+ * Every channel at time `t`. `schedule` is the component's resolved timeline;
+ * without it the default schedule is used.
+ */
+export function getSelectionSnapState(
+  t: number,
+  schedule: ResolvedTimeline<SelectionSnapElementId> = DEFAULT_SCHEDULE,
+): SelectionSnapState {
+  const intro = schedule.get("intro");
+  const snap = schedule.get("snap");
+  const weight = schedule.get("weight");
+  const tint = schedule.get("tint");
+  const edges = schedule.get("edges");
+  const badge = schedule.get("badge");
+  const count = schedule.get("count");
   return {
-    intro: interpolate(t, [0, 8], [0, 1], { ...CLAMP, easing: easeOutCubic }),
-    bracketScale: interpolate(t, [0, 8], [1.06, 1], {
+    intro: interpolate(t, [intro.start, intro.end], [0, 1], {
       ...CLAMP,
       easing: easeOutCubic,
     }),
-    snap: interpolate(t, [14, 28], [0, 1], { ...CLAMP, easing: snapEase }),
-    weight: interpolate(t, [14, 30], [0, 1], {
+    bracketScale: interpolate(t, [intro.start, intro.end], [1.06, 1], {
+      ...CLAMP,
+      easing: easeOutCubic,
+    }),
+    snap: interpolate(t, [snap.start, snap.end], [0, 1], {
+      ...CLAMP,
+      easing: snapEase,
+    }),
+    weight: interpolate(t, [weight.start, weight.end], [0, 1], {
       ...CLAMP,
       easing: easeInOutCubic,
     }),
-    tint: interpolate(t, [18, 30], [0, 1], {
+    tint: interpolate(t, [tint.start, tint.end], [0, 1], {
       ...CLAMP,
       easing: easeInOutCubic,
     }),
-    edges: interpolate(t, [16, 26], [0, 1], {
+    edges: interpolate(t, [edges.start, edges.end], [0, 1], {
       ...CLAMP,
       easing: easeInOutCubic,
     }),
-    handles: selectionSnapHandles.map((_, i) => pop(t, 24 + i, 5)),
-    badge: pop(t, 24, 8),
-    count: interpolate(t, [24, 38], [0, 1], { ...CLAMP, easing: easeOutCubic }),
+    handles: selectionSnapHandles.map((_, i) => {
+      const handle = schedule.get(`handle:${i}`);
+      return pop(t, handle.start, handle.length);
+    }),
+    badge: pop(t, badge.start, badge.length),
+    count: interpolate(t, [count.start, count.end], [0, 1], {
+      ...CLAMP,
+      easing: easeOutCubic,
+    }),
   };
 }
 
@@ -192,31 +228,39 @@ function useTextWidth(text: string, font: string) {
   return width;
 }
 
-export function SelectionSnap({
-  text = selectionSnapDefaults.text,
-  fontSize = selectionSnapDefaults.fontSize,
-  fontFamily = selectionSnapDefaults.fontFamily,
-  fromWeight = selectionSnapDefaults.fromWeight,
-  toWeight = selectionSnapDefaults.toWeight,
-  color = selectionSnapDefaults.color,
-  accent = selectionSnapDefaults.accent,
-  selectionColor = selectionSnapDefaults.selectionColor,
-  badge = selectionSnapDefaults.badge,
-  speed = selectionSnapDefaults.speed,
-  className,
-}: SelectionSnapProps) {
+export function SelectionSnap(props: SelectionSnapProps) {
+  const {
+    text = selectionSnapDefaults.text,
+    fontSize = selectionSnapDefaults.fontSize,
+    fontFamily = selectionSnapDefaults.fontFamily,
+    fromWeight = selectionSnapDefaults.fromWeight,
+    toWeight = selectionSnapDefaults.toWeight,
+    color = selectionSnapDefaults.color,
+    accent = selectionSnapDefaults.accent,
+    selectionColor = selectionSnapDefaults.selectionColor,
+    badge = selectionSnapDefaults.badge,
+    speed = selectionSnapDefaults.speed,
+    className,
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = useSceneFrame();
-  const { fps, height } = useSceneConfig();
+  const { fps, height, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    selectionSnapTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const unit = height / 720;
   const t = getSelectionSnapTime(frame, { fps, speed });
-  const state = getSelectionSnapState(t);
+  const state = getSelectionSnapState(t, tl);
   // The back ease overshoots, so the badge counts as moving while its value
   // differs from either neighbour, not while a progress is midway.
   const step = getSelectionSnapTime(1, { fps, speed });
   const badgeMoving =
-    Math.abs(getSelectionSnapState(t + step).badge - state.badge) > 1e-5 ||
-    Math.abs(state.badge - getSelectionSnapState(t - step).badge) > 1e-5;
+    Math.abs(getSelectionSnapState(t + step, tl).badge - state.badge) > 1e-5 ||
+    Math.abs(state.badge - getSelectionSnapState(t - step, tl).badge) > 1e-5;
 
   const size = fontSize * unit;
   const pad = getSelectionSnapPadding(state.snap);

@@ -4,6 +4,12 @@ import type { ComponentType } from "react";
 import { interpolate, spring } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  constellationCount,
+  type EcosystemConstellationElementId,
+  ecosystemConstellationTimeline,
+} from "./timeline";
 
 export interface EcosystemConstellationProps {
   satelliteCount?: number;
@@ -11,6 +17,11 @@ export interface EcosystemConstellationProps {
   accentColor?: string;
   speed?: number;
   className?: string;
+  /**
+   * Moves, trims or stretches each satellite flying into orbit, by the ids
+   * in `./timeline`. Frames on the scene timeline, after `speed`.
+   */
+  timing?: Timing<EcosystemConstellationElementId>;
 }
 
 const FONT_FAMILY =
@@ -136,21 +147,26 @@ const SATELLITE_BRANDS: SatelliteBrand[] = [
   { Logo: DiscordMark, bg: "#5865f2" },
 ];
 
-export function EcosystemConstellation({
-  satelliteCount = 6,
-  centerLabel = "V",
-  accentColor = "#a855f7",
-  speed = 1,
-  className,
-}: EcosystemConstellationProps) {
+export function EcosystemConstellation(props: EcosystemConstellationProps) {
+  const {
+    satelliteCount = 6,
+    centerLabel = "V",
+    accentColor = "#a855f7",
+    speed = 1,
+    className,
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = useSceneFrame() * speed;
-  const { fps } = useSceneConfig();
-
-  const count = Math.max(
-    3,
-    Math.min(SATELLITE_BRANDS.length, Math.floor(satelliteCount)),
+  const { fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    ecosystemConstellationTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
   );
+
+  const count = constellationCount(satelliteCount);
 
   // Center pulse (0..1)
   const pulse = (Math.sin(frame / 12) + 1) / 2;
@@ -165,12 +181,12 @@ export function EcosystemConstellation({
 
   // Per-satellite assembly spring (staggered)
   const satellites = Array.from({ length: count }).map((_, i) => {
-    const stagger = i * 4;
+    const assemble = tl.get(`satellite:${i}`);
     const sp = spring({
-      frame: frame - stagger,
+      frame: frame - assemble.start,
       fps,
       config: { mass: 1.1, damping: 16, stiffness: 70 },
-      durationInFrames: 50,
+      durationInFrames: assemble.length,
     });
     const radiusFactor = interpolate(sp, [0, 1], [offscreenRadius, 1]);
 

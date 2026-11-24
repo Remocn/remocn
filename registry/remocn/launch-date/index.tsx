@@ -6,6 +6,18 @@ import { useId } from "react";
 import { AbsoluteFill, Easing, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import {
+  type ResolvedElement,
+  type Timing,
+  useTimeline,
+} from "@/lib/remocn/timeline";
+import {
+  DEFAULT_LAUNCH_DATE,
+  daysInMonth,
+  type LaunchDateElementId,
+  launchDateTimeline,
+  weekdayOf,
+} from "./timeline";
 
 const { fontFamily: sora } = loadFont("normal", {
   weights: ["300", "400", "500"],
@@ -62,6 +74,12 @@ export interface LaunchDateProps {
   /** Playback multiplier. */
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches the grid, the camera, the header, the days,
+   * the sweep, the circle, the fall, the lockup and the label, by the ids in
+   * `./timeline`. Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<LaunchDateElementId>;
 }
 
 const MONTHS = [
@@ -128,29 +146,6 @@ const PALETTES = {
 
 type Palette = (typeof PALETTES)[keyof typeof PALETTES];
 
-/** Day of week, 0 = Monday (Sakamoto). Pure arithmetic, no Date. */
-function weekday(year: number, month: number, day: number) {
-  const t = [0, 3, 2, 5, 0, 3, 5, 1, 4, 6, 2, 4];
-  const y = month < 3 ? year - 1 : year;
-  const sun0 =
-    (y +
-      Math.floor(y / 4) -
-      Math.floor(y / 100) +
-      Math.floor(y / 400) +
-      t[month - 1] +
-      day) %
-    7;
-  return (sun0 + 6) % 7;
-}
-
-function daysIn(year: number, month: number) {
-  if (month === 2) {
-    const leap = (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
-    return leap ? 29 : 28;
-  }
-  return [4, 6, 9, 11].includes(month) ? 30 : 31;
-}
-
 const pad = (n: number) => String(n).padStart(2, "0");
 
 function Grain({ opacity }: { opacity: number }) {
@@ -179,6 +174,9 @@ function Grain({ opacity }: { opacity: number }) {
 
 interface CellProps {
   t: number;
+  days: ResolvedElement<LaunchDateElementId>;
+  sweep: ResolvedElement<LaunchDateElementId>;
+  fall: ResolvedElement<LaunchDateElementId>;
   day: number;
   col: number;
   row: number;
@@ -197,6 +195,9 @@ interface CellProps {
 
 function DayCell({
   t,
+  days,
+  sweep,
+  fall: fallEl,
   day,
   col,
   row,
@@ -213,23 +214,30 @@ function DayCell({
   fontWeight,
 }: CellProps) {
   // settle in with the grid
-  const appear = interpolate(t, [8 + row * 2.5, 24 + row * 2.5], [0, 1], {
+  const at = days.start + row * days.beat("row");
+  const appear = interpolate(t, [at, at + days.beat("fade")], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
   // sweep: day 1 → launch day across ~28 frames
-  const step = 28 / Math.max(1, launchDay);
-  const hit = 16 + (day - 1) * step;
+  const hit = sweep.start + (day - 1) * sweep.beat("step");
   const swept = day <= launchDay;
   const flash = swept
-    ? interpolate(t, [hit, hit + 3, hit + 14], [0, 1, 0], CLAMP)
+    ? interpolate(
+        t,
+        [hit, hit + sweep.beat("flashPeak"), hit + sweep.beat("flash")],
+        [0, 1, 0],
+        CLAMP,
+      )
     : 0;
-  const after = swept ? interpolate(t, [hit, hit + 10], [0, 1], CLAMP) : 0;
+  const after = swept
+    ? interpolate(t, [hit, hit + sweep.beat("lit")], [0, 1], CLAMP)
+    : 0;
   const numO = appear * (0.38 + 0.62 * flash + 0.22 * after * (1 - flash));
   // fall away: ripple outward from the launch day
   const dist = Math.hypot(col - heroCol, (row - heroRow) * 1.3);
-  const f0 = 90 + dist * 2.2;
-  const fall = interpolate(t, [f0, f0 + 18], [0, 1], {
+  const f0 = fallEl.start + dist * fallEl.beat("ripple");
+  const fall = interpolate(t, [f0, f0 + fallEl.beat("drop")], [0, 1], {
     ...CLAMP,
     easing: EASE_IN,
   });
@@ -295,32 +303,54 @@ function ScaleLayer({
   );
 }
 
-export function LaunchDate({
-  date = { month: 10, day: 30, year: 2026 },
-  label = "Coming soon",
-  order = "month-day",
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = sora,
-  fontWeight = 300,
-  scale = 1,
-  delay = 0,
-  grain = true,
-  speed = 1,
-  theme = "dark",
-}: LaunchDateProps) {
+export function LaunchDate(props: LaunchDateProps) {
+  const {
+    date = DEFAULT_LAUNCH_DATE,
+    label = "Coming soon",
+    order = "month-day",
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = sora,
+    fontWeight = 300,
+    scale = 1,
+    delay = 0,
+    grain = true,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width, height } = useSceneConfig();
+  const { width, height, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    launchDateTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const linesEl = tl.get("lines");
+  const settleEl = tl.get("settle");
+  const headerEl = tl.get("header");
+  const daysEl = tl.get("days");
+  const sweepEl = tl.get("sweep");
+  const pushEl = tl.get("push");
+  const circleEl = tl.get("circle");
+  const fallEl = tl.get("fall");
+  const driftEl = tl.get("drift");
+  const handEl = tl.get("hand");
+  const stopEl = tl.get("stop");
+  const echoEl = tl.get("echo");
+  const otherEl = tl.get("other");
+  const labelEl = tl.get("label");
   const u = height / 720;
   const p: Palette = PALETTES[theme];
   const fg = ink ?? p.fg;
 
   const month = Math.min(12, Math.max(1, Math.round(date.month)));
-  const total = daysIn(date.year, month);
+  const total = daysInMonth(date.year, month);
   const launchDay = Math.min(total, Math.max(1, Math.round(date.day)));
-  const lead = weekday(date.year, month, 1);
+  const lead = weekdayOf(date.year, month, 1);
   const rows = Math.ceil((lead + total) / 7);
 
   // ---- calendar layout (grid space, origin at the grid's top-left) ----
@@ -340,14 +370,14 @@ export function LaunchDate({
   // ---- camera: screen = C + (g - F) * s ----
   const cx = width / 2;
   const cy = height * 0.5;
-  const push = interpolate(t, [20, 90], [0, 1], {
+  const push = interpolate(t, [pushEl.start, pushEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_PUSH,
   });
   const S = 2.5;
   const s =
     interpolate(push, [0, 1], [0.94, S]) *
-    interpolate(t, [0, 20], [0.97, 1], CLAMP);
+    interpolate(t, [settleEl.start, settleEl.end], [0.97, 1], CLAMP);
   const fx = interpolate(push, [0, 1], [gridW / 2, heroGX]);
   const fy = interpolate(push, [0, 1], [gridH / 2, heroGY]);
   const toScreen = (gx: number, gy: number) => ({
@@ -361,8 +391,24 @@ export function LaunchDate({
   const gridRestX = cx - heroGX * S;
   const gridRestY = cy - heroGY * S;
   const dof = interpolate(push, [0.35, 1], [0, 2.4 * u], CLAMP);
-  const linesOut = interpolate(t, [86, 104], [1, 0], CLAMP);
-  const headOut = interpolate(t, [60, 84], [1, 0], CLAMP);
+  const linesOut = interpolate(
+    t,
+    [
+      fallEl.start + fallEl.beat("linesAt"),
+      fallEl.start + fallEl.beat("lines"),
+    ],
+    [1, 0],
+    CLAMP,
+  );
+  const headOut = interpolate(
+    t,
+    [
+      headerEl.start + headerEl.beat("outAt"),
+      headerEl.start + headerEl.beat("out"),
+    ],
+    [1, 0],
+    CLAMP,
+  );
 
   // ---- lockup (screen space) ----
   const F = Math.min(height * 0.34, (width * 0.7) / 2.7);
@@ -380,7 +426,10 @@ export function LaunchDate({
   const dotY = lockCY + F * 0.364 - dotD / 2;
 
   // hero day: follows its cell, then glides to the lockup slot
-  const hand = interpolate(t, [92, 120], [0, 1], { ...CLAMP, easing: EASE_IO });
+  const hand = interpolate(t, [handEl.start, handEl.end], [0, 1], {
+    ...CLAMP,
+    easing: EASE_IO,
+  });
   const heroCell = toScreen(heroGX, heroGY);
   const heroFont0 = cellH * 0.3 * s;
   const heroX = interpolate(hand, [0, 1], [heroCell.x, daySlotX]);
@@ -391,30 +440,47 @@ export function LaunchDate({
   // the growth are a transform, for the same reason as the grid.
   const heroK = heroFont / F;
   const heroTrack = interpolate(hand, [0, 1], [-0.02, -0.06]);
+  const heroAt = daysEl.start + heroRow * daysEl.beat("row");
   const heroAppear = interpolate(
     t,
-    [8 + heroRow * 2.5, 24 + heroRow * 2.5],
+    [heroAt, heroAt + daysEl.beat("fade")],
     [0, 1],
     { ...CLAMP, easing: EASE_OUT },
   );
-  const heroHit = 16 + (launchDay - 1) * (28 / Math.max(1, launchDay));
-  const heroLit = interpolate(t, [heroHit, heroHit + 3], [0.38, 1], CLAMP);
+  const heroHit = sweepEl.start + (launchDay - 1) * sweepEl.beat("step");
+  const heroLit = interpolate(
+    t,
+    [heroHit, heroHit + sweepEl.beat("flashPeak")],
+    [0.38, 1],
+    CLAMP,
+  );
 
   // circle: draws around the day, rides along with it, then tightens into
   // the full stop of the lockup
-  const draw = interpolate(t, [64, 90], [0, 1], { ...CLAMP, easing: EASE_OUT });
+  const draw = interpolate(t, [circleEl.start, circleEl.end], [0, 1], {
+    ...CLAMP,
+    easing: EASE_OUT,
+  });
   const ringW0 = Math.max(2, 2.5 * u * (s / S));
   const rideR = heroFont * interpolate(hand, [0, 1], [1.2, 0.7]);
   const rideW = ringW0 * interpolate(hand, [0, 1], [1, 1.7]);
-  const shrink = interpolate(t, [114, 136], [0, 1], {
+  const shrink = interpolate(t, [stopEl.start, stopEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
   // stays a hairline while it tightens, fills only once it is dot-sized
-  const close = interpolate(t, [124, 134], [0, 1], {
-    ...CLAMP,
-    easing: EASE_IO,
-  });
+  const close = interpolate(
+    t,
+    [
+      stopEl.start + stopEl.beat("closeAt"),
+      stopEl.start + stopEl.beat("close"),
+    ],
+    [0, 1],
+    {
+      ...CLAMP,
+      easing: EASE_IO,
+    },
+  );
   const outerR = interpolate(shrink, [0, 1], [rideR + rideW / 2, dotD / 2]);
   const ringW = Math.min(outerR, interpolate(close, [0, 1], [rideW, outerR]));
   const ringR = outerR - ringW / 2;
@@ -426,31 +492,46 @@ export function LaunchDate({
 
   // the echo: as the full stop lands, the ring it came from rings out once
   // more, wide, and stays behind the lockup as a halo of the same light
-  const echo = interpolate(t, [124, 164], [0, 1], {
+  const echo = interpolate(t, [echoEl.start, echoEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
   const echoR = dotD / 2 + (height * 0.37 - dotD / 2) * echo;
-  const echoO = interpolate(t, [124, 130], [0, 1], CLAMP);
-  const haloSpin = interpolate(t, [124, 195], [-30, 10], CLAMP);
+  const echoO = interpolate(
+    t,
+    [echoEl.start, echoEl.start + echoEl.beat("fade")],
+    [0, 1],
+    CLAMP,
+  );
+  const haloSpin = interpolate(
+    t,
+    [echoEl.start, echoEl.start + echoEl.beat("spin")],
+    [-30, 10],
+    CLAMP,
+  );
   const haloId = `halo${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
   const blurId = `hb${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
 
   // the other half of the lockup
-  const other = interpolate(t, [128, 152], [0, 1], {
+  const other = interpolate(t, [otherEl.start, otherEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
-  const labelP = (d: number) =>
-    interpolate(t, [140 + d, 164 + d], [0, 1], { ...CLAMP, easing: EASE_OUT });
+  const labelP = (k: number) => {
+    const at = labelEl.start + k * labelEl.beat("stagger");
+    return interpolate(t, [at, at + labelEl.beat("rise")], [0, 1], {
+      ...CLAMP,
+      easing: EASE_OUT,
+    });
+  };
   const labelTop = lockCY + F * 0.5 + 40 * u;
   const otherValue = pad(month);
-  const fullDate = `${WEEKDAYS[weekday(date.year, month, launchDay)]}, ${MONTHS[month - 1]} ${launchDay}, ${date.year}`;
+  const fullDate = `${WEEKDAYS[weekdayOf(date.year, month, launchDay)]}, ${MONTHS[month - 1]} ${launchDay}, ${date.year}`;
 
   const lines: React.ReactNode[] = [];
   for (let r = 0; r <= rows; r++) {
-    const d = r * 2;
-    const k = interpolate(t, [d, d + 16], [0, 1], {
+    const d = linesEl.start + r * linesEl.beat("stagger");
+    const k = interpolate(t, [d, d + linesEl.beat("draw")], [0, 1], {
       ...CLAMP,
       easing: EASE_IO,
     });
@@ -471,8 +552,9 @@ export function LaunchDate({
     );
   }
   for (let c = 1; c < 7; c++) {
-    const d = 4 + c * 2;
-    const k = interpolate(t, [d, d + 16], [0, 1], {
+    const d =
+      linesEl.start + linesEl.beat("colsAt") + c * linesEl.beat("stagger");
+    const k = interpolate(t, [d, d + linesEl.beat("draw")], [0, 1], {
       ...CLAMP,
       easing: EASE_IO,
     });
@@ -500,6 +582,9 @@ export function LaunchDate({
       <DayCell
         key={d}
         t={t}
+        days={daysEl}
+        sweep={sweepEl}
+        fall={fallEl}
         day={d}
         col={i % 7}
         row={Math.floor(i / 7)}
@@ -519,11 +604,11 @@ export function LaunchDate({
   }
 
   // a slow push that never quite stops, so the hold stays alive
-  const drift = interpolate(t, [90, 195], [1, 1.035], CLAMP);
+  const drift = interpolate(t, [driftEl.start, driftEl.end], [1, 1.035], CLAMP);
   // The camera moves until 90 and the drift takes over from there, so the
   // whole foreground is in motion from the first frame to the last.
-  const moving = t > 0 && t < 195;
-  const headIn = interpolate(t, [4, 26], [0, 1], {
+  const moving = t > 0 && t < driftEl.end;
+  const headIn = interpolate(t, [headerEl.start, headerEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
@@ -825,7 +910,7 @@ export function LaunchDate({
                 width: Math.max(1, u),
                 height: 20 * u,
                 background: p.line,
-                transform: `scaleY(${labelP(3)})`,
+                transform: `scaleY(${labelP(1)})`,
               }}
             />
             <span
@@ -834,8 +919,8 @@ export function LaunchDate({
                 fontWeight: 400,
                 letterSpacing: "-0.015em",
                 fontVariantNumeric: "tabular-nums",
-                opacity: labelP(6),
-                transform: `translateY(${(1 - labelP(6)) * 12 * u}px)`,
+                opacity: labelP(2),
+                transform: `translateY(${(1 - labelP(2)) * 12 * u}px)`,
               }}
             >
               {fullDate}

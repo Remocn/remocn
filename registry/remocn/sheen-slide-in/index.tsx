@@ -1,8 +1,14 @@
 "use client";
 
 import { Easing, interpolate } from "remotion";
-import { useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  EXIT_FRAMES,
+  type SheenSlideInElementId,
+  sheenSlideInTimeline,
+} from "./timeline";
 
 export interface SheenSlideInProps {
   text: string;
@@ -13,76 +19,91 @@ export interface SheenSlideInProps {
   fontWeight?: number;
   speed?: number;
   className?: string;
+  /**
+   * Moves, trims or stretches the slide, the sheen and the exit, by the ids
+   * in `./timeline`. Frames on the scene timeline, after `speed`.
+   */
+  timing?: Timing<SheenSlideInElementId>;
 }
 
 const SETTLE_AMP_EM = 1.8;
-const SETTLE_TAU = 2.5;
 const CREEP_AMP_EM = 0.28;
-const CREEP_TAU = 12;
-const FADE_FRAMES = 4;
-const SHEEN_IN_START = 0;
-const SHEEN_IN_END = 4;
-const SHEEN_SWEEP_END = 48;
-const SHEEN_OUT_START = 48;
-const SHEEN_OUT_END = 58;
-const EXIT_FRAMES = 4;
 const EXIT_SCALE = 0.9;
 
 export function sheenSlideInLength(exitAt = 60): number {
   return exitAt + EXIT_FRAMES;
 }
 
-function travelEm(frame: number): number {
+function travelEm(frame: number, settleTau: number, creepTau: number): number {
   return (
-    SETTLE_AMP_EM * Math.exp(-frame / SETTLE_TAU) +
-    CREEP_AMP_EM * Math.exp(-frame / CREEP_TAU)
+    SETTLE_AMP_EM * Math.exp(-frame / settleTau) +
+    CREEP_AMP_EM * Math.exp(-frame / creepTau)
   );
 }
 
 const exitEasing = Easing.out(Easing.quad);
 const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
 
-export function SheenSlideIn({
-  text,
-  exitAt = 60,
-  fontSize = 72,
-  baseColor = "#18181b",
-  sheenColor = "#4f8ef7",
-  fontWeight = 400,
-  speed = 1,
-  className,
-}: SheenSlideInProps) {
+export function SheenSlideIn(props: SheenSlideInProps) {
+  const {
+    text,
+    fontSize = 72,
+    baseColor = "#18181b",
+    sheenColor = "#4f8ef7",
+    fontWeight = 400,
+    speed = 1,
+    className,
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = useSceneFrame() * speed;
+  const { durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    sheenSlideInTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const enter = tl.get("enter");
+  const sheen = tl.get("sheen");
+  const leave = tl.get("exit");
 
-  const x = fontSize * travelEm(frame);
+  const x =
+    fontSize *
+    travelEm(frame - enter.start, enter.beat("settle"), enter.beat("creep"));
 
-  const exit = interpolate(frame, [exitAt, exitAt + EXIT_FRAMES], [0, 1], {
+  const exit = interpolate(frame, [leave.start, leave.end], [0, 1], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
     easing: exitEasing,
   });
 
-  const opacity = interpolate(frame, [0, FADE_FRAMES], [0, 1], {
+  const opacity = interpolate(frame, [enter.start, enter.end], [0, 1], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
   });
 
+  const sheenOutAt = sheen.start + sheen.beat("outAt");
   const sheenOpacity =
-    interpolate(frame, [SHEEN_IN_START, SHEEN_IN_END], [0, 1], {
+    interpolate(frame, [sheen.start, sheen.start + sheen.beat("in")], [0, 1], {
       extrapolateLeft: "clamp",
       extrapolateRight: "clamp",
     }) *
-    interpolate(frame, [SHEEN_OUT_START, SHEEN_OUT_END], [1, 0], {
+    interpolate(frame, [sheenOutAt, sheenOutAt + sheen.beat("out")], [1, 0], {
       extrapolateLeft: "clamp",
       extrapolateRight: "clamp",
     });
 
-  const sheenPosition = interpolate(frame, [0, SHEEN_SWEEP_END], [160, -60], {
-    extrapolateLeft: "clamp",
-    extrapolateRight: "clamp",
-    easing: Easing.bezier(0.42, 0, 0.58, 1),
-  });
+  const sheenPosition = interpolate(
+    frame,
+    [sheen.start, sheen.start + sheen.beat("sweep")],
+    [160, -60],
+    {
+      extrapolateLeft: "clamp",
+      extrapolateRight: "clamp",
+      easing: Easing.bezier(0.42, 0, 0.58, 1),
+    },
+  );
 
   const textStyle: React.CSSProperties = {
     fontSize,

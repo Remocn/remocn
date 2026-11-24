@@ -12,6 +12,14 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  type AnswerFirstElementId,
+  answerFirstTimeline,
+  DEFAULT_ANSWER,
+  DEFAULT_QUESTION,
+  split,
+} from "./timeline";
 
 const outfit = loadFont("normal", {
   weights: ["400", "500"],
@@ -37,6 +45,12 @@ export interface AnswerFirstProps {
   delay?: number;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches single words of the answer and the question
+   * and the move into the corner, by the ids in `./timeline`. Frames on the
+   * scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<AnswerFirstElementId>;
 }
 
 const THEMES = {
@@ -58,15 +72,6 @@ const CLAMP = {
   extrapolateLeft: "clamp",
   extrapolateRight: "clamp",
 } as const;
-
-const A_LEN = 14;
-const A_STAGGER = 3;
-const MOVE_AT = 34;
-const MOVE_LEN = 26;
-const Q_AT = 46;
-const Q_STAGGER = 4;
-const Q_LEN = 14;
-const MIN_HOLD = 26;
 
 let measureCtx: CanvasRenderingContext2D | null = null;
 
@@ -126,10 +131,6 @@ interface Layout {
   baseline: number;
   cap: number;
   portrait: boolean;
-}
-
-function split(s: string) {
-  return s.split(/\s+/).filter(Boolean);
 }
 
 function toRow(family: string, words: string[], track: number): Row {
@@ -264,23 +265,29 @@ function ScaleLayer({
   );
 }
 
-export function AnswerFirst({
-  answer = "A pull request.",
-  question = "Who made this video?",
-  accent,
-  ink,
-  background,
-  fontFamily = outfit.fontFamily,
-  moveAt = MOVE_AT,
-  stagger = Q_STAGGER,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: AnswerFirstProps) {
+export function AnswerFirst(props: AnswerFirstProps) {
+  const {
+    answer = DEFAULT_ANSWER,
+    question = DEFAULT_QUESTION,
+    accent,
+    ink,
+    background,
+    fontFamily = outfit.fontFamily,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay);
   const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    answerFirstTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const c = THEMES[theme];
   const hi = accent ?? c.accent;
   const fg = ink ?? c.ink;
@@ -292,7 +299,6 @@ export function AnswerFirst({
     () => (ready ? buildLayout(fontFamily, answer, question, W, H) : null),
     [ready, fontFamily, answer, question, W, H],
   );
-  const qAt = Q_AT + (moveAt - MOVE_AT);
 
   if (!layout) {
     return (
@@ -300,11 +306,8 @@ export function AnswerFirst({
     );
   }
 
-  const qCount = layout.question.reduce((n, r) => n + r.words.length, 0);
-  const motionEnd = qAt + (qCount - 1) * stagger + Q_LEN;
-  const room = durationInFrames * speed - MIN_HOLD;
-  const k = Math.max(0.55, Math.min(1, room / motionEnd));
-  const t = (frame * speed) / k;
+  const t = frame * speed;
+  const move = tl.get("move");
 
   const { F1, F2, FQ, baseline, cap, answerW, portrait } = layout;
   const mx = W * (portrait ? 0.08 : 0.07);
@@ -317,11 +320,16 @@ export function AnswerFirst({
   const bx1 = W - mx - answerW * F2;
   const by1 = H - my - visBottom * F2;
   const geometry = (tt: number) => {
-    const p = interpolate(tt, [moveAt, moveAt + MOVE_LEN], [0, 1], {
+    const p = interpolate(tt, [move.start, move.end], [0, 1], {
       ...CLAMP,
       easing: EASE_MOVE,
     });
-    const creep = interpolate(tt, [A_LEN, moveAt], [0, 0.02], CLAMP);
+    const creep = interpolate(
+      tt,
+      [move.start + move.beat("creep"), move.start],
+      [0, 0.02],
+      CLAMP,
+    );
     const s = Math.exp(Math.log(sEnd) * p) * (1 + creep * (1 - p));
     const bx0 = W / 2 - (answerW * F1 * s) / 2;
     const by0 = H / 2 - ((visTop + visBottom) / 2) * F1 * s;
@@ -336,7 +344,8 @@ export function AnswerFirst({
   // The creep and the move chain into each other, so motion is read off the
   // neighbouring frames: a scale step weighed by the block's width, and the
   // vertical travel.
-  const blockMoving = [t - speed / k, t + speed / k].some((tt) => {
+  // One composition frame either side, on the scene timeline.
+  const blockMoving = [t - speed, t + speed].some((tt) => {
     const o = geometry(tt);
     return (
       Math.abs(o.s - s) * answerW * F1 > 1e-3 || Math.abs(o.by - by) > 1e-3
@@ -366,12 +375,11 @@ export function AnswerFirst({
       >
         {row.words.map((w) => {
           const i = wordIndex++;
-          const q = interpolate(
-            t,
-            [i * A_STAGGER, i * A_STAGGER + A_LEN],
-            [0, 1],
-            { ...CLAMP, easing: EASE_OUT },
-          );
+          const word = tl.get(`answer:${i}`);
+          const q = interpolate(t, [word.start, word.end], [0, 1], {
+            ...CLAMP,
+            easing: EASE_OUT,
+          });
           return (
             <div
               key={`aw-${i}`}
@@ -415,8 +423,8 @@ export function AnswerFirst({
     >
       {row.words.map((w) => {
         const i = qIndex++;
-        const at = qAt + i * stagger;
-        const q = interpolate(t, [at, at + Q_LEN], [0, 1], {
+        const word = tl.get(`question:${i}`);
+        const q = interpolate(t, [word.start, word.end], [0, 1], {
           ...CLAMP,
           easing: EASE_OUT,
         });

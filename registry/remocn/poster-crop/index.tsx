@@ -14,6 +14,12 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  COLUMNS,
+  type PosterCropElementId,
+  posterCropTimeline,
+} from "./timeline";
 
 const { fontFamily: display } = loadBricolage("normal", {
   weights: ["400", "500"],
@@ -50,10 +56,13 @@ export interface PosterCropProps {
   grain?: boolean;
   theme?: "dark" | "light";
   speed?: number;
+  /**
+   * Moves, trims or stretches the camera's drift, pull and push, the grid
+   * and the labels, by the ids in `./timeline`. Frames on the scene
+   * timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<PosterCropElementId>;
 }
-
-const PULL_START = 8;
-const PULL_END = 104;
 
 /** Bricolage Grotesque 500 advance widths (per 1000 em) for ASCII 32–126. */
 const BRICOLAGE_500 = [
@@ -304,35 +313,44 @@ function ScaleLayer({
   );
 }
 
-export function PosterCrop({
-  title = "Launch films,\nas code.",
-  kicker = "remocn 3.0",
-  meta = "Oct 24, 2026",
-  note = "Production-ready motion for launch videos. Install a component, drop in your words, render.",
-  logo,
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = display,
-  pull: pullLen = PULL_END - PULL_START,
-  scale = 1,
-  delay = 0,
-  grain = true,
-  theme = "dark",
-  speed = 1,
-}: PosterCropProps) {
+export function PosterCrop(props: PosterCropProps) {
+  const {
+    title = "Launch films,\nas code.",
+    kicker = "remocn 3.0",
+    meta = "Oct 24, 2026",
+    note = "Production-ready motion for launch videos. Install a component, drop in your words, render.",
+    logo,
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = display,
+    scale = 1,
+    delay = 0,
+    grain = true,
+    theme = "dark",
+    speed = 1,
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H } = useSceneConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    posterCropTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const driftEl = tl.get("drift");
+  const pullEl = tl.get("pull");
+  const pushEl = tl.get("push");
+  const gridEl = tl.get("grid");
+  const labelsEl = tl.get("labels");
   const u = H / 720;
   const c = THEMES[theme];
   const fg = ink ?? c.fg;
   const stage =
     background === "transparent" ? "transparent" : (background ?? c.bg);
   const measure = useEm(fontFamily);
-  const pullEnd = PULL_START + pullLen;
-  const shift = pullEnd - PULL_END;
-
   const margin = 40 * u;
   const header = margin + 30 * u;
   const contentW = W - margin * 2;
@@ -360,12 +378,12 @@ export function PosterCrop({
   };
 
   const camera = (tt: number) => {
-    const pull = interpolate(tt, [PULL_START, pullEnd], [0, 1], {
+    const pull = interpolate(tt, [pullEl.start, pullEl.end], [0, 1], {
       ...CLAMP,
       easing: EASE_IO,
     });
-    const push = interpolate(tt, [pullEnd, pullEnd + 60], [0, 1], CLAMP);
-    const drift = interpolate(tt, [0, PULL_START + 30], [1, 0], {
+    const push = interpolate(tt, [pushEl.start, pushEl.end], [0, 1], CLAMP);
+    const drift = interpolate(tt, [driftEl.start, driftEl.end], [1, 0], {
       ...CLAMP,
       easing: Easing.bezier(0.33, 0, 0.67, 1),
     });
@@ -391,17 +409,26 @@ export function PosterCrop({
   );
 
   const hair = Math.max(1, u);
-  const grid = (d: number) =>
-    interpolate(t, [44 + shift + d, 92 + shift + d], [0, 1], {
-      ...CLAMP,
-      easing: EASE_IO,
-    });
-  const label = (d: number) =>
-    interpolate(t, [80 + shift + d, 104 + shift + d], [0, 1], {
-      ...CLAMP,
-      easing: EASE_OUT,
-    });
-  const columns = 6;
+  // Line `k` of the grid, label `k` of the three.
+  const grid = (k: number) => {
+    const d = k * gridEl.beat("stagger");
+    return interpolate(
+      t,
+      [gridEl.start + d, gridEl.start + gridEl.beat("draw") + d],
+      [0, 1],
+      { ...CLAMP, easing: EASE_IO },
+    );
+  };
+  const label = (k: number) => {
+    const d = k * labelsEl.beat("stagger");
+    return interpolate(
+      t,
+      [labelsEl.start + d, labelsEl.start + labelsEl.beat("rise") + d],
+      [0, 1],
+      { ...CLAMP, easing: EASE_OUT },
+    );
+  };
+  const columns = COLUMNS;
 
   const blockLeft = margin - 0.03 * F;
   const blockTop = baselines[0] - BASELINE * F;
@@ -446,7 +473,7 @@ export function PosterCrop({
         >
           {Array.from({ length: columns + 1 }, (_, i) => {
             const x = margin + (contentW / columns) * i;
-            const p = grid(i * 2);
+            const p = grid(i);
             const top = header;
             const bottom = H - margin;
             // A hairline stays `hair` wide on screen whatever the zoom.
@@ -521,8 +548,8 @@ export function PosterCrop({
               ...labelStyle,
               right: margin,
               color: c.muted,
-              opacity: label(4),
-              transform: `translateY(${((1 - label(4)) * 8 * u) / s}px)`,
+              opacity: label(1),
+              transform: `translateY(${((1 - label(1)) * 8 * u) / s}px)`,
             }}
           >
             {meta}
@@ -542,8 +569,8 @@ export function PosterCrop({
                 letterSpacing: "-0.005em",
                 color: c.muted,
                 textWrap: "balance",
-                opacity: label(8),
-                transform: `translateY(${((1 - label(8)) * 8 * u) / s}px)`,
+                opacity: label(2),
+                transform: `translateY(${((1 - label(2)) * 8 * u) / s}px)`,
               }}
             >
               {note}

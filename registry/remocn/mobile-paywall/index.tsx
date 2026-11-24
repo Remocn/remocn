@@ -8,6 +8,12 @@ import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
+import {
+  type ResolvedElement,
+  type Timing,
+  useTimeline,
+} from "@/lib/remocn/timeline";
+import { type MobilePaywallElementId, mobilePaywallTimeline } from "./timeline";
 
 const figtree = loadFont("normal", {
   weights: ["300", "400"],
@@ -66,6 +72,13 @@ export interface MobilePaywallProps {
   theme?: "light" | "dark";
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
+  /**
+   * Moves, trims or stretches the paywall, single copy lines, the finger's
+   * taps, the payment and its double-click, and the welcome screen, by the
+   * ids in `./timeline`. Frames on the scene timeline, after `delay` and
+   * `speed`.
+   */
+  timing?: Timing<MobilePaywallElementId>;
 }
 
 const DEFAULT_FEATURES: PaywallFeature[] = [
@@ -129,17 +142,6 @@ const CW = SW - PAD * 2;
 const CARD_W = (CW - 10) / 2;
 const PLANS_Y = 562;
 const CTA_Y = 694;
-
-const SHEET_AT = 4;
-const TAP_IN = 50;
-const TAP1 = 66;
-const TAP2 = 100;
-const PAY_AT = 108;
-const DC1 = 138;
-const DC2 = 146;
-const CHECK_AT = 156;
-const DISMISS = 180;
-const WELCOME = 186;
 
 const clamp = { extrapolateLeft: "clamp", extrapolateRight: "clamp" } as const;
 const ENTER = Easing.bezier(0.32, 0.72, 0, 1);
@@ -455,38 +457,65 @@ function ScaleLayer({
   );
 }
 
-export function MobilePaywall({
-  appName = "remocn Pro",
-  title = "Ship launch videos in minutes",
-  features = DEFAULT_FEATURES,
-  plans = DEFAULT_PLANS,
-  cta = "Start free for 7 days",
-  account = "maya@kitebase.dev",
-  dates = ["Nov 2", "Nov 7", "Nov 9"],
-  lines = [
-    "Pro, one tap away.",
-    "Double-click to confirm.",
-    "Seven days, on us.",
-  ],
-  welcomeTitle = "Welcome to Pro",
-  welcomeSub = "Your free week starts now. Here’s how it works.",
-  welcomeCta = "Start creating",
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = figtree.fontFamily,
-  logo,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "light",
-  ground,
-  groundParams,
-}: MobilePaywallProps) {
+export function MobilePaywall(props: MobilePaywallProps) {
+  const {
+    appName = "remocn Pro",
+    title = "Ship launch videos in minutes",
+    features = DEFAULT_FEATURES,
+    plans = DEFAULT_PLANS,
+    cta = "Start free for 7 days",
+    account = "maya@kitebase.dev",
+    dates = ["Nov 2", "Nov 7", "Nov 9"],
+    lines = [
+      "Pro, one tap away.",
+      "Double-click to confirm.",
+      "Seven days, on us.",
+    ],
+    welcomeTitle = "Welcome to Pro",
+    welcomeSub = "Your free week starts now. Here’s how it works.",
+    welcomeCta = "Start creating",
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = figtree.fontFamily,
+    logo,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "light",
+    ground,
+    groundParams,
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay);
-  const { fps, width, height } = useSceneConfig();
+  const { fps, width, height, durationInFrames } = useSceneConfig();
   const f = frame * speed;
+  const tl = useTimeline(
+    mobilePaywallTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const phoneEl = tl.get("phone");
+  const cameraEl = tl.get("camera");
+  const sheet = tl.get("sheet");
+  const reach = tl.get("reach");
+  const planEl = tl.get("plan");
+  const ctaEl = tl.get("cta");
+  const payEl = tl.get("pay");
+  const dc1 = tl.get("dc1");
+  const dc2 = tl.get("dc2");
+  const checkEl = tl.get("check");
+  const dismiss = tl.get("dismiss");
+  const welcome = tl.get("welcome");
+  const planAt = planEl.start;
+  const ctaTapAt = ctaEl.start;
+  const payAt = payEl.start;
+  const dc2At = dc2.start;
+  const checkAt = checkEl.start;
+  const dismissAt = dismiss.start;
+  const welcomeAt = welcome.start;
   const c = theme === "dark" ? DARK_PAL : LIGHT_PAL;
   const fg = ink ?? c.copy;
   const tall = height > width;
@@ -499,26 +528,46 @@ export function MobilePaywall({
 
   const sp = (at: number, config: typeof CARD | typeof MORPH = CARD) =>
     spring({ frame: f - at, fps, config });
-  const pressAt = (at: number) =>
-    spring({ frame: f - at, fps, config: CHIP }) -
-    spring({ frame: f - at - 4, fps, config: CHIP });
+  const pressAt = (e: ResolvedElement<MobilePaywallElementId>) =>
+    spring({ frame: f - e.start, fps, config: CHIP }) -
+    spring({ frame: f - e.start - e.beat("release"), fps, config: CHIP });
 
-  const rise = spring({ frame: f, fps, config: HEAVY });
-  const sheetIn = sp(SHEET_AT, HEAVY);
-  const hero = sp(10, CHIP);
-  const titleIn = interpolate(f, [12, 26], [0, 1], { ...clamp, easing: ENTER });
-  const featIn = features.map((_, i) => sp(16 + i * 3));
-  const plansIn = [sp(26), sp(29)];
-  const ctaIn = sp(32);
+  const rise = spring({ frame: f - phoneEl.start, fps, config: HEAVY });
+  const sheetIn = sp(sheet.start, HEAVY);
+  const hero = sp(sheet.start + sheet.beat("heroAt"), CHIP);
+  const titleAt = sheet.start + sheet.beat("titleAt");
+  const titleIn = interpolate(
+    f,
+    [titleAt, titleAt + sheet.beat("title")],
+    [0, 1],
+    {
+      ...clamp,
+      easing: ENTER,
+    },
+  );
+  const featIn = features.map((_, i) =>
+    sp(sheet.start + sheet.beat("featuresAt") + i * sheet.beat("feature")),
+  );
+  const plansAt = sheet.start + sheet.beat("plansAt");
+  const plansIn = [sp(plansAt), sp(plansAt + sheet.beat("plan"))];
+  const ctaIn = sp(sheet.start + sheet.beat("ctaAt"));
 
-  const sel = sp(TAP1 + 1, MORPH);
-  const ctaPress = pressAt(TAP2);
+  const sel = sp(planAt + planEl.beat("selectAt"), MORPH);
+  const ctaPress = pressAt(ctaEl);
 
   const keys = [
-    { t: TAP_IN, x: 300, y: 800 },
-    { t: TAP1 - 1, x: PAD + CARD_W / 2, y: PLANS_Y + 50 },
-    { t: TAP1 + 10, x: PAD + CARD_W / 2 + 6, y: PLANS_Y + 56 },
-    { t: TAP2 - 1, x: SW / 2, y: CTA_Y + 28 },
+    { t: reach.start, x: 300, y: 800 },
+    {
+      t: planAt + planEl.beat("arriveAt"),
+      x: PAD + CARD_W / 2,
+      y: PLANS_Y + 50,
+    },
+    {
+      t: planAt + planEl.beat("driftEnd"),
+      x: PAD + CARD_W / 2 + 6,
+      y: PLANS_Y + 56,
+    },
+    { t: ctaTapAt + ctaEl.beat("arriveAt"), x: SW / 2, y: CTA_Y + 28 },
   ];
   let tap = { x: keys[0].x, y: keys[0].y };
   for (let i = 0; i < keys.length - 1; i++) {
@@ -539,61 +588,87 @@ export function MobilePaywall({
   const tapRest = keys[keys.length - 1];
   const tapOpacity = interpolate(
     f,
-    [TAP_IN, TAP_IN + 6, TAP2 + 6, TAP2 + 11],
+    [
+      reach.start,
+      reach.start + reach.beat("fadeIn"),
+      ctaTapAt + ctaEl.beat("fadeAt"),
+      ctaTapAt + ctaEl.beat("fadeEnd"),
+    ],
     [0, 1, 1, 0],
     clamp,
   );
-  const tapScale = 1 - 0.14 * Math.max(pressAt(TAP1), pressAt(TAP2));
+  const tapScale = 1 - 0.14 * Math.max(pressAt(planEl), pressAt(ctaEl));
 
-  const pay = sp(PAY_AT, HEAVY);
+  const pay = sp(payAt, HEAVY);
   const away = spring({
-    frame: f - DISMISS,
+    frame: f - dismissAt,
     fps,
     config: MORPH,
-    durationInFrames: 14,
+    durationInFrames: dismiss.beat("away"),
   });
-  const sidePress = Math.max(pressAt(DC1), pressAt(DC2));
-  const hintOn = f >= PAY_AT + 8 && f < DC2 + 5;
-  const hintPulse = hintOn ? 0.55 + 0.45 * Math.sin((f - PAY_AT) / 3.2) : 0;
-  const hintIn = spring({ frame: f - PAY_AT - 8, fps, config: CARD });
-  const processing = f >= DC2 + 2 && f < CHECK_AT;
-  const check = interpolate(f, [CHECK_AT, CHECK_AT + 14], [0, 1], {
+  const sidePress = Math.max(pressAt(dc1), pressAt(dc2));
+  const hintOff = dc2At + dc2.beat("hintOut");
+  const hintOn = f >= payAt + payEl.beat("hintAt") && f < hintOff;
+  const hintPulse = hintOn ? 0.55 + 0.45 * Math.sin((f - payAt) / 3.2) : 0;
+  const hintIn = spring({
+    frame: f - payAt - payEl.beat("hintAt"),
+    fps,
+    config: CARD,
+  });
+  const processing = f >= dc2At + dc2.beat("processAt") && f < checkAt;
+  const check = interpolate(f, [checkAt, checkEl.end], [0, 1], {
     ...clamp,
     easing: LIGHT,
   });
-  const done = f >= CHECK_AT;
+  const done = f >= checkAt;
 
-  const out = interpolate(f, [DISMISS, DISMISS + 8], [1, 0], {
+  const out = interpolate(f, [dismissAt, dismiss.end], [1, 0], {
     ...clamp,
     easing: EXIT,
   });
-  const wIcon = sp(WELCOME);
-  const wBadge = sp(WELCOME + 8, CHIP);
-  const wTitle = interpolate(f, [WELCOME + 4, WELCOME + 18], [0, 1], {
-    ...clamp,
-    easing: ENTER,
-  });
-  const wSub = interpolate(f, [WELCOME + 7, WELCOME + 21], [0, 1], {
-    ...clamp,
-    easing: ENTER,
-  });
-  const wRows = [0, 1, 2].map((i) => sp(WELCOME + 10 + i * 4));
-  const wRail = interpolate(f, [WELCOME + 12, WELCOME + 30], [0, 1], {
+  const wb = (name: string) => welcomeAt + welcome.beat(name);
+  const wIcon = sp(welcomeAt);
+  const wBadge = sp(wb("badgeAt"), CHIP);
+  const wTitle = interpolate(
+    f,
+    [wb("titleAt"), wb("titleAt") + welcome.beat("text")],
+    [0, 1],
+    { ...clamp, easing: ENTER },
+  );
+  const wSub = interpolate(
+    f,
+    [wb("subAt"), wb("subAt") + welcome.beat("text")],
+    [0, 1],
+    { ...clamp, easing: ENTER },
+  );
+  const wRows = [0, 1, 2].map((i) =>
+    sp(wb("rowsAt") + i * welcome.beat("row")),
+  );
+  const wRail = interpolate(f, [wb("railAt"), wb("railEnd")], [0, 1], {
     ...clamp,
     easing: MOVE,
   });
-  const wCta = sp(WELCOME + 16);
-  const camera = interpolate(f, [0, 250], [1, 1.035], {
+  const wCta = sp(wb("ctaAt"));
+  const camera = interpolate(f, [cameraEl.start, cameraEl.end], [1, 1.035], {
     ...clamp,
     easing: CAMERA,
   });
   // Asked of the px at the phone's far edge: the rise never quite lands and
   // the push eases out so gently that its progress outlasts the motion.
   const phoneMoving =
-    stirs((g) => (1 - spring({ frame: g, fps, config: HEAVY })) * H * 0.9, f) ||
     stirs(
       (g) =>
-        interpolate(g, [0, 250], [1, 1.035], { ...clamp, easing: CAMERA }) *
+        (1 - spring({ frame: g - phoneEl.start, fps, config: HEAVY })) *
+        H *
+        0.9,
+      f,
+    ) ||
+    stirs(
+      (g) =>
+        interpolate(g, [cameraEl.start, cameraEl.end], [1, 1.035], {
+          ...clamp,
+          easing: CAMERA,
+        }) *
         k *
         (BH / 2),
       f,
@@ -610,22 +685,27 @@ export function MobilePaywall({
     top: top - SHEET_TOP,
   });
 
-  const beats = [0, PAY_AT, WELCOME];
   const copyLine = (i: number) => {
-    const inAt = beats[i] + (i === 0 ? 8 : 0);
-    const outAt = beats[i + 1];
+    const copy = tl.get(`line:${i}`);
+    const inAt = copy.start;
+    const outAt = i < 2 ? copy.end : undefined;
     const at = (g: number) => {
-      const pin = interpolate(g, [inAt, inAt + 14], [0, 1], {
+      const pin = interpolate(g, [inAt, inAt + copy.beat("rise")], [0, 1], {
         ...clamp,
         easing: ENTER,
       });
       const pout =
         outAt === undefined
           ? 0
-          : interpolate(g, [outAt - 2, outAt + 6], [0, 1], {
-              ...clamp,
-              easing: EXIT,
-            });
+          : interpolate(
+              g,
+              [outAt - copy.beat("outLead"), outAt + copy.beat("out")],
+              [0, 1],
+              {
+                ...clamp,
+                easing: EXIT,
+              },
+            );
       return { pin, pout, dy: (1 - pin) * 70 - pout * 50 };
     };
     const { pin, pout, dy } = at(f);
@@ -847,7 +927,7 @@ export function MobilePaywall({
                   ))}
                   {plans.map((pl, i) => {
                     const on = i === 0 ? sel : 1 - sel;
-                    const press = i === 0 ? pressAt(TAP1) : 0;
+                    const press = i === 0 ? pressAt(planEl) : 0;
                     return (
                       <div
                         key={pl.label}
@@ -972,7 +1052,7 @@ export function MobilePaywall({
                   </div>
                 </div>
 
-                {f >= WELCOME - 2 ? (
+                {f >= wb("showAt") ? (
                   <div style={{ position: "absolute", inset: 0 }}>
                     <div
                       style={{
@@ -1154,7 +1234,7 @@ export function MobilePaywall({
                       "inset 0 0 0 0.5px rgba(255,255,255,0.12), 0 8px 24px rgba(0,0,0,0.35)",
                     opacity:
                       Math.min(1, hintIn * 1.5) *
-                      interpolate(f, [DC2, DC2 + 5], [1, 0], {
+                      interpolate(f, [dc2At, hintOff], [1, 0], {
                         ...clamp,
                         easing: EXIT,
                       }),
@@ -1203,7 +1283,7 @@ export function MobilePaywall({
                   boxShadow: c.dark
                     ? "inset 0 1px 0 rgba(255,255,255,0.06)"
                     : "0 -4px 30px rgba(0,0,0,0.16)",
-                  opacity: f >= PAY_AT ? 1 : 0,
+                  opacity: f >= payAt ? 1 : 0,
                 }}
               >
                 <div style={{ display: "flex", alignItems: "center", gap: 12 }}>

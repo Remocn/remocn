@@ -10,6 +10,16 @@ import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
+import {
+  type ResolvedElement,
+  type Timing,
+  useTimeline,
+} from "@/lib/remocn/timeline";
+import {
+  DEFAULT_STOPS,
+  type PhoneScrollElementId,
+  phoneScrollTimeline,
+} from "./timeline";
 
 const figtree = loadFont("normal", {
   weights: ["300", "400"],
@@ -53,6 +63,12 @@ export interface PhoneScrollProps {
   theme?: "light" | "dark";
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
+  /**
+   * Moves, trims or stretches the phone rising, the headline and single
+   * flicks, by the ids in `./timeline`. Frames on the scene timeline, after
+   * `delay` and `speed`.
+   */
+  timing?: Timing<PhoneScrollElementId>;
 }
 
 const SW = 393;
@@ -62,22 +78,27 @@ const BW = SW + BEZEL * 2;
 const BH = SH + BEZEL * 2;
 const HEADER_H = 196;
 
-const FLICK_START = 40;
-const PRESS = 5;
-const DRAG = 6;
-const TAU = 10;
-const SEG = 46;
-
 const clamp = { extrapolateLeft: "clamp", extrapolateRight: "clamp" } as const;
 const ENTER = Easing.bezier(0.32, 0.72, 0, 1);
 const LIGHT = Easing.bezier(0.22, 1, 0.36, 1);
 const HEAVY = { mass: 1, damping: 26, stiffness: 120 };
 const CARD = { mass: 0.8, damping: 18, stiffness: 160 };
 
-function scrollAt(f: number, stops: number[], fps: number, seg = SEG): number {
+/** The scroll offset at frame `f`, one flick per stop on the flick's beats. */
+function scrollAt(
+  f: number,
+  stops: number[],
+  fps: number,
+  flicks: ResolvedElement<PhoneScrollElementId>[],
+): number {
   let base = 0;
   for (let i = 0; i < stops.length; i++) {
-    const local = f - (FLICK_START + i * seg) - PRESS;
+    const e = flicks[i];
+    const seg = e.length;
+    const PRESS = e.beat("press");
+    const DRAG = e.beat("drag");
+    const TAU = e.beat("tau");
+    const local = f - e.start - PRESS;
     if (local <= 0) return base;
     const dist = stops[i] - base;
     const over = Math.sign(dist) * Math.min(26, Math.abs(dist) * 0.035);
@@ -1146,31 +1167,43 @@ function ScaleLayer({
   );
 }
 
-export function PhoneScroll({
-  src,
-  stops = [930],
-  label = "Find your next stay in two taps.",
-  labelAccent = "two taps.",
-  eyebrow = "remocn for iOS",
-  children,
-  searchLabel = "Where to?",
-  flickGap = SEG,
-  motionBlur = true,
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = figtree.fontFamily,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "light",
-  ground,
-  groundParams,
-}: PhoneScrollProps) {
+export function PhoneScroll(props: PhoneScrollProps) {
+  const {
+    src,
+    stops = DEFAULT_STOPS,
+    label = "Find your next stay in two taps.",
+    labelAccent = "two taps.",
+    eyebrow = "remocn for iOS",
+    children,
+    searchLabel = "Where to?",
+    motionBlur = true,
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = figtree.fontFamily,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "light",
+    ground,
+    groundParams,
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay);
-  const { fps, width, height } = useSceneConfig();
+  const { fps, width, height, durationInFrames } = useSceneConfig();
   const f = frame * speed;
+  const tl = useTimeline(
+    phoneScrollTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const camera = tl.get("camera");
+  const phone = tl.get("phone");
+  const eyebrowEl = tl.get("eyebrow");
+  const headline = tl.get("headline");
+  const flicks = stops.map((_, i) => tl.get(`flick:${i}`));
   const blurId = `${useId().replace(/[^a-zA-Z0-9_-]/g, "")}mb`;
   const dark = theme === "dark";
   const c = appColors(dark);
@@ -1181,20 +1214,29 @@ export function PhoneScroll({
   const phoneCx = tall || !hasLabel ? width / 2 : width * 0.33;
   const phoneCy = tall && hasLabel ? height * 0.63 : height / 2;
 
-  const rise = spring({ frame: f, fps, config: HEAVY });
-  const level = spring({ frame: f - 6, fps, config: HEAVY });
+  const rise = spring({ frame: f - phone.start, fps, config: HEAVY });
+  const level = spring({
+    frame: f - phone.start - phone.beat("levelAt"),
+    fps,
+    config: HEAVY,
+  });
   const ty = (1 - rise) * height * 0.95;
   const rot = -8 * (1 - level);
 
-  const y = scrollAt(f, stops, fps, flickGap);
-  const v = Math.abs(y - scrollAt(f - speed, stops, fps, flickGap));
+  const y = scrollAt(f, stops, fps, flicks);
+  const v = Math.abs(y - scrollAt(f - speed, stops, fps, flicks));
   const blur = Math.min(9, v * 0.09);
 
+  // The flick the touch dot belongs to: it shows `lead` frames early.
   const flick = Math.max(
     0,
-    Math.min(stops.length - 1, Math.floor((f - FLICK_START + 4) / flickGap)),
+    flicks.filter((e) => f >= e.start - e.beat("lead")).length - 1,
   );
-  const fl = f - (FLICK_START + flick * flickGap);
+  const fe = flicks[flick];
+  const PRESS = fe?.beat("press") ?? 0;
+  const DRAG = fe?.beat("drag") ?? 0;
+  const TAU = fe?.beat("tau") ?? 0;
+  const fl = f - (fe?.start ?? 0);
   const prev = flick === 0 ? 0 : stops[flick - 1];
   const dist = stops[flick] - prev;
   const d0 =
@@ -1204,24 +1246,31 @@ export function PhoneScroll({
     2;
   const dragT = interpolate(fl, [PRESS, PRESS + DRAG], [0, 1], clamp);
   const dotY = SH * 0.74 - d0 * 0.55 * dragT * dragT;
-  const dotIn = interpolate(fl, [0, 4], [0, 1], clamp);
+  const dotIn = interpolate(fl, [0, fe?.beat("dotIn") ?? 1], [0, 1], clamp);
+  const dotOutLen = fe?.beat("dotOut") ?? 1;
   const dotOut = interpolate(
     fl,
-    [PRESS + DRAG, PRESS + DRAG + 6],
+    [PRESS + DRAG, PRESS + DRAG + dotOutLen],
     [1, 0],
     clamp,
   );
   const press = spring({ frame: fl, fps, config: CARD });
   const dotScale =
     interpolate(press, [0, 1], [1.3, 0.96]) *
-    interpolate(fl, [PRESS + DRAG, PRESS + DRAG + 6], [1, 1.25], clamp);
+    interpolate(fl, [PRESS + DRAG, PRESS + DRAG + dotOutLen], [1, 1.25], clamp);
 
   const typeIn = (d: number) =>
-    interpolate(f, [16 + d, 32 + d], [0, 1], { ...clamp, easing: ENTER });
-  const eyeIn = interpolate(f, [12, 26], [0, 1], { ...clamp, easing: LIGHT });
-  const push = interpolate(f, [0, 120], [1, 1.03], clamp);
+    interpolate(f, [headline.start + d, headline.end + d], [0, 1], {
+      ...clamp,
+      easing: ENTER,
+    });
+  const eyeIn = interpolate(f, [eyebrowEl.start, eyebrowEl.end], [0, 1], {
+    ...clamp,
+    easing: LIGHT,
+  });
+  const push = interpolate(f, [camera.start, camera.end], [1, 1.03], clamp);
   // The push holds the phone and the headline, so its mark covers both.
-  const pushing = f > 0 && f < 120;
+  const pushing = f > camera.start && f < camera.end;
 
   const content = children ? (
     <div style={{ width: SW }}>{children}</div>
@@ -1336,7 +1385,7 @@ export function PhoneScroll({
                   background: "rgba(30,30,36,0.22)",
                   boxShadow:
                     "inset 0 0 0 1.5px rgba(255,255,255,0.9), 0 2px 8px rgba(0,0,0,0.2)",
-                  opacity: f >= FLICK_START ? dotIn * dotOut : 0,
+                  opacity: fe && f >= flicks[0].start ? dotIn * dotOut : 0,
                   transform: `scale(${dotScale})`,
                   zIndex: 6,
                 }}
@@ -1403,8 +1452,8 @@ export function PhoneScroll({
                         letterSpacing: "-0.01em",
                         fontSize: headSize * 1.08,
                         display: "inline-block",
-                        opacity: typeIn(6),
-                        transform: `translateY(${(1 - typeIn(6)) * 30}%)`,
+                        opacity: typeIn(headline.beat("accentAt")),
+                        transform: `translateY(${(1 - typeIn(headline.beat("accentAt"))) * 30}%)`,
                       }}
                     >
                       {split[1]}

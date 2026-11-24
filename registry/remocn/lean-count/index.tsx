@@ -13,6 +13,13 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_LABEL,
+  type LeanCountElementId,
+  labelWordsOf,
+  leanCountTimeline,
+} from "./timeline";
 
 const bricolage = loadBricolage("normal", {
   weights: ["400", "500"],
@@ -45,6 +52,12 @@ export interface LeanCountProps {
   grain?: boolean;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches the figure's rise, the rule, single caption
+   * words and single surges, by the ids in `./timeline`. Frames on the scene
+   * timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<LeanCountElementId>;
 }
 
 const THEMES = {
@@ -65,13 +78,6 @@ const THEMES = {
 } as const;
 
 const TRACK = -0.04;
-const RISE_AT = 0;
-const RISE_LEN = 18;
-const RISE_GAP = 3;
-const FIRST_SURGE = 30;
-const SURGE_GAP = 16;
-const COUNT_LEN = 13;
-const LABEL_AT = 6;
 
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
 const EASE_IN_OUT = Easing.bezier(0.65, 0, 0.35, 1);
@@ -206,34 +212,39 @@ function ScaleLayer({
   );
 }
 
-export function LeanCount({
-  value = 3.2,
-  from = 1,
-  decimals = 1,
-  prefix = "",
-  suffix = "×",
-  label = "Faster renders on the laptop you already own.",
-  lean = 14,
-  steps = 3,
-  beat = SURGE_GAP,
-  accent,
-  ink,
-  background,
-  fontFamily = bricolage.fontFamily,
-  fontWeight = 500,
-  scale = 1,
-  delay = 0,
-  grain = true,
-  speed = 1,
-  theme = "dark",
-}: LeanCountProps) {
+export function LeanCount(props: LeanCountProps) {
+  const {
+    value = 3.2,
+    from = 1,
+    decimals = 1,
+    prefix = "",
+    suffix = "×",
+    label = DEFAULT_LABEL,
+    lean = 14,
+    accent,
+    ink,
+    background,
+    fontFamily = bricolage.fontFamily,
+    fontWeight = 500,
+    scale = 1,
+    delay = 0,
+    grain = true,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H, fps } = useSceneConfig();
+  const { width: W, height: H, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    leanCountTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const c = THEMES[theme];
   const spot = accent ?? c.accent;
   const fg = ink ?? c.ink;
-  const n = Math.max(1, Math.round(steps));
   const chars = Array.from(
     new Set(
       Array.from(
@@ -252,15 +263,16 @@ export function LeanCount({
     );
   }
 
-  const surgeAt = (k: number) => FIRST_SURGE + k * beat;
+  const surges = tl.lane("Surges");
+  const n = surges.length;
   let countK = 0;
   let slantK = 0;
-  for (let k = 0; k < n; k++) {
-    countK += interpolate(t, [surgeAt(k), surgeAt(k) + COUNT_LEN], [0, 1], {
+  for (const surge of surges) {
+    countK += interpolate(t, [surge.start, surge.end], [0, 1], {
       ...CLAMP,
       easing: EASE_OUT,
     });
-    slantK += spring({ frame: t - surgeAt(k), fps, config: SNAP });
+    slantK += spring({ frame: t - surge.start, fps, config: SNAP });
   }
   countK /= n;
   slantK /= n;
@@ -297,11 +309,13 @@ export function LeanCount({
   const left = right - runW;
   const suffixFrom = glyphs.length - Array.from(suffix).length;
 
-  const ruleP = interpolate(t, [2, 30], [0, 1], {
+  const ruleEl = tl.get("rule");
+  const riseEl = tl.get("rise");
+  const ruleP = interpolate(t, [ruleEl.start, ruleEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_IN_OUT,
   });
-  const labelWords = label ? label.split(" ") : [];
+  const labelWords = labelWordsOf(label);
 
   return (
     <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
@@ -337,14 +351,13 @@ export function LeanCount({
             }}
           >
             {slots.map(({ ch, i, gx }) => {
+              const at = riseEl.start + i * riseEl.beat("stagger");
               const riseAt = (tt: number) =>
                 (1 -
-                  interpolate(
-                    tt,
-                    [RISE_AT + i * RISE_GAP, RISE_AT + i * RISE_GAP + RISE_LEN],
-                    [0, 1],
-                    { ...CLAMP, easing: EASE_OUT },
-                  )) *
+                  interpolate(tt, [at, at + riseEl.beat("glyph")], [0, 1], {
+                    ...CLAMP,
+                    easing: EASE_OUT,
+                  })) *
                 F *
                 0.95;
               const rise = riseAt(t);
@@ -392,12 +405,11 @@ export function LeanCount({
             }}
           >
             {labelWords.map((w, i) => {
-              const p = interpolate(
-                t,
-                [LABEL_AT + i * 3, LABEL_AT + i * 3 + 16],
-                [0, 1],
-                { ...CLAMP, easing: EASE_OUT },
-              );
+              const word = tl.get(`word:${i}`);
+              const p = interpolate(t, [word.start, word.end], [0, 1], {
+                ...CLAMP,
+                easing: EASE_OUT,
+              });
               return (
                 <span key={`${w}-${i}`}>
                   <span

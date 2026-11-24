@@ -11,6 +11,14 @@ import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_LINES,
+  SWIPE_KINDS,
+  type SwipeDeckElementId,
+  type SwipeKind,
+  swipeDeckTimeline,
+} from "./timeline";
 
 const figtree = loadFont("normal", {
   weights: ["300", "400"],
@@ -68,6 +76,12 @@ export interface SwipeDeckProps {
   theme?: "light" | "dark";
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
+  /**
+   * Moves, trims or stretches the phone, the copy lines, the swipes and the
+   * match, by the ids in `./timeline`. Frames on the scene timeline, after
+   * `delay` and `speed`.
+   */
+  timing?: Timing<SwipeDeckElementId>;
 }
 
 const DEFAULT_CARDS: SwipeCard[] = [
@@ -114,14 +128,7 @@ const MOVE = Easing.bezier(0.65, 0, 0.35, 1);
 const EXIT = Easing.bezier(0.55, 0, 1, 0.45);
 const CAMERA = Easing.bezier(0.87, 0, 0.13, 1);
 
-type Act = { kind: "like" | "nope" | "super"; down: number; release: number };
-const ACTS: Act[] = [
-  { kind: "like", down: 24, release: 48 },
-  { kind: "nope", down: 60, release: 78 },
-  { kind: "super", down: 92, release: 96 },
-];
-const MATCH = 114;
-const END = 180;
+type Act = { kind: SwipeKind; down: number; release: number; fly: number };
 
 const clamp = { extrapolateLeft: "clamp", extrapolateRight: "clamp" } as const;
 
@@ -1064,29 +1071,50 @@ function ScaleLayer({
   );
 }
 
-export function SwipeDeck({
-  cards = DEFAULT_CARDS,
-  matchWith = "remocn",
-  initials = "MC",
-  lines = ["Swipe right on what fits.", "Skip the rest.", "Install the match."],
-  deckTitle = "Discover",
-  matchTitle = "It’s a match",
-  ctaLabel = "Install",
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = figtree.fontFamily,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-  ground,
-  groundParams,
-}: SwipeDeckProps) {
+export function SwipeDeck(props: SwipeDeckProps) {
+  const {
+    cards = DEFAULT_CARDS,
+    matchWith = "remocn",
+    initials = "MC",
+    lines = DEFAULT_LINES,
+    deckTitle = "Discover",
+    matchTitle = "It’s a match",
+    ctaLabel = "Install",
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = figtree.fontFamily,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    ground,
+    groundParams,
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay);
-  const { fps, width, height } = useSceneConfig();
+  const { fps, width, height, durationInFrames } = useSceneConfig();
   const f = frame * speed;
+  const tl = useTimeline(
+    swipeDeckTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const phone = tl.get("phone");
+  const touch = tl.get("touch");
+  const match = tl.get("match");
+  const ACTS: Act[] = SWIPE_KINDS.map((kind, i) => {
+    const e = tl.get(`swipe:${i}`);
+    return {
+      kind,
+      down: e.start,
+      release: e.start + e.beat("release"),
+      fly: e.beat("fly"),
+    };
+  });
+  const MATCH = match.start;
   const dark = theme !== "light";
   const pal = dark ? DARK : LIGHT;
   const c = { ...pal, copy: ink ?? pal.copy };
@@ -1103,9 +1131,10 @@ export function SwipeDeck({
   const ease = (a: number, b: number, e = ENTER) =>
     interpolate(f, [a, b], [0, 1], { ...clamp, easing: e });
 
-  const riseAt = (ff: number) => spring({ frame: ff, fps, config: HEAVY });
+  const riseAt = (ff: number) =>
+    spring({ frame: ff - phone.start, fps, config: HEAVY });
   const camAt = (ff: number) =>
-    interpolate(ff, [MATCH, END], [1, 1.035], {
+    interpolate(ff, [match.start, match.end], [1, 1.035], {
       ...clamp,
       easing: CAMERA,
     });
@@ -1128,12 +1157,10 @@ export function SwipeDeck({
             config: { damping: 20, stiffness: 140 },
           })
         : 0;
-      const fly = interpolate(
-        f,
-        [a.release, a.release + (dir ? 12 : 14)],
-        [0, 1],
-        { ...clamp, easing: EXIT },
-      );
+      const fly = interpolate(f, [a.release, a.release + a.fly], [0, 1], {
+        ...clamp,
+        easing: EXIT,
+      });
       const dragX = dir * 150 * Math.min(1, drag);
       const dx = dragX + dir * 560 * fly;
       const dy = dir ? -12 * drag + 70 * fly : -1000 * fly;
@@ -1169,7 +1196,7 @@ export function SwipeDeck({
   const starBtn = { x: SW / 2, y: BTN_Y };
   const touchBase = along(
     [
-      { f: 12, x: SW * 0.82, y: 560 },
+      { f: touch.start, x: SW * 0.82, y: 560 },
       { f: ACTS[0].down, x: grab.x, y: grab.y, bend: 0.2 },
       { f: ACTS[0].release + 2, x: grab.x, y: grab.y },
       { f: ACTS[1].down, x: grab2.x, y: grab2.y, bend: -0.25 },
@@ -1195,7 +1222,8 @@ export function SwipeDeck({
     y: touchBase.y + follow.y * lift,
   };
   const tapOpacity =
-    ease(12, 20) * (1 - ease(ACTS[2].down + 6, ACTS[2].down + 14, EXIT));
+    ease(touch.start, touch.end) *
+    (1 - ease(ACTS[2].down + 6, ACTS[2].down + 14, EXIT));
   const pressing = ACTS.some(
     (a) => a.kind !== "super" && f >= a.down && f < a.release,
   );
@@ -1214,18 +1242,26 @@ export function SwipeDeck({
   ];
 
   const m = sp(MATCH, MORPH);
-  const mTitle = ease(MATCH + 4, MATCH + 18);
-  const mAv = [sp(MATCH + 6, CARD), sp(MATCH + 9, CARD)];
-  const mHeart = sp(MATCH + 16, CHIP);
-  const mText = ease(MATCH + 18, MATCH + 32);
-  const mCta = sp(MATCH + 22, CARD);
+  const mTitle = ease(
+    MATCH + match.beat("title"),
+    MATCH + match.beat("titleEnd"),
+  );
+  const mAv = [
+    sp(MATCH + match.beat("avatar"), CARD),
+    sp(MATCH + match.beat("avatar2"), CARD),
+  ];
+  const mHeart = sp(MATCH + match.beat("heart"), CHIP);
+  const mText = ease(MATCH + match.beat("text"), MATCH + match.beat("textEnd"));
+  const mCta = sp(MATCH + match.beat("cta"), CARD);
 
-  const beats = [6, ACTS[1].down - 4, MATCH];
+  const copyLines = tl.lane("Copy");
   const copyLine = (i: number) => {
-    const inAt = beats[i];
-    const outAt = beats[i + 1];
-    const pin = ease(inAt, inAt + 16);
-    const pout = outAt === undefined ? 0 : ease(outAt - 8, outAt, EXIT);
+    const line = copyLines[i];
+    const inAt = line.start;
+    const outAt = copyLines[i + 1]?.start;
+    const pin = ease(inAt, inAt + line.beat("in"));
+    const pout =
+      outAt === undefined ? 0 : ease(outAt - line.beat("out"), outAt, EXIT);
     if (pin <= 0 || pout >= 1) return null;
     const moving = midway(pin) || midway(pout);
     return (

@@ -12,6 +12,14 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_EXCHANGES,
+  exchangesOf,
+  type NoButsElementId,
+  noButsTimeline,
+  wordsOf,
+} from "./timeline";
 
 const hubot = loadFont("normal", {
   weights: ["400", "500"],
@@ -41,16 +49,13 @@ export interface NoButsProps {
   delay?: number;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches single objections, replies and exits, by the
+   * ids in `./timeline`. Frames on the scene timeline, after `delay` and
+   * `speed`.
+   */
+  timing?: Timing<NoButsElementId>;
 }
-
-const DEFAULT_EXCHANGES: NoButsExchange[] = [
-  {
-    objection: "But I’m not a motion designer.",
-    reply: "You don’t need to be.",
-  },
-  { objection: "But I’m busy.", reply: "It takes one lunch." },
-  { objection: "But…", reply: "Go on. We’ll wait." },
-];
 
 const THEMES = {
   dark: {
@@ -69,10 +74,6 @@ const THEMES = {
 
 const TRACK = -0.025;
 const LH = 1.08;
-const OBJ_WORD = 3;
-const REPLY_WORD = 2.5;
-const RISE = 13;
-const EXIT = 10;
 
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
 const EASE_IN = Easing.bezier(0.55, 0, 0.85, 0.35);
@@ -230,30 +231,33 @@ function ScaleLayer({
   );
 }
 
-export function NoButs({
-  exchanges = DEFAULT_EXCHANGES,
-  stagger = REPLY_WORD,
-  pause = 26,
-  accent,
-  ink,
-  background,
-  fontFamily = hubot.fontFamily,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: NoButsProps) {
+export function NoButs(props: NoButsProps) {
+  const {
+    exchanges = DEFAULT_EXCHANGES,
+    accent,
+    ink,
+    background,
+    fontFamily = hubot.fontFamily,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
   const { width: W, height: H, durationInFrames: T } = useSceneConfig();
+  // The fit that squeezes long exchanges into the clip counts the clip
+  // without `speed`, so the schedule gets `durationInFrames`.
+  const tl = useTimeline(noButsTimeline, props, T, timing);
   const c = THEMES[theme];
   const hi = accent ?? c.accent;
   const stage =
     background === "transparent" ? "transparent" : (background ?? c.bg);
 
-  const list = exchanges.length > 0 ? exchanges : DEFAULT_EXCHANGES;
-  const objWords = list.map((e) => e.objection.trim().split(/\s+/));
-  const replyWords = list.map((e) => e.reply.trim().split(/\s+/));
+  const list = exchangesOf(exchanges);
+  const objWords = list.map((e) => wordsOf(e.objection));
+  const replyWords = list.map((e) => wordsOf(e.reply));
   const specs = Array.from(
     new Set([
       "400| ",
@@ -309,23 +313,6 @@ export function NoButs({
     );
   }
 
-  const objStart: number[] = [];
-  const replyStart: number[] = [];
-  const replyDone: number[] = [];
-  let clock = 6;
-  list.forEach((_, i) => {
-    objStart.push(clock);
-    const nO = objWords[i].length;
-    clock += nO * OBJ_WORD + RISE;
-    clock += nO <= 1 ? 22 : 4;
-    replyStart.push(clock);
-    clock += replyWords[i].length * stagger + RISE;
-    replyDone.push(clock);
-    clock += i < list.length - 1 ? pause : 0;
-  });
-  const room = Math.max(1, T - Math.max(30, T * 0.18));
-  const k = clock > room ? room / clock : 1;
-
   const lineO = Fo * LH;
   const lineR = Fr * LH;
 
@@ -340,12 +327,16 @@ export function NoButs({
       <ScaleLayer scale={scale}>
         {list.map((_, i) => {
           const last = i === list.length - 1;
-          const leaveAt = last ? 1e9 : (objStart[i + 1] - EXIT - 2) * k;
-          const leave = interpolate(t, [leaveAt, leaveAt + EXIT * k], [0, 1], {
-            ...CLAMP,
-            easing: EASE_IN,
-          });
-          if (t < objStart[i] * k - 1 || leave >= 1) return null;
+          const obj = tl.get(`objection:${i}`);
+          const reply = tl.get(`reply:${i}`);
+          const exit = last ? null : tl.get(`leave:${i}`);
+          const leave = exit
+            ? interpolate(t, [exit.start, exit.end], [0, 1], {
+                ...CLAMP,
+                easing: EASE_IN,
+              })
+            : 0;
+          if (t < obj.start - 1 || leave >= 1) return null;
           const oLay = objLays[i];
           const rLay = replyLays[i];
           const rTop = H - my - rLay.lines * lineR;
@@ -361,8 +352,8 @@ export function NoButs({
               }}
             >
               {oLay.placed.map((p, j) => {
-                const at = (objStart[i] + j * OBJ_WORD) * k;
-                const e = interpolate(t, [at, at + RISE], [0, 1], {
+                const at = obj.start + j * obj.beat("word");
+                const e = interpolate(t, [at, at + obj.beat("rise")], [0, 1], {
                   ...CLAMP,
                   easing: EASE_OUT,
                 });
@@ -388,11 +379,16 @@ export function NoButs({
                 );
               })}
               {rLay.placed.map((p, j) => {
-                const at = (replyStart[i] + j * stagger) * k;
-                const e = interpolate(t, [at, at + RISE], [0, 1], {
-                  ...CLAMP,
-                  easing: EASE_OUT,
-                });
+                const at = reply.start + j * reply.beat("word");
+                const e = interpolate(
+                  t,
+                  [at, at + reply.beat("rise")],
+                  [0, 1],
+                  {
+                    ...CLAMP,
+                    easing: EASE_OUT,
+                  },
+                );
                 return (
                   <div
                     key={`r${j}`}

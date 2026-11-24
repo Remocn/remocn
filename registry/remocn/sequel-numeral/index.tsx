@@ -14,6 +14,14 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_NAME,
+  DEFAULT_NUMERAL,
+  DEFAULT_TAGLINE,
+  type SequelNumeralElementId,
+  sequelNumeralTimeline,
+} from "./timeline";
 
 const rubik = loadRubik("normal", {
   weights: ["400", "500"],
@@ -44,6 +52,12 @@ export interface SequelNumeralProps {
   delay?: number;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches the name, the superscript, the drop, the grow
+   * and the tagline, by the ids in `./timeline`. Frames on the scene
+   * timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<SequelNumeralElementId>;
 }
 
 const REMOCN_R_PATH =
@@ -86,14 +100,6 @@ const THEMES = {
 const NUM_TRACK = -0.03;
 const LOGO_CAP = 0.76;
 const SUP = 0.52;
-
-const NAME_AT = 0;
-const SUP_AT = 10;
-const DROP_AT = 42;
-const DROP_LEN = 10;
-const GROW_AT = 50;
-const SETTLE_LEN = 26;
-const TAG_AT = 82;
 
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
 const EASE_DROP = Easing.bezier(0.55, 0, 0.25, 1);
@@ -206,30 +212,40 @@ function ScaleLayer({
   );
 }
 
-export function SequelNumeral({
-  name = "remocn",
-  numeral = "2",
-  tagline = "Part two. Out now.",
-  accent = RED,
-  ink,
-  background,
-  fontFamily = rubik.fontFamily,
-  logo,
-  hold = DROP_AT - SUP_AT,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: SequelNumeralProps) {
+export function SequelNumeral(props: SequelNumeralProps) {
+  const {
+    name = DEFAULT_NAME,
+    numeral = DEFAULT_NUMERAL,
+    tagline = DEFAULT_TAGLINE,
+    accent = RED,
+    ink,
+    background,
+    fontFamily = rubik.fontFamily,
+    logo,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H, fps } = useSceneConfig();
+  const { width: W, height: H, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    sequelNumeralTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const nameEl = tl.get("name");
+  const sup = tl.get("superscript");
+  const drop = tl.get("drop");
+  const grow = tl.get("grow");
+  const tag = tl.get("tagline");
   const c = THEMES[theme];
   const fg = ink ?? c.ink;
   const m = useMetrics(name, numeral, tagline, fontFamily);
-  const dropAt = SUP_AT + hold;
-  const growAt = dropAt + (GROW_AT - DROP_AT);
-  const tagAt = growAt + (TAG_AT - GROW_AT);
+  const growAt = grow.start;
 
   const transparent = background === "transparent";
   const stage = transparent ? "transparent" : (background ?? c.bg);
@@ -256,18 +272,18 @@ export function SequelNumeral({
   const S1 = Math.min(capTarget / m.numCap, room / (m.num + 0.08));
   const gap1 = 0.08 * S1;
 
-  const nameP = interpolate(t, [NAME_AT, NAME_AT + 18], [0, 1], {
+  const nameP = interpolate(t, [nameEl.start, nameEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
   const supPOf = (f: number) =>
-    interpolate(f, [SUP_AT, SUP_AT + 12], [0, 1], {
+    interpolate(f, [sup.start, sup.start + sup.beat("in")], [0, 1], {
       ...CLAMP,
       easing: EASE_OUT,
     });
   const supP = supPOf(t);
   const dropOf = (f: number) =>
-    interpolate(f, [dropAt, dropAt + DROP_LEN], [0, 1], {
+    interpolate(f, [drop.start, drop.end], [0, 1], {
       ...CLAMP,
       easing: EASE_DROP,
     });
@@ -282,7 +298,7 @@ export function SequelNumeral({
       frame: f - growAt,
       fps,
       config: { damping: 200, stiffness: 120, mass: 0.9 },
-      durationInFrames: SETTLE_LEN,
+      durationInFrames: grow.length,
     });
   const settle = settleAt(t);
   // The settle carries the name by hundreds of pixels; a step under 1e-6 of
@@ -290,7 +306,7 @@ export function SequelNumeral({
   const settling =
     Math.abs(settleAt(t + speed) - settle) > 1e-6 ||
     Math.abs(settle - settleAt(t - speed)) > 1e-6;
-  const tagP = interpolate(t, [tagAt, tagAt + 16], [0, 1], {
+  const tagP = interpolate(t, [tag.start, tag.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });

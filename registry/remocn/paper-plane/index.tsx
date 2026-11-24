@@ -7,6 +7,8 @@ import { useId, useMemo } from "react";
 import { AbsoluteFill, Easing, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import { type PaperPlaneElementId, paperPlaneTimeline } from "./timeline";
 
 // Manrope: small labels (500) and the remocn.dev logo (600, the brand asset).
 const { fontFamily: sans } = loadManrope("normal", {
@@ -45,6 +47,12 @@ export interface PaperPlaneProps {
   /** Playback multiplier. */
   speed?: number;
   theme?: "light" | "dark";
+  /**
+   * Moves, trims or stretches the first stop, the flight, the landing and
+   * the url, by the ids in `./timeline`.
+   * Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<PaperPlaneElementId>;
 }
 
 const EASE_IO = Easing.bezier(0.65, 0, 0.35, 1);
@@ -55,9 +63,6 @@ const CLAMP = {
   extrapolateLeft: "clamp",
   extrapolateRight: "clamp",
 } as const;
-
-/** Frame the plane touches down. */
-const LAND = 184;
 
 const PAPER_TEX = `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='p'><feTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' seed='9' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.35  0 0 0 0 0.33  0 0 0 0 0.3  0 0 0 0.16 0'/></filter><rect width='240' height='240' filter='url(%23p)'/></svg>")`;
 
@@ -239,18 +244,18 @@ function headingAt(tr: Track, s: number) {
 }
 
 /** Glide speed: already airborne at frame 0, eases off into the landing. */
-function velocity(t: number, land: number) {
-  return interpolate(t, [land - 36, land], [1, 0.14], {
+function velocity(t: number, land: number, ease: number) {
+  return interpolate(t, [land - ease, land], [1, 0.14], {
     ...CLAMP,
     easing: Easing.bezier(0.45, 0, 0.55, 1),
   });
 }
 
-function buildDistance(land: number) {
+function buildDistance(land: number, ease: number) {
   const table = [0];
   let sum = 0;
   for (let i = 1; i <= land * 2; i++) {
-    sum += velocity((i - 0.5) / 2, land) / 2;
+    sum += velocity((i - 0.5) / 2, land, ease) / 2;
     table.push(sum);
   }
   return table.map((v) => v / sum);
@@ -617,28 +622,40 @@ function ScaleLayer({
 
 /* ------------------------------------------------------------------ */
 
-export function PaperPlane({
-  steps = ["Write", "Render", "Launch"],
-  logo,
-  url = "remocn.dev",
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = display,
-  land = LAND,
-  trail = true,
-  scale = 1,
-  delay = 0,
-  grain = true,
-  speed = 1,
-  theme = "light",
-}: PaperPlaneProps) {
+export function PaperPlane(props: PaperPlaneProps) {
+  const {
+    steps = ["Write", "Render", "Launch"],
+    logo,
+    url = "remocn.dev",
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = display,
+    trail = true,
+    scale = 1,
+    delay = 0,
+    grain = true,
+    speed = 1,
+    theme = "light",
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = useSceneFrame();
   const tAt = (f: number) => Math.max(0, f - delay) * speed;
   const t = tAt(frame);
   const transparent = background === "transparent";
-  const { width, height } = useSceneConfig();
+  const { width, height, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    paperPlaneTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const intro = tl.get("intro");
+  const flight = tl.get("flight");
+  const landing = tl.get("landing");
+  const urlEl = tl.get("url");
+  const land = landing.start;
   const u = height / 720;
   const pal = THEMES[theme];
   const W = width;
@@ -684,10 +701,15 @@ export function PaperPlane({
       dot,
     ]);
   }, [W, D, u, dotX, dotY, lockX, lockY, lockW]);
-  const dist = useMemo(() => buildDistance(land), [land]);
+  const flightLength = flight.length;
+  const flightEase = flight.beat("ease");
+  const dist = useMemo(
+    () => buildDistance(flightLength, flightEase),
+    [flightLength, flightEase],
+  );
 
   const sAt = (time: number) => {
-    const x = Math.min(land, Math.max(0, time)) * 2;
+    const x = Math.min(flightLength, Math.max(0, time - flight.start)) * 2;
     const i = Math.floor(x);
     const f = x - i;
     const a = dist[Math.min(i, dist.length - 1)];
@@ -716,10 +738,15 @@ export function PaperPlane({
       lagX += p.x / 6;
       lagY += p.y / 6;
     }
-    const settle = interpolate(time, [land - 60, land + 6], [0, 1], {
-      ...CLAMP,
-      easing: EASE_IO,
-    });
+    const settle = interpolate(
+      time,
+      [land + landing.beat("cameraAt"), land + landing.beat("cameraEnd")],
+      [0, 1],
+      {
+        ...CLAMP,
+        easing: EASE_IO,
+      },
+    );
     const followX = softMax(lagX + 0.08 * W, 0, 180 * u);
     return {
       camX: followX + (2 * D - followX) * settle,
@@ -740,23 +767,38 @@ export function PaperPlane({
   );
 
   // landing: the plane folds itself into the accent dot
-  const morph = interpolate(t, [land - 14, land], [0, 1], {
+  const morph = interpolate(t, [land + landing.beat("morphAt"), land], [0, 1], {
     ...CLAMP,
     easing: Easing.bezier(0.55, 0, 1, 0.45),
   });
   const planeSize = 62 * u * (1 - morph * 0.86);
-  const height3d = interpolate(t, [land - 40, land], [1, 0], {
-    ...CLAMP,
-    easing: Easing.bezier(0.55, 0, 1, 0.45),
-  });
+  const height3d = interpolate(
+    t,
+    [land + landing.beat("descendAt"), land],
+    [1, 0],
+    {
+      ...CLAMP,
+      easing: Easing.bezier(0.55, 0, 1, 0.45),
+    },
+  );
   const lift = { x: 10 * u * height3d + 2 * u, y: 30 * u * height3d + 3 * u };
   const facets = planeFacets(heading, bank, tilt, planeSize, lift);
   const accentRgb = hexRgb(accent);
-  const dotIn = interpolate(t, [land - 3, land + 4], [0, 1], CLAMP);
-  const dotPop = interpolate(t, [land, land + 6, land + 16], [1, 1.12, 1], {
-    ...CLAMP,
-    easing: EASE_IO,
-  });
+  const dotIn = interpolate(
+    t,
+    [land + landing.beat("dotAt"), land + landing.beat("dotEnd")],
+    [0, 1],
+    CLAMP,
+  );
+  const dotPop = interpolate(
+    t,
+    [land, land + landing.beat("popPeak"), landing.end],
+    [1, 1.12, 1],
+    {
+      ...CLAMP,
+      easing: EASE_IO,
+    },
+  );
 
   // the dashed trail, oldest part faded
   const trailEnd = Math.max(0, s - planeSize * 0.72);
@@ -764,7 +806,12 @@ export function PaperPlane({
   const gap = 9 * u;
   const chunks: React.ReactNode[] = [];
   const CH = 140 * u;
-  const trailDim = interpolate(t, [land - 6, land + 30], [1, 0.4], CLAMP);
+  const trailDim = interpolate(
+    t,
+    [land + landing.beat("dimAt"), land + landing.beat("dimEnd")],
+    [1, 0.4],
+    CLAMP,
+  );
   for (let c0 = 0; c0 < trailEnd; c0 += CH) {
     const c1 = Math.min(trailEnd, c0 + CH);
     const pts: string[] = [];
@@ -796,9 +843,10 @@ export function PaperPlane({
     [0, 1],
     CLAMP,
   );
-  const enter = (start: number) =>
-    interpolate(t, [start, start + 22], [0, 1], { ...CLAMP, easing: EASE_OUT });
-  const s1 = enter(-8);
+  const s1 = interpolate(t, [intro.start, intro.end], [0, 1], {
+    ...CLAMP,
+    easing: EASE_OUT,
+  });
   const s2 = interpolate(camX, [0.35 * D, 0.75 * D], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
@@ -811,7 +859,7 @@ export function PaperPlane({
     ...CLAMP,
     easing: EASE_OUT,
   });
-  const urlIn = interpolate(t, [land + 8, land + 28], [0, 1], {
+  const urlIn = interpolate(t, [urlEl.start, urlEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });

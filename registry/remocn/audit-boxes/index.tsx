@@ -10,13 +10,22 @@ import {
   DemoDashboard,
   FONT,
   type Issue,
-  IssueMarks,
   MONO,
   midway,
+  OutlineBox,
+  Pill,
   progress,
+  type Rect,
   useAuditFrame,
 } from "@/lib/remocn/audit-core";
+import { useSceneConfig } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import {
+  type ResolvedTimeline,
+  type Timing,
+  useTimeline,
+} from "@/lib/remocn/timeline";
+import { type AuditBoxesElementId, auditBoxesTimeline } from "./timeline";
 
 export type AuditBoxesProps = {
   /** UI to audit, laid out in a 1280x720 frame. Defaults to a demo calendar dashboard. */
@@ -30,6 +39,11 @@ export type AuditBoxesProps = {
   /** Frames between one box and the next. */
   stagger?: number;
   speed?: number;
+  /**
+   * Moves, trims or stretches the counter and single boxes, by the ids in
+   * `./timeline`. Frames on the scene timeline, after `speed`.
+   */
+  timing?: Timing<AuditBoxesElementId>;
 };
 
 export const auditBoxesDefaults = {
@@ -42,16 +56,42 @@ export const auditBoxesDefaults = {
 
 export const auditBoxesLength = 56;
 
-const START = 10;
+type BoxesSchedule = ResolvedTimeline<AuditBoxesElementId>;
 
 export function AuditBoxes(props: AuditBoxesProps) {
-  const { speed = 1 } = props;
+  const { speed = 1, timing } = props;
+  const { durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    auditBoxesTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   return (
     <AuditClock speed={speed}>
-      <Scene {...props} />
+      <Scene {...props} tl={tl} />
     </AuditClock>
   );
 }
+
+/** Where an issue's note sits against its box. */
+const BOX_NOTE_SPOT = {
+  start: (r: Rect) => ({
+    x: r.x - 3,
+    y: r.y - 3,
+    anchor: "aboveStart" as const,
+  }),
+  end: (r: Rect) => ({
+    x: r.x + r.w + 3,
+    y: r.y - 3,
+    anchor: "aboveEnd" as const,
+  }),
+  below: (r: Rect) => ({
+    x: r.x - 3,
+    y: r.y + r.h + 3,
+    anchor: "belowStart" as const,
+  }),
+};
 
 function Scene({
   children,
@@ -59,21 +99,28 @@ function Scene({
   color = auditBoxesDefaults.color,
   background = auditBoxesDefaults.background,
   counterLabel = auditBoxesDefaults.counterLabel,
-  stagger = auditBoxesDefaults.stagger,
-}: AuditBoxesProps) {
+  tl,
+}: AuditBoxesProps & { tl: BoxesSchedule }) {
+  const boxes = issues.map((_, i) => tl.get(`box:${i}`));
   return (
     <AbsoluteFill style={{ background, fontFamily: FONT }}>
       {children ?? <DemoDashboard v={1} />}
-      <IssueMarks
-        issues={issues}
-        color={color}
-        start={START}
-        stagger={stagger}
-      />
+      {/* Every issue boxed, with its note popping on once the box closes. */}
+      {issues.map((issue, i) => (
+        <div key={`${issue.rect.x}-${issue.rect.y}-${issue.note}`}>
+          <OutlineBox rect={issue.rect} color={color} delay={boxes[i].start} />
+          <Pill
+            {...BOX_NOTE_SPOT[issue.side ?? "start"](issue.rect)}
+            text={issue.note}
+            color={color}
+            delay={boxes[i].start + boxes[i].beat("note")}
+          />
+        </div>
+      ))}
       {counterLabel && (
         <Counter
-          total={issues.length}
-          stagger={stagger}
+          starts={boxes.map((b) => b.start)}
+          tl={tl}
           color={color}
           label={counterLabel}
         />
@@ -84,23 +131,23 @@ function Scene({
 
 /** Count chip above the frame's top right that ticks up with every box. */
 function Counter({
-  total,
-  stagger,
+  starts,
+  tl,
   color,
   label,
 }: {
-  total: number;
-  stagger: number;
+  starts: number[];
+  tl: BoxesSchedule;
   color: string;
   label: string;
 }) {
   const glide = useGlide();
   const frame = useAuditFrame();
-  const count = Math.min(
-    total,
-    Math.max(0, Math.floor((frame - START) / stagger) + 1),
-  );
-  const show = progress(frame, START - 6, 10);
+  // One more for every box that has started drawing.
+  let count = 0;
+  while (count < starts.length && frame >= starts[count]) count++;
+  const counter = tl.get("counter");
+  const show = progress(frame, counter.start, counter.length);
   return (
     <div
       style={{

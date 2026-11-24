@@ -7,6 +7,18 @@ import { useId } from "react";
 import { AbsoluteFill, Easing, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import {
+  type ResolvedElement,
+  type Timing,
+  useTimeline,
+} from "@/lib/remocn/timeline";
+import {
+  DEFAULT_ITEMS,
+  HIGHLIGHT,
+  highlightRow,
+  type IndexListElementId,
+  indexListTimeline,
+} from "./timeline";
 
 const { fontFamily: hanken } = loadHanken("normal", {
   weights: ["400", "500"],
@@ -40,15 +52,13 @@ export interface IndexListProps {
   grain?: boolean;
   theme?: "dark" | "light";
   speed?: number;
+  /**
+   * Moves, trims or stretches the header, single rows and the highlight, by
+   * the ids in `./timeline`. Frames on the scene timeline, after `delay` and
+   * `speed`.
+   */
+  timing?: Timing<IndexListElementId>;
 }
-
-const DEFAULT_ITEMS = [
-  "Transitions",
-  "Captions",
-  "Backgrounds",
-  "Kinetic type",
-  "Templates",
-];
 
 const EASE_IO = Easing.bezier(0.65, 0, 0.35, 1);
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
@@ -79,10 +89,6 @@ const THEMES = {
     grain: 0.045,
   },
 } as const;
-
-const RULE_START = 2;
-const STAGGER = 3;
-const BLOCK_IN = 40;
 
 function pad(n: number) {
   return n < 10 ? `0${n}` : `${n}`;
@@ -180,7 +186,7 @@ interface RowsProps {
   numColor: string;
   nameColor: string;
   fontFamily: string;
-  stagger: number;
+  rowAt: (i: number) => ResolvedElement<IndexListElementId>;
 }
 
 function Rows({
@@ -194,26 +200,24 @@ function Rows({
   numColor,
   nameColor,
   fontFamily,
-  stagger,
+  rowAt,
 }: RowsProps) {
   const maskH = F * 1.24;
   const cell = (
     key: string,
     x: number,
     i: number,
-    delay: number,
+    part: "number" | "name",
     style: React.CSSProperties,
     text: string,
   ) => {
-    const p = interpolate(
-      t,
-      [
-        RULE_START + 8 + i * stagger + delay,
-        RULE_START + 26 + i * stagger + delay,
-      ],
-      [0, 1],
-      { ...CLAMP, easing: EASE_OUT },
-    );
+    // A row's element is its number rising; the name rises a beat later.
+    const row = rowAt(i);
+    const at = part === "name" ? row.start + row.beat("name") : row.start;
+    const p = interpolate(t, [at, at + row.length], [0, 1], {
+      ...CLAMP,
+      easing: EASE_OUT,
+    });
     return (
       <div
         key={key}
@@ -251,7 +255,7 @@ function Rows({
             "n",
             numX,
             i,
-            0,
+            "number",
             {
               fontFamily,
               fontWeight: 400,
@@ -265,7 +269,7 @@ function Rows({
             "t",
             nameX,
             i,
-            2,
+            "name",
             {
               fontFamily,
               fontWeight: 500,
@@ -296,33 +300,40 @@ function ScaleLayer({
   );
 }
 
-export function IndexList({
-  items = DEFAULT_ITEMS,
-  highlight = 3,
-  title = "What’s inside 3.0",
-  countLabel = "features",
-  logo,
-  stagger = STAGGER,
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = hanken,
-  scale = 1,
-  delay = 0,
-  grain = true,
-  theme = "dark",
-  speed = 1,
-}: IndexListProps) {
+export function IndexList(props: IndexListProps) {
+  const {
+    items = DEFAULT_ITEMS,
+    highlight = HIGHLIGHT,
+    title = "What’s inside 3.0",
+    countLabel = "features",
+    logo,
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = hanken,
+    scale = 1,
+    delay = 0,
+    grain = true,
+    theme = "dark",
+    speed = 1,
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H } = useSceneConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    indexListTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const u = H / 720;
   const c = THEMES[theme];
   const fg = ink ?? c.fg;
   const stage =
     background === "transparent" ? "transparent" : (background ?? c.bg);
   const n = Math.max(1, items.length);
-  const hl = Math.min(Math.max(0, Math.round(highlight)), n - 1);
+  const hl = highlightRow(items, highlight);
 
   const mX = W * 0.075;
   const cw = W - mX * 2;
@@ -339,43 +350,48 @@ export function IndexList({
   const rowTop = (i: number) => listTop + rowH * i;
   const hair = Math.max(1, u);
 
-  const rule = (i: number) =>
-    interpolate(
-      t,
-      [RULE_START + i * stagger, RULE_START + 22 + i * stagger],
-      [0, 1],
-      { ...CLAMP, easing: EASE_IO },
-    );
-  const head = (d: number) =>
-    interpolate(t, [d, d + 18], [0, 1], { ...CLAMP, easing: EASE_OUT });
+  const rowAt = (i: number) => tl.get(`row:${i}`);
+  const rule = (i: number) => {
+    const { start, end } = tl.get(`rule:${i}`);
+    return interpolate(t, [start, end], [0, 1], {
+      ...CLAMP,
+      easing: EASE_IO,
+    });
+  };
+  const head = (id: "title" | "count") => {
+    const { start, end } = tl.get(id);
+    return interpolate(t, [start, end], [0, 1], { ...CLAMP, easing: EASE_OUT });
+  };
 
-  const wipe = interpolate(t, [BLOCK_IN, BLOCK_IN + 14], [0, 1], {
+  const block = tl.get("block");
+  const travel = tl.get("travel");
+  const wipe = interpolate(t, [block.start, block.end], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
-  const travelStart = BLOCK_IN + 12;
-  const travelDur = 14 + hl * 5;
+  const travelStart = travel.start;
+  const travelDur = travel.beat("lead");
+  const trailAt = travelStart + travel.beat("trail");
   const lead = interpolate(t, [travelStart, travelStart + travelDur], [0, hl], {
     ...CLAMP,
     easing: EASE_IO,
   });
-  const trail = interpolate(
-    t,
-    [travelStart + 5, travelStart + 5 + travelDur],
-    [0, hl],
-    { ...CLAMP, easing: EASE_IO },
-  );
-  const parkedAt = travelStart + 5 + travelDur;
+  const trail = interpolate(t, [trailAt, trailAt + travelDur], [0, hl], {
+    ...CLAMP,
+    easing: EASE_IO,
+  });
+  const parkedAt = travel.end;
   const bTop = rowTop(trail) + hair;
   const bBottom = rowTop(lead) + rowH;
   const bLeft = mX;
   const bRight = mX + cw * wipe;
-  const arrowP = interpolate(t, [parkedAt - 4, parkedAt + 12], [0, 1], {
+  const arrow = tl.get("arrow");
+  const arrowP = interpolate(t, [arrow.start, arrow.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
   const pushAt = (tt: number) =>
-    interpolate(tt, [0, parkedAt + 40], [1.03, 1], {
+    interpolate(tt, [0, parkedAt + travel.beat("hold")], [1.03, 1], {
       ...CLAMP,
       easing: Easing.bezier(0.33, 0, 0.2, 1),
     });
@@ -395,10 +411,11 @@ export function IndexList({
     numX,
     nameX,
     fontFamily,
-    stagger,
+    rowAt,
   };
   const arrowSize = F * 0.78;
-  const dim = interpolate(t, [parkedAt - 2, parkedAt + 18], [1, 0.42], {
+  const dimming = tl.get("dim");
+  const dim = interpolate(t, [dimming.start, dimming.end], [1, 0.42], {
     ...CLAMP,
     easing: EASE_IO,
   });
@@ -433,8 +450,8 @@ export function IndexList({
               lineHeight: 1,
               letterSpacing: "-0.01em",
               color: c.muted,
-              opacity: head(0),
-              transform: `translateY(${(1 - head(0)) * 10 * u}px)`,
+              opacity: head("title"),
+              transform: `translateY(${(1 - head("title")) * 10 * u}px)`,
             }}
           >
             {logo ?? <RemocnLogo fontSize={24 * u} color={fg} />}
@@ -463,8 +480,8 @@ export function IndexList({
               letterSpacing: "-0.01em",
               fontVariantNumeric: "tabular-nums",
               color: c.muted,
-              opacity: head(4),
-              transform: `translateY(${(1 - head(4)) * 10 * u}px)`,
+              opacity: head("count"),
+              transform: `translateY(${(1 - head("count")) * 10 * u}px)`,
             }}
           >
             {`${pad(n)} ${countLabel}`}

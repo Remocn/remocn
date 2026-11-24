@@ -12,6 +12,12 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  type CaseFlipElementId,
+  caseFlipTimeline,
+  DEFAULT_TEXT,
+} from "./timeline";
 
 const face = loadFont("normal", { weights: ["500"], subsets: ["latin"] });
 
@@ -40,6 +46,12 @@ export interface CaseFlipProps {
   delay?: number;
   theme?: "dark" | "light";
   speed?: number;
+  /**
+   * Moves, trims or stretches the rise, the guides, each glyph's flips and
+   * the settle, by the ids in `./timeline`. Frames on the scene timeline,
+   * after `delay` and `speed`.
+   */
+  timing?: Timing<CaseFlipElementId>;
 }
 
 const THEMES = {
@@ -67,7 +79,6 @@ const WEIGHT = 500;
 const PROBE = 200;
 const TRACK_LOWER = -0.035;
 const TRACK_UPPER = -0.01;
-const FLIP = 10;
 
 /** Per-slot glyph forms for the three casing stages: lower, UPPER, final. */
 type Forms = [string, string, string];
@@ -199,25 +210,30 @@ function ScaleLayer({
   );
 }
 
-export function CaseFlip({
-  text = "Launch it LOUD",
-  accentWord = "LOUD",
-  stagger = 2,
-  flip = FLIP,
-  pause = 12,
-  showGuides = true,
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = face.fontFamily,
-  scale = 1,
-  delay = 0,
-  theme = "dark",
-  speed = 1,
-}: CaseFlipProps) {
+export function CaseFlip(props: CaseFlipProps) {
+  const {
+    text = DEFAULT_TEXT,
+    accentWord = "LOUD",
+    showGuides = true,
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = face.fontFamily,
+    scale = 1,
+    delay = 0,
+    theme = "dark",
+    speed = 1,
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H } = useSceneConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    caseFlipTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const c = THEMES[theme];
   const fg = ink ?? c.fg;
   const bg =
@@ -233,24 +249,21 @@ export function CaseFlip({
     return <div style={{ position: "absolute", inset: 0, background: bg }} />;
 
   const n = forms.length;
-  const wave1 = 16;
-  const wave2 = wave1 + (n - 1) * stagger + flip + pause;
-  const settled = wave2 + (n - 1) * stagger + flip;
+  const enterEl = tl.get("enter");
+  const guidesEl = tl.get("guides");
+  const settle = tl.get("settle");
+  // A space has no flips: its stage changes nothing it draws or spaces.
+  const flips = forms.map((f, i) =>
+    f[0] === " "
+      ? null
+      : { up: tl.get(`upper:${i}`), fin: tl.get(`final:${i}`) },
+  );
 
   // Stage of each slot (0 lower → 1 UPPER → 2 final) and its flip clocks.
-  const local = forms.map((_, i) => {
-    const q1 = interpolate(
-      t,
-      [wave1 + i * stagger, wave1 + i * stagger + flip],
-      [0, 1],
-      CLAMP,
-    );
-    const q2 = interpolate(
-      t,
-      [wave2 + i * stagger, wave2 + i * stagger + flip],
-      [0, 1],
-      CLAMP,
-    );
+  const local = flips.map((fl) => {
+    if (!fl) return { q1: 0, q2: 0 };
+    const q1 = interpolate(t, [fl.up.start, fl.up.end], [0, 1], CLAMP);
+    const q2 = interpolate(t, [fl.fin.start, fl.fin.end], [0, 1], CLAMP);
     return { q1, q2 };
   });
   const stage = local.map(({ q1, q2 }) => EASE_IO(q1) + EASE_IO(q2));
@@ -271,15 +284,23 @@ export function CaseFlip({
   const lineW = advances.reduce((a, b) => a + b, 0) * size;
   let cursor = W / 2 - lineW / 2;
 
-  const enter = interpolate(t, [0, 14], [0, 1], { ...CLAMP, easing: EASE_OUT });
-  const guidesIn = interpolate(t, [2, 22], [0, 1], {
+  const enter = interpolate(t, [enterEl.start, enterEl.end], [0, 1], {
+    ...CLAMP,
+    easing: EASE_OUT,
+  });
+  const guidesIn = interpolate(t, [guidesEl.start, guidesEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
-  const guidesOut = interpolate(t, [settled, settled + 20], [1, 0], {
-    ...CLAMP,
-    easing: EASE_IO,
-  });
+  const guidesOut = interpolate(
+    t,
+    [settle.start, settle.start + settle.beat("guides")],
+    [1, 0],
+    {
+      ...CLAMP,
+      easing: EASE_IO,
+    },
+  );
   const guideHalf = (lineW / 2 + size * 0.5) * guidesIn;
   const hair = Math.max(1, u);
 
@@ -292,7 +313,7 @@ export function CaseFlip({
     advances
       .slice(Math.max(0, accentFrom), Math.max(0, accentTo))
       .reduce((a, b) => a + b, 0) * size;
-  const drift = interpolate(t, [settled, settled + 50], [0, 0.08], {
+  const drift = interpolate(t, [settle.start, settle.end], [0, 0.08], {
     ...CLAMP,
     easing: EASE_IO,
   });
@@ -383,11 +404,11 @@ export function CaseFlip({
   // along the line on the frame a flip lands, so the mark stays on through it.
   const around = (a: number, b: number) => t + speed > a && t - speed < b;
   const moving =
-    around(0, 14) ||
-    forms.some(
-      (_, i) =>
-        around(wave1 + i * stagger, wave1 + i * stagger + flip) ||
-        around(wave2 + i * stagger, wave2 + i * stagger + flip),
+    around(enterEl.start, enterEl.end) ||
+    flips.some(
+      (fl) =>
+        fl !== null &&
+        (around(fl.up.start, fl.up.end) || around(fl.fin.start, fl.fin.end)),
     );
 
   return (

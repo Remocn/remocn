@@ -7,6 +7,12 @@ import { useId, useMemo } from "react";
 import { AbsoluteFill, Easing, interpolate, spring } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  type FeatureChipsFlowElementId,
+  featureChipsFlowTimeline,
+  HIT,
+} from "./timeline";
 
 const { fontFamily: GEIST } = loadGeist("normal", {
   weights: ["400", "500"],
@@ -138,6 +144,12 @@ export interface FeatureChipsFlowProps {
   grain?: boolean;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches the converge, the name's landing and the
+   * push-in, by the ids in `./timeline`.
+   * Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<FeatureChipsFlowElementId>;
 }
 
 const DEFAULT_FEATURES: FeatureChip[] = [
@@ -201,9 +213,6 @@ const NAME_ROW = 2;
 
 /** Rows of the river: screen position (0–1) and depth (0 far, 1 near). */
 const RIVER_DEPTHS = [0.4, 0.78, 0.12, 1, 0.55, 0.22, 0.86];
-
-const CONVERGE = 58;
-const HIT = 96;
 
 const OUT = Easing.bezier(0.22, 1, 0.36, 1);
 
@@ -284,26 +293,37 @@ function ScaleLayer({
   );
 }
 
-export function FeatureChipsFlow({
-  features = DEFAULT_FEATURES,
-  name = "remocn",
-  logo,
-  converge = CONVERGE,
-  push: pushBy = 0.045,
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = GEIST,
-  scale = 1,
-  delay = 0,
-  grain = true,
-  speed = 1,
-  theme = "dark",
-}: FeatureChipsFlowProps) {
+export function FeatureChipsFlow(props: FeatureChipsFlowProps) {
+  const {
+    features = DEFAULT_FEATURES,
+    name = "remocn",
+    logo,
+    push: pushBy = 0.045,
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = GEIST,
+    scale = 1,
+    delay = 0,
+    grain = true,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay) * speed;
-  const hit = converge + HIT - CONVERGE;
-  const { width: W, height: H, fps } = useSceneConfig();
+  const { width: W, height: H, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    featureChipsFlowTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const convergeEl = tl.get("converge");
+  const nameEl = tl.get("name");
+  const pushEl = tl.get("push");
+  const converge = convergeEl.start;
+  const hit = nameEl.start;
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
   const isLight = theme === "light";
   const isLogo = name.trim().toLowerCase() === "remocn";
@@ -453,16 +473,26 @@ export function FeatureChipsFlow({
 
   // The hit: name lands, the cluster takes a small outward nudge and settles.
   const hitT = frame - hit;
-  const nameIn = interpolate(hitT, [-2, 8], [0, 1], {
-    easing: OUT,
-    extrapolateLeft: "clamp",
-    extrapolateRight: "clamp",
-  });
-  const nameScale = interpolate(hitT, [-2, 10], [1.1, 1], {
-    easing: OUT,
-    extrapolateLeft: "clamp",
-    extrapolateRight: "clamp",
-  });
+  const nameIn = interpolate(
+    hitT,
+    [nameEl.beat("lead"), nameEl.beat("in")],
+    [0, 1],
+    {
+      easing: OUT,
+      extrapolateLeft: "clamp",
+      extrapolateRight: "clamp",
+    },
+  );
+  const nameScale = interpolate(
+    hitT,
+    [nameEl.beat("lead"), nameEl.beat("settle")],
+    [1.1, 1],
+    {
+      easing: OUT,
+      extrapolateLeft: "clamp",
+      extrapolateRight: "clamp",
+    },
+  );
   const nudge =
     hitT > 0
       ? Math.sin(hitT * 0.42) * Math.exp(-hitT * 0.19) * chipH * 0.16
@@ -474,16 +504,21 @@ export function FeatureChipsFlow({
     extrapolateRight: "clamp",
   });
   const beamChip = `radial-gradient(90% 160% at ${18 + drift * 10}% -10%, rgba(143,180,255,0.75) 0%, rgba(143,180,255,0) 60%), linear-gradient(${100 + drift * 12}deg, ${accent} 0%, #3d5bff 45%, #1a1660 135%)`;
-  const pool = interpolate(frame, [converge, hit + 20], [0.55, 1], {
-    easing: INOUT,
-    extrapolateLeft: "clamp",
-    extrapolateRight: "clamp",
-  });
+  const pool = interpolate(
+    frame,
+    [converge, hit + nameEl.beat("pool")],
+    [0.55, 1],
+    {
+      easing: INOUT,
+      extrapolateLeft: "clamp",
+      extrapolateRight: "clamp",
+    },
+  );
   const ground = isLight
     ? `radial-gradient(62% 52% at ${48 + drift * 4}% 56%, rgba(143,180,255,${(0.34 * pool).toFixed(3)}) 0%, rgba(143,180,255,0) 72%), radial-gradient(110% 85% at 50% 45%, ${p.top} 0%, ${p.stage} 70%)`
     : `radial-gradient(58% 50% at ${48 + drift * 4}% 56%, rgba(61,91,255,${(0.2 * pool).toFixed(3)}) 0%, rgba(26,22,96,${(0.16 * pool).toFixed(3)}) 50%, rgba(2,3,10,0) 78%), radial-gradient(110% 85% at 50% 45%, ${p.top} 0%, ${p.stage} 70%)`;
 
-  const push = interpolate(frame, [converge, 170], [1, 1 + pushBy], {
+  const push = interpolate(frame, [pushEl.start, pushEl.end], [1, 1 + pushBy], {
     easing: INOUT,
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
@@ -521,7 +556,10 @@ export function FeatureChipsFlow({
     }
     const out = interpolate(
       f,
-      [converge + 4 + hash(i) * 10, converge + 30 + hash(i) * 10],
+      [
+        converge + convergeEl.beat("dissolve") + hash(i) * 10,
+        converge + convergeEl.beat("dissolveEnd") + hash(i) * 10,
+      ],
       [0, 1],
       { extrapolateLeft: "clamp", extrapolateRight: "clamp", easing: INOUT },
     );

@@ -12,6 +12,18 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  type ChoreFoldElementId,
+  choreFoldTimeline,
+  DEFAULT_LABEL,
+  DEFAULT_NAME,
+  DEFAULT_PAYOFF,
+  DEFAULT_RESULT,
+  DEFAULT_STEPS,
+  splitWords,
+  stepsOf,
+} from "./timeline";
 
 const geologica = loadFont("normal", {
   weights: ["400", "500"],
@@ -40,20 +52,18 @@ export interface ChoreFoldProps {
   delay?: number;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches the label, single steps, the rounds of the
+   * fold, the swap, the hero and the payoff, by the ids in `./timeline`.
+   * Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<ChoreFoldElementId>;
 }
 
 const THEMES = {
   dark: { bg: "#0E3B43", ink: "#FFFFFF", accent: "#4FE3D0" },
   light: { bg: "#E8F6F5", ink: "#0B3138", accent: "#0F8C7E" },
 } as const;
-
-const DEFAULT_STEPS = [
-  "Export the audio.",
-  "Send it off for a transcript.",
-  "Fix every timestamp by hand.",
-  "Style each line to match.",
-  "Render the whole film again.",
-];
 
 const FONT_PX = 200;
 const STEP_W = 400;
@@ -69,18 +79,6 @@ const CLAMP = {
   extrapolateLeft: "clamp",
   extrapolateRight: "clamp",
 } as const;
-
-const LINE_AT = 6;
-const LINE_GAP = 8;
-const WORD_STAGGER = 2;
-const WORD_IN = 13;
-const ROUND = [17, 13, 11, 10, 9];
-const ROUND_GAP = 3;
-const SWAP_LEAD = 5;
-const SWAP_OUT = 10;
-const SWAP_IN = 18;
-const PAYOFF_AFTER = 16;
-const HOLD = 40;
 
 const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
 
@@ -128,8 +126,6 @@ function useMetrics(texts: string[], fontFamily: string) {
   }, [id, handle, fontFamily]);
   return state && state.id === id ? state.m : null;
 }
-
-const splitWords = (s: string) => s.split(/\s+/).filter(Boolean);
 
 function balanced(
   words: string[],
@@ -182,33 +178,39 @@ function ScaleLayer({
   );
 }
 
-export function ChoreFold({
-  steps = DEFAULT_STEPS,
-  label = "By hand",
-  name = "Captions",
-  result = "does all of that.",
-  payoff = "You just talk.",
-  accent,
-  ink,
-  background,
-  fontFamily = geologica.fontFamily,
-  lineStagger = LINE_GAP,
-  stagger = WORD_STAGGER,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: ChoreFoldProps) {
+export function ChoreFold(props: ChoreFoldProps) {
+  const {
+    steps = DEFAULT_STEPS,
+    label = DEFAULT_LABEL,
+    name = DEFAULT_NAME,
+    result = DEFAULT_RESULT,
+    payoff = DEFAULT_PAYOFF,
+    accent,
+    ink,
+    background,
+    fontFamily = geologica.fontFamily,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
   const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    choreFoldTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const c = THEMES[theme];
   const hi = accent ?? c.accent;
   const fg = ink ?? c.ink;
   const stage =
     background === "transparent" ? "transparent" : (background ?? c.bg);
 
-  const list = steps.length > 0 ? steps : DEFAULT_STEPS;
+  const list = stepsOf(steps);
   const heroWords = [
     ...splitWords(name).map((w) => ({ w, lit: true })),
     ...splitWords(result).map((w) => ({ w, lit: false })),
@@ -268,22 +270,15 @@ export function ChoreFold({
 
   const D = (n - 1) / 2;
   const rounds = Math.max(1, Math.ceil(D));
-  const roundDur = (r: number) => ROUND[Math.min(r, ROUND.length - 1)];
-  let foldLen = 0;
-  for (let r = 0; r < rounds; r++) foldLen += roundDur(r) + ROUND_GAP;
-
-  const linesDone = LINE_AT + (n - 1) * lineStagger + 16;
-  const tail = foldLen + SWAP_LEAD + SWAP_IN + PAYOFF_AFTER + 14 + HOLD;
-  const span = durationInFrames * speed;
-  const read = Math.min(70, Math.max(18, span - linesDone - tail));
-  const foldAt = linesDone + read;
+  const roundEls = Array.from({ length: rounds }, (_, r) =>
+    tl.get(`round:${r}`),
+  );
 
   const foldP = (at: number) => {
     let acc = 0;
-    let from = foldAt;
     for (let r = 0; r < rounds; r++) {
-      acc += Math.min(1, D - r) * easeAt(at, from, roundDur(r), EASE_MOVE);
-      from += roundDur(r) + ROUND_GAP;
+      const e = roundEls[r];
+      acc += Math.min(1, D - r) * easeAt(at, e.start, e.length, EASE_MOVE);
     }
     return acc;
   };
@@ -294,12 +289,8 @@ export function ChoreFold({
   const folding =
     Math.abs(foldPx(t + speed) - foldPx(t)) > 1e-3 ||
     Math.abs(foldPx(t) - foldPx(t - speed)) > 1e-3;
-  let cursor = foldAt;
-  for (let r = 0; r < rounds; r++) cursor += roundDur(r) + ROUND_GAP;
-  const foldEnd = cursor;
-  const swapAt = foldEnd + SWAP_LEAD - ROUND_GAP;
-  const heroAt = swapAt + 4;
-  const payoffAt = heroAt + PAYOFF_AFTER;
+  const swap = tl.get("swap");
+  const hero = tl.get("hero");
 
   const cy = H * (portrait ? 0.47 : 0.48);
   const ys = list.map((_, i) => {
@@ -319,8 +310,9 @@ export function ChoreFold({
   const nodes: React.ReactNode[] = [];
 
   if (label) {
-    const lin = ease(2, 12);
-    const lout = ease(foldAt, 10);
+    const labelEl = tl.get("label");
+    const lin = ease(labelEl.start, labelEl.length);
+    const lout = ease(roundEls[0].start, roundEls[0].beat("labelOut"));
     const labelF = Math.max(12, F * 0.46);
     const top = cy - D * pitch - pitch / 2 - labelF * 1.6;
     // The pull rides the transform, not `top`: layout rounds a baseline to
@@ -350,11 +342,12 @@ export function ChoreFold({
     );
   }
 
-  const swapOut = ease(swapAt, SWAP_OUT, EASE_MOVE);
+  const swapOut = ease(swap.start, swap.length, EASE_MOVE);
   const centre = Math.ceil(D);
 
   list.forEach((line, i) => {
-    const enter = LINE_AT + i * lineStagger;
+    const lineEl = tl.get(`line:${i}`);
+    const enter = lineEl.start;
     if (t < enter - 1) return;
     const y = ys[i];
     let clipTop = 0;
@@ -405,7 +398,10 @@ export function ChoreFold({
           }}
         >
           {words.map((w, wi) => {
-            const e = ease(enter + wi * stagger, WORD_IN);
+            const e = ease(
+              enter + wi * lineEl.beat("stagger"),
+              lineEl.beat("rise"),
+            );
             return (
               <span
                 key={`${w}-${wi}`}
@@ -424,6 +420,7 @@ export function ChoreFold({
     );
   });
 
+  const heroAt = hero.start;
   if (t >= heroAt - 1) {
     const lh = heroF * HERO_LH;
     const blockH = heroLines.length * lh;
@@ -453,7 +450,10 @@ export function ChoreFold({
         {heroLines.map((line) => (
           <div key={line.map((h) => h.w).join(" ")}>
             {line.map((h, wi) => {
-              const e = ease(heroAt + wordIndex++ * stagger, SWAP_IN);
+              const e = ease(
+                heroAt + wordIndex++ * hero.beat("stagger"),
+                hero.beat("rise"),
+              );
               return (
                 <span
                   key={`${h.w}-${wi}`}
@@ -474,7 +474,8 @@ export function ChoreFold({
 
     if (payoff) {
       const pf = Math.max(12, Math.min(heroF * 0.5, F * 0.95));
-      const pin = ease(payoffAt, 16);
+      const payoffEl = tl.get("payoff");
+      const pin = ease(payoffEl.start, payoffEl.length);
       nodes.push(
         <div
           key="payoff"

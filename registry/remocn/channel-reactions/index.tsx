@@ -18,26 +18,24 @@ import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  type ChannelAuthor,
+  type ChannelReaction,
+  type ChannelReactionsElementId,
+  type ChannelReply,
+  channelReactionsTimeline,
+  DEFAULT_REACTIONS,
+  DEFAULT_REPLIES,
+  PEOPLE,
+} from "./timeline";
+
+export type { ChannelAuthor, ChannelReaction, ChannelReply };
 
 const onest = loadOnest("normal", {
   weights: ["300", "400"],
   subsets: ["latin"],
 });
-
-export interface ChannelAuthor {
-  name: string;
-  color: string;
-}
-
-export interface ChannelReaction {
-  emoji: string;
-  count: number;
-}
-
-export interface ChannelReply {
-  author: ChannelAuthor;
-  text: string;
-}
 
 export interface ChannelReactionsProps {
   author?: ChannelAuthor;
@@ -74,22 +72,14 @@ export interface ChannelReactionsProps {
   speed?: number;
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
+  /**
+   * Moves, trims or stretches the window, the message and its unfurl, the
+   * cursor's reaction, single reaction chips, the thread line and single
+   * replies, by the ids in `./timeline`. Frames on the scene timeline, after
+   * `delay` and `speed`.
+   */
+  timing?: Timing<ChannelReactionsElementId>;
 }
-
-const PEOPLE = {
-  maya: { name: "Maya Chen", color: "#B4577E" },
-  leo: { name: "Leo Park", color: "#3E7F62" },
-  priya: { name: "Priya Raman", color: "#B26B2C" },
-  sam: { name: "Sam Ortiz", color: "#4A6FA8" },
-};
-
-const DEFAULT_REACTIONS: ChannelReaction[] = [
-  { emoji: "🚀", count: 48 },
-  { emoji: "🔥", count: 36 },
-  { emoji: "🎉", count: 27 },
-  { emoji: "👏", count: 19 },
-  { emoji: "🙌", count: 12 },
-];
 
 const HISTORY: { person: ChannelAuthor; time: string; text: string }[] = [
   {
@@ -107,14 +97,6 @@ const HISTORY: { person: ChannelAuthor; time: string; text: string }[] = [
     time: "10:06 AM",
     text: "Changelog is merged and the docs are live.",
   },
-];
-
-const DEFAULT_REPLIES: ChannelReply[] = [
-  {
-    author: PEOPLE.leo,
-    text: "Already rebuilding our onboarding video with it.",
-  },
-  { author: PEOPLE.priya, text: "The captions tab alone is worth it." },
 ];
 
 const CARD = { mass: 0.8, damping: 18, stiffness: 160 };
@@ -437,41 +419,58 @@ function Sidebar({
   );
 }
 
-export function ChannelReactions({
-  author = PEOPLE.maya,
-  message = "remocn v2 is live. Thirty new components, a captions tab, and a studio that renders right in your browser. Take it for a spin:",
-  link = {
-    url: "remocn.dev/v2",
-    site: "remocn.dev",
-    title: "remocn 2.0: launch videos from components",
-    description:
-      "Copy-paste Remotion components for every beat of your launch video.",
-  },
-  image,
-  reactions = DEFAULT_REACTIONS,
-  replies = DEFAULT_REPLIES,
-  replyCount = 14,
-  workspace = "remocn",
-  channel = "launch",
-  headline = "Launch day, live",
-  time = "10:30 AM",
-  lastReplyLabel = "Last reply just now",
-  stagger = 6,
-  theme = "light",
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = onest.fontFamily,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  ground,
-  groundParams,
-}: ChannelReactionsProps) {
+export function ChannelReactions(props: ChannelReactionsProps) {
+  const {
+    author = PEOPLE.maya,
+    message = "remocn v2 is live. Thirty new components, a captions tab, and a studio that renders right in your browser. Take it for a spin:",
+    link = {
+      url: "remocn.dev/v2",
+      site: "remocn.dev",
+      title: "remocn 2.0: launch videos from components",
+      description:
+        "Copy-paste Remotion components for every beat of your launch video.",
+    },
+    image,
+    reactions = DEFAULT_REACTIONS,
+    replies = DEFAULT_REPLIES,
+    replyCount = 14,
+    workspace = "remocn",
+    channel = "launch",
+    headline = "Launch day, live",
+    time = "10:30 AM",
+    lastReplyLabel = "Last reply just now",
+    theme = "light",
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = onest.fontFamily,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    ground,
+    groundParams,
+    timing,
+  } = props;
   const glide = useGlide();
   const rawFrame = useSceneFrame();
   const frame = Math.max(0, rawFrame - delay) * speed;
-  const { width, height, fps } = useSceneConfig();
+  const { width, height, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    channelReactionsTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const camera = tl.get("camera");
+  const panel = tl.get("panel");
+  const messageEl = tl.get("message");
+  const unfurlEl = tl.get("unfurl");
+  const cursorEl = tl.get("cursor");
+  const react = tl.get("react");
+  const reactionsEl = tl.get("reactions");
+  const thread = tl.get("thread");
+  const pops = reactions.map((_, i) => tl.get(`pop:${i}`));
+  const replyEls = replies.map((_, i) => tl.get(`reply:${i}`));
   const tall = height > width;
   const SW = tall ? 720 : 1280;
   const SH = tall ? 1280 : 720;
@@ -504,10 +503,10 @@ export function ChannelReactions({
   const PAD = tall ? 18 : 24;
   const mainW = WIN.w - SIDE;
 
-  const win = sp(0, HEAVY);
-  const winFade = ease(0, 12);
+  const win = sp(panel.start, HEAVY);
+  const winFade = ease(panel.start, panel.end);
   const camAt = (f: number) =>
-    interpolate(f, [0, 220], [1, 1.03], {
+    interpolate(f, [camera.start, camera.end], [1, 1.03], {
       ...CL,
       easing: CAMERA,
     });
@@ -516,23 +515,32 @@ export function ChannelReactions({
   // as moving while its furthest line still travels a thousandth of a pixel
   // a frame; below that it is at rest and gets no tilt.
   const winMoving =
-    stirs((f) => spAt(f, 0, HEAVY) * 60, 5e-4) ||
-    stirs((f) => (0.96 + 0.04 * spAt(f, 0, HEAVY)) * camAt(f), 2e-6);
-  const headIn = ease(4, 20);
+    stirs((f) => spAt(f, panel.start, HEAVY) * 60, 5e-4) ||
+    stirs((f) => (0.96 + 0.04 * spAt(f, panel.start, HEAVY)) * camAt(f), 2e-6);
+  const headIn = ease(
+    panel.start + panel.beat("headAt"),
+    panel.start + panel.beat("headEnd"),
+  );
 
-  const msgIn = sp(16, MORPH, 16);
-  const msgFade = ease(16, 26);
-  const unfurl = sp(30, MORPH, 16);
-  const unfurlFade = ease(32, 44);
+  const msgIn = sp(messageEl.start, MORPH, messageEl.length);
+  const msgFade = ease(
+    messageEl.start,
+    messageEl.start + messageEl.beat("fade"),
+  );
+  const unfurl = sp(unfurlEl.start, MORPH, unfurlEl.length);
+  const unfurlFade = ease(
+    unfurlEl.start + unfurlEl.beat("fadeAt"),
+    unfurlEl.start + unfurlEl.beat("fadeEnd"),
+  );
 
   const barW = 268;
   const barX = mainW - PAD - barW;
   const target = { x: barX + 24, y: -6 };
   const cursorKeys = [
-    { f: 44, x: mainW + 40, y: 300 },
-    { f: 76, x: target.x, y: target.y },
-    { f: 86, x: target.x, y: target.y },
-    { f: 112, x: mainW + 60, y: 380 },
+    { f: cursorEl.start, x: mainW + 40, y: 300 },
+    { f: react.start, x: target.x, y: target.y },
+    { f: react.end, x: target.x, y: target.y },
+    { f: react.start + react.beat("leave"), x: mainW + 60, y: 380 },
   ];
   let cx = cursorKeys[0].x;
   let cy = cursorKeys[0].y;
@@ -548,16 +556,41 @@ export function ChannelReactions({
     cx = a.x + dx * p + (dy / d) * arc;
     cy = a.y + dy * p - (dx / d) * arc;
   }
-  const press = sp(76, PRESS) - sp(81, PRESS);
-  const cursorOpacity = ease(44, 52) * (1 - ease(104, 112, EXIT));
-  const hover = ease(56, 64) * (1 - ease(92, 100, EXIT));
-  const barIn = sp(58, CARD);
-  const barOut = 1 - ease(90, 98, EXIT);
+  const press =
+    sp(react.start, PRESS) - sp(react.start + react.beat("release"), PRESS);
+  const cursorOpacity =
+    ease(cursorEl.start, cursorEl.start + cursorEl.beat("fadeIn")) *
+    (1 -
+      ease(
+        react.start + react.beat("fadeOutAt"),
+        react.start + react.beat("leave"),
+        EXIT,
+      ));
+  const hover =
+    ease(
+      cursorEl.start + cursorEl.beat("hoverAt"),
+      cursorEl.start + cursorEl.beat("hoverEnd"),
+    ) *
+    (1 -
+      ease(
+        react.start + react.beat("hoverOutAt"),
+        react.start + react.beat("hoverOutEnd"),
+        EXIT,
+      ));
+  const barAt = cursorEl.start + cursorEl.beat("barAt");
+  const barIn = sp(barAt, CARD);
+  const barOut =
+    1 -
+    ease(
+      react.start + react.beat("barOutAt"),
+      react.start + react.beat("barOutEnd"),
+      EXIT,
+    );
 
-  const popAt = reactions.map((_, i) => (i === 0 ? 80 : 86 + i * stagger));
-  const rowIn = sp(78, MORPH, 12);
-  const threadIn = sp(104, MORPH, 14);
-  const replyAt = replies.map((_, i) => 120 + i * 24);
+  const popAt = pops.map((e) => e.start);
+  const rowIn = sp(reactionsEl.start, MORPH, reactionsEl.length);
+  const threadIn = sp(thread.start, MORPH, thread.length);
+  const replyAt = replyEls.map((e) => e.start);
 
   // The channel sticks to its bottom edge, so a block that opens pushes every
   // line above it up by layout, and layout rounds each baseline and box edge
@@ -618,11 +651,13 @@ export function ChannelReactions({
   });
   // Progress of each row, the message first, then its blocks and the replies.
   const openAt = [
-    (f: number) => clamp(spAt(f, 16, MORPH, 16)),
-    (f: number) => clamp(spAt(f, 30, MORPH, 16)),
-    (f: number) => clamp(spAt(f, 78, MORPH, 12)),
-    (f: number) => clamp(spAt(f, 104, MORPH, 14)),
-    ...replyAt.map((at) => (f: number) => clamp(spAt(f, at, MORPH, 14))),
+    (f: number) => clamp(spAt(f, messageEl.start, MORPH, messageEl.length)),
+    (f: number) => clamp(spAt(f, unfurlEl.start, MORPH, unfurlEl.length)),
+    (f: number) => clamp(spAt(f, reactionsEl.start, MORPH, reactionsEl.length)),
+    (f: number) => clamp(spAt(f, thread.start, MORPH, thread.length)),
+    ...replyEls.map(
+      (e) => (f: number) => clamp(spAt(f, e.start, MORPH, e.length)),
+    ),
   ];
   // Px of its height each row still holds back. The message holds back a
   // share of what it contains at that moment, its blocks as far as they are
@@ -656,7 +691,13 @@ export function ChannelReactions({
   // above it already carries the tilt gets none of its own.
   const carried = winMoving || columnMoving;
   const threadAvatars = [PEOPLE.leo, PEOPLE.priya, PEOPLE.sam, PEOPLE.maya];
-  const typing = 1 - ease(12, 18, EXIT);
+  const typing =
+    1 -
+    ease(
+      panel.start + panel.beat("typingOutAt"),
+      panel.start + panel.beat("typingOutEnd"),
+      EXIT,
+    );
 
   return (
     <AbsoluteFill
@@ -946,10 +987,10 @@ export function ChannelReactions({
                             {reactions.map((r, i) => {
                               const s = sp(popAt[i], CHIP);
                               const self = i === 0;
-                              const start = popAt[i] + 4;
+                              const start = popAt[i] + pops[i].beat("countAt");
                               const v = interpolate(
                                 frame,
-                                [start, start + 62 + i * 3],
+                                [start, start + pops[i].beat("count")],
                                 [1, r.count],
                                 { ...CL, easing: LIGHT },
                               );
@@ -995,8 +1036,10 @@ export function ChannelReactions({
                                 alignItems: "center",
                                 justifyContent: "center",
                                 opacity: ease(
-                                  popAt[popAt.length - 1] + 4,
-                                  popAt[popAt.length - 1] + 14,
+                                  popAt[popAt.length - 1] +
+                                    pops[pops.length - 1].beat("countAt"),
+                                  popAt[popAt.length - 1] +
+                                    pops[pops.length - 1].beat("addEnd"),
                                 ),
                               }}
                             >
@@ -1019,13 +1062,15 @@ export function ChannelReactions({
                           >
                             <div style={{ display: "flex", gap: 4 }}>
                               {threadAvatars.map((p, i) => {
-                                const s = sp(104 + i * 6, CHIP);
+                                const at =
+                                  thread.start + i * thread.beat("avatarStep");
+                                const s = sp(at, CHIP);
                                 return (
                                   <div
                                     key={p.name}
                                     style={{
                                       width: 24 * clamp(s),
-                                      transform: `scale(${s})${glide(stirs((f) => spAt(f, 104 + i * 6, CHIP)))}`,
+                                      transform: `scale(${s})${glide(stirs((f) => spAt(f, at, CHIP)))}`,
                                     }}
                                   >
                                     <Avatar person={p} size={24} />
@@ -1043,7 +1088,10 @@ export function ChannelReactions({
                               <Count
                                 value={interpolate(
                                   frame,
-                                  [104, 176],
+                                  [
+                                    thread.start,
+                                    thread.start + thread.beat("count"),
+                                  ],
                                   [1, replyCount],
                                   { ...CL, easing: LIGHT },
                                 )}
@@ -1073,7 +1121,7 @@ export function ChannelReactions({
                           borderRadius: 10,
                           background: pal.panel,
                           boxShadow: pal.raised,
-                          opacity: frame >= 58 ? clamp(barIn) * barOut : 0,
+                          opacity: frame >= barAt ? clamp(barIn) * barOut : 0,
                           transform: `translateY(${(1 - barIn) * 6}px)${glide(stirs((f) => spAt(f, 58, CARD)))}`,
                           fontSize: 15,
                           color: pal.text,
@@ -1095,7 +1143,13 @@ export function ChannelReactions({
                                   i === 0
                                     ? withAlpha(
                                         pal.dark ? "#ffffff" : "#1e1c18",
-                                        0.07 * ease(68, 74),
+                                        0.07 *
+                                          ease(
+                                            cursorEl.start +
+                                              cursorEl.beat("emojiAt"),
+                                            cursorEl.start +
+                                              cursorEl.beat("emojiEnd"),
+                                          ),
                                       )
                                     : undefined,
                               }}
@@ -1152,8 +1206,11 @@ export function ChannelReactions({
                     </div>
                   </Grow>
                   {replies.map((r, i) => {
-                    const p = sp(replyAt[i], MORPH, 14);
-                    const o = ease(replyAt[i], replyAt[i] + 10);
+                    const p = sp(replyAt[i], MORPH, replyEls[i].length);
+                    const o = ease(
+                      replyAt[i],
+                      replyAt[i] + replyEls[i].beat("fade"),
+                    );
                     return (
                       <Grow key={r.text} p={p} cut={cut(4 + i)}>
                         <div

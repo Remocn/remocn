@@ -9,6 +9,8 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { CLAMP, EXPO, SETTLE_SOFT } from "@/lib/remocn/scene-motion";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import { type StageElementId, stageKeyOrder, stageTimeline } from "./timeline";
 
 export interface StageKey {
   at: number;
@@ -40,6 +42,11 @@ export interface StageProps {
   shadow?: number;
   light?: number;
   className?: string;
+  /**
+   * Moves, trims or stretches the entry and each camera move, by the ids in
+   * `./timeline`. Frames on the scene timeline.
+   */
+  timing?: Timing<StageElementId>;
 }
 
 export interface StagePose {
@@ -77,27 +84,51 @@ const poseFromKey = (key: StageKey): StagePose => ({
   rotate: key.rotate ?? NEUTRAL_POSE.rotate,
 });
 
-export function normalizeStageKeys(moves: StageKey[]): StageKey[] {
-  const byFrame = new Map<number, StageKey>();
-  for (const move of moves) byFrame.set(move.at, move);
-  return [...byFrame.values()].sort((a, b) => a.at - b.at);
+export const normalizeStageKeys: (moves: StageKey[]) => StageKey[] =
+  stageKeyOrder;
+
+/** When the camera moves from one key to the next. */
+export interface StageSpan {
+  start: number;
+  end: number;
 }
 
-export function resolveStagePose(frame: number, moves: StageKey[]): StagePose {
+/**
+ * The camera pose at `frame`. `spans` time the moves between consecutive
+ * keys (the resolved `move:<i>` elements); without them, each move runs
+ * from one key's `at` to the next.
+ */
+export function resolveStagePose(
+  frame: number,
+  moves: StageKey[],
+  spans?: StageSpan[],
+): StagePose {
   const keys = normalizeStageKeys(moves);
   if (keys.length === 0) return NEUTRAL_POSE;
-  if (frame <= keys[0].at) return poseFromKey(keys[0]);
-  if (frame >= keys[keys.length - 1].at) {
+  const segments =
+    spans ??
+    keys.slice(1).map((key, i) => ({ start: keys[i].at, end: key.at }));
+  if (segments.length === 0 || frame <= segments[0].start) {
+    return poseFromKey(keys[0]);
+  }
+  if (frame >= segments[segments.length - 1].end) {
     return poseFromKey(keys[keys.length - 1]);
   }
 
-  const rightIndex = keys.findIndex((key) => frame <= key.at);
-  const left = keys[rightIndex - 1];
-  const right = keys[rightIndex];
-  const progress = interpolate(frame, [left.at, right.at], [0, 1], {
-    ...CLAMP,
-    easing: right.easing ?? EXPO,
-  });
+  const index = segments.findIndex((span) => frame <= span.end);
+  const span = segments[index];
+  const left = keys[index];
+  const right = keys[index + 1];
+  const easing = right.easing ?? EXPO;
+  const progress =
+    span.end > span.start
+      ? interpolate(frame, [span.start, span.end], [0, 1], {
+          ...CLAMP,
+          easing,
+        })
+      : frame >= span.end
+        ? 1
+        : 0;
   const from = poseFromKey(left);
   const to = poseFromKey(right);
   const lerp = (a: number, b: number) => a + (b - a) * progress;
@@ -197,31 +228,43 @@ export function getStageTransform(
   return `translate3d(${translateX}px, ${translateY}px, 0) scale(${options.scale * pose.zoom}) rotateZ(${rotateZ}deg) rotateX(${options.rotateX}deg) rotateY(${options.rotateY}deg)`;
 }
 
-export function Stage({
-  children,
-  contentSize,
-  moves = [],
-  shake = 0,
-  seed = "remocn-stage",
-  backdrop = "linear-gradient(145deg, #17181d 0%, #09090b 72%)",
-  rotateX = 14,
-  rotateY = -20,
-  perspective = 900,
-  scale = 0.86,
-  radius = 1.4,
-  reflection = 0.24,
-  shadow = 0.7,
-  light = 0.55,
-  className,
-}: StageProps) {
+export function Stage(props: StageProps) {
+  const {
+    children,
+    contentSize,
+    moves = [],
+    shake = 0,
+    seed = "remocn-stage",
+    backdrop = "linear-gradient(145deg, #17181d 0%, #09090b 72%)",
+    rotateX = 14,
+    rotateY = -20,
+    perspective = 900,
+    scale = 0.86,
+    radius = 1.4,
+    reflection = 0.24,
+    shadow = 0.7,
+    light = 0.55,
+    className,
+    timing,
+  } = props;
   const frame = useSceneFrame();
-  const { width, height } = useSceneConfig();
-  const settle = interpolate(frame, [0, 24], [0, 1], {
+  const { width, height, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(stageTimeline, props, durationInFrames, timing);
+  const entry = tl.get("entry");
+  const settle = interpolate(frame, [entry.start, entry.end], [0, 1], {
     ...CLAMP,
     easing: SETTLE_SOFT,
   });
-  const opacity = interpolate(frame, [0, 9], [0, 1], CLAMP);
-  const pose = resolveStagePose(frame, moves);
+  const opacity = interpolate(
+    frame,
+    [entry.start, entry.start + entry.beat("fade")],
+    [0, 1],
+    CLAMP,
+  );
+  const spans = normalizeStageKeys(moves)
+    .slice(1)
+    .map((_, i) => tl.get(`move:${i}`));
+  const pose = resolveStagePose(frame, moves, spans);
   const handheld = getStageShake(frame, shake, seed);
   const geometry = getStagePlaneGeometry(width, height, contentSize, pose);
   const radiusPx = (radius / 100) * width;

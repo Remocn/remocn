@@ -12,6 +12,12 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  type DiminuendoElementId,
+  diminuendoTimeline,
+  placesOf,
+} from "./timeline";
 
 const arimo = loadArimo("normal", {
   weights: ["400", "500"],
@@ -40,6 +46,12 @@ export interface DiminuendoProps {
   delay?: number;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches the intro, the label, the count and each
+   * place's birth, by the ids in `./timeline`. Frames on the scene timeline,
+   * after `delay` and `speed`.
+   */
+  timing?: Timing<DiminuendoElementId>;
 }
 
 const tone = (ink: string, field: string, k: number) =>
@@ -74,12 +86,7 @@ const WEIGHT = 500;
 const HEAD = 1.06;
 const TRACK = -0.02;
 
-const INTRO_LEN = 14;
-const COUNT_AT = 8;
-const COUNT_LEN = 64;
-const BIRTH_LEN = 10;
 const ROLL_LEN = 6;
-const LABEL_AT = 4;
 
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
 const EASE_COUNT = Easing.bezier(0.33, 0.05, 0.2, 1);
@@ -178,10 +185,6 @@ function rampAt(ramp: readonly string[], u: number) {
   return `color-mix(in oklab, ${ramp[i]} ${((1 - f) * 100).toFixed(1)}%, ${ramp[i + 1]})`;
 }
 
-function placesOf(v: number) {
-  return Math.max(1, Math.floor(Math.log10(Math.max(1, v))) + 1);
-}
-
 // Every progress here is a clamped ramp, exactly 0 or 1 at rest; an ease-out's
 // last frame still moves the number by a hundredth of a pixel, so it counts.
 const midway = (p: number) => p > 0 && p < 1;
@@ -211,27 +214,37 @@ function ScaleLayer({
   );
 }
 
-export function Diminuendo({
-  value = 860000,
-  from = 0,
-  prefix = "",
-  suffix = "",
-  label = "frames rendered from the registry last month",
-  ratio = 0.8,
-  separator = ",",
-  accent = "#8ACE00",
-  ink,
-  background,
-  fontFamily = arimo.fontFamily,
-  countDuration = COUNT_LEN,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: DiminuendoProps) {
+export function Diminuendo(props: DiminuendoProps) {
+  const {
+    value = 860000,
+    from = 0,
+    prefix = "",
+    suffix = "",
+    label = "frames rendered from the registry last month",
+    ratio = 0.8,
+    separator = ",",
+    accent = "#8ACE00",
+    ink,
+    background,
+    fontFamily = arimo.fontFamily,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H } = useSceneConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    diminuendoTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const introEl = tl.get("intro");
+  const labelEl = tl.get("label");
+  const countEl = tl.get("count");
   const c = THEMES[theme];
   const bg = background ?? c.bg(accent);
   const fg = ink ?? c.label(accent);
@@ -249,24 +262,19 @@ export function Diminuendo({
   const logHi = Math.log10(hi + 1);
   const valueAt = (f: number) => {
     const p = EASE_COUNT(
-      Math.min(1, Math.max(0, (f - COUNT_AT) / countDuration)),
+      Math.min(1, Math.max(0, (f - countEl.start) / countEl.length)),
     );
     if (p >= 1) return hi;
     return Math.round(10 ** (logLo + (logHi - logLo) * p) - 1);
   };
 
   const nFinal = placesOf(hi);
-  const birthOf = (p: number) => {
-    if (p === 0 || placesOf(lo) > p) return Number.NEGATIVE_INFINITY;
-    for (let f = COUNT_AT; f <= COUNT_AT + countDuration; f += 0.5) {
-      if (valueAt(f) >= 10 ** p) return f;
-    }
-    return COUNT_AT + countDuration;
-  };
+  // Places the count starts with have no birth.
+  const birthOf = (p: number) => tl.elements.find((e) => e.id === `place:${p}`);
   const presence = Array.from({ length: nFinal }, (_, p) => {
     const b = birthOf(p);
-    if (!Number.isFinite(b)) return 1;
-    return interpolate(t, [b, b + BIRTH_LEN], [0, 1], {
+    if (!b) return 1;
+    return interpolate(t, [b.start, b.end], [0, 1], {
       ...CLAMP,
       easing: EASE_OUT,
     });
@@ -302,7 +310,7 @@ export function Diminuendo({
   );
 
   const v = valueAt(t);
-  const intro = interpolate(t, [0, INTRO_LEN], [0, 1], {
+  const intro = interpolate(t, [introEl.start, introEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
@@ -434,7 +442,7 @@ export function Diminuendo({
     const { anchor, shift } = placeOf(`d${p}`);
     const digit = Math.floor(v / 10 ** p) % 10;
     const roll = p >= leadNow - 1 ? { from: digit, p: 1 } : rollOf(p);
-    const spin = spinning(p) && t < COUNT_AT + countDuration;
+    const spin = spinning(p) && t < countEl.end;
     const base = colorFor(p);
     const color = spin
       ? `color-mix(in oklab, ${base} 72%, ${c.spin(accent)})`
@@ -499,7 +507,7 @@ export function Diminuendo({
     );
   }
 
-  const labelIn = interpolate(t, [LABEL_AT, LABEL_AT + 18], [0, 1], {
+  const labelIn = interpolate(t, [labelEl.start, labelEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });

@@ -13,6 +13,21 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import {
+  type ResolvedElement,
+  type Timing,
+  useTimeline,
+} from "@/lib/remocn/timeline";
+import {
+  DEFAULT_PREFIXES,
+  DEFAULT_UNIT,
+  DEFAULT_VALUE,
+  type Plan,
+  type PointHopElementId,
+  plan,
+  pointHopTimeline,
+  prefixesOf,
+} from "./timeline";
 
 const geist = loadGeist("normal", {
   weights: ["500"],
@@ -44,6 +59,12 @@ export interface PointHopProps {
   delay?: number;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches each digit's rise, the point, the unit, the
+   * label and each prefix step, by the ids in `./timeline`. Frames on the
+   * scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<PointHopElementId>;
 }
 
 const THEMES = {
@@ -64,16 +85,6 @@ const THEMES = {
 const TRACK = -0.02;
 const UNIT_SCALE = 0.46;
 
-const RISE_GAP = 1.6;
-const RISE_LEN = 16;
-const LABEL_AT = 6;
-const FIRST_STEP = 34;
-const HOP_LEN = 7;
-const HOP_GAP = 1;
-const SWAP_LEN = 12;
-const FOLD_LEN = 14;
-const STEP_REST = 12;
-
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
 const EASE_IO = Easing.bezier(0.65, 0, 0.35, 1);
 const midway = (p: number) => p > 0 && p < 1;
@@ -81,46 +92,6 @@ const CLAMP = {
   extrapolateLeft: "clamp",
   extrapolateRight: "clamp",
 } as const;
-
-interface Plan {
-  digits: string[];
-  start: number;
-  steps: number;
-  foldAfter: number[];
-  pointLeaves: boolean;
-}
-
-function plan(value: number, maxSteps: number): Plan {
-  const v = Math.max(0, Math.abs(value));
-  let s = v.toFixed(12).replace(/0+$/, "");
-  if (s.endsWith(".")) s = s.slice(0, -1);
-  const [intPart, frac = ""] = s.split(".");
-  let steps = 0;
-  let scaled = v;
-  while (scaled > 0 && scaled < 1 && steps < maxSteps) {
-    scaled *= 1000;
-    steps++;
-  }
-  const end = intPart.length + steps * 3;
-  const digits = Array.from(intPart + frac);
-  while (digits.length < end) digits.push("0");
-  const foldAfter = digits.map(() => -1);
-  for (let k = 1; k <= steps; k++) {
-    const slot = intPart.length + k * 3;
-    let i = 0;
-    while (i < slot - 1 && digits[i] === "0") {
-      if (foldAfter[i] < 0) foldAfter[i] = k;
-      i++;
-    }
-  }
-  return {
-    digits,
-    start: intPart.length,
-    steps,
-    foldAfter,
-    pointLeaves: end >= digits.length && steps > 0,
-  };
-}
 
 interface Metrics {
   digit: number;
@@ -186,59 +157,55 @@ function useMetrics(units: string[], label: string, fontFamily: string) {
   return state && state.key === key ? state.m : null;
 }
 
-function stepTimes(k: number, hopLen: number, rest: number) {
-  const stepLen = 3 * (hopLen + HOP_GAP) + FOLD_LEN + rest;
-  const at = FIRST_STEP + (k - 1) * stepLen;
-  const hopsEnd = at + 3 * (hopLen + HOP_GAP) - HOP_GAP;
-  return {
-    at,
-    hop: (h: number) => at + h * (hopLen + HOP_GAP),
-    swapAt: hopsEnd - 6,
-    foldAt: hopsEnd - 2,
-  };
-}
+type Step = ResolvedElement<PointHopElementId>;
 
-function stateAt(t: number, p: Plan, m: Metrics, hopLen: number, rest: number) {
+const hopAt = (st: Step, h: number) => st.start + h * st.beat("hopEvery");
+
+function stateAt(t: number, p: Plan, m: Metrics, steps: Step[]) {
   let q = p.start;
   let arc = 0;
   let land = 0;
   for (let k = 1; k <= p.steps; k++) {
-    const st = stepTimes(k, hopLen, rest);
+    const st = steps[k - 1];
     for (let h = 0; h < 3; h++) {
-      const a = st.hop(h);
-      const raw = interpolate(t, [a, a + hopLen], [0, 1], CLAMP);
+      const a = hopAt(st, h);
+      const raw = interpolate(t, [a, a + st.beat("hop")], [0, 1], CLAMP);
       const e = EASE_IO(raw);
       q += e;
       if (raw > 0 && raw < 1) arc = Math.sin(Math.PI * e);
-      const after = t - (a + hopLen);
+      const after = t - (a + st.beat("hop"));
       if (after >= 0 && after < 5) land = Math.sin((after / 5) * Math.PI);
     }
   }
   const fold = p.digits.map((_, i) => {
     const k = p.foldAfter[i];
     if (k < 0) return 1;
-    const st = stepTimes(k, hopLen, rest);
+    const st = steps[k - 1];
+    const foldAt = st.start + st.beat("foldAt");
     return (
       1 -
-      interpolate(t, [st.foldAt, st.foldAt + FOLD_LEN], [0, 1], {
+      interpolate(t, [foldAt, foldAt + st.beat("fold")], [0, 1], {
         ...CLAMP,
         easing: EASE_IO,
       })
     );
   });
-  const last = stepTimes(Math.max(1, p.steps), hopLen, rest);
-  const pointAlive = p.pointLeaves
-    ? 1 -
-      interpolate(t, [last.foldAt, last.foldAt + FOLD_LEN], [0, 1], {
-        ...CLAMP,
-        easing: EASE_IO,
-      })
-    : 1;
+  const last = steps[p.steps - 1];
+  const lastFold = last ? last.start + last.beat("foldAt") : 0;
+  const pointAlive =
+    p.pointLeaves && last
+      ? 1 -
+        interpolate(t, [lastFold, lastFold + last.beat("fold")], [0, 1], {
+          ...CLAMP,
+          easing: EASE_IO,
+        })
+      : 1;
   let unitIdx = 0;
   let swap = 1;
   for (let k = 1; k <= p.steps; k++) {
-    const st = stepTimes(k, hopLen, rest);
-    const s = interpolate(t, [st.swapAt, st.swapAt + SWAP_LEN], [0, 1], {
+    const st = steps[k - 1];
+    const swapAt = st.start + st.beat("swapAt");
+    const s = interpolate(t, [swapAt, swapAt + st.beat("swap")], [0, 1], {
       ...CLAMP,
       easing: EASE_OUT,
     });
@@ -296,29 +263,35 @@ function ScaleLayer({
   );
 }
 
-export function PointHop({
-  value = 0.0000342,
-  unit = "s",
-  prefixes = ["", "m", "µ", "n"],
-  label = "scene refresh after a prop change",
-  accent,
-  ink,
-  background,
-  fontFamily = geist.fontFamily,
-  hop = HOP_LEN,
-  rest = STEP_REST,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: PointHopProps) {
+export function PointHop(props: PointHopProps) {
+  const {
+    value = DEFAULT_VALUE,
+    unit = DEFAULT_UNIT,
+    prefixes = DEFAULT_PREFIXES,
+    label = "scene refresh after a prop change",
+    accent,
+    ink,
+    background,
+    fontFamily = geist.fontFamily,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H } = useSceneConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    pointHopTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const c = THEMES[theme];
   const spot = accent ?? c.pink;
   const fg = ink ?? c.ink;
-  const pre = prefixes.length > 0 ? prefixes : [""];
+  const pre = prefixesOf(prefixes);
   const p = useMemo(() => plan(value, pre.length - 1), [value, pre.length]);
   const units = useMemo(
     () => pre.slice(0, p.steps + 1).map((x) => x + unit),
@@ -337,7 +310,8 @@ export function PointHop({
   const portrait = H > W * 1.1;
   const margin = Math.min(W, H) * (portrait ? 0.08 : 0.085);
   const measureW = W - 2 * margin;
-  const at = (tt: number) => stateAt(tt, p, m, hop, rest);
+  const steps = tl.lane("Steps");
+  const at = (tt: number) => stateAt(tt, p, m, steps);
   const s = at(t);
   const sPrev = at(t - speed);
   const sNext = at(t + speed);
@@ -377,12 +351,13 @@ export function PointHop({
   const maskBottom = baseY + Fl * 0.24;
   const glyphTop = (lift: number) => baseY - maskTop - m.base * Fl + lift;
 
-  const riseAt = (i: number, tt: number) =>
-    interpolate(tt, [i * RISE_GAP, i * RISE_GAP + RISE_LEN], [0, 1], {
+  const riseAt = (e: Step, tt: number) =>
+    interpolate(tt, [e.start, e.end], [0, 1], {
       ...CLAMP,
       easing: EASE_OUT,
     });
-  const rise = (i: number) => riseAt(i, t);
+  const digitRise = (i: number) => tl.get(`digit:${i}`);
+  const rise = (i: number) => riseAt(digitRise(i), t);
   const drop = (r: number) => (1 - r) * (maskBottom - maskTop);
   // Layout rounds a baseline to whole pixels, so the rises, the hops and the
   // unit swap travel by a transform from the resting `top`; the tilt rides on
@@ -424,7 +399,7 @@ export function PointHop({
           transform: lift(
             drop(rise(i)),
             f < 1 ? `scaleX(${f.toFixed(4)})` : undefined,
-            moves((tt) => drop(riseAt(i, tt))),
+            moves((tt) => drop(riseAt(digitRise(i), tt))),
           ),
           transformOrigin: "0% 50%",
         }}
@@ -439,7 +414,7 @@ export function PointHop({
   const pointAt = (tt: number, st: ReturnType<typeof stateAt>) => {
     const squash = 1 - 0.18 * st.land;
     return {
-      dy: drop(riseAt(p.start, tt)) - st.arc * arcH,
+      dy: drop(riseAt(tl.get("point"), tt)) - st.arc * arcH,
       sx: 1 / squash,
       sy: squash,
       k: 0.5 + 0.5 * st.pointAlive,
@@ -488,7 +463,7 @@ export function PointHop({
 
   const U = Fl * UNIT_SCALE;
   const unitLeft = left + (s.digitsW + s.unitGap) * Fl;
-  const unitRiseAt = (tt: number) => riseAt(p.digits.length + 1, tt);
+  const unitRiseAt = (tt: number) => riseAt(tl.get("unit"), tt);
   const unitRise = unitRiseAt(t);
   const unitLine = (
     str: string,
@@ -547,7 +522,8 @@ export function PointHop({
           ),
         ];
 
-  const labelP = interpolate(t, [LABEL_AT, LABEL_AT + 16], [0, 1], {
+  const labelEl = tl.get("label");
+  const labelP = interpolate(t, [labelEl.start, labelEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });

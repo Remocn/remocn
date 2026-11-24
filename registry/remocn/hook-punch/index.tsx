@@ -9,6 +9,8 @@ import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import { type HookPunchElementId, hookPunchTimeline } from "./timeline";
 
 const { fontFamily: grotesk } = loadFont("normal", {
   weights: ["300", "400"],
@@ -48,17 +50,13 @@ export interface HookPunchProps {
   /** Overrides for the ground shader. */
   groundParams?: Partial<GradientParams>;
   speed?: number;
+  /**
+   * Moves, trims or stretches the words, the whip, the payoff and the ground
+   * rise, by the ids in `./timeline`. Frames on the scene timeline, after
+   * `delay` and `speed`.
+   */
+  timing?: Timing<HookPunchElementId>;
 }
-
-const BEATS = {
-  stop: 0,
-  scroll: 6,
-  whip: 30,
-  whipLen: 8,
-  lead: 33,
-  pay: 42,
-  rise: 43,
-} as const;
 
 const EXIT = Easing.bezier(0.55, 0, 1, 0.45);
 const LIGHT = Easing.bezier(0.22, 1, 0.36, 1);
@@ -125,27 +123,40 @@ function ScaleLayer({
   );
 }
 
-export function HookPunch({
-  stop = "Stop",
-  scroll = "scrolling.",
-  lead = "This video took",
-  payoff = "1 day.",
-  ink,
-  background,
-  fontFamily = grotesk,
-  hold = BEATS.whip,
-  scale = 1,
-  delay = 0,
-  theme = "dark",
-  ground,
-  groundParams,
-  speed = 1,
-}: HookPunchProps) {
+export function HookPunch(props: HookPunchProps) {
+  const {
+    stop = "Stop",
+    scroll = "scrolling.",
+    lead = "This video took",
+    payoff = "1 day.",
+    ink,
+    background,
+    fontFamily = grotesk,
+    scale = 1,
+    delay = 0,
+    theme = "dark",
+    ground,
+    groundParams,
+    speed = 1,
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = useSceneFrame();
   const at = (f: number) => Math.max(0, f - delay) * speed;
   const t = at(frame);
-  const { width: W, height: H, fps } = useSceneConfig();
+  const { width: W, height: H, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    hookPunchTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const stopEl = tl.get("stop");
+  const scrollEl = tl.get("scroll");
+  const whipEl = tl.get("whip");
+  const leadEl = tl.get("lead");
+  const payEl = tl.get("payoff");
+  const riseEl = tl.get("rise");
   const c = THEMES[theme];
   const stage =
     background === undefined
@@ -153,13 +164,14 @@ export function HookPunch({
       : background === "transparent"
         ? "transparent"
         : background;
-  const shift = hold - BEATS.whip;
   const beats = {
-    ...BEATS,
-    whip: BEATS.whip + shift,
-    lead: BEATS.lead + shift,
-    pay: BEATS.pay + shift,
-    rise: BEATS.rise + shift,
+    stop: stopEl.start,
+    scroll: scrollEl.start,
+    whip: whipEl.start,
+    whipLen: whipEl.length,
+    lead: leadEl.start,
+    pay: payEl.start,
+    rise: riseEl.start,
   };
   const tall = H > W;
   const base = tall ? W * 0.56 : H;
@@ -182,36 +194,52 @@ export function HookPunch({
     };
 
     const bump = Math.max(
-      kick(t - beats.stop - 4),
-      kick(t - beats.scroll - 4),
-      1.3 * kick(t - beats.pay - 4),
+      kick(t - beats.stop - stopEl.beat("kick")),
+      kick(t - beats.scroll - scrollEl.beat("kick")),
+      1.3 * kick(t - beats.pay - payEl.beat("kick")),
     );
-    const s1 = shake(t - beats.stop - 4, 6 * u, 0.4);
-    const s2 = shake(t - beats.scroll - 4, 5 * u, 2.1);
-    const s3 = shake(t - beats.pay - 4, 8 * u, 4.2);
+    const s1 = shake(t - beats.stop - stopEl.beat("kick"), 6 * u, 0.4);
+    const s2 = shake(t - beats.scroll - scrollEl.beat("kick"), 5 * u, 2.1);
+    const s3 = shake(t - beats.pay - payEl.beat("kick"), 8 * u, 4.2);
     const camScale = 1 + 0.03 * bump;
 
     const pStop = slam(beats.stop, 1.5);
     const pScroll = slam(beats.scroll, 1.5);
     const shove = 1 - spring({ frame: t - beats.scroll, fps, config: HEAVY });
-    const creep1 = interpolate(t, [beats.scroll + 6, beats.whip], [1, 1.04], {
-      ...CLAMP,
-      easing: CAMERA,
-    });
+    const creep1 = interpolate(
+      t,
+      [beats.scroll + scrollEl.beat("creep"), beats.whip],
+      [1, 1.04],
+      {
+        ...CLAMP,
+        easing: CAMERA,
+      },
+    );
     const whip = EXIT(ramp(t, beats.whip, beats.whipLen));
     const line1Scale = creep1 * (1 + 1.6 * whip);
     const line1Blur = 22 * whip;
-    const line1Opacity = 1 - ramp(t, beats.whip + 3, beats.whipLen - 3);
+    const line1Opacity =
+      1 -
+      ramp(
+        t,
+        beats.whip + whipEl.beat("fade"),
+        beats.whipLen - whipEl.beat("fade"),
+      );
 
     const lead2 = spring({ frame: t - beats.lead, fps, config: HEAVY });
     const leadScale = 0.6 + 0.4 * lead2;
     const leadBlur = Math.max(0, 1 - lead2) * 16;
-    const leadOpacity = ramp(t, beats.lead, 3);
+    const leadOpacity = ramp(t, beats.lead, leadEl.beat("in"));
     const pPay = slam(beats.pay, 1.6);
-    const creep2 = interpolate(t, [beats.pay + 6, beats.pay + 62], [1, 1.035], {
-      ...CLAMP,
-      easing: CAMERA,
-    });
+    const creep2 = interpolate(
+      t,
+      [beats.pay + payEl.beat("creep"), beats.pay + payEl.beat("creepEnd")],
+      [1, 1.035],
+      {
+        ...CLAMP,
+        easing: CAMERA,
+      },
+    );
     return {
       s1,
       s2,
@@ -272,7 +300,7 @@ export function HookPunch({
     (v, k) => Math.abs(after[k] - v) > 1e-3 || Math.abs(v - before[k]) > 1e-3,
   );
 
-  const rise = LIGHT(ramp(t, beats.rise, 26));
+  const rise = LIGHT(ramp(t, beats.rise, riseEl.length));
   const veil = c.veilFrom + (c.veilTo - c.veilFrom) * rise;
   const groundShift = (0.06 + (1 - rise) * 0.14) * H;
 
@@ -331,7 +359,7 @@ export function HookPunch({
             color: ink ?? c.ink,
           }}
         >
-          {t < beats.whip + beats.whipLen ? (
+          {t < whipEl.end ? (
             <div
               style={{
                 position: "absolute",

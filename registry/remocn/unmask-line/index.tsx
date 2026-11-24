@@ -11,6 +11,13 @@ import {
   interpolate,
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_LINES,
+  linesOf,
+  type UnmaskLineElementId,
+  unmaskLineTimeline,
+} from "./timeline";
 
 const plex = loadPlexMono("normal", {
   weights: ["500"],
@@ -36,6 +43,12 @@ export interface UnmaskLineProps {
   delay?: number;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches single dots arriving, the breath and single
+   * letters opening, by the ids in `./timeline`. Frames on the scene
+   * timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<UnmaskLineElementId>;
 }
 
 const GREEN = { dark: "#00C805", light: "#00873C" } as const;
@@ -47,15 +60,6 @@ const THEMES = {
 
 const DOT_R = 0.1;
 const LEADING = 1.08;
-const DOT_GAP = 1.2;
-const DOT_LEN = 10;
-const BREATH_AT = 18;
-const BREATH_GAP = 1.4;
-const BREATH_LEN = 12;
-const OPEN_AT = 38;
-const OPEN_GAP = 2.2;
-const OPEN_LEN = 12;
-const LINE_LAG = 4;
 
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
 const EASE_OPEN = Easing.bezier(0.33, 0, 0.15, 1);
@@ -128,22 +132,28 @@ function ScaleLayer({
   );
 }
 
-export function UnmaskLine({
-  lines = ["Out of", "stealth."],
-  highlight = -1,
-  openAt = OPEN_AT,
-  stagger = OPEN_GAP,
-  accent,
-  ink,
-  background,
-  fontFamily = plex.fontFamily,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: UnmaskLineProps) {
+export function UnmaskLine(props: UnmaskLineProps) {
+  const {
+    lines = DEFAULT_LINES,
+    highlight = -1,
+    accent,
+    ink,
+    background,
+    fontFamily = plex.fontFamily,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H } = useSceneConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    unmaskLineTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const c = THEMES[theme];
   const green = accent ?? GREEN[theme];
   const fg = ink ?? c.ink;
@@ -158,7 +168,8 @@ export function UnmaskLine({
     );
   }
 
-  const list = lines.length > 0 ? lines : [" "];
+  const list = linesOf(lines);
+  const breathEl = tl.get("breath");
   const hl = highlight < 0 ? list.length + highlight : highlight;
   const portrait = H > W * 1.1;
   const margin = Math.min(W, H) * (portrait ? 0.08 : 0.09);
@@ -183,21 +194,20 @@ export function UnmaskLine({
       const x = margin + ci * cell;
       const cx = x + cell / 2;
       const cy = baseY - m.xh * F * 0.5;
-      const arrive = interpolate(
-        t,
-        [li * LINE_LAG + i * DOT_GAP, li * LINE_LAG + i * DOT_GAP + DOT_LEN],
-        [0, 1],
-        { ...CLAMP, easing: EASE_OUT },
-      );
-      const bt = t - (BREATH_AT + i * BREATH_GAP);
+      const dot = tl.get(`dot:${i}`);
+      const letter = tl.get(`letter:${i}`);
+      const arrive = interpolate(t, [dot.start, dot.end], [0, 1], {
+        ...CLAMP,
+        easing: EASE_OUT,
+      });
+      const pulse = breathEl.beat("pulse");
+      const bt = t - (breathEl.start + i * breathEl.beat("gap"));
       const breath =
-        bt > 0 && bt < BREATH_LEN ? Math.sin((bt / BREATH_LEN) * Math.PI) : 0;
-      const p = interpolate(
-        t,
-        [openAt + i * stagger, openAt + i * stagger + OPEN_LEN],
-        [0, 1],
-        { ...CLAMP, easing: EASE_OPEN },
-      );
+        bt > 0 && bt < pulse ? Math.sin((bt / pulse) * Math.PI) : 0;
+      const p = interpolate(t, [letter.start, letter.end], [0, 1], {
+        ...CLAMP,
+        easing: EASE_OPEN,
+      });
       const r0 = DOT_R * F * (0.5 + 0.5 * arrive) * (1 + 0.22 * breath);
       const rFull = Math.hypot(cell * 0.6, F * 0.8);
       const r = r0 + (rFull - r0) * p;

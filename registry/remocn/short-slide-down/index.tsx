@@ -2,8 +2,13 @@
 
 import { useMemo } from "react";
 import { Easing, interpolate } from "remotion";
-import { useSceneFrame } from "@/lib/remocn/frame-rate";
+import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  type ShortSlideDownElementId,
+  shortSlideDownTimeline,
+} from "./timeline";
 
 export interface ShortSlideDownProps {
   text: string;
@@ -13,6 +18,11 @@ export interface ShortSlideDownProps {
   fontWeight?: number;
   speed?: number;
   className?: string;
+  /**
+   * Moves, trims or stretches single words, by the ids in `./timeline`.
+   * Frames on the scene timeline, after `speed`.
+   */
+  timing?: Timing<ShortSlideDownElementId>;
 }
 
 const FONT_FAMILY =
@@ -20,26 +30,32 @@ const FONT_FAMILY =
 
 const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
 
-export function ShortSlideDown({
-  text,
-  entryOffset = 28,
-  fontSize = 72,
-  color = "#171717",
-  fontWeight = 600,
-  speed = 1,
-  className,
-}: ShortSlideDownProps) {
+export function ShortSlideDown(props: ShortSlideDownProps) {
+  const {
+    text,
+    entryOffset = 28,
+    fontSize = 72,
+    color = "#171717",
+    fontWeight = 600,
+    speed = 1,
+    className,
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = useSceneFrame() * speed;
+  const { durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    shortSlideDownTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
 
   const words = useMemo(() => text.split(" "), [text]);
   const n = words.length;
 
   const lineGap = 12;
   const rowHeight = fontSize;
-  const firstDur = 11;
-  const pushDur = 15;
-  const travelDur = 8;
   const entryScale = 0.992;
   const entryBlur = 2.4;
   const reflowBlur = 0.7;
@@ -82,8 +98,9 @@ export function ShortSlideDown({
         }}
       >
         {words.map((word, j) => {
-          const entryStart = j === 0 ? 0 : firstDur + (j - 1) * pushDur;
-          const entryEnd = entryStart + (j === 0 ? firstDur : pushDur);
+          const entry = tl.get(`word:${j}`);
+          const entryStart = entry.start;
+          const entryEnd = entry.end;
           const targetY = positionsAt[j][j];
           const yFrom = j === 0 ? firstWordY : targetY - entryOffset;
 
@@ -102,7 +119,7 @@ export function ShortSlideDown({
             const range: [number, number] = [entryStart, entryEnd];
             const travelRange: [number, number] = [
               entryStart,
-              Math.min(entryStart + travelDur, entryEnd),
+              Math.min(entryStart + entry.beat("travel"), entryEnd),
             ];
             const opts = {
               extrapolateLeft: "clamp" as const,
@@ -116,8 +133,9 @@ export function ShortSlideDown({
             moving = midway(interpolate(frame, range, [0, 1], opts));
           } else {
             for (let w = j + 1; w < n; w++) {
-              const pushStart = firstDur + (w - 1) * pushDur;
-              const pushEnd = pushStart + pushDur;
+              const pusher = tl.get(`word:${w}`);
+              const pushStart = pusher.start;
+              const pushEnd = pusher.end;
               const fromY = positionsAt[w - 1][j];
               const toY = positionsAt[w][j];
               if (frame >= pushEnd) {
@@ -125,7 +143,10 @@ export function ShortSlideDown({
               } else if (frame >= pushStart) {
                 const push = interpolate(
                   frame,
-                  [pushStart, Math.min(pushStart + travelDur, pushEnd)],
+                  [
+                    pushStart,
+                    Math.min(pushStart + pusher.beat("travel"), pushEnd),
+                  ],
                   [0, 1],
                   {
                     extrapolateLeft: "clamp",

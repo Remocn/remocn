@@ -7,6 +7,14 @@ import { type ReactNode, useId, useMemo } from "react";
 import { AbsoluteFill, Easing, interpolate, interpolateColors } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_TEXT,
+  DEFAULT_WORD,
+  findLetters,
+  type HiddenWordElementId,
+  hiddenWordTimeline,
+} from "./timeline";
 
 const { fontFamily: sans } = loadFont("normal", {
   weights: ["400"],
@@ -42,6 +50,12 @@ export interface HiddenWordProps {
   grain?: boolean;
   theme?: "dark" | "light";
   speed?: number;
+  /**
+   * Moves, trims or stretches the sentence's entry, dim and move, and each
+   * letter's light and lift, by the ids in `./timeline`. Frames on the scene
+   * timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<HiddenWordElementId>;
 }
 
 // Hanken Grotesk 400 (the sentence) and Instrument Serif italic 400 (the
@@ -197,22 +211,6 @@ const SERIF_X = 0.51;
 /** Distance (em) from a line box's top to its baseline, for `face` at LINE. */
 const baseOf = (face: Face) => (LINE - face.asc - face.desc) / 2 + face.asc;
 
-// Timing, in frames at speed 1.
-const ENTER = 22;
-const LINE_STAGGER = 4;
-const LIGHT_AT = 44;
-const LIGHT_STAGGER = 7;
-const LIGHT = 10;
-const DIM_AT = 48;
-const DIM = 28;
-const LIFT_AT = 86;
-const LIFT_STAGGER = 6;
-const FLIGHT = 30;
-const MOVE_AT = 82;
-const MOVE = 40;
-const SETTLE_GAP = 4;
-const SETTLE = 14;
-
 const GHOST_SCALE = 0.66;
 
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
@@ -307,64 +305,6 @@ function breakLines(words: string[][], measure: number) {
   return wrap(hi);
 }
 
-/** Pick the letters of `word` in order, spread as evenly as the sentence allows. */
-function findLetters(text: string[], word: string[]) {
-  const n = word.length;
-  const len = text.length;
-  if (!n) return [];
-  const cost = (j: number, i: number) => {
-    const a = text[i];
-    const b = word[j];
-    if (a.toLowerCase() !== b.toLowerCase()) return Number.POSITIVE_INFINITY;
-    const target = ((j + 0.5) / n) * len;
-    return Math.abs(i - target) + (a === b ? 0 : len * 0.25);
-  };
-  // best[j][i]: cheapest placement of letters 0..j with letter j at index i.
-  const best: number[][] = [];
-  const from: number[][] = [];
-  for (let j = 0; j < n; j++) {
-    best.push(new Array<number>(len).fill(Number.POSITIVE_INFINITY));
-    from.push(new Array<number>(len).fill(-1));
-    let run = Number.POSITIVE_INFINITY;
-    let runAt = -1;
-    for (let i = 0; i < len; i++) {
-      const c = cost(j, i);
-      if (j === 0) best[j][i] = c;
-      else if (runAt >= 0 && c < Number.POSITIVE_INFINITY) {
-        best[j][i] = run + c;
-        from[j][i] = runAt;
-      }
-      if (j > 0 && best[j - 1][i] < run) {
-        run = best[j - 1][i];
-        runAt = i;
-      }
-    }
-  }
-  let end = -1;
-  best[n - 1].forEach((v, i) => {
-    if (v < Number.POSITIVE_INFINITY && (end < 0 || v < best[n - 1][end]))
-      end = i;
-  });
-  if (end < 0) {
-    // Not every letter is in the sentence: match greedily, leave gaps as -1.
-    let at = 0;
-    return word.map((ch) => {
-      for (let i = at; i < len; i++)
-        if (text[i].toLowerCase() === ch.toLowerCase()) {
-          at = i + 1;
-          return i;
-        }
-      return -1;
-    });
-  }
-  const out = new Array<number>(n).fill(-1);
-  for (let j = n - 1, i = end; j >= 0; j--) {
-    out[j] = i;
-    i = from[j][i];
-  }
-  return out;
-}
-
 function Grain({ opacity }: { opacity: number }) {
   const id = `g${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
   return (
@@ -411,23 +351,30 @@ function ScaleLayer({
   );
 }
 
-export function HiddenWord({
-  text = "Small teams make their launch film in code and post it by Friday.",
-  word = "ship",
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = sans,
-  stagger = LIFT_STAGGER,
-  scale: layerScale = 1,
-  delay = 0,
-  grain = true,
-  theme = "dark",
-  speed = 1,
-}: HiddenWordProps) {
+export function HiddenWord(props: HiddenWordProps) {
+  const {
+    text = DEFAULT_TEXT,
+    word = DEFAULT_WORD,
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = sans,
+    scale: layerScale = 1,
+    delay = 0,
+    grain = true,
+    theme = "dark",
+    speed = 1,
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H } = useSceneConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    hiddenWordTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const c = THEMES[theme];
   const fg = ink ?? c.fg;
   const stage =
@@ -492,7 +439,8 @@ export function HiddenWord({
   const ghostMid = displayBase + DESC * F + gap + ghostH / 2;
   const displayLeft = W / 2 - (display.total * F) / 2;
 
-  const move = interpolate(t, [MOVE_AT, MOVE_AT + MOVE], [0, 1], {
+  const moveEl = tl.get("move");
+  const move = interpolate(t, [moveEl.start, moveEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
@@ -519,14 +467,14 @@ export function HiddenWord({
   picks.forEach((i, j) => {
     if (i >= 0) picked.set(i, j);
   });
-  const lastLand = LIFT_AT + Math.max(0, target.length - 1) * stagger + FLIGHT;
-  const settle = interpolate(
-    t,
-    [lastLand + SETTLE_GAP, lastLand + SETTLE_GAP + SETTLE],
-    [0, 1],
-    { ...CLAMP, easing: EASE_IO },
-  );
-  const dim = interpolate(t, [DIM_AT, DIM_AT + DIM], [0, 1], {
+  const settleEl = tl.get("settle");
+  const settle = interpolate(t, [settleEl.start, settleEl.end], [0, 1], {
+    ...CLAMP,
+    easing: EASE_IO,
+  });
+  const dimEl = tl.get("dim");
+  const enterEl = tl.get("enter");
+  const dim = interpolate(t, [dimEl.start, dimEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
@@ -542,9 +490,10 @@ export function HiddenWord({
 
   set.glyphs.forEach((g, i) => {
     if (!g) return;
+    const lineAt = enterEl.start + g.line * enterEl.beat("stagger");
     const enter = interpolate(
       t,
-      [g.line * LINE_STAGGER, g.line * LINE_STAGGER + ENTER],
+      [lineAt, lineAt + enterEl.beat("line")],
       [0, 1],
       { ...CLAMP, easing: EASE_OUT },
     );
@@ -575,14 +524,13 @@ export function HiddenWord({
       return;
     }
 
-    const lit = interpolate(
-      t,
-      [LIGHT_AT + j * LIGHT_STAGGER, LIGHT_AT + j * LIGHT_STAGGER + LIGHT],
-      [0, 1],
-      { ...CLAMP, easing: EASE_OUT },
-    );
-    const liftAt = LIFT_AT + j * stagger;
-    const p = interpolate(t, [liftAt, liftAt + FLIGHT], [0, 1], {
+    const light = tl.get(`light:${j}`);
+    const lit = interpolate(t, [light.start, light.end], [0, 1], {
+      ...CLAMP,
+      easing: EASE_OUT,
+    });
+    const lift = tl.get(`lift:${j}`);
+    const p = interpolate(t, [lift.start, lift.end], [0, 1], {
       ...CLAMP,
       easing: EASE_IO,
     });
@@ -684,8 +632,9 @@ export function HiddenWord({
   // Letters of the word that the sentence does not contain arrive on their own.
   target.forEach((ch, j) => {
     if (picks[j] >= 0) return;
-    const at = LIFT_AT + j * stagger + FLIGHT * 0.5;
-    const v = interpolate(t, [at, at + FLIGHT * 0.5], [0, 1], {
+    const lift = tl.get(`lift:${j}`);
+    const at = lift.start + lift.beat("half");
+    const v = interpolate(t, [at, at + lift.beat("half")], [0, 1], {
       ...CLAMP,
       easing: EASE_OUT,
     });
@@ -711,7 +660,7 @@ export function HiddenWord({
   });
 
   // The bloom drifts a few percent left and up over the shot.
-  const drift = interpolate(t, [0, lastLand + SETTLE_GAP + SETTLE], [0, 1], {
+  const drift = interpolate(t, [0, settleEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });

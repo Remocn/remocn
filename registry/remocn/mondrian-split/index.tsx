@@ -3,6 +3,30 @@
 import { type CSSProperties, type ReactNode, useMemo } from "react";
 import { Easing, random } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import {
+  type ResolvedTimeline,
+  type Timing,
+  useTimeline,
+} from "@/lib/remocn/timeline";
+import {
+  coloredCount,
+  DEFAULT_SPLITS,
+  FIELD_WIPE,
+  FILL_GAP,
+  FILL_WIPE,
+  LINE_DRAW,
+  LINE_GAP,
+  LINE_START,
+  type MondrianSplitElementId,
+  mondrianPhasesOf,
+  mondrianSplitTimeline,
+  SIDE_GAP,
+  SIDE_PUSH,
+  splitCount,
+  TRACK_COUNT,
+  TRACK_GAP,
+  TRACK_SLIDE,
+} from "./timeline";
 
 export type MondrianSplitAxis = "x" | "y";
 export type MondrianSplitSlot = "red" | "yellow" | "blue";
@@ -21,6 +45,12 @@ export interface MondrianSplitProps {
   fieldColor?: string;
   speed?: number;
   className?: string;
+  /**
+   * Moves, trims or stretches the lines drawing in, the colour fills, the
+   * field, the track slides and the field's pushes to the edges, by the ids
+   * in `./timeline`. Frames on the scene timeline, after `speed`.
+   */
+  timing?: Timing<MondrianSplitElementId>;
 }
 
 export type MondrianSplitOptions = Pick<
@@ -71,7 +101,7 @@ interface GridWipe {
 
 export const mondrianSplitDefaults = {
   seed: 7,
-  splits: 7,
+  splits: DEFAULT_SPLITS,
   lineWeight: 14,
   expandCell: 0,
   lineColor: "#121212",
@@ -81,21 +111,6 @@ export const mondrianSplitDefaults = {
   fieldColor: "#d62d20",
 };
 
-const LINE_START = 3;
-const LINE_GAP = 5;
-const LINE_DRAW = 10;
-const FILL_LAG = 7;
-const FILL_GAP = 4;
-const FILL_WIPE = 9;
-const FIELD_LAG = 6;
-const FIELD_WIPE = 12;
-const HOLD = 14;
-const TRACK_COUNT = 3;
-const TRACK_GAP = 5;
-const TRACK_SLIDE = 20;
-const EXPAND_LEAD = 4;
-const SIDE_GAP = 3;
-const SIDE_PUSH = 22;
 const TAIL = 12;
 const SLIDE_PEAK = 0.72;
 const SLIDE_OVER = 0.035;
@@ -130,9 +145,6 @@ const lowEdge = (box: MondrianSplitBox, axis: MondrianSplitAxis) =>
 const extent = (box: MondrianSplitBox, axis: MondrianSplitAxis) =>
   axis === "x" ? box.x1 - box.x0 : box.y1 - box.y0;
 const area = (box: MondrianSplitBox) => extent(box, "x") * extent(box, "y");
-const splitCount = (splits: number) =>
-  Math.round(clamp(finite(splits, mondrianSplitDefaults.splits), 3, 12));
-const coloredCount = (count: number) => clamp(Math.round(count * 0.3), 1, 5);
 
 const touches = (a: MondrianSplitBox, b: MondrianSplitBox) => {
   const overlapX = Math.min(a.x1, b.x1) - Math.max(a.x0, b.x0);
@@ -245,14 +257,7 @@ const percent = (value: number, size: number) =>
 export function getMondrianSplitTimeline({
   splits = mondrianSplitDefaults.splits,
 }: Pick<MondrianSplitProps, "splits"> = {}) {
-  const count = splitCount(splits);
-  const fill = LINE_START + (count - 1) * LINE_GAP + FILL_LAG;
-  const field = fill + (coloredCount(count) - 1) * FILL_GAP + FIELD_LAG;
-  const reflow = field + FIELD_WIPE + HOLD;
-  const settled = reflow + (TRACK_COUNT - 1) * TRACK_GAP + TRACK_SLIDE;
-  const expand = settled - EXPAND_LEAD;
-  const end = expand + (SIDES.length - 1) * SIDE_GAP + SIDE_PUSH;
-  return { lines: LINE_START, fill, field, reflow, expand, end };
+  return mondrianPhasesOf(splits);
 }
 
 export const mondrianSplitLength = getMondrianSplitTimeline().end;
@@ -638,6 +643,7 @@ export function getMondrianSplitLayout({
     const across = name === "left" || name === "right" ? "x" : "y";
     const share = (extent(home, across) * DIP_SHARE) / travel[name];
     return {
+      rank: ranking.indexOf(name),
       start: timeline.expand + ranking.indexOf(name) * SIDE_GAP,
       dip: nodes[target].bounds[name] === -1 ? 0 : Math.min(DIP, share),
     };
@@ -671,23 +677,35 @@ export function getMondrianSplitLayout({
 
 export type MondrianSplitLayout = ReturnType<typeof getMondrianSplitLayout>;
 
+/**
+ * The grid at `frame`. With a resolved timeline the phases run from its
+ * elements; without one, from the layout's own starts.
+ */
 export function getMondrianSplitState(
   frame: number,
   layout: MondrianSplitLayout = getMondrianSplitLayout(),
+  tl?: ResolvedTimeline<MondrianSplitElementId>,
 ) {
   const time = Math.max(0, finite(frame, 0));
   const { width, height, weight, overscan } = layout;
+  const span = (id: MondrianSplitElementId, start: number, length: number) => {
+    const element = tl?.get(id);
+    return element ? element : { start, length };
+  };
   const positions = layout.lines.map((line) => {
-    const move = layout.moves.find((item) => item.track === line.track);
-    if (!move) return line.position;
-    const amount = slide(progress(time, move.start, TRACK_SLIDE));
+    const index = layout.moves.findIndex((item) => item.track === line.track);
+    if (index === -1) return line.position;
+    const move = layout.moves[index];
+    const at = span(`track:${index}`, move.start, TRACK_SLIDE);
+    const amount = slide(progress(time, at.start, at.length));
     return line.position + (move.to - move.from) * amount;
   });
   const boxes = placeBoxes(layout.lines, positions, width, height);
   const home = boxes[layout.target];
   const reach = (name: MondrianSplitSide) => {
-    const { start, dip } = layout.sides[name];
-    return push(progress(time, start, SIDE_PUSH), dip);
+    const { rank, start, dip } = layout.sides[name];
+    const at = span(`push:${rank}`, start, SIDE_PUSH);
+    return push(progress(time, at.start, at.length), dip);
   };
   const mapX = stretch(
     home.x0,
@@ -713,7 +731,8 @@ export function getMondrianSplitState(
   });
 
   const lines = layout.lines.flatMap((line) => {
-    const drawn = drawEase(progress(time, line.start, LINE_DRAW));
+    const at = span(`line:${line.id}`, line.start, LINE_DRAW);
+    const drawn = drawEase(progress(time, at.start, at.length));
     if (drawn <= 0) return [];
     const box = boxes[line.node];
     const vertical = line.axis === "x";
@@ -733,8 +752,9 @@ export function getMondrianSplitState(
       : [];
   });
 
-  const fills = layout.fills.flatMap((fill) => {
-    const amount = wipeEase(progress(time, fill.start, FILL_WIPE));
+  const fills = layout.fills.flatMap((fill, order) => {
+    const at = span(`fill:${order}`, fill.start, FILL_WIPE);
+    const amount = wipeEase(progress(time, at.start, at.length));
     if (amount <= 0) return [];
     const rect = wipe(project(boxes[fill.node]), fill, amount);
     return inFrame(rect, width, height)
@@ -742,7 +762,8 @@ export function getMondrianSplitState(
       : [];
   });
 
-  const reveal = wipeEase(progress(time, layout.field.start, FIELD_WIPE));
+  const fieldAt = span("field", layout.field.start, FIELD_WIPE);
+  const reveal = wipeEase(progress(time, fieldAt.start, fieldAt.length));
   const field = reveal > 0 ? wipe(project(home), layout.field, reveal) : null;
 
   return {
@@ -769,22 +790,31 @@ export function getMondrianSplitClip(
   return `inset(${top} ${right} ${bottom} ${left})`;
 }
 
-export function MondrianSplit({
-  children,
-  seed = mondrianSplitDefaults.seed,
-  splits = mondrianSplitDefaults.splits,
-  lineWeight = mondrianSplitDefaults.lineWeight,
-  expandCell = mondrianSplitDefaults.expandCell,
-  lineColor = mondrianSplitDefaults.lineColor,
-  redColor = mondrianSplitDefaults.redColor,
-  yellowColor = mondrianSplitDefaults.yellowColor,
-  blueColor = mondrianSplitDefaults.blueColor,
-  fieldColor = mondrianSplitDefaults.fieldColor,
-  speed = 1,
-  className,
-}: MondrianSplitProps) {
+export function MondrianSplit(props: MondrianSplitProps) {
+  const {
+    children,
+    seed = mondrianSplitDefaults.seed,
+    splits = mondrianSplitDefaults.splits,
+    lineWeight = mondrianSplitDefaults.lineWeight,
+    expandCell = mondrianSplitDefaults.expandCell,
+    lineColor = mondrianSplitDefaults.lineColor,
+    redColor = mondrianSplitDefaults.redColor,
+    yellowColor = mondrianSplitDefaults.yellowColor,
+    blueColor = mondrianSplitDefaults.blueColor,
+    fieldColor = mondrianSplitDefaults.fieldColor,
+    speed = 1,
+    className,
+    timing,
+  } = props;
   const frame = useSceneFrame();
-  const { width, height, fps } = useSceneConfig();
+  const { width, height, fps, durationInFrames } = useSceneConfig();
+  const rate = Math.max(0, finite(speed, 1));
+  const tl = useTimeline(
+    mondrianSplitTimeline,
+    props,
+    durationInFrames * rate,
+    timing,
+  );
   const layout = useMemo(
     () =>
       getMondrianSplitLayout({
@@ -797,8 +827,8 @@ export function MondrianSplit({
       }),
     [seed, splits, lineWeight, expandCell, width, height],
   );
-  const time = frame * (30 / fps) * Math.max(0, finite(speed, 1));
-  const state = getMondrianSplitState(time, layout);
+  const time = frame * (30 / fps) * rate;
+  const state = getMondrianSplitState(time, layout, tl);
   const palette: Record<MondrianSplitSlot, string> = {
     red: redColor,
     yellow: yellowColor,

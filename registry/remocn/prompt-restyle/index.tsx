@@ -15,6 +15,17 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_HEADLINE,
+  DEFAULT_HIGHLIGHT,
+  instructionsOf,
+  type PromptRestyleElementId,
+  promptRestyleTimeline,
+  type Token,
+  TYPE_RATE,
+  tokenize,
+} from "./timeline";
 
 const geist = loadGeist("normal", {
   weights: ["300", "400", "500"],
@@ -43,6 +54,12 @@ export interface PromptRestyleProps {
   delay?: number;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches the headline's entry and each instruction's
+   * prompt and apply, by the ids in `./timeline`. Frames on the scene
+   * timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<PromptRestyleElementId>;
 }
 
 const HALO = ["#fff4ec", "#ffb36b", "#e2457a", "#3d4dff"] as const;
@@ -80,12 +97,6 @@ const S0: Style = { size: 0.42, wght: 300, track: 0.01, lead: 1.3 };
 const S1: Style = { size: 0.8, wght: 500, track: 0.01, lead: 1.3 };
 const S2: Style = { size: 1, wght: 500, track: -0.04, lead: 1.02 };
 
-const TYPE_RATE = 1.6;
-const ENTER_PAUSE = 6;
-const APPLY = 24;
-const NEXT_GAP = 20;
-const FIRST_AT = 16;
-
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
 const CLAMP = {
   extrapolateLeft: "clamp",
@@ -93,11 +104,6 @@ const CLAMP = {
 } as const;
 
 const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
-
-interface Token {
-  text: string;
-  hero: boolean;
-}
 
 interface Layout {
   lines: Token[][];
@@ -108,33 +114,6 @@ interface Layout {
   sansDesc: number;
   serifAsc: number;
   serifDesc: number;
-}
-
-function tokenize(headline: string, highlight: string): Token[] {
-  const words = headline.split(/\s+/).filter(Boolean);
-  const hw = highlight.split(/\s+/).filter(Boolean);
-  if (hw.length > 0) {
-    for (let i = 0; i + hw.length <= words.length; i++) {
-      const slice = words.slice(i, i + hw.length);
-      const ok = slice.every((w, k) =>
-        k === hw.length - 1
-          ? w.replace(/[.,!?;:]+$/, "") === hw[k]
-          : w === hw[k],
-      );
-      if (!ok) continue;
-      const last = slice[slice.length - 1];
-      const tail = last.slice(hw[hw.length - 1].length);
-      const out: Token[] = words
-        .slice(0, i)
-        .map((text) => ({ text, hero: false }));
-      out.push({ text: hw.join(" "), hero: true });
-      if (tail) out.push({ text: tail, hero: false });
-      for (const text of words.slice(i + hw.length))
-        out.push({ text, hero: false });
-      return out;
-    }
-  }
-  return words.map((text) => ({ text, hero: false }));
 }
 
 function measureLayout(
@@ -280,24 +259,31 @@ function ScaleLayer({
   );
 }
 
-export function PromptRestyle({
-  headline = "Launch videos from parts you own.",
-  highlight = "you own",
-  instructions,
-  stepGap = NEXT_GAP,
-  accent = "#3B5BFD",
-  ink: inkProp,
-  background,
-  fontFamily = geist.fontFamily,
-  accentFont = serif.fontFamily,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: PromptRestyleProps) {
+export function PromptRestyle(props: PromptRestyleProps) {
+  const {
+    headline = DEFAULT_HEADLINE,
+    highlight = DEFAULT_HIGHLIGHT,
+    instructions,
+    accent = "#3B5BFD",
+    ink: inkProp,
+    background,
+    fontFamily = geist.fontFamily,
+    accentFont = serif.fontFamily,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H } = useSceneConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    promptRestyleTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const c = THEMES[theme];
   const bg = background ?? c.bg;
 
@@ -308,22 +294,23 @@ export function PromptRestyle({
   const heroOn = tokens.some((tk) => tk.hero);
   const layout = useLayout(tokens, W, H, heroOn, fontFamily, accentFont);
 
-  const steps = useMemo(() => {
-    const d = [
-      "make it bigger",
-      "tighten it up",
-      `set “${highlight}” in serif`,
-    ];
-    const list = (instructions ?? d).slice(0, heroOn ? 3 : 2);
-    const out: { text: string; start: number; enter: number }[] = [];
-    let at = FIRST_AT;
-    for (const text of list) {
-      const enter = at + Math.ceil(text.length / TYPE_RATE) + ENTER_PAUSE;
-      out.push({ text, start: at, enter });
-      at = enter + stepGap;
-    }
-    return out;
-  }, [instructions, highlight, heroOn, stepGap]);
+  const steps = useMemo(
+    () =>
+      instructionsOf(instructions, highlight, heroOn).map((text, i) => {
+        const prompt = tl.get(`prompt:${i}`);
+        const apply = tl.get(`apply:${i}`);
+        return {
+          text,
+          start: prompt.start,
+          show: prompt.beat("show"),
+          enter: apply.start,
+          applyEnd: apply.end,
+          gone: apply.beat("gone"),
+        };
+      }),
+    [instructions, highlight, heroOn, tl],
+  );
+  const enterEl = tl.get("enter");
 
   if (!layout) {
     return <div style={{ position: "absolute", inset: 0, background: bg }} />;
@@ -331,7 +318,7 @@ export function PromptRestyle({
 
   const apply = (i: number) =>
     steps[i]
-      ? interpolate(t, [steps[i].enter, steps[i].enter + APPLY], [0, 1], {
+      ? interpolate(t, [steps[i].enter, steps[i].applyEnd], [0, 1], {
           ...CLAMP,
           easing: EASE_OUT,
         })
@@ -360,7 +347,7 @@ export function PromptRestyle({
   const fit = st.size / refSize;
   const size = refSize * F;
   const ink = interpolateColors(k1, [0, 1], [c.draft, inkProp ?? c.ink]);
-  const enterIn = interpolate(t, [0, 12], [0, 1], {
+  const enterIn = interpolate(t, [enterEl.start, enterEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
@@ -454,13 +441,18 @@ export function PromptRestyle({
       active.text.length,
       Math.floor((t - active.start) * TYPE_RATE),
     );
-    const gone = interpolate(t, [active.enter, active.enter + 10], [0, 1], {
-      ...CLAMP,
-      easing: EASE_OUT,
-    });
+    const gone = interpolate(
+      t,
+      [active.enter, active.enter + active.gone],
+      [0, 1],
+      {
+        ...CLAMP,
+        easing: EASE_OUT,
+      },
+    );
     const show = interpolate(
       t,
-      [active.start, active.start + 5],
+      [active.start, active.start + active.show],
       [0, 1],
       CLAMP,
     );

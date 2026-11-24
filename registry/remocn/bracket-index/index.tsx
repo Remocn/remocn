@@ -14,6 +14,13 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  type BracketIndexElementId,
+  bracketIndexTimeline,
+  DEFAULT_PRODUCT,
+  DEFAULT_WORDS,
+} from "./timeline";
 
 const manrope = loadManrope("normal", {
   weights: ["500", "600"],
@@ -59,6 +66,12 @@ export interface BracketIndexProps {
   delay?: number;
   theme?: "dark" | "light";
   speed?: number;
+  /**
+   * Moves, trims or stretches the brackets' intro, single words and the
+   * product name, by the ids in `./timeline`.
+   * Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<BracketIndexElementId>;
 }
 
 const CLAMP = {
@@ -75,14 +88,6 @@ const TRACK = -0.03;
 const SERIF_TRACK = -0.01;
 const PAD = 0.2;
 const GAP = 0.26;
-
-const OPEN_AT = 6;
-const OPEN_LEN = 16;
-const HOLD = 22;
-const SWAP = 16;
-const ROLL = 8;
-const RESIZE = 8;
-const FINAL_SWAP = 20;
 
 // gradients.sh "beam" palette (#f4f7ff #8fb4ff #3d5bff #1a1660), with the
 // accent standing in for #3d5bff. Dark runs light→accent, light runs accent→deep.
@@ -177,22 +182,23 @@ function ScaleLayer({
   );
 }
 
-export function BracketIndex({
-  prefix = "Motion for",
-  words = ["launches", "changelogs", "demos"],
-  product = "remocn",
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = manrope.fontFamily,
-  fontWeight = WEIGHT,
-  hold = HOLD,
-  logo,
-  scale = 1,
-  delay = 0,
-  theme = "dark",
-  speed = 1,
-}: BracketIndexProps) {
+export function BracketIndex(props: BracketIndexProps) {
+  const {
+    prefix = "Motion for",
+    words = DEFAULT_WORDS,
+    product = DEFAULT_PRODUCT,
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = manrope.fontFamily,
+    fontWeight = WEIGHT,
+    logo,
+    scale = 1,
+    delay = 0,
+    theme = "dark",
+    speed = 1,
+    timing,
+  } = props;
   const glide = useGlide();
   const now = useSceneFrame();
   const fAt = (n: number) => Math.max(0, n - delay) * speed;
@@ -205,7 +211,13 @@ export function BracketIndex({
       Math.abs(here - v(fAt(now - 1))) > 1e-3
     );
   };
-  const { width, height } = useSceneConfig();
+  const { width, height, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    bracketIndexTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const t = THEMES[theme];
   const fg = ink ?? t.fg;
   const stage = background ?? t.bg;
@@ -221,13 +233,15 @@ export function BracketIndex({
   );
 
   // Swap i brings items[i] in. Swap 0 is the bracket opening.
-  const starts = useMemo(() => {
-    const s = [OPEN_AT];
-    for (let i = 1; i < items.length; i++) {
-      s.push(s[i - 1] + (i === 1 ? OPEN_LEN : SWAP) + hold);
-    }
-    return s;
-  }, [items.length, hold]);
+  const swaps = useMemo(
+    () =>
+      items.map((_, i) =>
+        tl.get(i === items.length - 1 ? "product" : `word:${i}`),
+      ),
+    [tl, items],
+  );
+  const starts = swaps.map((e) => e.start);
+  const intro = tl.get("intro");
 
   if (!widths)
     return <div style={{ position: "absolute", inset: 0, background: fill }} />;
@@ -245,30 +259,43 @@ export function BracketIndex({
   // The brackets always hold the wider of the two words: a longer word
   // gets room before it rolls in, a shorter one is closed on after.
   const rollAt = (i: number) =>
-    i > 0 && itemW[i] > itemW[i - 1] ? starts[i] + RESIZE - 2 : starts[i];
+    i > 0 && itemW[i] > itemW[i - 1]
+      ? starts[i] + swaps[i].beat("rollWait")
+      : starts[i];
   let slot = 0;
   for (let i = 0; i < items.length; i++) {
     if (frame < starts[i]) break;
     if (i === 0) {
       slot =
         itemW[0] *
-        interpolate(frame, [starts[0], starts[0] + OPEN_LEN], [0, 1], {
-          ...CLAMP,
-          easing: EASE_SNAP,
-        });
+        interpolate(
+          frame,
+          [starts[0], starts[0] + swaps[0].beat("open")],
+          [0, 1],
+          {
+            ...CLAMP,
+            easing: EASE_SNAP,
+          },
+        );
       continue;
     }
     const from = itemW[i - 1];
-    const resizeAt = itemW[i] > from ? starts[i] : starts[i] + ROLL - 1;
-    const p = interpolate(frame, [resizeAt, resizeAt + RESIZE], [0, 1], {
-      ...CLAMP,
-      easing: EASE_IO,
-    });
+    const resizeAt =
+      itemW[i] > from ? starts[i] : starts[i] + swaps[i].beat("resizeWait");
+    const p = interpolate(
+      frame,
+      [resizeAt, resizeAt + swaps[i].beat("resize")],
+      [0, 1],
+      {
+        ...CLAMP,
+        easing: EASE_IO,
+      },
+    );
     slot = from + (itemW[i] - from) * p;
   }
 
   const finalAt = (f: number) =>
-    interpolate(f, [starts[last], starts[last] + FINAL_SWAP], [0, 1], {
+    interpolate(f, [swaps[last].start, swaps[last].end], [0, 1], {
       ...CLAMP,
       easing: EASE_IO,
     });
@@ -291,13 +318,13 @@ export function BracketIndex({
   const slotCenter = (bracketL + bracketR) / 2;
 
   const introAt = (f: number) =>
-    interpolate(f, [0, 10], [0, 1], {
+    interpolate(f, [intro.start, intro.end], [0, 1], {
       ...CLAMP,
       easing: EASE_OUT,
     });
-  const intro = introAt(frame);
-  const half = em(0.8) * (0.7 + 0.3 * intro);
-  const arm = em(0.2) * intro;
+  const introP = introAt(frame);
+  const half = em(0.8) * (0.7 + 0.3 * introP);
+  const arm = em(0.2) * introP;
   const sw = Math.max(1.5, sizeA * stroke);
   // Lowercase words sit below cap center; nudge the frame toward x-height.
   const top = cy + em(0.04) - half;
@@ -310,13 +337,18 @@ export function BracketIndex({
   };
 
   const prefixOpacity =
-    interpolate(frame, [0, 10], [0.15, 1], CLAMP) *
+    interpolate(frame, [intro.start, intro.end], [0.15, 1], CLAMP) *
     interpolate(presence, [0.45, 1], [0, 1], CLAMP);
   const riseAt = (f: number) =>
-    interpolate(f, [0, 12], [sizeOf(finalAt(f)) * 0.14, 0], {
-      ...CLAMP,
-      easing: EASE_OUT,
-    });
+    interpolate(
+      f,
+      [intro.start, intro.start + intro.beat("rise")],
+      [sizeOf(finalAt(f)) * 0.14, 0],
+      {
+        ...CLAMP,
+        easing: EASE_OUT,
+      },
+    );
   const prefixRise = riseAt(frame);
   // While the product name lands, the type grows. Layout rounds a box and a
   // baseline to whole pixels, so the line rode `top` and the font size in
@@ -345,7 +377,7 @@ export function BracketIndex({
   // Words ride one strip through the slit, like an odometer: the outgoing
   // word and the incoming one never share the window.
   const roll = (i: number, f = frame) =>
-    interpolate(f, [rollAt(i), rollAt(i) + ROLL], [0, 1], {
+    interpolate(f, [rollAt(i), rollAt(i) + swaps[i].beat("roll")], [0, 1], {
       ...CLAMP,
       easing: EASE_IO,
     });
@@ -356,7 +388,7 @@ export function BracketIndex({
     const s = starts[i];
     const enterAt = (f: number) =>
       i === 0
-        ? interpolate(f, [s, s + OPEN_LEN], [0, 1], {
+        ? interpolate(f, [s, s + swaps[0].beat("open")], [0, 1], {
             ...CLAMP,
             easing: EASE_OUT,
           })
@@ -484,10 +516,18 @@ export function BracketIndex({
   // Counter: two-digit index that rolls on every swap.
   const counterSize = Math.max(12, sizeA * 0.2);
   const counterInAt = (f: number) =>
-    interpolate(f, [starts[0] + 8, starts[0] + 18], [0, 1], {
-      ...CLAMP,
-      easing: EASE_OUT,
-    });
+    interpolate(
+      f,
+      [
+        starts[0] + swaps[0].beat("counterAt"),
+        starts[0] + swaps[0].beat("counterAt") + swaps[0].beat("counter"),
+      ],
+      [0, 1],
+      {
+        ...CLAMP,
+        easing: EASE_OUT,
+      },
+    );
   const counterIn = counterInAt(frame);
   // The counter rides the bracket's top edge, which moves as the bracket opens
   // and as the product name grows. Layout holds where it finally rests and
@@ -508,20 +548,34 @@ export function BracketIndex({
     const intoAt = (f: number) =>
       i === 0
         ? 1
-        : interpolate(f, [s + 2, s + 12], [0, 1], {
-            ...CLAMP,
-            easing: EASE_OUT,
-          });
+        : interpolate(
+            f,
+            [
+              s + swaps[i].beat("indexAt"),
+              s + swaps[i].beat("indexAt") + swaps[i].beat("index"),
+            ],
+            [0, 1],
+            {
+              ...CLAMP,
+              easing: EASE_OUT,
+            },
+          );
     const outAt = (f: number) =>
       i < last
-        ? interpolate(f, [starts[i + 1], starts[i + 1] + 8], [0, 1], {
-            ...CLAMP,
-            easing: EASE_IO,
-          })
+        ? interpolate(
+            f,
+            [starts[i + 1], starts[i + 1] + swaps[i + 1].beat("indexOut")],
+            [0, 1],
+            {
+              ...CLAMP,
+              easing: EASE_IO,
+            },
+          )
         : 0;
     const into = intoAt(frame);
     const out = outAt(frame);
-    if ((i > 0 && frame < s + 2) || out >= 1) return null;
+    if ((i > 0 && frame < s + swaps[i].beat("indexAt")) || out >= 1)
+      return null;
     const lift = (f: number) =>
       (1 - intoAt(f)) * counterSize * 1.1 - outAt(f) * counterSize * 1.1;
     return (
@@ -623,7 +677,7 @@ export function BracketIndex({
             strokeWidth={sw}
             strokeLinecap="butt"
             strokeLinejoin="miter"
-            opacity={interpolate(intro, [0, 1], [0.2, 1])}
+            opacity={interpolate(introP, [0, 1], [0.2, 1])}
           >
             <path d={bracketPath(bracketL, 1)} />
             <path d={bracketPath(bracketR, -1)} />

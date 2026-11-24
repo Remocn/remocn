@@ -12,6 +12,12 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  type CoyDenialElementId,
+  coyDenialTimeline,
+  DEFAULT_ROUNDS,
+} from "./timeline";
 
 const funnel = loadFont("normal", {
   weights: ["400", "500"],
@@ -41,12 +47,12 @@ export interface CoyDenialProps {
   delay?: number;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches each round, by the ids in `./timeline`. Frames
+   * on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<CoyDenialElementId>;
 }
-
-const DEFAULT_ROUNDS: CoyDenialRound[] = [
-  { say: "Nothing is launching on Thursday.", aside: "(Something is.)" },
-  { say: "Don’t check the site at nine.", aside: "(Do.)" },
-];
 
 const THEMES = {
   dark: { bg: "#0B0B0F", ink: "#FFFFFF", accent: "#B79CFF" },
@@ -66,17 +72,6 @@ const CLAMP = {
   extrapolateLeft: "clamp",
   extrapolateRight: "clamp",
 } as const;
-
-const SAY_LEN = 15;
-const SAY_STAGGER = 3;
-const ASIDE_AT = 48;
-const ASIDE_GAP = 7;
-const ASIDE_LEN = 10;
-const OUT_MIN = 84;
-const READ_HOLD = 28;
-const ROUND_GAP = 12;
-const OUT_LEN = 10;
-const MIN_HOLD = 36;
 
 let measureCtx: CanvasRenderingContext2D | null = null;
 
@@ -254,22 +249,29 @@ function ScaleLayer({
   );
 }
 
-export function CoyDenial({
-  rounds = DEFAULT_ROUNDS,
-  accent,
-  ink,
-  background,
-  fontFamily = funnel.fontFamily,
-  stagger = SAY_STAGGER,
-  hold = READ_HOLD,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: CoyDenialProps) {
+export function CoyDenial(props: CoyDenialProps) {
+  const {
+    rounds = DEFAULT_ROUNDS,
+    accent,
+    ink,
+    background,
+    fontFamily = funnel.fontFamily,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay);
   const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const t = frame * speed;
+  const tl = useTimeline(
+    coyDenialTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const c = THEMES[theme];
   const hi = accent ?? c.accent;
   const fg = ink ?? c.ink;
@@ -290,21 +292,6 @@ export function CoyDenial({
 
   const { F, FA, portrait } = layout;
   const n = layout.says.length;
-  const plan = layout.asides.map((rows) => {
-    const words = rows.reduce((acc, r) => acc + r.words.length, 0);
-    const gap = Math.max(3, Math.min(ASIDE_GAP, 36 / Math.max(1, words)));
-    const end = ASIDE_AT + (words - 1) * gap + ASIDE_LEN;
-    return { gap, end, out: Math.max(OUT_MIN, end + hold) };
-  });
-  const starts: number[] = [];
-  plan.reduce((acc, p) => {
-    starts.push(acc);
-    return acc + p.out + ROUND_GAP;
-  }, 0);
-  const motionEnd = starts[n - 1] + plan[n - 1].end;
-  const room = durationInFrames * speed - MIN_HOLD;
-  const k = Math.max(0.6, Math.min(1, room / motionEnd));
-  const t = (frame * speed) / k;
 
   const mx = W * (portrait ? 0.08 : 0.065);
   const my = H * (portrait ? 0.07 : 0.1);
@@ -312,16 +299,19 @@ export function CoyDenial({
   const clipTop = -F * 0.06;
 
   const nodes = layout.says.map((rows, ri) => {
-    const s = starts[ri];
-    const { gap: aGap, out: outAt } = plan[ri];
+    const round = tl.get(`round:${ri}`);
+    const s = round.start;
+    const aGap = round.beat("asideGap");
+    const outAt = round.beat("out");
+    const outLen = round.beat("outLen");
     const local = t - s;
     const isLast = ri === n - 1;
-    if (local < -2) return null;
-    if (!isLast && local > outAt + OUT_LEN + 4) return null;
+    if (local < round.beat("lead")) return null;
+    if (!isLast && local > outAt + outLen + round.beat("linger")) return null;
 
     const out = isLast
       ? 0
-      : interpolate(local, [outAt, outAt + OUT_LEN], [0, 1], {
+      : interpolate(local, [outAt, outAt + outLen], [0, 1], {
           ...CLAMP,
           easing: EASE_IN,
         });
@@ -343,7 +333,10 @@ export function CoyDenial({
           const i = wi++;
           const q = interpolate(
             local,
-            [i * stagger, i * stagger + SAY_LEN],
+            [
+              i * round.beat("stagger"),
+              i * round.beat("stagger") + round.beat("say"),
+            ],
             [0, 1],
             { ...CLAMP, easing: EASE_OUT },
           );
@@ -376,18 +369,28 @@ export function CoyDenial({
     const asideRows = layout.asides[ri];
     const asideFade = isLast
       ? 1
-      : interpolate(local, [outAt - 6, outAt + 2], [1, 0], CLAMP);
+      : interpolate(
+          local,
+          [outAt + round.beat("fadeFrom"), outAt + round.beat("fadeTo")],
+          [1, 0],
+          CLAMP,
+        );
     let ai = 0;
     const asideNodes = asideRows.flatMap((arow, ar) => {
       const ax = W - mx - arow.w * FA;
       const ay = H - my - FA - (asideRows.length - 1 - ar) * FA * 1.22;
       return arow.words.map((w) => {
         const i = ai++;
-        const at = ASIDE_AT + i * aGap;
-        const q = interpolate(local, [at, at + ASIDE_LEN], [0, 1], {
-          ...CLAMP,
-          easing: EASE_OUT,
-        });
+        const at = round.beat("aside") + i * aGap;
+        const q = interpolate(
+          local,
+          [at, at + round.beat("asideLen")],
+          [0, 1],
+          {
+            ...CLAMP,
+            easing: EASE_OUT,
+          },
+        );
         return (
           <div
             key={`a-${ri}-${i}`}

@@ -18,6 +18,14 @@ import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  matchWords,
+  SHOT_ANSWER,
+  SHOT_QUESTION,
+  type ShotAnswersElementId,
+  shotAnswersTimeline,
+} from "./timeline";
 
 const onest = loadFont("normal", {
   weights: ["300", "400"],
@@ -49,6 +57,12 @@ export interface ShotAnswersProps {
   delay?: number;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches the ground, the question words, the
+   * screenshot, the morph and the answer words, by the ids in `./timeline`.
+   * Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<ShotAnswersElementId>;
 }
 
 const THEMES = {
@@ -141,44 +155,6 @@ function useWidths(fontFamily: string) {
   return useMemo(() => buildWidths(version, fontFamily), [version, fontFamily]);
 }
 
-const keyOf = (word: string) =>
-  word.toLowerCase().replace(/[^\p{L}\p{N}']/gu, "");
-
-function match(a: string[], b: string[]) {
-  const ka = a.map(keyOf);
-  const kb = b.map(keyOf);
-  const n = ka.length;
-  const m = kb.length;
-  const dp: number[][] = Array.from({ length: n + 1 }, () =>
-    new Array<number>(m + 1).fill(0),
-  );
-  for (let i = n - 1; i >= 0; i--) {
-    for (let j = m - 1; j >= 0; j--) {
-      dp[i][j] =
-        ka[i] === kb[j] && ka[i] !== ""
-          ? dp[i + 1][j + 1] + 1
-          : Math.max(dp[i + 1][j], dp[i][j + 1]);
-    }
-  }
-  const aToB = new Array<number>(n).fill(-1);
-  const bToA = new Array<number>(m).fill(-1);
-  let i = 0;
-  let j = 0;
-  while (i < n && j < m) {
-    if (ka[i] === kb[j] && ka[i] !== "") {
-      aToB[i] = j;
-      bToA[j] = i;
-      i++;
-      j++;
-    } else if (dp[i + 1][j] >= dp[i][j + 1]) {
-      i++;
-    } else {
-      j++;
-    }
-  }
-  return { aToB, bToA };
-}
-
 interface Placed {
   x: number;
   y: number;
@@ -224,28 +200,31 @@ function ScaleLayer({
   );
 }
 
-export function ShotAnswers({
-  question = "What if your launch video were just another pull request?",
-  answer = "Your launch video is just another pull request.",
-  src,
-  aspect = 16 / 9,
-  stagger = 1.6,
-  answerAt = 58,
-  accent,
-  ink,
-  background,
-  fontFamily = onest.fontFamily,
-  ground,
-  groundParams,
-  url = "remocn.dev/studio",
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: ShotAnswersProps) {
+export function ShotAnswers(props: ShotAnswersProps) {
+  const {
+    question = SHOT_QUESTION,
+    answer = SHOT_ANSWER,
+    src,
+    aspect = 16 / 9,
+    accent,
+    ink,
+    background,
+    fontFamily = onest.fontFamily,
+    ground,
+    groundParams,
+    url = "remocn.dev/studio",
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay);
   const { width: W, height: H, durationInFrames: D, fps } = useSceneConfig();
+  // The scene paces itself to the clip length, not to `speed`, so the
+  // schedule fits into `durationInFrames`.
+  const tl = useTimeline(shotAnswersTimeline, props, D, timing);
   const c = THEMES[theme];
   const hi = accent ?? c.accent;
   const fg = ink ?? c.ink;
@@ -256,11 +235,10 @@ export function ShotAnswers({
   const qWords = question.split(/\s+/).filter(Boolean);
   const aWords = answer.split(/\s+/).filter(Boolean);
 
-  const k = Math.min(1.6, Math.max(0.6, D / 140));
   const t = frame * speed;
   const portrait = H > W * 1.1;
   const sp = widths(" ");
-  const { aToB, bToA } = match(qWords, aWords);
+  const { aToB, bToA } = matchWords(qWords, aWords);
 
   const colX = W * (portrait ? 0.11 : 0.065);
   const colW = W * (portrait ? 0.78 : 0.32);
@@ -303,8 +281,9 @@ export function ShotAnswers({
       };
   const radius = Math.min(W, H) * 0.018;
 
-  const SHOT_AT = 26 * k;
-  const MORPH = answerAt * k;
+  const shotEl = tl.get("shot");
+  const SHOT_AT = shotEl.start;
+  const morphEl = tl.get("morph");
 
   // Whether `value(f)`, in px, moves by more than a thousandth of a pixel
   // into or out of this frame: the eases and the spring here have long flat
@@ -320,7 +299,7 @@ export function ShotAnswers({
       config: HEAVY,
     });
   const shotIn = shotInAt(t);
-  const reveal = interpolate(t, [SHOT_AT, SHOT_AT + 18 * k], [0, 1], {
+  const reveal = interpolate(t, [SHOT_AT, shotEl.end], [0, 1], {
     ...CLAMP,
     easing: ENTER,
   });
@@ -338,7 +317,8 @@ export function ShotAnswers({
     ...CLAMP,
     easing: Easing.bezier(0.22, 1, 0.36, 1),
   });
-  const groundIn = interpolate(t, [0, 14], [0, 1], {
+  const groundEl = tl.get("ground");
+  const groundIn = interpolate(t, [groundEl.start, groundEl.end], [0, 1], {
     ...CLAMP,
     easing: ENTER,
   });
@@ -359,8 +339,9 @@ export function ShotAnswers({
   const spans: ReactNode[] = [];
 
   qWords.forEach((wd, i) => {
+    const wordEl = tl.get(`word:${i}`);
     const enterAt = (f: number) =>
-      interpolate(f, [i * stagger * k, i * stagger * k + 12 * k], [0, 1], {
+      interpolate(f, [wordEl.start, wordEl.end], [0, 1], {
         ...CLAMP,
         easing: ENTER,
       });
@@ -369,7 +350,7 @@ export function ShotAnswers({
     const j = aToB[i];
     if (j < 0) {
       const outAt = (f: number) =>
-        interpolate(f, [MORPH, MORPH + 8 * k], [0, 1], {
+        interpolate(f, [morphEl.start, morphEl.end], [0, 1], {
           ...CLAMP,
           easing: EXIT,
         });
@@ -392,9 +373,9 @@ export function ShotAnswers({
       return;
     }
     const a = A.placed[j];
-    const start = MORPH + 6 * k + j * 0.6 * k;
+    const glideEl = tl.get(`answer:${j}`);
     const gAt = (f: number) =>
-      interpolate(f, [start, start + 20 * k], [0, 1], CLAMP);
+      interpolate(f, [glideEl.start, glideEl.end], [0, 1], CLAMP);
     const g = gAt(t);
     const gx = MOVE(interpolate(g, [0, 0.72], [0, 1], CLAMP));
     const yAt = (f: number) =>
@@ -439,9 +420,9 @@ export function ShotAnswers({
   aWords.forEach((wd, j) => {
     if (bToA[j] >= 0) return;
     const a = A.placed[j];
-    const start = MORPH + 18 * k + j * 0.8 * k;
+    const inEl = tl.get(`answer:${j}`);
     const eAt = (f: number) =>
-      interpolate(f, [start, start + 14 * k], [0, 1], {
+      interpolate(f, [inEl.start, inEl.end], [0, 1], {
         ...CLAMP,
         easing: ENTER,
       });

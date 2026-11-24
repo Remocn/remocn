@@ -7,6 +7,12 @@ import { useId } from "react";
 import { AbsoluteFill, Easing, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_HARMONICS,
+  type FourierSumElementId,
+  fourierSumTimeline,
+} from "./timeline";
 
 const { fontFamily: sans } = loadFont("normal", {
   weights: ["400"],
@@ -44,6 +50,12 @@ export interface FourierSumProps {
   grain?: boolean;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches the rows drawing in, the sum's slot, each
+   * merge, the final wave and the title, by the ids in `./timeline`. Frames
+   * on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<FourierSumElementId>;
 }
 
 const EASE_IO = Easing.bezier(0.65, 0, 0.35, 1);
@@ -75,13 +87,6 @@ const THEMES = {
   },
 } as const;
 
-const ROW_DRAW_AT = 0;
-const ROW_STAGGER = 6;
-const ROW_DRAW_DUR = 22;
-const SLOT_IN = [22, 40] as const;
-const MERGE_AT = 44;
-const MERGE_STAGGER = 11;
-const MERGE_DUR = 20;
 const PHASE = Math.PI / 2;
 
 const lerp = (a: number, b: number, k: number) => a + (b - a) * k;
@@ -149,25 +154,37 @@ function ScaleLayer({
 
 const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
 
-export function FourierSum({
-  harmonics = [1, 3, 5, 7, 9],
-  title = "Many parts. One signal.",
-  periods = 2,
-  accent = "#3B5BFD",
-  stagger = MERGE_STAGGER,
-  waveFill = true,
-  ink,
-  background,
-  fontFamily = display,
-  scale = 1,
-  delay = 0,
-  grain = true,
-  speed = 1,
-  theme = "dark",
-}: FourierSumProps) {
+export function FourierSum(props: FourierSumProps) {
+  const {
+    harmonics = DEFAULT_HARMONICS,
+    title = "Many parts. One signal.",
+    periods = 2,
+    accent = "#3B5BFD",
+    waveFill = true,
+    ink,
+    background,
+    fontFamily = display,
+    scale = 1,
+    delay = 0,
+    grain = true,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H } = useSceneConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    fourierSumTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const rows = harmonics.map((_, i) => tl.get(`row:${i}`));
+  const merges = harmonics.map((_, i) => tl.get(`merge:${i}`));
+  const slotEl = tl.get("slot");
+  const finalEl = tl.get("final");
+  const titleEl = tl.get("title");
   const u = H / 720;
   const p = THEMES[theme];
   const fg = ink ?? p.fg;
@@ -185,10 +202,8 @@ export function FourierSum({
   const amp = Math.min(34 * u, gap * 0.42);
   const midY = H * 0.5;
 
-  const mergeStart = (i: number) => MERGE_AT + i * stagger;
-  const mergeEnd = mergeStart(count - 1) + MERGE_DUR;
-  const merge = harmonics.map((_, i) =>
-    interpolate(t, [mergeStart(i), mergeStart(i) + MERGE_DUR], [0, 1], {
+  const merge = merges.map((m) =>
+    interpolate(t, [m.start, m.end], [0, 1], {
       ...CLAMP,
       easing: EASE_IO,
     }),
@@ -203,16 +218,11 @@ export function FourierSum({
   const lift = (merged * gap) / 2;
   const merging = merge.some(midway);
 
-  const FINAL = [mergeEnd - 2, mergeEnd + 26] as const;
-  const TITLE_AT = mergeEnd + 14;
-
-  const weights = harmonics.map((_, i) =>
-    interpolate(
-      t,
-      [mergeStart(i) + MERGE_DUR * 0.5, mergeStart(i) + MERGE_DUR],
-      [0, 1],
-      { ...CLAMP, easing: EASE_IO },
-    ),
+  const weights = merges.map((m) =>
+    interpolate(t, [m.start + m.beat("weigh"), m.end], [0, 1], {
+      ...CLAMP,
+      easing: EASE_IO,
+    }),
   );
   const sumFn = (th: number) =>
     harmonics.reduce(
@@ -221,7 +231,10 @@ export function FourierSum({
     );
 
   const slotY = slotIndexY(0);
-  const fin = interpolate(t, FINAL, [0, 1], { ...CLAMP, easing: EASE_IO });
+  const fin = interpolate(t, [finalEl.start, finalEl.end], [0, 1], {
+    ...CLAMP,
+    easing: EASE_IO,
+  });
   const finW = W * 0.74;
   const finY = H * 0.43;
   const sumX = lerp(waveX, (W - finW) / 2, fin);
@@ -231,12 +244,12 @@ export function FourierSum({
   const sumStroke = lerp(2.6, 5.5, fin) * u;
   const sumO = Math.min(1, weights[0] * 2.5);
 
-  const slotIn = interpolate(t, SLOT_IN, [0, 1], {
+  const slotIn = interpolate(t, [slotEl.start, slotEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
   const slotO = slotIn * (1 - fin);
-  const titleA = interpolate(t, [TITLE_AT, TITLE_AT + 20], [0, 1], {
+  const titleA = interpolate(t, [titleEl.start, titleEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
@@ -319,20 +332,15 @@ export function FourierSum({
             opacity={slotO}
           />
           {harmonics.map((n, i) => {
-            const drawAt = ROW_DRAW_AT + i * ROW_STAGGER;
-            const prog = interpolate(
-              t,
-              [drawAt, drawAt + ROW_DRAW_DUR],
-              [0, 1],
-              {
-                ...CLAMP,
-                easing: DRAW,
-              },
-            );
+            const row = rows[i];
+            const prog = interpolate(t, [row.start, row.end], [0, 1], {
+              ...CLAMP,
+              easing: DRAW,
+            });
             if (prog <= 0) return null;
             const o = interpolate(
               t,
-              [mergeStart(i) + MERGE_DUR * 0.6, mergeStart(i) + MERGE_DUR],
+              [merges[i].start + merges[i].beat("fade"), merges[i].end],
               [1, 0],
               CLAMP,
             );
@@ -381,14 +389,17 @@ export function FourierSum({
         </svg>
 
         {harmonics.map((n, i) => {
-          const drawAt = ROW_DRAW_AT + i * ROW_STAGGER;
-          const a = interpolate(t, [drawAt + 2, drawAt + 14], [0, 1], {
-            ...CLAMP,
-            easing: EASE_OUT,
-          });
+          const row = rows[i];
+          const m = merges[i];
+          const a = interpolate(
+            t,
+            [row.start + row.beat("labelAt"), row.start + row.beat("labelEnd")],
+            [0, 1],
+            { ...CLAMP, easing: EASE_OUT },
+          );
           const out = interpolate(
             t,
-            [mergeStart(i), mergeStart(i) + 8],
+            [m.start, m.start + m.beat("labelOut")],
             [1, 0],
             CLAMP,
           );
@@ -454,7 +465,10 @@ export function FourierSum({
           {harmonics.map((n, i) => {
             const a = interpolate(
               t,
-              [mergeStart(i) + MERGE_DUR * 0.6, mergeStart(i) + MERGE_DUR + 4],
+              [
+                merges[i].start + merges[i].beat("fade"),
+                merges[i].end + merges[i].beat("termTail"),
+              ],
               [0, 1],
               { ...CLAMP, easing: EASE_OUT },
             );

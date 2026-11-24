@@ -14,6 +14,14 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_AXES,
+  type RadarCompareElementId,
+  RINGS,
+  radarCompareTimeline,
+  ringsOf,
+} from "./timeline";
 
 const { fontFamily: sans } = loadSans("normal", {
   weights: ["400", "500"],
@@ -97,16 +105,15 @@ export interface RadarCompareProps {
   delay?: number;
   theme?: "dark" | "light";
   speed?: number;
+  /**
+   * Moves, trims or stretches the grid, the push, each spoke, ring, label
+   * and brand vertex, the competitor's outline, the slide and the copy, by
+   * the ids in `./timeline`. Frames on the scene timeline, after `delay` and
+   * `speed`.
+   */
+  timing?: Timing<RadarCompareElementId>;
 }
 
-const DEFAULT_AXES = [
-  "Speed",
-  "Quality",
-  "Price",
-  "Support",
-  "Integrations",
-  "Docs",
-];
 const DEFAULT_COMPETITOR = [0.58, 0.66, 0.82, 0.5, 0.62, 0.46];
 const DEFAULT_BRAND = [0.94, 0.88, 0.7, 0.86, 0.9, 0.96];
 
@@ -118,7 +125,6 @@ const CLAMP = {
   extrapolateRight: "clamp",
 } as const;
 const TAU = Math.PI * 2;
-const RINGS = [0.25, 0.5, 0.75, 1];
 
 const THEMES = {
   dark: {
@@ -199,41 +205,46 @@ function ScaleLayer({
   );
 }
 
-export function RadarCompare({
-  axes = DEFAULT_AXES,
-  competitor = DEFAULT_COMPETITOR,
-  brand = DEFAULT_BRAND,
-  brandLabel = "remocn",
-  competitorLabel = "Kitebase",
-  caption,
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = sans,
-  stagger = 1.8,
-  rings = RINGS.length,
-  logo,
-  grain = true,
-  scale: size = 1,
-  delay = 0,
-  theme = "dark",
-  speed = 1,
-}: RadarCompareProps) {
+export function RadarCompare(props: RadarCompareProps) {
+  const {
+    axes = DEFAULT_AXES,
+    competitor = DEFAULT_COMPETITOR,
+    brand = DEFAULT_BRAND,
+    brandLabel = "remocn",
+    competitorLabel = "Kitebase",
+    caption,
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = sans,
+    rings = RINGS.length,
+    logo,
+    grain = true,
+    scale: size = 1,
+    delay = 0,
+    theme = "dark",
+    speed = 1,
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = useSceneFrame();
   const tAt = (f: number) => Math.max(0, f - delay) * speed;
   const t = tAt(frame);
-  const { width, height, fps } = useSceneConfig();
+  const { width, height, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    radarCompareTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const span = (e: { start: number; end: number }) => [e.start, e.end];
   const gid = `rc${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
   const u = Math.min(width / 1280, height / 720);
   const p = THEMES[theme];
   const fg = ink ?? p.fg;
   const fill =
     background === "transparent" ? "transparent" : (background ?? p.bg);
-  const ringList =
-    rings === RINGS.length
-      ? RINGS
-      : Array.from({ length: Math.max(1, rings) }, (_, j) => (j + 1) / rings);
+  const ringList = ringsOf(rings);
   const list = axes.slice(0, 8);
   const n = Math.max(3, list.length);
   const comp = Array.from({ length: n }, (_, i) => clamp01(competitor[i] ?? 0));
@@ -246,7 +257,10 @@ export function RadarCompare({
   const cy = height * 0.5;
   const centreAt = (tt: number) =>
     interpolate(
-      interpolate(tt, [86, 118], [0, 1], { ...CLAMP, easing: EASE_IO }),
+      interpolate(tt, span(tl.get("slide")), [0, 1], {
+        ...CLAMP,
+        easing: EASE_IO,
+      }),
       [0, 1],
       [width * 0.5, width * 0.335],
     );
@@ -266,10 +280,14 @@ export function RadarCompare({
       })
       .join(" ")} Z`;
 
-  const stage = interpolate(t, [0, 8], [0, 1], CLAMP);
+  const stage = interpolate(t, span(tl.get("enter")), [0, 1], CLAMP);
   const scaleAt = (tt: number) =>
     0.965 +
-    0.035 * interpolate(tt, [0, 150], [0, 1], { ...CLAMP, easing: EASE_IO });
+    0.035 *
+      interpolate(tt, span(tl.get("push")), [0, 1], {
+        ...CLAMP,
+        easing: EASE_IO,
+      });
   const scale = scaleAt(t);
   // The push eases in and out slowly; it moves while the furthest text, some
   // 700px from the centre, shifts by more than a thousandth of a pixel.
@@ -286,38 +304,47 @@ export function RadarCompare({
     const b = pt(compPts[(i + 1) % n], ang(i + 1));
     perim += Math.hypot(b.x - a.x, b.y - a.y);
   }
-  const compDraw = interpolate(t, [22, 52], [0, 1], {
+  const compEl = tl.get("competitor");
+  const compDraw = interpolate(t, span(compEl), [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
-  const compFill = interpolate(t, [42, 60], [0, 1], {
-    ...CLAMP,
-    easing: EASE_OUT,
-  });
-  const settle = interpolate(t, [80, 100], [0, 1], {
+  const compFill = interpolate(
+    t,
+    [
+      compEl.start + compEl.beat("fillAt"),
+      compEl.start + compEl.beat("fillEnd"),
+    ],
+    [0, 1],
+    {
+      ...CLAMP,
+      easing: EASE_OUT,
+    },
+  );
+  const settle = interpolate(t, span(tl.get("settle")), [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
 
   const grow = mine.map((_, i) =>
     spring({
-      frame: t - 58 - i * stagger,
+      frame: t - tl.get(`vertex:${i}`).start,
       fps,
       config: { damping: 17, stiffness: 110, mass: 0.9 },
     }),
   );
-  const brandOn = interpolate(t, [56, 62], [0, 1], CLAMP);
+  const brandOn = interpolate(t, span(tl.get("brand")), [0, 1], CLAMP);
   const brandPts = mine.map((v, i) => v * R * (0.06 + 0.94 * grow[i]));
 
-  const hero = interpolate(t, [98, 120], [0, 1], {
+  const hero = interpolate(t, span(tl.get("name")), [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
-  const line2 = interpolate(t, [106, 126], [0, 1], {
+  const line2 = interpolate(t, span(tl.get("caption")), [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
-  const line3 = interpolate(t, [112, 132], [0, 1], {
+  const line3 = interpolate(t, span(tl.get("legend")), [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
@@ -342,7 +369,7 @@ export function RadarCompare({
             aria-hidden
           >
             {list.map((ax, i) => {
-              const k = interpolate(t, [2 + i * 2, 22 + i * 2], [0, 1], {
+              const k = interpolate(t, span(tl.get(`spoke:${i}`)), [0, 1], {
                 ...CLAMP,
                 easing: EASE_OUT,
               });
@@ -360,7 +387,7 @@ export function RadarCompare({
               );
             })}
             {ringList.map((r, j) => {
-              const k = interpolate(t, [6 + j * 3, 26 + j * 3], [0, 1], {
+              const k = interpolate(t, span(tl.get(`ring:${j}`)), [0, 1], {
                 ...CLAMP,
                 easing: EASE_OUT,
               });
@@ -489,7 +516,7 @@ export function RadarCompare({
 
           {list.map((ax, i) => {
             const a = ang(i);
-            const k = interpolate(t, [10 + i * 2, 30 + i * 2], [0, 1], {
+            const k = interpolate(t, span(tl.get(`label:${i}`)), [0, 1], {
               ...CLAMP,
               easing: EASE_OUT,
             });

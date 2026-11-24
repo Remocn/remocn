@@ -8,6 +8,8 @@ import { useId, useMemo } from "react";
 import { AbsoluteFill, Easing, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import { type TickerTapeElementId, tickerTapeTimeline } from "./timeline";
 
 const { fontFamily: display } = loadFont("normal", {
   weights: ["500"],
@@ -83,6 +85,11 @@ export interface TickerTapeProps {
   /** Playback multiplier. */
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches the brake and the poster rise, by the ids in
+   * `./timeline`. Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<TickerTapeElementId>;
 }
 
 // Oswald 500 advances per em for A–Z (fontTools, wght 500); cap height 0.81.
@@ -137,10 +144,6 @@ const CLAMP = {
 //  84–108  the side bands clear out up and down, the hero's neighbours slide
 //          off, and the hero quote scales up into the poster
 //  108–    poster: symbol, price, move; the thin mono tapes keep crawling
-const BRAKE_AT = 40;
-const STOP_AT = 86;
-const RISE_AT = 84;
-const RISE_LEN = 26;
 
 // gradients.sh "aurora" (bg #03050b): #a0f0c8 #3fb5a3 #5147b6 #b25c9c.
 // Up moves take the mint/teal end; the glow under the poster uses the set.
@@ -365,41 +368,69 @@ function ScaleLayer({
 }
 
 /** Distance travelled: full speed, then a cubic brake to `rest` × speed. */
-function travel(t: number, v: number, stopAt: number, rest: number) {
-  const L = stopAt - BRAKE_AT;
-  if (t <= BRAKE_AT) return v * t;
-  const tau = Math.min(1, (t - BRAKE_AT) / L);
+function travel(
+  t: number,
+  v: number,
+  stopAt: number,
+  rest: number,
+  brakeAt: number,
+) {
+  const L = stopAt - brakeAt;
+  if (t <= brakeAt) return v * t;
+  const tau = Math.min(1, (t - brakeAt) / L);
   const brake = (v * (1 - rest) * L * (1 - (1 - tau) ** 3)) / 3;
-  return v * BRAKE_AT + brake + v * rest * (t - BRAKE_AT);
+  return v * brakeAt + brake + v * rest * (t - brakeAt);
 }
 
-function speedAt(t: number, v: number, stopAt: number, rest: number) {
-  if (t <= BRAKE_AT) return v;
-  const tau = Math.min(1, (t - BRAKE_AT) / (stopAt - BRAKE_AT));
+function speedAt(
+  t: number,
+  v: number,
+  stopAt: number,
+  rest: number,
+  brakeAt: number,
+) {
+  if (t <= brakeAt) return v;
+  const tau = Math.min(1, (t - brakeAt) / (stopAt - brakeAt));
   return v * rest + v * (1 - rest) * (1 - tau) ** 2;
 }
 
-export function TickerTape({
-  symbol = "RMCN",
-  price = "128.40",
-  change = 12.4,
-  symbols = SYMBOLS,
-  name = "remocn",
-  logo,
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = display,
-  label = "MARKET CLOSE",
-  blur = 1,
-  scale: zoom = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: TickerTapeProps) {
+export function TickerTape(props: TickerTapeProps) {
+  const {
+    symbol = "RMCN",
+    price = "128.40",
+    change = 12.4,
+    symbols = SYMBOLS,
+    name = "remocn",
+    logo,
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = display,
+    label = "MARKET CLOSE",
+    blur = 1,
+    scale: zoom = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H } = useSceneConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    tickerTapeTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const brake = tl.get("brake");
+  const BRAKE_AT = brake.start;
+  const STOP_AT = brake.end;
+  // Band `i` (not the hero) slows to its crawl here.
+  const rowStop = (i: number) =>
+    STOP_AT + brake.beat("rowStop") + i * brake.beat("rowGap");
+  const riseEl = tl.get("rise");
+  const RISE_AT = riseEl.start;
   const u = H / 720;
   const p = THEMES[theme];
   const fg = ink ?? p.fg;
@@ -462,7 +493,7 @@ export function TickerTape({
 
   // poster scale and position
   const riseAt = (f: number) =>
-    interpolate(f, [RISE_AT, RISE_AT + RISE_LEN], [0, 1], {
+    interpolate(f, [RISE_AT, riseEl.end], [0, 1], {
       ...CLAMP,
       easing: Easing.bezier(0.7, 0, 0.2, 1),
     });
@@ -475,22 +506,38 @@ export function TickerTape({
   const heroCy = heroCy0 + (heroCy1 - heroCy0) * rise;
 
   const clearAt = (f: number) =>
-    interpolate(f, [RISE_AT - 4, RISE_AT + 20], [0, 1], {
-      ...CLAMP,
-      easing: EASE_IN,
-    });
+    interpolate(
+      f,
+      [
+        RISE_AT + riseEl.beat("clearAt"),
+        RISE_AT + riseEl.beat("clearAt") + riseEl.beat("clear"),
+      ],
+      [0, 1],
+      {
+        ...CLAMP,
+        easing: EASE_IN,
+      },
+    );
   const clear = clearAt(t);
   const caption = (d: number) =>
     interpolate(
       t,
-      [RISE_AT + RISE_LEN - 6 + d, RISE_AT + RISE_LEN + 14 + d],
+      [
+        RISE_AT + riseEl.beat("captionAt") + d,
+        RISE_AT + riseEl.beat("captionAt") + riseEl.beat("caption") + d,
+      ],
       [0, 1],
       { ...CLAMP, easing: EASE_OUT },
     );
-  const glowIn = interpolate(t, [RISE_AT, RISE_AT + 40], [0, 1], {
-    ...CLAMP,
-    easing: EASE_IO,
-  });
+  const glowIn = interpolate(
+    t,
+    [RISE_AT, RISE_AT + riseEl.beat("glow")],
+    [0, 1],
+    {
+      ...CLAMP,
+      easing: EASE_IO,
+    },
+  );
   const drift = interpolate(t, [0, 160], [0, 1], CLAMP);
 
   const upId = `${uid}up`;
@@ -548,8 +595,9 @@ export function TickerTape({
               const v = speedAt(
                 t,
                 r.v * u,
-                r.hero ? STOP_AT : STOP_AT - 8 + i * 3,
+                r.hero ? STOP_AT : rowStop(i),
                 r.hero ? 0 : 0.12,
+                BRAKE_AT,
               );
               return (
                 <filter
@@ -569,11 +617,11 @@ export function TickerTape({
           </defs>
 
           {rows.map((r, i) => {
-            const stopAt = r.hero ? STOP_AT : STOP_AT - 8 + i * 3;
+            const stopAt = r.hero ? STOP_AT : rowStop(i);
             const rest = r.hero ? 0 : r.kind === "mono" ? 0.35 : 0.12;
-            const D = travel(t, r.v * u, stopAt, rest);
+            const D = travel(t, r.v * u, stopAt, rest, BRAKE_AT);
             // the hero row is offset so the hero quote lands dead centre
-            const Dstop = travel(stopAt + 1000, r.v * u, stopAt, 0);
+            const Dstop = travel(stopAt + 1000, r.v * u, stopAt, 0, BRAKE_AT);
             const x0 = r.hero
               ? W / 2 - (heroQ.x + heroQ.w / 2) - r.dir * Dstop
               : -hash(i * 3.3) * r.period;
@@ -659,8 +707,8 @@ export function TickerTape({
           {/* hero quote: rides its band, then scales into the poster */}
           {(() => {
             const r = heroRow;
-            const D = travel(t, r.v * u, STOP_AT, 0);
-            const Dstop = travel(STOP_AT + 1000, r.v * u, STOP_AT, 0);
+            const D = travel(t, r.v * u, STOP_AT, 0, BRAKE_AT);
+            const Dstop = travel(STOP_AT + 1000, r.v * u, STOP_AT, 0, BRAKE_AT);
             const x0 = W / 2 - (heroQ.x + heroQ.w / 2) - r.dir * Dstop;
             const shift = x0 + r.dir * D;
             // nearest copy to the centre

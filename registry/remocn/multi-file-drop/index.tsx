@@ -16,6 +16,12 @@ import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DROP_END,
+  type MultiFileDropElementId,
+  multiFileDropTimeline,
+} from "./timeline";
 
 const hanken = loadHanken("normal", {
   weights: ["300", "400"],
@@ -35,24 +41,7 @@ const CARD = { mass: 0.8, damping: 18, stiffness: 160 };
 const CHIP = { mass: 0.5, damping: 12, stiffness: 200 };
 const MORPH = { damping: 200 };
 
-const B = {
-  head: -12,
-  card: -8,
-  fly: 4,
-  hover: 26,
-  drop: 38,
-  deal: 40,
-  dealStep: 2,
-  land: 10,
-  resolve: [62, 74, 84, 92],
-  cursorOut: 52,
-  ready: 100,
-  send: 112,
-  leave: 122,
-  end: 144,
-};
-
-export const MULTI_FILE_DROP_DURATION = B.end;
+export const MULTI_FILE_DROP_DURATION = DROP_END;
 
 const ramp = (f: number, start: number, dur: number, easing = ENTER) =>
   interpolate(f, [start, start + dur], [0, 1], {
@@ -360,6 +349,12 @@ export interface MultiFileDropProps {
   /** Frames to hold the first frame before anything moves. */
   delay?: number;
   speed?: number;
+  /**
+   * Moves, trims or stretches the fan's flight and drop, each file's deal and
+   * upload, the cursor, the send and the camera, by the ids in `./timeline`.
+   * Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<MultiFileDropElementId>;
 }
 
 /** The foreground at `scale`, around the frame's center; nothing extra at 1. */
@@ -378,27 +373,46 @@ function ScaleLayer({
   );
 }
 
-export function MultiFileDrop({
-  theme = "dark",
-  accent = "#3B5BFD",
-  heading = "What are we launching?",
-  prompt = "Build a launch page for v2 with a hero video, a pricing table and a waitlist.",
-  files = DEFAULT_FILES,
-  resolveOrder = [0, 2, 1, 3],
-  ground,
-  groundParams,
-  attachLabel = "Attach",
-  modeLabel = "Build",
-  totalSize = "3.4 MB",
-  ink: inkProp,
-  background,
-  fontFamily = hanken.fontFamily,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-}: MultiFileDropProps) {
+export function MultiFileDrop(props: MultiFileDropProps) {
+  const {
+    theme = "dark",
+    accent = "#3B5BFD",
+    heading = "What are we launching?",
+    prompt = "Build a launch page for v2 with a hero video, a pricing table and a waitlist.",
+    files = DEFAULT_FILES,
+    ground,
+    groundParams,
+    attachLabel = "Attach",
+    modeLabel = "Build",
+    totalSize = "3.4 MB",
+    ink: inkProp,
+    background,
+    fontFamily = hanken.fontFamily,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    timing,
+  } = props;
   const frame = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width, height, fps } = useSceneConfig();
+  const { width, height, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    multiFileDropTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const headEl = tl.get("head");
+  const cardEl = tl.get("card");
+  const cameraEl = tl.get("camera");
+  const flyEl = tl.get("fly");
+  const hoverEl = tl.get("hover");
+  const dropEl = tl.get("drop");
+  const dealEl = tl.get("deal");
+  const pushEl = tl.get("push");
+  const cursorOut = tl.get("cursor-out");
+  const readyEl = tl.get("ready");
+  const sendEl = tl.get("send");
+  const leaveEl = tl.get("leave");
   const dark = theme === "dark";
   const portrait = height > width * 1.2;
   const stageW = portrait ? 1080 : 1280;
@@ -421,11 +435,6 @@ export function MultiFileDrop({
 
   const n = Math.min(4, files.length);
   const list = files.slice(0, n);
-  const order = resolveOrder.filter((k) => k < n);
-  const resolveAt = (i: number) => {
-    const k = order.indexOf(i);
-    return B.resolve[k >= 0 ? k : i] ?? B.resolve[B.resolve.length - 1];
-  };
 
   const pad = 22 * u;
   const fontSize = 24 * u;
@@ -441,10 +450,10 @@ export function MultiFileDrop({
   const headGap = portrait ? 64 : 30;
 
   const grow = spring({
-    frame: frame - B.deal,
+    frame: frame - dealEl.start,
     fps,
     config: MORPH,
-    durationInFrames: 16,
+    durationInFrames: dealEl.length,
   });
   const baseH = pad + textH + 18 * u + footH + pad;
   const cardH = baseH + grow * (slot + 16 * u);
@@ -459,8 +468,8 @@ export function MultiFileDrop({
   // prompt eased by `top` clicks down pixel by pixel.
   const unGrown = (1 - grow) * (slot + 16 * u);
 
-  const headIn = ramp(frame, B.head, 15);
-  const cardIn = spring({ frame: frame - B.card, fps, config: HEAVY });
+  const headIn = ramp(frame, headEl.start, headEl.length);
+  const cardIn = spring({ frame: frame - cardEl.start, fps, config: HEAVY });
 
   const fanW = 168 * u;
   const fanH = 128 * u;
@@ -473,27 +482,53 @@ export function MultiFileDrop({
   const bez = (t: number, a: number, c: number, b: number) =>
     (1 - t) * (1 - t) * a + 2 * (1 - t) * t * c + t * t * b;
   const flyAt = (f: number) =>
-    spring({ frame: f - B.fly, fps, config: CARD, durationInFrames: 24 });
+    spring({
+      frame: f - flyEl.start,
+      fps,
+      config: CARD,
+      durationInFrames: flyEl.length,
+    });
   const fp = flyAt(frame);
   const fpPrev = flyAt(frame - 1);
-  const hoverAmt = ramp(frame, B.hover - 4, 10) * (1 - ramp(frame, B.drop, 4));
+  const hoverAmt =
+    ramp(frame, hoverEl.start + hoverEl.beat("in"), hoverEl.beat("inLength")) *
+    (1 - ramp(frame, dropEl.start, dropEl.beat("out")));
+  const fall = ramp(
+    frame,
+    dropEl.start + dropEl.beat("fall"),
+    dropEl.beat("fallLength"),
+    EXIT,
+  );
   const fanCx =
     bez(fp, startX, ctrlX, hoverX) +
-    Math.sin((frame - B.hover) / 7) * 4 * u * hoverAmt;
+    Math.sin((frame - hoverEl.start) / 7) * 4 * u * hoverAmt;
   const fanCy =
     bez(fp, startY, ctrlY, hoverY) +
-    Math.cos((frame - B.hover) / 9) * 4 * u * hoverAmt +
-    10 * u * ramp(frame, B.drop - 3, 4, EXIT);
+    Math.cos((frame - hoverEl.start) / 9) * 4 * u * hoverAmt +
+    10 * u * fall;
   const fanSpeed = Math.hypot(
     fanCx - bez(fpPrev, startX, ctrlX, hoverX),
     fanCy - bez(fpPrev, startY, ctrlY, hoverY),
   );
   const fanSpread =
-    mix(0.35, 1, ramp(frame, B.fly + 6, 18)) *
-    (1 - 0.25 * ramp(frame, B.drop - 3, 4, EXIT));
+    mix(
+      0.35,
+      1,
+      ramp(
+        frame,
+        flyEl.start + flyEl.beat("spread"),
+        flyEl.beat("spreadLength"),
+      ),
+    ) *
+    (1 - 0.25 * fall);
   const fanTilt = mix(14, 0, fp);
   const dropZone =
-    ramp(frame, B.hover - 8, 10) * (1 - ramp(frame, B.deal, 8, EXIT));
+    ramp(
+      frame,
+      hoverEl.start + hoverEl.beat("zone"),
+      hoverEl.beat("zoneLength"),
+    ) *
+    (1 - ramp(frame, dealEl.start, dealEl.beat("zoneOut"), EXIT));
 
   const slotX = (i: number) => cardX + pad + i * (slot + slotGap) + slot / 2;
   const slotY = cardTop + pad + slot / 2;
@@ -503,12 +538,12 @@ export function MultiFileDrop({
   const sendX = cardX + cardW - pad - 19 * u;
   const sendY = cardTop + cardH - pad - footH / 2;
   const curGo = spring({
-    frame: frame - B.cursorOut,
+    frame: frame - cursorOut.start,
     fps,
     config: HEAVY,
-    durationInFrames: 36,
+    durationInFrames: cursorOut.length,
   });
-  const curLeave = spring({ frame: frame - B.leave, fps, config: HEAVY });
+  const curLeave = spring({ frame: frame - leaveEl.start, fps, config: HEAVY });
   const curX = mix(fanCx + curDX, sendX + 6 * u, curGo) + curLeave * 70 * u;
   const curY =
     mix(fanCy + curDY, sendY + 8 * u, curGo) +
@@ -520,26 +555,61 @@ export function MultiFileDrop({
   const curRestY = cardTopRest + cardHRest - pad - footH / 2 + 8 * u;
   const sendPress = Math.max(
     0,
-    spring({ frame: frame - B.send + 2, fps, config: CHIP }) -
-      spring({ frame: frame - B.send - 2, fps, config: CHIP }),
+    spring({
+      frame: frame - sendEl.start - sendEl.beat("press"),
+      fps,
+      config: CHIP,
+    }) -
+      spring({
+        frame: frame - sendEl.start - sendEl.beat("release"),
+        fps,
+        config: CHIP,
+      }),
   );
-  const sent = ramp(frame, B.send + 1, 8);
+  const sent = ramp(
+    frame,
+    sendEl.start + sendEl.beat("sent"),
+    sendEl.beat("sentLength"),
+  );
   const badge =
-    spring({ frame: frame - B.fly - 8, fps, config: CHIP }) *
-    (1 - ramp(frame, B.drop - 2, 5, EXIT));
+    spring({
+      frame: frame - flyEl.start - flyEl.beat("badge"),
+      fps,
+      config: CHIP,
+    }) *
+    (1 -
+      ramp(
+        frame,
+        dropEl.start + dropEl.beat("badgeOut"),
+        dropEl.beat("badgeOutLength"),
+        EXIT,
+      ));
   const curPress =
     Math.max(
       0,
-      spring({ frame: frame - B.drop + 3, fps, config: CHIP }) -
-        spring({ frame: frame - B.drop - 1, fps, config: CHIP }),
+      spring({
+        frame: frame - dropEl.start - dropEl.beat("press"),
+        fps,
+        config: CHIP,
+      }) -
+        spring({
+          frame: frame - dropEl.start - dropEl.beat("release"),
+          fps,
+          config: CHIP,
+        }),
     ) + sendPress;
 
-  const resolvedCount = list.filter((_, i) => frame >= resolveAt(i) + 2).length;
-  const ready = ramp(frame, B.ready, 8);
-  const readyPop = spring({ frame: frame - B.ready, fps, config: CHIP });
-  const push = 1 + 0.035 * ramp(frame, B.deal, B.end - B.deal, SWAY);
-  const settle = spring({ frame: frame + 6, fps, config: HEAVY });
-  const rotX = mix(14, 3, settle) - 2 * ramp(frame, B.deal, 40, MOVE);
+  const resolvedCount = list.filter((_, i) => {
+    const upload = tl.get(`upload:${i}`);
+    return frame >= upload.start + upload.beat("counted");
+  }).length;
+  const ready = ramp(frame, readyEl.start, readyEl.beat("fade"));
+  const readyPop = spring({ frame: frame - readyEl.start, fps, config: CHIP });
+  const push = 1 + 0.035 * ramp(frame, pushEl.start, pushEl.length, SWAY);
+  const settle = spring({ frame: frame - cameraEl.start, fps, config: HEAVY });
+  const rotX =
+    mix(14, 3, settle) -
+    2 * ramp(frame, pushEl.start, pushEl.beat("tilt"), MOVE);
 
   const resolvedGround: GshPresetId =
     ground ?? (dark ? "cobalt-rise" : "paper-crease");
@@ -644,7 +714,15 @@ export function MultiFileDrop({
                     background: slotBg,
                     border: `1px dashed ${hair}`,
                     opacity:
-                      grow * (1 - ramp(frame, B.deal + i * B.dealStep + 6, 4)),
+                      grow *
+                      (1 -
+                        ramp(
+                          frame,
+                          dealEl.start +
+                            i * dealEl.beat("step") +
+                            dealEl.beat("slotFade"),
+                          dealEl.beat("slotFadeLength"),
+                        )),
                   }}
                 />
               ))}
@@ -706,7 +784,7 @@ export function MultiFileDrop({
                     />
                   </svg>
                   <span style={{ fontVariantNumeric: "tabular-nums" }}>
-                    {frame < B.deal
+                    {frame < dealEl.start
                       ? attachLabel
                       : resolvedCount < n
                         ? `Uploading ${resolvedCount}/${n}`
@@ -800,9 +878,9 @@ export function MultiFileDrop({
             </div>
 
             {list.map((f, i) => {
-              const k = n - 1 - i;
               const fan = FAN[i] ?? FAN[0];
-              const dealT = B.deal + k * B.dealStep;
+              const fileEl = tl.get(`file:${i}`);
+              const dealT = fileEl.start;
               const go = spring({ frame: frame - dealT, fps, config: CARD });
               const goPrev = spring({
                 frame: frame - dealT - 1,
@@ -819,23 +897,20 @@ export function MultiFileDrop({
               const w = mix(fanW, slot, go);
               const h = mix(fanH, slot, go);
               const r = mix(fan.r * fanSpread + fanTilt, 0, go);
-              const landed = ramp(frame, dealT + B.land - 4, 6);
-              const rs = resolveAt(i);
-              const done = ramp(frame, rs, 6);
+              const loadAt = dealT + fileEl.beat("loading");
+              const landed = ramp(frame, loadAt, fileEl.beat("loadingLength"));
+              const upload = tl.get(`upload:${i}`);
+              const rs = upload.start;
+              const done = ramp(frame, rs, upload.length);
               const pop = spring({ frame: frame - rs, fps, config: CHIP });
               const punch =
                 1 + 0.07 * Math.sin(Math.PI * Math.min(1, pop)) * done;
               const loading = landed * (1 - done);
-              const progress = interpolate(
-                frame,
-                [dealT + B.land - 4, rs],
-                [0.06, 1],
-                {
-                  extrapolateLeft: "clamp",
-                  extrapolateRight: "clamp",
-                  easing: MOVE,
-                },
-              );
+              const progress = interpolate(frame, [loadAt, rs], [0.06, 1], {
+                extrapolateLeft: "clamp",
+                extrapolateRight: "clamp",
+                easing: MOVE,
+              });
               const lift = 1 - go;
               // Laid out in its slot; the flight there is a transform, for
               // the same reason as the card's growth above.
@@ -858,7 +933,7 @@ export function MultiFileDrop({
                     outlineOffset: -1,
                     background: slotBg,
                     boxShadow: `0 ${mix(2, 22, lift) * u}px ${mix(6, 40, lift) * u}px rgba(4,6,30,${dark ? 0.5 : 0.2})`,
-                    opacity: ramp(frame, B.fly, 4),
+                    opacity: ramp(frame, flyEl.start, flyEl.beat("show")),
                     filter:
                       vel > 8
                         ? `blur(${Math.min(5, vel * 0.05)}px)`
@@ -920,7 +995,11 @@ export function MultiFileDrop({
                 top: curRestY,
                 transform: `translate(${curX - curRestX}px, ${curY - curRestY}px) scale(${1 - 0.04 * curPress})`,
                 transformOrigin: "4px 3px",
-                opacity: ramp(frame, B.fly + 2, 6),
+                opacity: ramp(
+                  frame,
+                  flyEl.start + flyEl.beat("cursorIn"),
+                  flyEl.beat("cursorInLength"),
+                ),
                 zIndex: 30,
               }}
             >

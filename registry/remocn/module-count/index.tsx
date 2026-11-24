@@ -5,6 +5,13 @@ import { useMemo } from "react";
 import { AbsoluteFill, Easing, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  countValues,
+  DEFAULT_LABEL,
+  type ModuleCountElementId,
+  moduleCountTimeline,
+} from "./timeline";
 
 const archivo = loadVariableFont("normal", { subsets: ["latin"] });
 
@@ -31,6 +38,12 @@ export interface ModuleCountProps {
   delay?: number;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches the intro, each step of the count, the grid
+   * lock and the label words, by the ids in `./timeline`. Frames on the
+   * scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<ModuleCountElementId>;
 }
 
 const THEMES = {
@@ -95,12 +108,6 @@ const FIT_W = 0.84;
 const CAP_H = 0.46;
 const TRACK_LABEL = -0.012;
 
-const START = 10;
-const FIRST_GAP = 4;
-const LAST_GAP = 9;
-const MORPH = 7;
-const COL_DELAY = 0.7;
-
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
 const EASE_IN_OUT = Easing.bezier(0.65, 0, 0.35, 1);
 const CLAMP = {
@@ -139,45 +146,40 @@ function ScaleLayer({
   );
 }
 
-export function ModuleCount({
-  value = 48,
-  from = 0,
-  prefix = "",
-  suffix = "",
-  label = "Scenes, every one snapped to a single grid",
-  steps = 11,
-  accent,
-  ink,
-  background,
-  fontFamily = archivo.fontFamily,
-  fontWeight = 450,
-  stagger = 3,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: ModuleCountProps) {
+export function ModuleCount(props: ModuleCountProps) {
+  const {
+    value = 48,
+    from = 0,
+    prefix = "",
+    suffix = "",
+    label = DEFAULT_LABEL,
+    steps = 11,
+    accent,
+    ink,
+    background,
+    fontFamily = archivo.fontFamily,
+    fontWeight = 450,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H } = useSceneConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    moduleCountTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const c = THEMES[theme];
   const bg = background ?? c.bg;
   const clear = bg === "transparent";
 
   const plan = useMemo(() => {
-    const n = Math.max(1, Math.round(steps));
-    const values: number[] = [];
-    for (let k = 0; k <= n; k++) {
-      const p = k / n;
-      const eased = 1 - (1 - p) ** 2.4;
-      const v = Math.round(from + (value - from) * eased);
-      if (values.length === 0 || values[values.length - 1] !== v) {
-        values.push(v);
-      }
-    }
-    if (values[values.length - 1] !== Math.round(value)) {
-      values.push(Math.round(value));
-    }
+    const values = countValues(value, from, steps);
     const finalNum = format(value);
     const finalStr = `${prefix}${finalNum}${suffix}`;
     const slots = Array.from(finalStr);
@@ -199,20 +201,14 @@ export function ModuleCount({
       }
       return arr;
     });
-    const times: number[] = [];
-    let at = START;
-    const last = Math.max(1, values.length - 1);
-    for (let k = 0; k < values.length; k++) {
-      times.push(at);
-      const p = k / last;
-      at += FIRST_GAP + (LAST_GAP - FIRST_GAP) * p ** 1.6;
-    }
     const cols = slots.map((ch) => glyph(ch)[0].length);
-    return { strings, times, slots, cols };
+    return { strings, slots, cols };
   }, [value, from, prefix, suffix, steps]);
 
-  const { strings, times, slots, cols } = plan;
-  const lastStep = times[times.length - 1];
+  const { strings, slots, cols } = plan;
+  const stepEls = strings.map((_, k) => tl.get(`step:${k}`));
+  const introEl = tl.get("intro");
+  const lockEl = tl.get("lock");
 
   const unitsW =
     cols.reduce((s, n) => s + n * (1 + GAP), 0) +
@@ -231,7 +227,7 @@ export function ModuleCount({
   // the same arithmetic, so the leftover translate there is exactly 0.
   const labelRows = 2;
   const geometry = (time: number) => {
-    const lock = interpolate(time, [lastStep + 4, lastStep + 22], [0, 1], {
+    const lock = interpolate(time, [lockEl.start, lockEl.end], [0, 1], {
       ...CLAMP,
       easing: EASE_IN_OUT,
     });
@@ -258,10 +254,16 @@ export function ModuleCount({
     };
     let centre = visibleFrom(0);
     for (let k = 1; k < strings.length; k++) {
-      const p = interpolate(time, [times[k], times[k] + MORPH + 4], [0, 1], {
-        ...CLAMP,
-        easing: EASE_IN_OUT,
-      });
+      const e = stepEls[k];
+      const p = interpolate(
+        time,
+        [e.start, e.start + e.beat("morph") + e.beat("recentre")],
+        [0, 1],
+        {
+          ...CLAMP,
+          easing: EASE_IN_OUT,
+        },
+      );
       centre += (visibleFrom(k) - centre) * p;
     }
     const shiftX = boxW / 2 - centre;
@@ -304,7 +306,7 @@ export function ModuleCount({
       ? ""
       : `translate(${dx}px, ${dy}px) `;
 
-  const intro = interpolate(t, [START - 8, START + 6], [0, 1], {
+  const intro = interpolate(t, [introEl.start, introEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
@@ -317,12 +319,14 @@ export function ModuleCount({
   for (let i = 0; i < slots.length; i++) {
     const n = cols[i];
     for (let col = 0; col < n; col++) {
-      const sweep = colIndex * COL_DELAY;
+      const column = colIndex;
       colIndex++;
       for (let row = 0; row < ROWS; row++) {
         let k = 0;
         for (let q = 1; q < strings.length; q++) {
-          if (t >= times[q] + sweep) k = q;
+          if (t >= stepEls[q].start + column * stepEls[q].beat("column")) {
+            k = q;
+          }
         }
         const codeAt = (q: number): Cell => {
           const g =
@@ -336,7 +340,12 @@ export function ModuleCount({
             ? 1
             : interpolate(
                 t,
-                [times[k] + sweep, times[k] + sweep + MORPH],
+                [
+                  stepEls[k].start + column * stepEls[k].beat("column"),
+                  stepEls[k].start +
+                    column * stepEls[k].beat("column") +
+                    stepEls[k].beat("morph"),
+                ],
                 [0, 1],
                 {
                   ...CLAMP,
@@ -378,7 +387,6 @@ export function ModuleCount({
     }
   }
 
-  const labelAt = lastStep - 6;
   const portrait = H > W * 1.1;
   const sizeAt = (p: number) =>
     Math.min(Math.max(p * 0.4, H * 0.036), portrait ? W * 0.06 : H * 0.056);
@@ -400,16 +408,15 @@ export function ModuleCount({
     Math.abs(dP) < 1e-6
       ? shift(g.labelLeft - rest.labelLeft, g.labelTop - rest.labelTop)
       : `translate(${g.labelLeft - rest.labelLeft + 0.16 * dP}px, calc(${g.labelTop - rest.labelTop - 0.16 * dP}px + ${(dP / Pr) * 100}%)) scale(${labelK}) `;
-  const wordsMoving = (label ? label.split(" ") : []).some((_, k) =>
-    midway(
-      interpolate(
-        t,
-        [labelAt + k * stagger, labelAt + k * stagger + 16],
-        [0, 1],
-        { ...CLAMP, easing: EASE_OUT },
-      ),
-    ),
-  );
+  const wordsMoving = (label ? label.split(" ") : []).some((_, k) => {
+    const e = tl.get(`word:${k}`);
+    return midway(
+      interpolate(t, [e.start, e.end], [0, 1], {
+        ...CLAMP,
+        easing: EASE_OUT,
+      }),
+    );
+  });
   const words = label ? label.split(" ") : [];
   const gridLine = Math.max(1, s * 0.016);
 
@@ -467,12 +474,11 @@ export function ModuleCount({
             }}
           >
             {words.map((w, k) => {
-              const p = interpolate(
-                t,
-                [labelAt + k * stagger, labelAt + k * stagger + 16],
-                [0, 1],
-                { ...CLAMP, easing: EASE_OUT },
-              );
+              const e = tl.get(`word:${k}`);
+              const p = interpolate(t, [e.start, e.end], [0, 1], {
+                ...CLAMP,
+                easing: EASE_OUT,
+              });
               return (
                 <span
                   key={`${w}-${k}`}

@@ -8,17 +8,22 @@ import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_KEYS,
+  DEFAULT_LABEL,
+  type KeycapKey,
+  type KeycapPressElementId,
+  keycapPressTimeline,
+  keyDefs,
+} from "./timeline";
 
 const { fontFamily: sans } = loadFont("normal", {
   weights: ["300", "400"],
   subsets: ["latin"],
 });
 
-export interface KeycapKey {
-  label: string;
-  sub?: string;
-  width?: number;
-}
+export type { KeycapKey };
 
 export interface KeycapPressProps {
   keys?: (string | KeycapKey)[];
@@ -43,12 +48,13 @@ export interface KeycapPressProps {
   /** Frames to hold the first frame before anything moves. */
   delay?: number;
   speed?: number;
+  /**
+   * Moves, trims or stretches the keys, the presses, the chord, the camera
+   * and the label's words, by the ids in `./timeline`.
+   * Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<KeycapPressElementId>;
 }
-
-const DEFAULT_KEYS: KeycapKey[] = [
-  { label: "⌘", sub: "command", width: 1.25 },
-  { label: "K" },
-];
 
 const LIGHT_GLASS: Partial<GradientParams> = {
   colors: ["#a9bbff", "#3b5bfd", "#1a2a9e", "#8fa6ff"],
@@ -307,26 +313,37 @@ function ScaleLayer({
   );
 }
 
-export function KeycapPress({
-  keys = DEFAULT_KEYS,
-  label = "Everything, one shortcut away",
-  material = "dark",
-  theme,
-  accent = "#3B5BFD",
-  ground,
-  groundParams,
-  stagger = 3,
-  glow: glowK = 1,
-  ink,
-  background,
-  fontFamily = sans,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-}: KeycapPressProps) {
+export function KeycapPress(props: KeycapPressProps) {
+  const {
+    keys = DEFAULT_KEYS,
+    label = DEFAULT_LABEL,
+    material = "dark",
+    theme,
+    accent = "#3B5BFD",
+    ground,
+    groundParams,
+    glow: glowK = 1,
+    ink,
+    background,
+    fontFamily = sans,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width, height, fps } = useSceneConfig();
+  const { width, height, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    keycapPressTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const cameraEl = tl.get("camera");
+  const glowEl = tl.get("glow");
+  const chordEl = tl.get("chord");
+  const liftEl = tl.get("lift");
   const tall = height > width;
   const u = tall ? width / 760 : Math.min(width / 1280, height / 720);
   const m = MATERIALS[material];
@@ -337,9 +354,7 @@ export function KeycapPress({
     (groundParams ? undefined : look === "dark" ? "spotlight" : "glasswork");
   const acc = hexToRgb(accent);
 
-  const defs: KeycapKey[] = keys.map((k) =>
-    typeof k === "string" ? { label: k } : k,
-  );
+  const defs = keyDefs(keys);
   const unit = 205 * u * (tall ? 1.22 : 1) * (defs.length > 2 ? 0.82 : 1);
   const gap = unit * 0.1;
   const widths = defs.map((k) => (k.width ?? 1) * unit);
@@ -353,31 +368,40 @@ export function KeycapPress({
   const depth = unit;
   const capH = unit * 0.44;
   const travel = unit * 0.13;
-  const n = defs.length;
-  const pressGap = n > 2 ? 10 : 12;
-  const pressAt = defs.map((_, i) => 36 + i * pressGap);
-  const chord = pressAt[n - 1];
-  const releaseAt = defs.map((_, i) => chord + 22 + (n - 1 - i) * 4);
+  const presses = defs.map((_, i) => tl.get(`press:${i}`));
+  const pressAt = presses.map((e) => e.start);
+  const chord = chordEl.start;
+  const releaseAt = presses.map((e) => e.end);
   const settle = spring({
-    frame: t,
+    frame: t - cameraEl.start,
     fps,
     config: HEAVY,
-    durationInFrames: 54,
+    durationInFrames: cameraEl.length,
   });
-  const lift = interpolate(t, [chord + 2, chord + 34], [0, 1], {
+  const lift = interpolate(t, [liftEl.start, liftEl.end], [0, 1], {
     ...CLAMP,
     easing: CAMERA,
   });
   const rotX = 50 - settle * 8 - lift * 3;
-  const rotZ = interpolate(t, [0, 135], [-9, -4], {
-    ...CLAMP,
-    easing: EASE_IO,
-  });
+  const rotZ = interpolate(
+    t,
+    [cameraEl.start, cameraEl.start + cameraEl.beat("drift")],
+    [-9, -4],
+    {
+      ...CLAMP,
+      easing: EASE_IO,
+    },
+  );
   const camScale = 1.04 - settle * 0.04 - lift * 0.06;
-  const kick = interpolate(t, [chord, chord + 3, chord + 14], [0, 1, 0], {
-    ...CLAMP,
-    easing: EASE_IO,
-  });
+  const kick = interpolate(
+    t,
+    [chord, chord + chordEl.beat("kick"), chord + chordEl.beat("kickEnd")],
+    [0, 1, 0],
+    {
+      ...CLAMP,
+      easing: EASE_IO,
+    },
+  );
   const keysY0 = height * (tall ? 0.42 : 0.46);
   const keysDy = height * -(lift * (tall ? 0.05 : 0.08)) + kick * 2 * u;
   const keysY = keysY0 + keysDy;
@@ -385,7 +409,7 @@ export function KeycapPress({
 
   const keyState = defs.map((_, i) => {
     const rise = spring({
-      frame: t - (-8 + i * 5),
+      frame: t - tl.get(`key:${i}`).start,
       fps,
       config: CARD,
     });
@@ -434,8 +458,9 @@ export function KeycapPress({
   const ripples: React.ReactNode[] = [];
   defs.forEach((_, i) => {
     const age = t - pressAt[i];
-    if (age < 0 || age > 34) return;
-    const p = interpolate(age, [0, 34], [0, 1], {
+    const ripple = presses[i].beat("ripple");
+    if (age < 0 || age > ripple) return;
+    const p = interpolate(age, [0, ripple], [0, 1], {
       ...CLAMP,
       easing: EASE_OUT,
     });
@@ -459,14 +484,17 @@ export function KeycapPress({
     );
   });
   const chordAge = t - chord;
-  if (chordAge >= 0 && chordAge < 50) {
+  if (chordAge >= 0 && chordAge < chordEl.length) {
     for (const [lag, strength] of [
       [0, 1],
-      [7, 0.55],
+      [chordEl.beat("echo"), 0.55],
     ] as const) {
       const a = chordAge - lag;
       if (a < 0) continue;
-      const p = interpolate(a, [0, 44], [0, 1], { ...CLAMP, easing: EASE_OUT });
+      const p = interpolate(a, [0, chordEl.beat("ring")], [0, 1], {
+        ...CLAMP,
+        easing: EASE_OUT,
+      });
       const sx = total * (1.1 + p * 1.6);
       const sy = depth * (1.1 + p * 2.6);
       ripples.push(
@@ -487,20 +515,30 @@ export function KeycapPress({
       );
     }
   }
-  const poolFlash = interpolate(chordAge, [0, 3, 30], [0, 1, 0], CLAMP);
-  const glowRest = interpolate(t, [6, 40], [0, 0.35], {
+  const poolFlash = interpolate(
+    chordAge,
+    [0, chordEl.beat("flash"), chordEl.beat("flashEnd")],
+    [0, 1, 0],
+    CLAMP,
+  );
+  const glowRest = interpolate(t, [glowEl.start, glowEl.end], [0, 0.35], {
     ...CLAMP,
     easing: EASE_IO,
   });
-  const glowHold = interpolate(chordAge, [0, 4, 40], [0, 1, 0.7], {
-    ...CLAMP,
-    easing: EASE_OUT,
-  });
+  const glowHold = interpolate(
+    chordAge,
+    [0, chordEl.beat("glow"), chordEl.beat("glowEnd")],
+    [0, 1, 0.7],
+    {
+      ...CLAMP,
+      easing: EASE_OUT,
+    },
+  );
   const glow = Math.max(glowRest, glowHold);
   const glowSpread =
     1 +
     0.12 *
-      interpolate(chordAge, [0, 40], [0, 1], {
+      interpolate(chordAge, [0, chordEl.beat("glowEnd")], [0, 1], {
         ...CLAMP,
         easing: EASE_OUT,
       });
@@ -607,16 +645,13 @@ export function KeycapPress({
     }),
   );
   const words = label.split(" ");
-  const word = (i: number) =>
-    interpolate(
-      t,
-      [chord + 6 + i * stagger, chord + 26 + i * stagger],
-      [0, 1],
-      {
-        ...CLAMP,
-        easing: EASE_OUT,
-      },
-    );
+  const word = (i: number) => {
+    const e = tl.get(`word:${i}`);
+    return interpolate(t, [e.start, e.end], [0, 1], {
+      ...CLAMP,
+      easing: EASE_OUT,
+    });
+  };
 
   return (
     <AbsoluteFill

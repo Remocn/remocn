@@ -11,6 +11,15 @@ import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_DAYS,
+  type LaunchDay,
+  type LaunchDaysElementId,
+  launchDaysList,
+  launchDaysPicks,
+  launchDaysTimeline,
+} from "./timeline";
 
 const hanken = loadHanken("normal", {
   weights: ["300", "400"],
@@ -21,12 +30,6 @@ const manrope = loadManrope("normal", {
   weights: ["600"],
   subsets: ["latin"],
 });
-
-export interface LaunchDay {
-  day: string;
-  title: string;
-  description?: string;
-}
 
 export interface LaunchDaysProps {
   week?: string;
@@ -54,36 +57,13 @@ export interface LaunchDaysProps {
   theme?: "dark" | "light";
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
+  /**
+   * Moves, trims or stretches the header, single cards, the open morph and
+   * the title's words, by the ids in `./timeline`. Frames on the scene
+   * timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<LaunchDaysElementId>;
 }
-
-const DEFAULT_DAYS: LaunchDay[] = [
-  {
-    day: "Mon",
-    title: "Captions",
-    description: "31 transcript-driven caption styles.",
-  },
-  {
-    day: "Tue",
-    title: "Transitions",
-    description: "Cuts that land on the beat.",
-  },
-  {
-    day: "Wed",
-    title: "Templates",
-    description:
-      "Whole launch films, installed into your project and yours to edit.",
-  },
-  {
-    day: "Thu",
-    title: "Agent skill",
-    description: "Your agent reads the docs and picks the beat.",
-  },
-  {
-    day: "Fri",
-    title: "Studio",
-    description: "Preview every scene before it renders.",
-  },
-];
 
 const PALETTES = {
   dark: {
@@ -193,42 +173,47 @@ function ScaleLayer({
   );
 }
 
-export function LaunchDays({
-  week = "Launch Week 01",
-  label = "New today",
-  days = DEFAULT_DAYS,
-  active = 2,
-  from,
-  revealUpcoming = false,
-  logo,
-  accent = "#3B5BFD",
-  background,
-  ink,
-  fontFamily = hanken.fontFamily,
-  stagger = 3,
-  radius: corner = 16,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-  ground,
-  groundParams,
-}: LaunchDaysProps) {
+export type { LaunchDay };
+
+export function LaunchDays(props: LaunchDaysProps) {
+  const {
+    week = "Launch Week 01",
+    label = "New today",
+    days = DEFAULT_DAYS,
+    active = 2,
+    from,
+    revealUpcoming = false,
+    logo,
+    accent = "#3B5BFD",
+    background,
+    ink,
+    fontFamily = hanken.fontFamily,
+    radius: corner = 16,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    ground,
+    groundParams,
+    timing,
+  } = props;
   const glide = useGlide();
   const raw = Math.max(0, useSceneFrame() - delay);
   const frame = raw * speed;
-  const { width, height, fps } = useSceneConfig();
+  const { width, height, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    launchDaysTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const p = PALETTES[theme];
   const fg = ink ?? p.fg;
   const activeFg = ink ?? p.activeFg;
 
-  const list = days.length >= 2 ? days.slice(0, 7) : DEFAULT_DAYS;
+  const list = launchDaysList(days);
   const n = list.length;
-  const act = Math.min(Math.max(0, Math.round(active)), n - 1);
-  const swap =
-    from !== undefined && Math.round(from) !== act
-      ? Math.min(Math.max(0, Math.round(from)), n - 1)
-      : null;
+  const { act, swap } = launchDaysPicks(n, active, from);
 
   const portrait = height > width * 1.1;
   const u = Math.min(width, height) / 720;
@@ -251,17 +236,24 @@ export function LaunchDays({
   const wide = free - sliver * (n - 1);
 
   const riseAt = (i: number, f: number) =>
-    swap === null ? spring({ frame: f - i * 2, fps, config: SPRING_CARD }) : 1;
+    swap === null
+      ? spring({
+          frame: f - tl.get(`card:${i}`).start,
+          fps,
+          config: SPRING_CARD,
+        })
+      : 1;
   const rise = (i: number) => riseAt(i, frame);
   // The card's lift overshoots, so it is "moving" while its px still change.
   const lifting = (i: number) =>
     Math.abs(riseAt(i, frame + 1) - riseAt(i, frame)) * 30 * u > 1e-3 ||
     Math.abs(riseAt(i, frame) - riseAt(i, frame - 1)) * 30 * u > 1e-3;
+  const openEl = tl.get("open");
   const open = spring({
-    frame: frame - 14,
+    frame: frame - openEl.start,
     fps,
     config: SPRING_MORPH,
-    durationInFrames: 28,
+    durationInFrames: openEl.length,
   });
   const sizeAt = (i: number, o: number) => {
     if (swap === null) {
@@ -282,20 +274,29 @@ export function LaunchDays({
     return at;
   };
 
-  const eyebrowT = interpolate(frame, [26, 42], [0, 1], {
-    ...CLAMP,
-    easing: EASE_OUT,
-  });
-  const wordT = (i: number) =>
-    interpolate(frame, [30 + i * stagger, 48 + i * stagger], [0, 1], {
+  const eyebrowEl = tl.get("eyebrow");
+  const eyebrowT = interpolate(
+    frame,
+    [eyebrowEl.start, eyebrowEl.end],
+    [0, 1],
+    { ...CLAMP, easing: EASE_OUT },
+  );
+  const wordT = (i: number) => {
+    const e = tl.get(`word:${i}`);
+    return interpolate(frame, [e.start, e.end], [0, 1], {
       ...CLAMP,
       easing: EASE_OUT,
     });
-  const outT = (i: number) =>
-    interpolate(frame, [6 + i * 2, 16 + i * 2], [0, 1], {
+  };
+  // Only with a swap: the day being swapped from writes out.
+  const outT = (i: number) => {
+    const e = tl.get("exit");
+    const lag = i * e.beat("stagger");
+    return interpolate(frame, [e.start + lag, e.end + lag], [0, 1], {
       ...CLAMP,
       easing: EASE_IN,
     });
+  };
 
   const panelPad = (portrait ? 44 : 36) * u;
   const avail = (portrait ? cross : wide) - panelPad * 2;
@@ -312,12 +313,21 @@ export function LaunchDays({
   const showHeader = headerH > 0;
   const labelFs = 16 * u;
   const preset = ground ?? (groundParams ? undefined : p.ground);
+  const litAt = openEl.start + openEl.beat("litAt");
   const litO = (i: number) =>
     i === act
-      ? interpolate(frame, [16, 40], [0, 1], { ...CLAMP, easing: EASE_OUT })
+      ? interpolate(frame, [litAt, litAt + openEl.beat("lit")], [0, 1], {
+          ...CLAMP,
+          easing: EASE_OUT,
+        })
       : i === swap
         ? 1 -
-          interpolate(frame, [14, 36], [0, 1], { ...CLAMP, easing: EASE_IN })
+          interpolate(
+            frame,
+            [openEl.start, openEl.start + openEl.beat("unlit")],
+            [0, 1],
+            { ...CLAMP, easing: EASE_IN },
+          )
         : 0;
   const stripX = marginX;
   const stripY = showHeader ? headerH + margin * 0.15 : margin;
@@ -346,7 +356,8 @@ export function LaunchDays({
     });
   const scrimD = `M0 0H${width}V${height}H0Z${holes.join("")}`;
 
-  const headerT = interpolate(frame, [0, 18], [0, 1], {
+  const headerEl = tl.get("header");
+  const headerT = interpolate(frame, [headerEl.start, headerEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
@@ -362,19 +373,19 @@ export function LaunchDays({
     const words = d.title.split(/\s+/).filter(Boolean);
     const shown = mode === "in";
     const eb = shown ? eyebrowT : 1 - outT(0);
+    const numEl = tl.get("number");
+    const descEl = tl.get("description");
     const numT = shown
-      ? interpolate(frame, [24, 44], [0, 1], { ...CLAMP, easing: EASE_OUT })
+      ? interpolate(frame, [numEl.start, numEl.end], [0, 1], {
+          ...CLAMP,
+          easing: EASE_OUT,
+        })
       : 1 - outT(0);
     const descT = shown
-      ? interpolate(
-          frame,
-          [40 + words.length * 3, 60 + words.length * 3],
-          [0, 1],
-          {
-            ...CLAMP,
-            easing: EASE_OUT,
-          },
-        )
+      ? interpolate(frame, [descEl.start, descEl.end], [0, 1], {
+          ...CLAMP,
+          easing: EASE_OUT,
+        })
       : 1 - outT(1);
     const box = portrait ? cross : wide;
     const contentOpacity = interpolate(

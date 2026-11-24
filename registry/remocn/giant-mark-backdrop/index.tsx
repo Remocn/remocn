@@ -18,6 +18,14 @@ import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
 
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  GIANT_MARK_LENGTH,
+  GIANT_MARK_WORD,
+  type GiantMarkBackdropElementId,
+  giantMarkBackdropTimeline,
+} from "./timeline";
+
 const manrope = loadManrope("normal", {
   weights: ["600"],
   subsets: ["latin"],
@@ -36,7 +44,6 @@ const EM = 100;
 const R_WE = (0.76 * R_W) / R_H;
 const GAP_E = 0.04;
 const TRACK = -0.025;
-const WORD = "emocn";
 
 const CLAMP = {
   extrapolateLeft: "clamp",
@@ -48,21 +55,7 @@ const CHIP = { mass: 0.5, damping: 12, stiffness: 200 };
 const CARD = { mass: 0.8, damping: 18, stiffness: 160 };
 const BALLOON = { mass: 1, damping: 20, stiffness: 110 };
 
-const B = {
-  mark: -3,
-  type: 6,
-  typeStep: 3,
-  flood: 40,
-  floodLen: 16,
-  balloon: 42,
-  card: 54,
-  prompt: 66,
-  promptEnd: 94,
-  send: 100,
-  end: 126,
-};
-
-export const GIANT_MARK_BACKDROP_DURATION = B.end;
+export const GIANT_MARK_BACKDROP_DURATION = GIANT_MARK_LENGTH;
 
 const mix = (a: number, b: number, t: number) => a + (b - a) * t;
 
@@ -103,7 +96,9 @@ function measureWord(_version: number) {
   const ctx = document.createElement("canvas").getContext("2d");
   if (!ctx) return 2.95;
   ctx.font = `600 ${EM}px "${manrope.fontFamily}"`;
-  return ctx.measureText(WORD).width / EM + TRACK * WORD.length;
+  return (
+    ctx.measureText(GIANT_MARK_WORD).width / EM + TRACK * GIANT_MARK_WORD.length
+  );
 }
 
 type Palette = {
@@ -204,12 +199,15 @@ function Wordmark({
   word,
   frame,
   typed,
+  letters,
 }: {
   word: string;
   frame: number;
   typed: boolean;
+  /** When each letter fades in, from `start` to `end`. */
+  letters: { start: number; end: number }[];
 }) {
-  const chars = Array.from(WORD);
+  const chars = Array.from(GIANT_MARK_WORD);
   return (
     <text
       x={(R_WE + GAP_E) * EM}
@@ -227,7 +225,7 @@ function Wordmark({
           ? 1
           : interpolate(
               frame,
-              [B.type + i * B.typeStep, B.type + i * B.typeStep + 3],
+              [letters[i].start, letters[i].end],
               [0, 1],
               CLAMP,
             );
@@ -268,6 +266,13 @@ export interface GiantMarkBackdropProps {
   speed?: number;
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
+  /**
+   * Moves, trims or stretches the mark, single letters of the word, the
+   * lean, the flood, the balloon, the drift, the card, the prompt and the
+   * send, by the ids in `./timeline`. Frames on the scene timeline, after
+   * `delay` and `speed`.
+   */
+  timing?: Timing<GiantMarkBackdropElementId>;
 }
 
 /** The foreground at `scale`, around the frame's center; nothing extra at 1. */
@@ -286,27 +291,44 @@ function ScaleLayer({
   );
 }
 
-export function GiantMarkBackdrop({
-  theme = "dark",
-  accent,
-  prompt = "Make a launch film for our v2 release",
-  placeholder = "Describe your launch film",
-  attachLabel = "Attach",
-  stylesLabel = "Styles",
-  ink,
-  background,
-  fontFamily = instrument.fontFamily,
-  logo,
-  scale = 1,
-  delay = 0,
-  grain = true,
-  speed = 1,
-  ground,
-  groundParams,
-}: GiantMarkBackdropProps) {
+export function GiantMarkBackdrop(props: GiantMarkBackdropProps) {
+  const {
+    theme = "dark",
+    accent,
+    prompt = "Make a launch film for our v2 release",
+    placeholder = "Describe your launch film",
+    attachLabel = "Attach",
+    stylesLabel = "Styles",
+    ink,
+    background,
+    fontFamily = instrument.fontFamily,
+    logo,
+    scale = 1,
+    delay = 0,
+    grain = true,
+    speed = 1,
+    ground,
+    groundParams,
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H, fps } = useSceneConfig();
+  const { width: W, height: H, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    giantMarkBackdropTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const markEl = tl.get("mark");
+  const pushEl = tl.get("push");
+  const letters = Array.from(GIANT_MARK_WORD, (_, i) => tl.get(`char:${i}`));
+  const floodEl = tl.get("flood");
+  const balloonEl = tl.get("balloon");
+  const drift = tl.get("drift");
+  const cardEl = tl.get("card");
+  const promptEl = tl.get("prompt");
+  const sendEl = tl.get("send");
   const base = THEMES[theme];
   const c = accent ? { ...base, accent, mark: accent } : base;
   const fg = ink ?? c.ink;
@@ -322,17 +344,17 @@ export function GiantMarkBackdrop({
   const s0 = { x: W / 2, y: H / 2 };
   const s1 = { x: tall ? W * 0.5 : W / 2, y: tall ? H * 0.5 : H * 0.36 };
 
-  const markIn = spring({ frame: frame - B.mark, fps, config: CHIP });
+  const markIn = spring({ frame: frame - markEl.start, fps, config: CHIP });
   const balloonAt = (f: number) =>
-    spring({ frame: f - B.balloon, fps, config: BALLOON });
+    spring({ frame: f - balloonEl.start, fps, config: BALLOON });
   const pushBAt = (f: number) =>
-    interpolate(f, [B.balloon + 12, B.end], [1, 1.07], {
+    interpolate(f, [drift.start, drift.end], [1, 1.07], {
       ...CLAMP,
       easing: Easing.bezier(0.33, 0, 0.4, 1),
     });
   const sizeAt = (f: number) => {
     const b = balloonAt(f);
-    const pushA = interpolate(f, [0, B.balloon], [1, 1.04], CLAMP);
+    const pushA = interpolate(f, [pushEl.start, pushEl.end], [1, 1.04], CLAMP);
     return F0 * (F1 / F0) ** b * mix(pushA, 1, b) * pushBAt(f);
   };
   const balloon = balloonAt(frame);
@@ -353,7 +375,7 @@ export function GiantMarkBackdrop({
   const logoTransform = `translate(${sx.toFixed(2)} ${sy.toFixed(2)}) rotate(${rot.toFixed(3)}) scale(${k.toFixed(5)}) translate(${(-ax * EM).toFixed(3)} ${(-ay * EM).toFixed(3)})`;
   const markTransform = `translate(${(R_WE * EM) / 2} ${-0.38 * EM}) scale(${markScale.toFixed(4)}) translate(${(-R_WE * EM) / 2} ${0.38 * EM})`;
 
-  const flood = interpolate(frame, [B.flood, B.flood + B.floodLen], [0, 1], {
+  const flood = interpolate(frame, [floodEl.start, floodEl.end], [0, 1], {
     ...CLAMP,
     easing: FLOOD,
   });
@@ -363,14 +385,21 @@ export function GiantMarkBackdrop({
   const fr = mix(H * 0.2, reach, flood);
   const clip = `circle(${fr.toFixed(2)}px at ${fcx.toFixed(2)}px ${fcy.toFixed(2)}px)`;
 
-  const card = spring({ frame: frame - B.card, fps, config: CARD });
+  const card = spring({ frame: frame - cardEl.start, fps, config: CARD });
   const typedN = Math.floor(
-    interpolate(frame, [B.prompt, B.promptEnd], [0, prompt.length], CLAMP),
+    interpolate(
+      frame,
+      [promptEl.start, promptEl.end],
+      [0, prompt.length],
+      CLAMP,
+    ),
   );
   const done = typedN >= prompt.length;
-  const caretOn = !done || Math.floor((frame - B.promptEnd) / 8) % 2 === 0;
-  const send = spring({ frame: frame - B.send, fps, config: CHIP });
-  const sendOn = frame >= B.send;
+  const caretOn =
+    !done ||
+    Math.floor((frame - promptEl.end) / promptEl.beat("blink")) % 2 === 0;
+  const send = spring({ frame: frame - sendEl.start, fps, config: CHIP });
+  const sendOn = frame >= sendEl.start;
   const cardW = tall ? W * 0.88 : W * 0.56;
   const cardH = tall ? H * 0.16 : H * 0.29;
   const cardX = (W - cardW) / 2;
@@ -379,7 +408,8 @@ export function GiantMarkBackdrop({
   const cardMoving =
     changing(pushBAt, frame, 1e-6) ||
     changing(
-      (f) => (1 - spring({ frame: f - B.card, fps, config: CARD })) * H * 0.32,
+      (f) =>
+        (1 - spring({ frame: f - cardEl.start, fps, config: CARD })) * H * 0.32,
       frame,
       1e-3,
     );
@@ -430,7 +460,12 @@ export function GiantMarkBackdrop({
                   transform={`translate(0 ${-0.76 * EM}) scale(${(0.76 * EM) / R_H})`}
                 />
               </g>
-              <Wordmark word={word} frame={frame} typed={typed} />
+              <Wordmark
+                word={word}
+                frame={frame}
+                typed={typed}
+                letters={letters}
+              />
             </>
           )}
         </g>

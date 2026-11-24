@@ -6,6 +6,14 @@ import { useId, useMemo } from "react";
 import { AbsoluteFill, Easing, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  type CounterRevealElementId,
+  counterRevealTimeline,
+  DEFAULT_WORD,
+  EXIT,
+  EXIT_LEN,
+} from "./timeline";
 
 const { fontFamily: sora } = loadFont("normal", {
   weights: ["500"],
@@ -38,6 +46,12 @@ export interface CounterRevealProps {
   grain?: boolean;
   theme?: "dark" | "light";
   speed?: number;
+  /**
+   * Moves, trims or stretches single letters, the push and the lift, by the
+   * ids in `./timeline`. Frames on the scene timeline, after `delay` and
+   * `speed`.
+   */
+  timing?: Timing<CounterRevealElementId>;
 }
 
 // Sora 500 advance widths (per 1000 em) for ASCII 32–126, and full outlines
@@ -84,13 +98,6 @@ const CAP = 0.73;
 const WORD_TRACK = -0.03;
 const LINE_TRACK = -0.035;
 const WORD_SPACE = 0.24;
-
-// Beats (frames at 30fps).
-const ENTER = -6; // first letter is already mid-rise on frame 0
-const ENTER_LEN = 20;
-const STAGGER = 3;
-const EXIT = 66;
-const EXIT_LEN = 26;
 
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
 const EASE_IO = Easing.bezier(0.7, 0, 0.3, 1);
@@ -193,24 +200,32 @@ function ScaleLayer({
   );
 }
 
-export function CounterReveal({
-  word = "Beta",
-  line = "Out now.",
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = sora,
-  stagger = STAGGER,
-  liftAt = EXIT,
-  scale = 1,
-  delay = 0,
-  grain = true,
-  theme = "dark",
-  speed = 1,
-}: CounterRevealProps) {
+export function CounterReveal(props: CounterRevealProps) {
+  const {
+    word = DEFAULT_WORD,
+    line = "Out now.",
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = sora,
+    scale = 1,
+    delay = 0,
+    grain = true,
+    theme = "dark",
+    speed = 1,
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H } = useSceneConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    counterRevealTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const lift = tl.get("lift");
+  const liftAt = lift.start;
   const c = THEMES[theme];
   const fg = ink ?? c.ink;
   const wordInk = ink ?? c.fg;
@@ -229,13 +244,18 @@ export function CounterReveal({
   const B = Math.min((W * 0.86) / back.width, (H * 0.34) / CAP);
   const lineLeft = W / 2 - (back.width * B) / 2;
   const lineBase = H / 2 + (CAP * B) / 2;
-  const end = liftAt + EXIT_LEN;
+  const end = lift.end;
   const lineAt = (f: number) => {
     const drift = EASE_IO(interpolate(f, [0, end], [0, 1], CLAMP));
     const shrink = EASE_IO(
-      interpolate(f, [liftAt - 6, end + 4], [0, 1], CLAMP),
+      interpolate(
+        f,
+        [liftAt + lift.beat("shrinkAt"), end + lift.beat("shrinkTail")],
+        [0, 1],
+        CLAMP,
+      ),
     );
-    const settle = interpolate(f, [end, end + 36], [0, 1], {
+    const settle = interpolate(f, [end, end + lift.beat("settle")], [0, 1], {
       ...CLAMP,
       easing: EASE_OUT,
     });
@@ -273,7 +293,9 @@ export function CounterReveal({
 
   const exit = EASE_IO(interpolate(t, [liftAt, end], [0, 1], CLAMP));
   const plateY = -exit * H * 1.04;
-  const push = 1 + 0.025 * interpolate(t, [ENTER_LEN, liftAt], [0, 1], CLAMP);
+  const pushEl = tl.get("push");
+  const push =
+    1 + 0.025 * interpolate(t, [pushEl.start, pushEl.end], [0, 1], CLAMP);
   // Screen y of the plate's trailing edge: below it the line is already
   // uncovered and shows in its final ink; through the windows it stays dark.
   const edgeY = plateY + baseline + (H - baseline) * push;
@@ -282,7 +304,7 @@ export function CounterReveal({
     EASE_OUT(
       interpolate(
         t,
-        [ENTER + i * stagger, ENTER + i * stagger + ENTER_LEN],
+        [tl.get(`char:${i}`).start, tl.get(`char:${i}`).end],
         [0, 1],
         CLAMP,
       ),

@@ -2,6 +2,11 @@
 
 import { interpolate, interpolateColors, spring } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  type MarkerHighlightElementId,
+  markerHighlightTimeline,
+} from "./timeline";
 
 export interface MarkerHighlightProps {
   before?: string;
@@ -14,25 +19,38 @@ export interface MarkerHighlightProps {
   fontWeight?: number;
   speed?: number;
   className?: string;
+  /**
+   * Moves the marker sweep, by the ids in `./timeline`. Frames on the scene
+   * timeline, after `speed`.
+   */
+  timing?: Timing<MarkerHighlightElementId>;
 }
 
-export function MarkerHighlight({
-  before = "",
-  highlight,
-  after = "",
-  markerColor = "#facc15",
-  baseColor = "#171717",
-  highlightedTextColor = "#171717",
-  fontSize = 72,
-  fontWeight = 600,
-  speed = 1,
-  className,
-}: MarkerHighlightProps) {
+export function MarkerHighlight(props: MarkerHighlightProps) {
+  const {
+    before = "",
+    highlight,
+    after = "",
+    markerColor = "#facc15",
+    baseColor = "#171717",
+    highlightedTextColor = "#171717",
+    fontSize = 72,
+    fontWeight = 600,
+    speed = 1,
+    className,
+    timing,
+  } = props;
   const frame = useSceneFrame() * speed;
-  const { fps } = useSceneConfig();
+  const { fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    markerHighlightTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
 
   const markerScale = spring({
-    frame: frame - 15,
+    frame: frame - tl.get("marker").start,
     fps,
     config: { damping: 14 },
   });

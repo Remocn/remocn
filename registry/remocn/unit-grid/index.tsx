@@ -7,6 +7,16 @@ import { useId, useMemo } from "react";
 import { AbsoluteFill, Easing, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  appearOf,
+  FLIP_DUR,
+  FLIP_START,
+  flipSpan,
+  gridShape,
+  type UnitGridElementId,
+  unitGridTimeline,
+} from "./timeline";
 
 const { fontFamily: sans } = loadFont("normal", {
   weights: ["400"],
@@ -39,6 +49,12 @@ export interface UnitGridProps {
   delay?: number;
   theme?: "dark" | "light";
   speed?: number;
+  /**
+   * Moves, trims or stretches the grid appearing, the count, the flips, the
+   * caption and the settle, by the ids in `./timeline`. Frames on the scene
+   * timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<UnitGridElementId>;
 }
 
 const EASE_IO = Easing.bezier(0.65, 0, 0.35, 1);
@@ -76,22 +92,8 @@ const THEMES = {
   },
 } as const;
 
-const APPEAR_STEP = 0.9;
-const APPEAR_DUR = 12;
-const FLIP_START = 34;
-const FLIP_DUR = 10;
-
 export const unitGridLength = (highlighted = 33) =>
   FLIP_START + flipSpan(highlighted) + FLIP_DUR + 18;
-
-function flipSpan(n: number) {
-  return Math.min(60, Math.max(10, 8 + n * 0.9));
-}
-
-function hash(n: number) {
-  const x = Math.sin(n * 127.1 + 311.7) * 43758.5453;
-  return x - Math.floor(x);
-}
 
 function mix(a: string, b: string, t: number) {
   const pa = Number.parseInt(a.slice(1), 16);
@@ -144,31 +146,32 @@ function ScaleLayer({
   );
 }
 
-function gridShape(total: number) {
-  if (total === 100) return { cols: 10, rows: 10 };
-  const cols = Math.max(1, Math.ceil(Math.sqrt(total)));
-  return { cols, rows: Math.ceil(total / cols) };
-}
-
-export function UnitGrid({
-  total = 100,
-  highlighted = 33,
-  caption = "1 in 3 teams ship weekly",
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = sans,
-  flip = FLIP_DUR,
-  dotSize = 0.34,
-  grain = true,
-  scale = 1,
-  delay = 0,
-  theme = "dark",
-  speed = 1,
-}: UnitGridProps) {
+export function UnitGrid(props: UnitGridProps) {
+  const {
+    total = 100,
+    highlighted = 33,
+    caption = "1 in 3 teams ship weekly",
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = sans,
+    dotSize = 0.34,
+    grain = true,
+    scale = 1,
+    delay = 0,
+    theme = "dark",
+    speed = 1,
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H } = useSceneConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    unitGridTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const u = H / 720;
   const pal = THEMES[theme];
   const fg = ink ?? pal.fg;
@@ -188,8 +191,14 @@ export function UnitGrid({
   const top = (H - gh) / 2;
   const r = pitch * dotSize;
 
-  const span = flipSpan(hi);
-  const flipEnd = FLIP_START + span + flip;
+  const appearEl = tl.get("appear");
+  const flipEl = tl.get("flip");
+  const span = flipEl.beat("span");
+  const flip = flipEl.beat("unit");
+  const flipEnd = flipEl.end;
+  const settleEl = tl.get("settle");
+  const countEl = tl.get("count");
+  const captionEl = tl.get("caption");
 
   const units = useMemo(
     () =>
@@ -201,8 +210,8 @@ export function UnitGrid({
           i,
           x: left + (c + 0.5) * pitch,
           y: top + (row + 0.5) * pitch,
-          appear: (c + row) * APPEAR_STEP + hash(i + 1.3) * 2,
-          flip: i < hi ? FLIP_START + EASE_IO(order) * span : -1,
+          appear: appearOf(i, cols),
+          flip: i < hi ? flipEl.start + EASE_IO(order) * span : -1,
           hue: c / Math.max(1, cols - 1),
           light:
             1 -
@@ -210,29 +219,39 @@ export function UnitGrid({
               (row / Math.max(1, rows - 1)) * 0.4),
         };
       }),
-    [n, cols, rows, hi, left, top, pitch, span],
+    [n, cols, rows, hi, left, top, pitch, span, flipEl],
   );
 
   const litAt = (k: number) =>
     k < 0.5
       ? mix(pal.lit[0], pal.lit[1], k * 2)
       : mix(pal.lit[1], pal.lit[2], (k - 0.5) * 2);
-  const glowIn = interpolate(t, [FLIP_START, flipEnd + 10], [0, 1], {
-    ...CLAMP,
-    easing: EASE_IO,
-  });
+  const glowIn = interpolate(
+    t,
+    [flipEl.start, flipEnd + flipEl.beat("glowTail")],
+    [0, 1],
+    {
+      ...CLAMP,
+      easing: EASE_IO,
+    },
+  );
   let count = 0;
-  const settle = interpolate(t, [flipEnd, flipEnd + 22], [0, 1], {
+  const settle = interpolate(t, [settleEl.start, settleEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
 
   const dots: React.ReactNode[] = [];
   for (const d of units) {
-    const a = interpolate(t + 4 - d.appear, [0, APPEAR_DUR], [0, 1], {
-      ...CLAMP,
-      easing: EASE_OUT,
-    });
+    const a = interpolate(
+      t - appearEl.start + appearEl.beat("lead") - d.appear,
+      [0, appearEl.beat("unit")],
+      [0, 1],
+      {
+        ...CLAMP,
+        easing: EASE_OUT,
+      },
+    );
     if (a <= 0) continue;
     let sx = 1;
     let s = 0.55 + 0.45 * a;
@@ -267,16 +286,16 @@ export function UnitGrid({
     );
   }
 
-  const numIn = interpolate(t, [16, 34], [0, 1], {
+  const numIn = interpolate(t, [countEl.start, countEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
-  const capIn = interpolate(t, [flipEnd - 8, flipEnd + 12], [0, 1], {
+  const capIn = interpolate(t, [captionEl.start, captionEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
   const camAt = (f: number) =>
-    interpolate(f, [0, flipEnd + 40], [1, 1.03], {
+    interpolate(f, [0, flipEnd + flipEl.beat("cameraTail")], [1, 1.03], {
       ...CLAMP,
       easing: EASE_IO,
     });

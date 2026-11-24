@@ -5,6 +5,14 @@ import { type ReactNode, useId, useMemo } from "react";
 import { AbsoluteFill, Easing, interpolate, spring } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  ACC_END,
+  ACC_START,
+  BUBBLE_ITEMS,
+  type BubblePackElementId,
+  bubblePackTimeline,
+} from "./timeline";
 
 const { fontFamily: sans } = loadFont("normal", {
   weights: ["400", "500"],
@@ -47,20 +55,13 @@ export interface BubblePackProps {
   grain?: boolean;
   theme?: "dark" | "light";
   speed?: number;
+  /**
+   * Moves, trims or stretches single bubble pops, the accent growing and
+   * its number, by the ids in `./timeline`. Frames on the scene timeline,
+   * after `delay` and `speed`.
+   */
+  timing?: Timing<BubblePackElementId>;
 }
-
-const DEFAULT_ITEMS: BubbleItem[] = [
-  { label: "Launch videos", value: 420 },
-  { label: "Demos", value: 180 },
-  { label: "Changelogs", value: 150 },
-  { label: "Social clips", value: 130 },
-  { label: "Onboarding", value: 96 },
-  { label: "Ads", value: 84 },
-  { label: "Tutorials", value: 70 },
-  { label: "Recaps", value: 58 },
-  { label: "Teasers", value: 46 },
-  { label: "Pitches", value: 38 },
-];
 
 const EASE_IO = Easing.bezier(0.65, 0, 0.35, 1);
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
@@ -87,10 +88,6 @@ const THEMES = {
   },
 } as const;
 
-const GROW_IN = 4;
-const STAGGER = 3;
-const ACC_START = 46;
-const ACC_END = 86;
 const SUB = 3;
 const SQUASH = 2.1;
 
@@ -171,8 +168,15 @@ function bounds(cs: (V & { r: number })[]) {
   return { cx: (x0 + x1) / 2, cy: (y0 + y1) / 2, w: x1 - x0, h: y1 - y0 };
 }
 
-function accentRadius(frame: number, seed: number, full: number) {
-  const k = interpolate(frame, [ACC_START, ACC_END], [0, 1], {
+/** The accent's radius; the pack is simulated on `ACC_START`–`ACC_END`. */
+function accentRadius(
+  frame: number,
+  seed: number,
+  full: number,
+  from = ACC_START,
+  to = ACC_END,
+) {
+  const k = interpolate(frame, [from, to], [0, 1], {
     ...CLAMP,
     easing: EASE_GROW,
   });
@@ -223,24 +227,36 @@ function formatValue(v: number) {
   return Math.round(v).toLocaleString("en-US");
 }
 
-export function BubblePack({
-  items = DEFAULT_ITEMS,
-  highlight = 0,
-  stagger = STAGGER,
-  fontWeight = 500,
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = sans,
-  scale = 1,
-  delay = 0,
-  grain = true,
-  theme = "dark",
-  speed = 1,
-}: BubblePackProps) {
+export function BubblePack(props: BubblePackProps) {
+  const {
+    items = BUBBLE_ITEMS,
+    highlight = 0,
+    fontWeight = 500,
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = sans,
+    scale = 1,
+    delay = 0,
+    grain = true,
+    theme = "dark",
+    speed = 1,
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width, height, fps } = useSceneConfig();
+  const { width, height, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    bubblePackTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const grow = tl.get("grow");
+  const heroEl = tl.get("hero");
+  // The pack is simulated frame by frame over `ACC_START`–`ACC_END`; the
+  // grow element plays that simulation over its own span.
+  const simRate = (ACC_END - ACC_START) / grow.length;
   const u = Math.min(width / 1280, height / 720);
   const p = THEMES[theme];
   const fg = ink ?? p.fg;
@@ -376,8 +392,8 @@ export function BubblePack({
   const { grays, hero, placed, frames, S, seedR, RA, camA, cams, seq } = model;
 
   const sampleAt = (i: number, tt: number) => {
-    if (tt <= ACC_START) return placed[i];
-    const k = Math.min(tt - ACC_START, frames.length - 1);
+    if (tt <= grow.start) return placed[i];
+    const k = Math.min((tt - grow.start) * simRate, frames.length - 1);
     const f0 = Math.floor(k);
     const f1 = Math.min(f0 + 1, frames.length - 1);
     const w = k - f0;
@@ -390,8 +406,8 @@ export function BubblePack({
   const sample = (i: number) => sampleAt(i, t);
 
   const camFor = (tt: number) => {
-    if (tt <= ACC_START) return camA;
-    const k = Math.min(tt - ACC_START, cams.length - 1);
+    if (tt <= grow.start) return camA;
+    const k = Math.min((tt - grow.start) * simRate, cams.length - 1);
     const f0 = Math.floor(k);
     const f1 = Math.min(f0 + 1, cams.length - 1);
     const w = k - f0;
@@ -402,7 +418,7 @@ export function BubblePack({
     };
   };
   const driftAt = (tt: number) =>
-    interpolate(tt, [0, ACC_END + 60], [0, 1], {
+    interpolate(tt, [0, grow.start + grow.beat("settle")], [0, 1], {
       ...CLAMP,
       easing: EASE_IO,
     });
@@ -427,7 +443,7 @@ export function BubblePack({
   // pixel. Layout holds each where it settles for its whole life and the
   // travel is a transform, 0 once the camera is done: a label handed back to
   // layout on its last frames would snap to a whole pixel there.
-  const SETTLED = ACC_END + 60;
+  const SETTLED = grow.start + grow.beat("settle");
   const shift = (
     at: (tt: number) => V,
     rest: V,
@@ -451,26 +467,38 @@ export function BubblePack({
     };
   };
 
-  const ra = accentRadius(t, seedR, RA);
+  const ra = accentRadius(t, seedR, RA, grow.start, grow.end);
+  const accAt = grow.start + grow.beat("fadeAt");
   const accOpacity = interpolate(
     t,
-    [ACC_START - 2, ACC_START + 6],
+    [accAt, accAt + grow.beat("fade")],
     [0, 1],
     CLAMP,
   );
-  const heroIn = interpolate(t, [ACC_END - 8, ACC_END + 14], [0, 1], {
+  const heroIn = interpolate(t, [heroEl.start, heroEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
-  const heroLab = interpolate(t, [ACC_END - 2, ACC_END + 16], [0, 1], {
-    ...CLAMP,
-    easing: EASE_OUT,
-  });
-  const count = interpolate(t, [ACC_END - 8, ACC_END + 22], [0.5, 1], {
-    ...CLAMP,
-    easing: Easing.bezier(0.22, 1, 0.36, 1),
-  });
-  const quiet = interpolate(t, [ACC_START, ACC_END], [0, 1], {
+  const labAt = heroEl.start + heroEl.beat("labelAt");
+  const heroLab = interpolate(
+    t,
+    [labAt, labAt + heroEl.beat("label")],
+    [0, 1],
+    {
+      ...CLAMP,
+      easing: EASE_OUT,
+    },
+  );
+  const count = interpolate(
+    t,
+    [heroEl.start, heroEl.start + heroEl.beat("count")],
+    [0.5, 1],
+    {
+      ...CLAMP,
+      easing: Easing.bezier(0.22, 1, 0.36, 1),
+    },
+  );
+  const quiet = interpolate(t, [grow.start, grow.end], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
@@ -491,7 +519,10 @@ export function BubblePack({
   const heroFontAt = (tt: number) => {
     const cam = camFor(tt);
     const k = cam.s * (0.985 + 0.015 * driftAt(tt));
-    return Math.min(136 * u, accentRadius(tt, seedR, RA) * k * 0.68);
+    return Math.min(
+      136 * u,
+      accentRadius(tt, seedR, RA, grow.start, grow.end) * k * 0.68,
+    );
   };
   const heroFont = Math.min(136 * u, heroR * 0.68);
   // The number's size follows the bubble until it reaches its cap. A size
@@ -510,7 +541,13 @@ export function BubblePack({
   const heroPos = shift(
     (tt) => screenAt(S, tt),
     screenAt(S, SETTLED),
-    (tt) => interpolate(tt, [ACC_END - 8, ACC_END + 16], [0, 1], CLAMP) * 10,
+    (tt) =>
+      interpolate(
+        tt,
+        [heroEl.start, heroEl.start + heroEl.beat("rise")],
+        [0, 1],
+        CLAMP,
+      ) * 10,
   );
 
   return (
@@ -523,13 +560,13 @@ export function BubblePack({
           aria-hidden
         >
           {grays.map((g, i) => {
-            const start = GROW_IN + seq[i] * stagger;
+            const pop = tl.get(`pop:${seq[i]}`);
             const k = spring({
-              frame: t - start,
+              frame: t - pop.start,
               fps,
               config: { damping: 15, stiffness: 120, mass: 0.7 },
             });
-            const o = interpolate(t, [start, start + 6], [0, 1], CLAMP);
+            const o = interpolate(t, [pop.start, pop.end], [0, 1], CLAMP);
             const q = toScreen(sample(i));
             return (
               <circle
@@ -574,9 +611,10 @@ export function BubblePack({
           const fits =
             rs >= 44 * u && g.label.length * nameSize * 0.56 <= rs * 1.6;
           if (!fits) return null;
-          const start = GROW_IN + seq[i] * stagger + 8;
+          const pop = tl.get(`pop:${seq[i]}`);
+          const start = pop.start + pop.beat("labelAt");
           const aAt = (tt: number) =>
-            interpolate(tt, [start, start + 12], [0, 1], {
+            interpolate(tt, [start, start + pop.beat("label")], [0, 1], {
               ...CLAMP,
               easing: EASE_OUT,
             });

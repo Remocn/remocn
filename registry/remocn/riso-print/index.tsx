@@ -3,6 +3,8 @@
 import { type ReactNode, useId } from "react";
 import { AbsoluteFill, Easing, interpolate, random, spring } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import { type RisoPrintElementId, risoPrintTimeline } from "./timeline";
 
 export type RisoPrintProps = {
   /** Subject printed in both inks. Dark tones go to the key plate, warm tones to the accent plate. */
@@ -23,6 +25,12 @@ export type RisoPrintProps = {
   /** Print registration marks in the corners. */
   marks?: boolean;
   speed?: number;
+  /**
+   * Moves, trims or stretches the key plate, the accent plate and the
+   * jitter, by the ids in `./timeline`.
+   * Frames on the scene timeline, after `speed`.
+   */
+  timing?: Timing<RisoPrintElementId>;
 };
 
 export const risoPrintDefaults = {
@@ -133,20 +141,31 @@ function Marks({ width, height }: { width: number; height: number }) {
   );
 }
 
-export function RisoPrint({
-  children,
-  inks: inksProp = risoPrintDefaults.inks,
-  keyInk,
-  accentInk,
-  paper = risoPrintDefaults.paper,
-  offset = risoPrintDefaults.offset,
-  grain = risoPrintDefaults.grain,
-  jitter = risoPrintDefaults.jitter,
-  marks = risoPrintDefaults.marks,
-  speed = risoPrintDefaults.speed,
-}: RisoPrintProps) {
+export function RisoPrint(props: RisoPrintProps) {
+  const {
+    children,
+    inks: inksProp = risoPrintDefaults.inks,
+    keyInk,
+    accentInk,
+    paper = risoPrintDefaults.paper,
+    offset = risoPrintDefaults.offset,
+    grain = risoPrintDefaults.grain,
+    jitter = risoPrintDefaults.jitter,
+    marks = risoPrintDefaults.marks,
+    speed = risoPrintDefaults.speed,
+    timing,
+  } = props;
   const frame = useSceneFrame();
-  const { width, height, fps } = useSceneConfig();
+  const { width, height, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    risoPrintTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const keyPlate = tl.get("key");
+  const accent = tl.get("accent");
+  const jitterEl = tl.get("jitter");
   const id = useId().replace(/[^a-zA-Z0-9_-]/g, "");
   const inks: [string, string] = [
     keyInk ?? inksProp[0],
@@ -157,25 +176,35 @@ export function RisoPrint({
   const g = Math.max(0, Math.min(1, grain));
 
   // Key plate: the ink hits the paper.
-  const press = interpolate(t, [0, 8], [0, 1], {
+  const press = interpolate(t, [keyPlate.start, keyPlate.end], [0, 1], {
     ...clamp,
     easing: Easing.out(Easing.cubic),
   });
 
   // Accent plate: slides in off-register, wobbles, settles a hair off.
   const slide = spring({
-    frame: t - 4,
+    frame: t - accent.start,
     fps: 30,
     config: { damping: 9, stiffness: 120, mass: 0.8 },
   });
   const step = Math.floor(t / 4);
-  const jitterIn = interpolate(t, [26, 34], [0, 1], clamp);
+  const jitterIn = interpolate(
+    t,
+    [jitterEl.start, jitterEl.end],
+    [0, 1],
+    clamp,
+  );
   const jx = (random(`riso-jx-${step}`) - 0.5) * 2 * jitter * unit * jitterIn;
   const jy = (random(`riso-jy-${step}`) - 0.5) * 2 * jitter * unit * jitterIn;
   const ax = interpolate(slide, [0, 1], [-0.22 * width, offset[0] * unit]) + jx;
   const ay = interpolate(slide, [0, 1], [0.08 * height, offset[1] * unit]) + jy;
   const arot = interpolate(slide, [0, 1], [-4, 0.35]);
-  const aopacity = interpolate(t, [4, 8], [0, 1], clamp);
+  const aopacity = interpolate(
+    t,
+    [accent.start, accent.start + accent.beat("fade")],
+    [0, 1],
+    clamp,
+  );
 
   const speckle = `0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  ${-5 * g} 0 0 0 ${1 + 5 * g * 0.56}`;
   const plates = [

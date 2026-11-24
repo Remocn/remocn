@@ -3,6 +3,8 @@
 import { Easing, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import { type BlurOutUpElementId, blurOutUpTimeline } from "./timeline";
 
 export interface BlurOutUpProps {
   text: string;
@@ -12,36 +14,33 @@ export interface BlurOutUpProps {
   fontWeight?: number;
   speed?: number;
   className?: string;
+  /**
+   * Moves, trims or stretches single words and their exits, by the ids in
+   * `./timeline`. Frames on the scene timeline, after `speed`.
+   */
+  timing?: Timing<BlurOutUpElementId>;
 }
 
-export function BlurOutUp({
-  text,
-  staggerDelay = 1,
-  fontSize = 72,
-  color = "#171717",
-  fontWeight = 600,
-  speed = 1,
-  className,
-}: BlurOutUpProps) {
+export function BlurOutUp(props: BlurOutUpProps) {
+  const {
+    text,
+    fontSize = 72,
+    color = "#171717",
+    fontWeight = 600,
+    speed = 1,
+    className,
+    timing,
+  } = props;
   const frame = useSceneFrame() * speed;
   const glide = useGlide();
   const { durationInFrames } = useSceneConfig();
+  // The exit is timed against the composition length without `speed`.
+  const tl = useTimeline(blurOutUpTimeline, props, durationInFrames, timing);
 
   const words = text.split(" ");
 
-  const enterDur = 17;
-  const enterTravel = 6;
-  const exitDur = 14;
-  const exitTravelFrom = 8;
-
   const enterEasing = Easing.bezier(0.22, 1, 0.36, 1);
   const exitEasing = Easing.bezier(0.64, 0, 0.78, 0);
-
-  const enterEnd = enterDur + (words.length - 1) * staggerDelay;
-  const exitStart = Math.max(
-    enterEnd,
-    durationInFrames - exitDur - (words.length - 1) * staggerDelay,
-  );
 
   return (
     <div
@@ -66,8 +65,14 @@ export function BlurOutUp({
         }}
       >
         {words.map((word, i) => {
-          const enterLocal = frame - i * staggerDelay;
-          const exitLocal = frame - exitStart - i * staggerDelay;
+          const enter = tl.get(`word:${i}`);
+          const exit = tl.get(`exit:${i}`);
+          const enterLocal = frame - enter.start;
+          const exitLocal = frame - exit.start;
+          const enterDur = enter.length;
+          const enterTravel = enter.beat("travel");
+          const exitDur = exit.length;
+          const exitTravelFrom = exit.beat("travelFrom");
 
           const enterP = interpolate(enterLocal, [0, enterDur], [0, 1], {
             extrapolateLeft: "clamp",

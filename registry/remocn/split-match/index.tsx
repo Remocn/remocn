@@ -20,6 +20,23 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import {
+  type ResolvedElement,
+  type Timing,
+  useTimeline,
+} from "@/lib/remocn/timeline";
+import {
+  DEFAULT_WORDS,
+  ENTER,
+  HOLD,
+  MERGE,
+  MERGE_DELAY,
+  type SplitMatchElementId,
+  STEP,
+  splitMatchTimeline,
+  TAIL,
+  wordsOf,
+} from "./timeline";
 
 const bricolage = loadFont("normal", {
   weights: ["500"],
@@ -54,22 +71,13 @@ export interface SplitMatchProps {
   grain?: boolean;
   theme?: "dark" | "light";
   speed?: number;
+  /**
+   * Moves, trims or stretches the reels' entrance, each roll on to the next
+   * word, the push and the merge, by the ids in `./timeline`. Frames on the
+   * scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<SplitMatchElementId>;
 }
-
-// Beat sheet (30fps), four words:
-//  0–10    both reels slam in from opposite sides and lock on word 1
-//  10–26   hold: left half on stage, right half on a gradient panel, one word
-//  26–35   step: left reel climbs, right reel drops, halves blur past each other
-//  ...     two more step + lock beats
-//  85      final lock on the last word
-//  93–109  the seam closes: the gradient floods the left panel, neighbours fall away
-//  109–145 poster hold with a slow push
-const ENTER = 10;
-const HOLD = 16;
-const STEP = 9;
-const MERGE_DELAY = 8;
-const MERGE = 16;
-const TAIL = 36;
 
 export function splitMatchDuration(wordCount = 4, hold = HOLD, step = STEP) {
   return (
@@ -271,15 +279,21 @@ function ScaleLayer({
 }
 
 /** Reel position at frame t: integer = locked on that word. */
-function reelAt(t: number, n: number, hold: number, step: number) {
-  if (t < ENTER) {
-    const k = interpolate(t, [-4, ENTER], [0, 1], { ...CLAMP, easing: SNAP });
+function reelAt(
+  t: number,
+  enter: ResolvedElement<SplitMatchElementId>,
+  steps: ResolvedElement<SplitMatchElementId>[],
+) {
+  if (t < enter.end) {
+    const k = interpolate(t, [enter.start, enter.end], [0, 1], {
+      ...CLAMP,
+      easing: SNAP,
+    });
     return -1 + k;
   }
   let p = 0;
-  for (let i = 1; i < n; i++) {
-    const start = ENTER + (i - 1) * (hold + step) + hold;
-    p += interpolate(t, [start, start + step], [0, 1], {
+  for (const e of steps) {
+    p += interpolate(t, [e.start, e.end], [0, 1], {
       ...CLAMP,
       easing: SNAP,
     });
@@ -287,23 +301,29 @@ function reelAt(t: number, n: number, hold: number, step: number) {
   return p;
 }
 
-export function SplitMatch({
-  words = ["build", "ship", "launch", "remocn"],
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = bricolage.fontFamily,
-  hold = HOLD,
-  step = STEP,
-  scale = 1,
-  delay = 0,
-  grain = true,
-  theme = "dark",
-  speed = 1,
-}: SplitMatchProps) {
+export function SplitMatch(props: SplitMatchProps) {
+  const {
+    words = DEFAULT_WORDS,
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = bricolage.fontFamily,
+    scale = 1,
+    delay = 0,
+    grain = true,
+    theme = "dark",
+    speed = 1,
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H } = useSceneConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    splitMatchTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const c = THEMES[theme];
   const fg = ink ?? c.fg;
   const stage =
@@ -311,8 +331,12 @@ export function SplitMatch({
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
   const measure = useMeasurer(fontFamily);
 
-  const list = words.length ? words : ["remocn"];
+  const list = wordsOf(words);
   const n = list.length;
+  const enter = tl.get("enter");
+  const steps = list.slice(1).map((_, i) => tl.get(`word:${i + 1}`));
+  const pushEl = tl.get("push");
+  const mergeEl = tl.get("merge");
 
   if (!measure) {
     return (
@@ -329,21 +353,18 @@ export function SplitMatch({
   const pitch = H * 0.5;
   const baseline = cy + F * 0.33;
 
-  const p = reelAt(t, n, hold, step);
-  const v = (p - reelAt(t - 0.5, n, hold, step)) * 2 * pitch;
+  const p = reelAt(t, enter, steps);
+  const v = (p - reelAt(t - 0.5, enter, steps)) * 2 * pitch;
   const blur = Math.min(Math.abs(v) * 0.15, H * 0.022);
 
-  const lastLock = ENTER + (n - 1) * (hold + step);
-  const merge = interpolate(
-    t,
-    [lastLock + MERGE_DELAY, lastLock + MERGE_DELAY + MERGE],
-    [0, 1],
-    { ...CLAMP, easing: EASE_IO },
-  );
+  const merge = interpolate(t, [mergeEl.start, mergeEl.end], [0, 1], {
+    ...CLAMP,
+    easing: EASE_IO,
+  });
   const edge = seam * (1 - merge);
   const pushAt = (f: number) =>
     1 +
-    interpolate(f, [lastLock, lastLock + MERGE + TAIL + 10], [0, 1], {
+    interpolate(f, [pushEl.start, pushEl.end], [0, 1], {
       ...CLAMP,
       easing: Easing.bezier(0.33, 0, 0.2, 1),
     }) *
@@ -356,7 +377,7 @@ export function SplitMatch({
   // The reels move the words by SVG attribute, which parks a glyph on whole
   // pixels just like a transform does, so the same tilt rides them.
   const reeling = [t - speed, t + speed].some(
-    (f) => Math.abs(reelAt(f, n, hold, step) - p) * pitch > 1e-3,
+    (f) => Math.abs(reelAt(f, enter, steps) - p) * pitch > 1e-3,
   );
 
   const reel = (dir: 1 | -1, color: string, dim: number) => {

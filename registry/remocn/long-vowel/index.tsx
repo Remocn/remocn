@@ -13,6 +13,14 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  copiesOf,
+  DEFAULT_REST,
+  DEFAULT_WORD,
+  type LongVowelElementId,
+  longVowelTimeline,
+} from "./timeline";
 
 const fraunces = loadFraunces("normal", {
   weights: ["400"],
@@ -42,6 +50,12 @@ export interface LongVowelProps {
   grain?: boolean;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches single letters rising, single copies of the
+   * vowel drawing out and single caption words, by the ids in `./timeline`.
+   * Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<LongVowelElementId>;
 }
 
 const THEMES = {
@@ -64,13 +78,6 @@ const THEMES = {
 const TRACK = -0.035;
 const REST_TRACK = -0.01;
 const FONT_PX = 400;
-
-const RISE_AT = 0;
-const RISE_LEN = 16;
-const RISE_GAP = 2;
-const DRAWL_AT = 28;
-const DRAWL_GAP = 4;
-const REST_GAP_AFTER = 4;
 
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
 const CLAMP = {
@@ -206,26 +213,32 @@ function ScaleLayer({
   );
 }
 
-export function LongVowel({
-  word = "Way",
-  letter,
-  repeat = 5,
-  rest = "less keyframing.",
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = fraunces.fontFamily,
-  stretchAt = DRAWL_AT,
-  stagger = DRAWL_GAP,
-  scale = 1,
-  delay = 0,
-  grain = true,
-  speed = 1,
-  theme = "dark",
-}: LongVowelProps) {
+export function LongVowel(props: LongVowelProps) {
+  const {
+    word = DEFAULT_WORD,
+    letter,
+    repeat = 5,
+    rest = DEFAULT_REST,
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = fraunces.fontFamily,
+    scale = 1,
+    delay = 0,
+    grain = true,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H, fps } = useSceneConfig();
+  const { width: W, height: H, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    longVowelTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const c = THEMES[theme];
   const bg = background ?? c.bg;
   const ramp = c.ramp(accent);
@@ -239,7 +252,7 @@ export function LongVowel({
     const v = chars.findIndex((ch) => /[aeiouyAEIOUY]/.test(ch));
     return v >= 0 ? v : Math.max(0, Math.floor((chars.length - 1) / 2));
   }, [chars, letter]);
-  const copies = Math.max(1, Math.round(repeat));
+  const copies = copiesOf(repeat);
   const drawn = useMemo(
     () =>
       [
@@ -265,10 +278,11 @@ export function LongVowel({
   const baseY = H / 2 + (blockTop - blockBot) / 2;
   const restBase = baseY + gap + m.restAsc * R;
 
+  const copyEls = Array.from({ length: copies }, (_, k) => tl.get(`copy:${k}`));
   const progAt = (f: number) =>
-    Array.from({ length: copies }, (_, k) =>
+    copyEls.map((copy) =>
       spring({
-        frame: f - stretchAt - k * stagger,
+        frame: f - copy.start,
         fps,
         config: { damping: 15, stiffness: 140, mass: 0.8 },
       }),
@@ -276,7 +290,7 @@ export function LongVowel({
   const prog = progAt(t);
   const vel = prog.map((_, k) => {
     const a = spring({
-      frame: t - stretchAt - k * stagger - 1,
+      frame: t - copyEls[k].start - 1,
       fps,
       config: { damping: 15, stiffness: 140, mass: 0.8 },
     });
@@ -317,12 +331,11 @@ export function LongVowel({
     const isCopy = i > hold && i <= hold + copies;
     const k = isCopy ? i - hold - 1 : -1;
     const ri = i <= hold ? i : isCopy ? hold : i - copies;
-    const rp = interpolate(
-      t,
-      [RISE_AT + ri * RISE_GAP, RISE_AT + ri * RISE_GAP + RISE_LEN],
-      [0, 1],
-      { ...CLAMP, easing: EASE_OUT },
-    );
+    const riseEl = tl.get(`letter:${ri}`);
+    const rp = interpolate(t, [riseEl.start, riseEl.end], [0, 1], {
+      ...CLAMP,
+      easing: EASE_OUT,
+    });
     const dy = (1 - rp) * maskH * 1.05;
     // Layout rounds a box and a baseline to whole pixels, so a glyph moved by
     // `left`/`top` clicks along pixel by pixel, and jumps where layout takes
@@ -392,7 +405,6 @@ export function LongVowel({
     );
   }
 
-  const restAt = stretchAt + (copies - 1) * stagger + 14 + REST_GAP_AFTER;
   const restWords = rest ? rest.split(" ") : [];
 
   return (
@@ -432,12 +444,11 @@ export function LongVowel({
             }}
           >
             {restWords.map((w, k) => {
-              const p = interpolate(
-                t,
-                [restAt + k * 3, restAt + k * 3 + 16],
-                [0, 1],
-                { ...CLAMP, easing: EASE_OUT },
-              );
+              const restEl = tl.get(`rest:${k}`);
+              const p = interpolate(t, [restEl.start, restEl.end], [0, 1], {
+                ...CLAMP,
+                easing: EASE_OUT,
+              });
               return (
                 <span
                   key={`${w}-${k}`}

@@ -3,6 +3,8 @@
 import type React from "react";
 import { AbsoluteFill, Easing, interpolate, random, spring } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import { type PuzzleSnapElementId, puzzleSnapTimeline } from "./timeline";
 
 export type PuzzleSnapProps = {
   /** Wordmark revealed beside the assembled mark. */
@@ -19,6 +21,11 @@ export type PuzzleSnapProps = {
   /** Seed for the scattered start positions. */
   seed?: number;
   speed?: number;
+  /**
+   * Moves, trims or stretches each piece and the lockup, by the ids in
+   * `./timeline`. Frames on the scene timeline, after `speed`.
+   */
+  timing?: Timing<PuzzleSnapElementId>;
 };
 
 export const puzzleSnapDefaults = {
@@ -31,11 +38,6 @@ export const puzzleSnapDefaults = {
   speed: 1,
 };
 
-const STAGGER = 3;
-const DRIFT = 10;
-const SNAP = 3;
-const SPARK = 8;
-const SLIDE = 11;
 const clamp = {
   extrapolateLeft: "clamp" as const,
   extrapolateRight: "clamp" as const,
@@ -59,10 +61,18 @@ export function PuzzleSnap(props: PuzzleSnapProps) {
     square,
     seed,
     speed,
+    timing,
   } = { ...puzzleSnapDefaults, ...props };
   const frame = useSceneFrame();
-  const { width, height, fps } = useSceneConfig();
+  const { width, height, fps, durationInFrames } = useSceneConfig();
   const t = frame * Math.max(0, speed);
+  const tl = useTimeline(
+    puzzleSnapTimeline,
+    props,
+    durationInFrames * Math.max(0, speed),
+    timing,
+  );
+  const lockup = tl.get("lockup");
   const s = Math.min(width, height);
   const size = Math.round(s * 0.2);
   const c = size / 2;
@@ -119,7 +129,7 @@ export function PuzzleSnap(props: PuzzleSnapProps) {
         ]
       : []),
   ];
-  const lastContact = (pieces.length - 1) * STAGGER + DRIFT + SNAP;
+  const lastContact = lockup.start;
 
   const punch = spring({
     frame: t - lastContact,
@@ -129,7 +139,10 @@ export function PuzzleSnap(props: PuzzleSnapProps) {
   const markScale = t < lastContact ? 1 : 1 + 0.08 * (1 - punch);
   const slide = interpolate(
     t,
-    [lastContact + 2, lastContact + 2 + SLIDE],
+    [
+      lastContact + lockup.beat("slide"),
+      lastContact + lockup.beat("slide") + lockup.beat("slideLength"),
+    ],
     [0, 1],
     {
       ...clamp,
@@ -138,7 +151,10 @@ export function PuzzleSnap(props: PuzzleSnapProps) {
   );
   const reveal = interpolate(
     t,
-    [lastContact + 4, lastContact + 4 + SLIDE],
+    [
+      lastContact + lockup.beat("reveal"),
+      lastContact + lockup.beat("reveal") + lockup.beat("revealLength"),
+    ],
     [0, 1],
     { ...clamp, easing: Easing.out(Easing.cubic) },
   );
@@ -171,7 +187,10 @@ export function PuzzleSnap(props: PuzzleSnapProps) {
           }}
         >
           {pieces.map((piece, i) => {
-            const local = t - i * STAGGER;
+            const el = tl.get(`piece:${i}`);
+            const drift = el.beat("drift");
+            const snapLen = el.beat("snap");
+            const local = t - el.start;
             const angle = random(`puzzle-snap-${seed}-${i}-a`) * Math.PI * 2;
             const dist =
               s * (0.42 + 0.22 * random(`puzzle-snap-${seed}-${i}-d`));
@@ -180,12 +199,12 @@ export function PuzzleSnap(props: PuzzleSnapProps) {
               (120 + 160 * random(`puzzle-snap-${seed}-${i}-s`));
             // Drift most of the way in, then get yanked onto the slot.
             const remain =
-              local < DRIFT
-                ? interpolate(local, [0, DRIFT], [1, 0.2], {
+              local < drift
+                ? interpolate(local, [0, drift], [1, 0.2], {
                     ...clamp,
                     easing: Easing.out(Easing.cubic),
                   })
-                : interpolate(local, [DRIFT, DRIFT + SNAP], [0.2, 0], {
+                : interpolate(local, [drift, drift + snapLen], [0.2, 0], {
                     ...clamp,
                     easing: Easing.in(Easing.quad),
                   });
@@ -193,8 +212,13 @@ export function PuzzleSnap(props: PuzzleSnapProps) {
             const oy = Math.sin(angle) * dist * remain;
             const pivotX = piece.px * c;
             const pivotY = piece.py * c;
-            const opacity = interpolate(local, [0, 3], [0, 1], clamp);
-            const sparkT = (local - DRIFT - SNAP) / SPARK;
+            const opacity = interpolate(
+              local,
+              [0, el.beat("fade")],
+              [0, 1],
+              clamp,
+            );
+            const sparkT = (local - drift - snapLen) / el.beat("spark");
             return (
               <g key={piece.key}>
                 <g

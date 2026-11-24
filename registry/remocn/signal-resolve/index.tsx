@@ -9,6 +9,13 @@ import { useId, useMemo } from "react";
 import { AbsoluteFill, Easing, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  captionWords,
+  DEFAULT_CAPTION,
+  type SignalResolveElementId,
+  signalResolveTimeline,
+} from "./timeline";
 
 const { fontFamily: sans } = loadFont("normal", {
   weights: ["400"],
@@ -63,6 +70,12 @@ export interface SignalResolveProps {
   /** Playback multiplier. */
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches the scope phases, the logo trace and lockup
+   * and the caption words, by the ids in `./timeline`.
+   * Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<SignalResolveElementId>;
 }
 
 /**
@@ -272,25 +285,39 @@ function ScaleLayer({
   );
 }
 
-export function SignalResolve({
-  name = "emocn",
-  caption = "Less noise. More signal.",
-  traces = 5,
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = sans,
-  stagger = 3,
-  grid = true,
-  scale = 1,
-  delay = 0,
-  grain = true,
-  speed = 1,
-  theme = "dark",
-}: SignalResolveProps) {
+export function SignalResolve(props: SignalResolveProps) {
+  const {
+    name = "emocn",
+    caption = DEFAULT_CAPTION,
+    traces = 5,
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = sans,
+    grid = true,
+    scale = 1,
+    delay = 0,
+    grain = true,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width, height } = useSceneConfig();
+  const { width, height, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    signalResolveTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const noiseEl = tl.get("noise");
+  const sweepEl = tl.get("sweep");
+  const flatten = tl.get("flatten");
+  const reel = tl.get("reel");
+  const fillEl = tl.get("fill");
+  const lockup = tl.get("lockup");
+  const nameEl = tl.get("name");
   const u = height / 720;
   const pal = THEMES[theme];
   const fg = ink ?? pal.fg;
@@ -313,16 +340,29 @@ export function SignalResolve({
   const lineY = traceCenter - (VB.h * kTrace) / 2;
 
   // ── scope phase ────────────────────────────────────────────────────────
-  const sweepX = interpolate(t, [16, 74], [-0.3 * width, 1.3 * width], {
-    ...CLAMP,
-    easing: EASE_IO,
-  });
+  const sweepX = interpolate(
+    t,
+    [sweepEl.start, sweepEl.end],
+    [-0.3 * width, 1.3 * width],
+    {
+      ...CLAMP,
+      easing: EASE_IO,
+    },
+  );
   const band = width * 0.24;
-  const flat = interpolate(t, [90, 110], [1, 0], {
-    ...CLAMP,
-    easing: EASE_IO,
-  });
-  const rise = interpolate(t, [88, 112], [0, 1], {
+  const flat = interpolate(
+    t,
+    [
+      flatten.start + flatten.beat("flat"),
+      flatten.start + flatten.beat("flatEnd"),
+    ],
+    [1, 0],
+    {
+      ...CLAMP,
+      easing: EASE_IO,
+    },
+  );
+  const rise = interpolate(t, [flatten.start, flatten.end], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
@@ -335,10 +375,15 @@ export function SignalResolve({
     baseY + sineAmp * Math.sin((x / width) * Math.PI * 2 * 2.4 + time * 0.07);
 
   const tracePath = (i: number, time: number, calm = false) => {
-    const sweep = interpolate(time, [16, 74], [-0.3 * width, 1.3 * width], {
-      ...CLAMP,
-      easing: EASE_IO,
-    });
+    const sweep = interpolate(
+      time,
+      [sweepEl.start, sweepEl.end],
+      [-0.3 * width, 1.3 * width],
+      {
+        ...CLAMP,
+        easing: EASE_IO,
+      },
+    );
     let d = "";
     for (let k = 0; k <= N; k++) {
       const x = (k / N) * width;
@@ -360,8 +405,8 @@ export function SignalResolve({
     return d;
   };
 
-  const resolved = t >= 76;
-  const scopeVisible = t < 110;
+  const resolved = t >= sweepEl.start + sweepEl.beat("lock");
+  const scopeVisible = t < reel.start;
   const traceEls: React.ReactNode[] = [];
   if (scopeVisible && !resolved) {
     for (let i = 0; i < traces; i++) {
@@ -385,14 +430,37 @@ export function SignalResolve({
   }
 
   const gratO =
-    interpolate(t, [0, 12], [0.6, 1], CLAMP) *
-    interpolate(t, [92, 116], [1, 0], { ...CLAMP, easing: EASE_IO });
+    interpolate(
+      t,
+      [noiseEl.start, noiseEl.start + noiseEl.beat("gridIn")],
+      [0.6, 1],
+      CLAMP,
+    ) *
+    interpolate(
+      t,
+      [
+        flatten.start + flatten.beat("gridOut"),
+        flatten.start + flatten.beat("gridOutEnd"),
+      ],
+      [1, 0],
+      { ...CLAMP, easing: EASE_IO },
+    );
 
   // sweep marker: a hairline and the point where the signal locks
-  const sweepOn = t > 16 && t < 74;
+  const sweepOn = t > sweepEl.start && t < sweepEl.end;
   const sweepO =
-    interpolate(t, [16, 24], [0, 1], CLAMP) *
-    interpolate(t, [64, 74], [1, 0], CLAMP);
+    interpolate(
+      t,
+      [sweepEl.start, sweepEl.start + sweepEl.beat("fadeIn")],
+      [0, 1],
+      CLAMP,
+    ) *
+    interpolate(
+      t,
+      [sweepEl.start + sweepEl.beat("fadeOut"), sweepEl.end],
+      [1, 0],
+      CLAMP,
+    );
   const lockX = sweepX - band * 0.85;
   const lockY = clean(lockX, t);
   // the beam colour paints the signal only where it has resolved
@@ -400,7 +468,7 @@ export function SignalResolve({
 
   // ── lockup ────────────────────────────────────────────────────────────
   const lockAt = (f: number) =>
-    interpolate(f, [160, 188], [0, 1], {
+    interpolate(f, [lockup.start, lockup.end], [0, 1], {
       ...CLAMP,
       easing: EASE_IO,
     });
@@ -432,33 +500,48 @@ export function SignalResolve({
   // frame before the move and goes a frame after it: never on a frame where
   // layout moves the word too.
   const locking = rowDyAt(t + speed) !== rowDy || rowDyAt(t - speed) !== rowDy;
-  const slide = interpolate(t, [176, 204], [0, 1], {
+  const slide = interpolate(t, [nameEl.start, nameEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
-  const wordClip = interpolate(t, [179, 208], [0, 1], {
-    ...CLAMP,
-    easing: EASE_OUT,
-  });
+  const wordClip = interpolate(
+    t,
+    [nameEl.start + nameEl.beat("clip"), nameEl.start + nameEl.beat("clipEnd")],
+    [0, 1],
+    {
+      ...CLAMP,
+      easing: EASE_OUT,
+    },
+  );
 
   // the outline starts at the R's top-left corner, right on the line
   const entryX = width / 2 - (VB.w * kTrace) / 2;
 
   // ── reel-in: lead line + outline trace ───────────────────────────────
-  const reeling = t >= 110;
-  const head = interpolate(t, [110, 152], [0, 1], {
+  const reeling = t >= reel.start;
+  const head = interpolate(t, [reel.start, reel.end], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
-  const tailX = interpolate(t, [112, 150], [0, entryX], {
-    ...CLAMP,
-    easing: EASE_IO,
-  });
-  const rightEnd = interpolate(t, [110, 128], [width, entryX], {
-    ...CLAMP,
-    easing: EASE_IO,
-  });
-  const fillIn = interpolate(t, [148, 166], [0, 1], {
+  const tailX = interpolate(
+    t,
+    [reel.start + reel.beat("tail"), reel.start + reel.beat("tailEnd")],
+    [0, entryX],
+    {
+      ...CLAMP,
+      easing: EASE_IO,
+    },
+  );
+  const rightEnd = interpolate(
+    t,
+    [reel.start, reel.start + reel.beat("retract")],
+    [width, entryX],
+    {
+      ...CLAMP,
+      easing: EASE_IO,
+    },
+  );
+  const fillIn = interpolate(t, [fillEl.start, fillEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
@@ -469,21 +552,17 @@ export function SignalResolve({
   const beamO = interpolate(head, [0, 0.04, 0.94, 1], [0, 1, 1, 0], CLAMP);
 
   // ── caption: the last sentence turns to an italic serif ───────────────
-  const sentences = caption.split(/(?<=[.!?\u2026])\s+/);
-  const words: { w: string; serif: boolean }[] = [];
-  sentences.forEach((sentence, si) => {
-    for (const w of sentence.split(" ")) {
-      words.push({
-        w,
-        serif: sentences.length > 1 && si === sentences.length - 1,
-      });
-    }
-  });
+  const words = captionWords(caption);
   const word = (i: number) =>
-    interpolate(t, [198 + i * stagger, 218 + i * stagger], [0, 1], {
-      ...CLAMP,
-      easing: EASE_OUT,
-    });
+    interpolate(
+      t,
+      [tl.get(`word:${i}`).start, tl.get(`word:${i}`).end],
+      [0, 1],
+      {
+        ...CLAMP,
+        easing: EASE_OUT,
+      },
+    );
 
   const edgeMask = `linear-gradient(90deg, transparent 0%, #000 9%, #000 91%, transparent 100%)`;
   const localStroke = stroke / k;

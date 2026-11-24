@@ -2,6 +2,8 @@
 
 import { AbsoluteFill, Easing, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import { type PhyllotaxisElementId, phyllotaxisTimeline } from "./timeline";
 
 export type PhyllotaxisProps = {
   /** Number of seeds. */
@@ -20,9 +22,14 @@ export type PhyllotaxisProps = {
   background?: string;
   color?: string;
   accent?: string;
+  /**
+   * Moves, trims or stretches the seeds' growth, the arm and its pulse, by
+   * the ids in `./timeline`. Frames on the scene timeline, after `speed`.
+   */
+  timing?: Timing<PhyllotaxisElementId>;
 };
 
-export const phyllotaxisDefaults: Required<PhyllotaxisProps> = {
+export const phyllotaxisDefaults: Required<Omit<PhyllotaxisProps, "timing">> = {
   count: 420,
   size: 1,
   growFrames: 60,
@@ -36,27 +43,35 @@ export const phyllotaxisDefaults: Required<PhyllotaxisProps> = {
 };
 
 const GOLDEN = (137.508 * Math.PI) / 180;
-const POP = 10;
 const pop = Easing.out(Easing.back(2.2));
 const clamp = { extrapolateLeft: "clamp", extrapolateRight: "clamp" } as const;
 const fmt = (n: number) => Math.round(n * 10) / 10;
 const dot = (x: number, y: number, r: number) =>
   `M ${fmt(x - r)} ${fmt(y)} a ${fmt(r)} ${fmt(r)} 0 1 0 ${fmt(r * 2)} 0 a ${fmt(r)} ${fmt(r)} 0 1 0 ${fmt(-r * 2)} 0 `;
 
-export function Phyllotaxis({
-  count = phyllotaxisDefaults.count,
-  size = phyllotaxisDefaults.size,
-  growFrames = phyllotaxisDefaults.growFrames,
-  pulseFrames = phyllotaxisDefaults.pulseFrames,
-  arm = phyllotaxisDefaults.arm,
-  rotation = phyllotaxisDefaults.rotation,
-  speed = phyllotaxisDefaults.speed,
-  background = phyllotaxisDefaults.background,
-  color = phyllotaxisDefaults.color,
-  accent = phyllotaxisDefaults.accent,
-}: PhyllotaxisProps) {
+export function Phyllotaxis(props: PhyllotaxisProps) {
+  const {
+    count = phyllotaxisDefaults.count,
+    size = phyllotaxisDefaults.size,
+    arm = phyllotaxisDefaults.arm,
+    rotation = phyllotaxisDefaults.rotation,
+    speed = phyllotaxisDefaults.speed,
+    background = phyllotaxisDefaults.background,
+    color = phyllotaxisDefaults.color,
+    accent = phyllotaxisDefaults.accent,
+    timing,
+  } = props;
   const frame = useSceneFrame();
-  const { width, height, fps } = useSceneConfig();
+  const { width, height, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    phyllotaxisTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const grow = tl.get("grow");
+  const armEl = tl.get("arm");
+  const pulseEl = tl.get("pulse");
   const n = Math.max(1, Math.round(count));
   const step = Math.max(1, Math.round(arm));
   const time = frame * speed;
@@ -69,15 +84,16 @@ export function Phyllotaxis({
   // Seeds appear in order with a little overshoot; the reveal eases so the
   // dense centre does not flash in all at once.
   const grown = (i: number) => {
-    const at = growFrames * Math.sqrt(i / n);
-    return pop(Math.min(1, Math.max(0, (time - at) / POP)));
+    const at = grow.start + grow.length * Math.sqrt(i / n);
+    return pop(Math.min(1, Math.max(0, (time - at) / grow.beat("pop"))));
   };
-  const armIn = interpolate(time, [growFrames, growFrames + 14], [0, 1], {
+  const armIn = interpolate(time, [armEl.start, armEl.end], [0, 1], {
     ...clamp,
     easing: Easing.out(Easing.cubic),
   });
-  const since = time - growFrames - 10;
-  const pulse = since > 0 ? (since / Math.max(1, pulseFrames)) % 1 : -1;
+  const since = time - pulseEl.start;
+  const pulse =
+    since > 0 ? (since / Math.max(1, pulseEl.beat("period"))) % 1 : -1;
 
   let plain = "";
   let red = "";

@@ -7,6 +7,21 @@ import { useId, useMemo } from "react";
 import { AbsoluteFill, Easing, interpolate, interpolateColors } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  BINS,
+  ballCount,
+  buildDrops,
+  COLS,
+  DROP,
+  type Drop,
+  finaleShift,
+  type GaltonStackElementId,
+  galtonStackTimeline,
+  ROW_T,
+  ROWS,
+  SPAWN_WIN,
+} from "./timeline";
 
 const { fontFamily: sans } = loadFont("normal", {
   weights: ["400", "500"],
@@ -46,15 +61,13 @@ export interface GaltonStackProps {
   grain?: boolean;
   theme?: "dark" | "light";
   speed?: number;
+  /**
+   * Moves, trims or stretches the pegs, the axis, the pour and the finale
+   * (camera, marker, tint, label), by the ids in `./timeline`.
+   * Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<GaltonStackElementId>;
 }
-
-const ROWS = 14;
-const BINS = ROWS + 1;
-const COLS = 4;
-const SPAWN0 = 10;
-const SPAWN_WIN = 50;
-const DROP = 6;
-const ROW_T = 1.3;
 
 const EASE_IO = Easing.bezier(0.65, 0, 0.35, 1);
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
@@ -87,61 +100,6 @@ const THEMES = {
     grain: 0.045,
   },
 } as const;
-
-function hash(a: number, b: number) {
-  let h = (Math.imul(a, 374761393) + Math.imul(b, 668265263)) | 0;
-  h = Math.imul(h ^ (h >>> 13), 1274126177);
-  h ^= h >>> 16;
-  return (h >>> 0) / 4294967296;
-}
-
-function choose(n: number, k: number) {
-  let r = 1;
-  for (let i = 1; i <= k; i++) r = (r * (n - k + i)) / i;
-  return r;
-}
-
-interface Drop {
-  bin: number;
-  slot: number;
-  path: number[];
-  spawn: number;
-}
-
-function buildDrops(count: number, pourLength: number): Drop[] {
-  const denom = 2 ** ROWS;
-  const target = Array.from({ length: BINS }, (_, b) =>
-    Math.round((count * choose(ROWS, b)) / denom),
-  );
-  const diff = count - target.reduce((s, x) => s + x, 0);
-  target[ROWS / 2] += diff;
-  const bins: number[] = [];
-  target.forEach((n, b) => {
-    for (let i = 0; i < n; i++) bins.push(b);
-  });
-  for (let i = bins.length - 1; i > 0; i--) {
-    const j = Math.floor(hash(i, 7) * (i + 1));
-    [bins[i], bins[j]] = [bins[j], bins[i]];
-  }
-  const filled = new Array(BINS).fill(0);
-  return bins.map((bin, i) => {
-    const moves = Array.from({ length: ROWS }, (_, r): number =>
-      r < bin ? 1 : 0,
-    );
-    for (let r = moves.length - 1; r > 0; r--) {
-      const j = Math.floor(hash(i * 31 + r, 13) * (r + 1));
-      [moves[r], moves[j]] = [moves[j], moves[r]];
-    }
-    const path = [0];
-    for (const m of moves) path.push(path[path.length - 1] + (m ? 0.5 : -0.5));
-    return {
-      bin,
-      slot: filled[bin]++,
-      path,
-      spawn: SPAWN0 + (i * pourLength) / Math.max(1, bins.length - 1),
-    };
-  });
-}
 
 function Grain({ opacity }: { opacity: number }) {
   const id = `g${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
@@ -185,30 +143,38 @@ function ScaleLayer({
   );
 }
 
-export function GaltonStack({
-  count = 260,
-  marker = 0.733,
-  label = "95% of renders under 2s",
-  markerLabel = "2s",
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = sans,
-  fontWeight = 400,
-  pourLength = SPAWN_WIN,
-  scale = 1,
-  delay = 0,
-  grain = true,
-  theme = "dark",
-  speed = 1,
-}: GaltonStackProps) {
+export function GaltonStack(props: GaltonStackProps) {
+  const {
+    count = 260,
+    marker = 0.733,
+    label = "95% of renders under 2s",
+    markerLabel = "2s",
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = sans,
+    fontWeight = 400,
+    pourLength = SPAWN_WIN,
+    scale = 1,
+    delay = 0,
+    grain = true,
+    theme = "dark",
+    speed = 1,
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width, height } = useSceneConfig();
+  const { width, height, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    galtonStackTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const u = Math.min(width / 1280, height / 720);
   const p = THEMES[theme];
   const fg = ink ?? p.fg;
-  const n = Math.max(20, Math.min(600, Math.round(count)));
+  const n = ballCount(count);
   const drops = useMemo(() => buildDrops(n, pourLength), [n, pourLength]);
 
   const binP = 52 * u;
@@ -237,9 +203,16 @@ export function GaltonStack({
   });
   const fallDur = (y: number) =>
     5 + Math.sqrt(Math.max(0, y - exitY) / u) * 0.5;
-  const flight = (dr: Drop) => DROP + ROWS * ROW_T + fallDur(slotPos(dr).y);
-  const landEnd = Math.max(...drops.map((dr) => dr.spawn + flight(dr)));
-  const MARK = landEnd + 2;
+  // The finale is scheduled for a 16:9 frame; balls fall further or less in
+  // another shape, and the finale waits for them by the difference.
+  const late = finaleShift(drops, width, height);
+  const at = (id: GaltonStackElementId) => {
+    const e = tl.get(id);
+    return [e.start + late, e.end + late];
+  };
+  const pour = tl.get("pour");
+  const spawnOf = (i: number) =>
+    pour.start + (i * pour.length) / Math.max(1, drops.length - 1);
 
   const boundary = Math.max(1, Math.min(BINS - 1, Math.round(marker * BINS)));
   const markerX = cx + (boundary - BINS / 2) * binP;
@@ -261,17 +234,18 @@ export function GaltonStack({
   const finalCenter = (labelTop + bottomEdge) / 2;
   const shift = height / 2 - finalCenter;
 
-  const fieldIn = interpolate(t, [0, 14], [0, 1], {
+  const fieldEl = tl.get("field");
+  const fieldIn = interpolate(t, [fieldEl.start, fieldEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
-  const fieldOut = interpolate(t, [MARK - 8, MARK + 8], [0, 1], {
+  const fieldOut = interpolate(t, at("field-out"), [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
   const field = fieldIn * (1 - fieldOut);
   const camAt = (f: number) =>
-    interpolate(f, [MARK - 6, MARK + 26], [0, 1], {
+    interpolate(f, at("camera"), [0, 1], {
       ...CLAMP,
       easing: EASE_IO,
     });
@@ -286,19 +260,19 @@ export function GaltonStack({
   // that carries them has stopped.
   const ownTilt = (p: number) => glide(midway(p) && !camMoving);
   const camScale = 1 + 0.05 * cam;
-  const lineIn = interpolate(t, [MARK + 2, MARK + 20], [0, 1], {
+  const lineIn = interpolate(t, at("line"), [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
-  const land = interpolate(t, [MARK + 14, MARK + 34], [0, 1], {
+  const land = interpolate(t, at("hero"), [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
-  const subIn = interpolate(t, [MARK + 22, MARK + 40], [0, 1], {
+  const subIn = interpolate(t, at("sub"), [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
-  const tickIn = interpolate(t, [MARK + 10, MARK + 24], [0, 1], {
+  const tickIn = interpolate(t, at("tick"), [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
@@ -306,7 +280,11 @@ export function GaltonStack({
   const sw = Math.max(1, u);
   const axisL = binX(0) - binP / 2;
   const axisR = binX(ROWS) + binP / 2;
-  const axisIn = interpolate(t, [2, 22], [0, 1], { ...CLAMP, easing: EASE_IO });
+  const axisEl = tl.get("axis");
+  const axisIn = interpolate(t, [axisEl.start, axisEl.end], [0, 1], {
+    ...CLAMP,
+    easing: EASE_IO,
+  });
 
   const pegs: { x: number; y: number }[] = [];
   for (let j = 0; j < ROWS; j++) {
@@ -318,11 +296,19 @@ export function GaltonStack({
   const gid = `limb${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
   const stops = LIMB[theme];
   // The gradient drifts a few percent sideways across the shot, never more.
-  const drift = interpolate(t, [0, 180], [-0.04, 0.04], CLAMP);
+  const driftEl = tl.get("drift");
+  const drift = interpolate(
+    t,
+    [driftEl.start, driftEl.end],
+    [-0.04, 0.04],
+    CLAMP,
+  );
   const heroFill = `linear-gradient(${172 + drift * 60}deg, ${stops[0]} 8%, ${stops[1]} 52%, ${stops[2]} 100%)`;
 
+  const tint = tl.get("tint");
+  const tintAt = tint.start + late;
   const dotsSvg = drops.map((dr, i) => {
-    const lt = t - dr.spawn;
+    const lt = t - spawnOf(i);
     if (lt < 0) return null;
     const end = slotPos(dr);
     let x = cx;
@@ -353,7 +339,10 @@ export function GaltonStack({
     }
     const a = interpolate(
       t,
-      [MARK + 6 + dr.bin * 1.8, MARK + 11 + dr.bin * 1.8],
+      [
+        tintAt + dr.bin * tint.beat("step"),
+        tintAt + tint.beat("fade") + dr.bin * tint.beat("step"),
+      ],
       [0, 1],
       { ...CLAMP, easing: EASE_IO },
     );

@@ -12,6 +12,8 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import { type BeatCountElementId, beatCountTimeline } from "./timeline";
 
 const inter = loadVariableFont("normal", { subsets: ["latin"] });
 
@@ -40,6 +42,12 @@ export interface BeatCountProps {
   delay?: number;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches the entry, single beats and the caption, by
+   * the ids in `./timeline`. Frames on the scene timeline, after `delay` and
+   * `speed`.
+   */
+  timing?: Timing<BeatCountElementId>;
 }
 
 const THEMES = {
@@ -59,9 +67,6 @@ const WGHT = { rest: 200, duck: 500 } as const;
 const TRACK = { rest: -0.045, duck: -0.01 } as const;
 const DUCK = 0.2;
 const LAST_DUCK = 0.3;
-
-const FIRST_BEAT = 12;
-const ENTER_LEN = 10;
 
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
 const CLAMP = {
@@ -157,29 +162,35 @@ function envelope(since: number, release: number) {
   return attack * Math.exp(-Math.max(0, since - 1) / release);
 }
 
-export function BeatCount({
-  value = 64,
-  from = 0,
-  beats = 8,
-  bpm = 120,
-  decimals = 0,
-  prefix = "",
-  suffix = "",
-  label = "cuts, each one landing on the kick",
-  accent,
-  ink,
-  background,
-  fontFamily = inter.fontFamily,
-  fontWeight = WGHT.rest,
-  punch = DUCK,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: BeatCountProps) {
+export function BeatCount(props: BeatCountProps) {
+  const {
+    value = 64,
+    from = 0,
+    decimals = 0,
+    prefix = "",
+    suffix = "",
+    label = "cuts, each one landing on the kick",
+    accent,
+    ink,
+    background,
+    fontFamily = inter.fontFamily,
+    fontWeight = WGHT.rest,
+    punch = DUCK,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H, fps } = useSceneConfig();
+  const { width: W, height: H, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    beatCountTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const c = THEMES[theme];
   const spot = accent ?? c.accent;
   const fg = ink ?? c.ink;
@@ -201,13 +212,15 @@ export function BeatCount({
   const portrait = H > W * 1.1;
   const s = portrait ? W / 1080 : Math.min(W / 1280, H / 720);
 
-  const n = Math.max(1, Math.round(beats));
-  const beatLen = (fps * 60) / Math.max(30, bpm);
-  const lastBeat = FIRST_BEAT + (n - 1) * beatLen;
-  const beatOf = (f: number) =>
-    f < FIRST_BEAT
-      ? -1
-      : Math.min(n - 1, Math.floor((f - FIRST_BEAT) / beatLen));
+  const beatEls = tl.lane("Beats");
+  const n = beatEls.length;
+  const lastBeat = beatEls[n - 1].start;
+  // The beat playing at `f`: the last one started, -1 before the first.
+  const beatOf = (f: number) => {
+    let b = -1;
+    for (let i = 0; i < n; i++) if (f >= beatEls[i].start) b = i;
+    return b;
+  };
   const k = beatOf(t);
 
   const shown = k < 0 ? from : from + ((value - from) * (k + 1)) / n;
@@ -216,7 +229,6 @@ export function BeatCount({
     decimals,
   )}${suffix}`;
 
-  const release = Math.max(2, beatLen * 0.26);
   const duckAt = (f: number) => {
     const b = beatOf(f);
     if (b === n - 1) {
@@ -231,7 +243,7 @@ export function BeatCount({
     }
     return b < 0
       ? 0
-      : envelope(f - (FIRST_BEAT + b * beatLen), release) * punch;
+      : envelope(f - beatEls[b].start, beatEls[b].beat("release")) * punch;
   };
   const d = duckAt(t);
   // The squash decays and springs without a clean end, so the test is on
@@ -253,8 +265,10 @@ export function BeatCount({
   const boxTop = baseY - m.baseline * F;
   const labelFs = (portrait ? 50 : 32) * s;
 
+  const enterEl = tl.get("enter");
+  const labelEl = tl.get("label");
   const enterAt = (f: number) =>
-    interpolate(f, [0, ENTER_LEN], [0, 1], {
+    interpolate(f, [enterEl.start, enterEl.end], [0, 1], {
       ...CLAMP,
       easing: EASE_OUT,
     });
@@ -262,15 +276,10 @@ export function BeatCount({
   // The rise lands a frame before the first beat squashes the figure, so the
   // tilt holds through the landing frame instead of blinking off for it.
   const entering = enter !== enterAt(t - speed) || enter !== enterAt(t + speed);
-  const labelP = interpolate(
-    t,
-    [FIRST_BEAT + beatLen, FIRST_BEAT + beatLen + 16],
-    [0, 1],
-    {
-      ...CLAMP,
-      easing: EASE_OUT,
-    },
-  );
+  const labelP = interpolate(t, [labelEl.start, labelEl.end], [0, 1], {
+    ...CLAMP,
+    easing: EASE_OUT,
+  });
 
   return (
     <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>

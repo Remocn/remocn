@@ -7,6 +7,8 @@ import { useId } from "react";
 import { AbsoluteFill, Easing, interpolate, interpolateColors } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import { type InkBloomElementId, inkBloomTimeline } from "./timeline";
 
 const { fontFamily: serif } = loadFont("normal", {
   weights: ["400"],
@@ -74,6 +76,12 @@ export interface InkBloomProps {
   theme?: "light" | "dark";
   /** Changes the shape of the bloom. */
   seed?: number;
+  /**
+   * Moves, trims or stretches the drop, the bloom, the thinning and the
+   * lockup, by the ids in `./timeline`.
+   * Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<InkBloomElementId>;
 }
 
 const EASE_IO = Easing.bezier(0.65, 0, 0.35, 1);
@@ -108,8 +116,6 @@ const THEMES = {
   },
 } as const;
 
-/** Frame the drop meets the water. */
-const IMPACT = 13;
 /** How far the vortex ring sinks, as a share of the frame height. */
 const SINK = 0.33;
 
@@ -303,34 +309,43 @@ function ScaleLayer({
   );
 }
 
-export function InkBloom({
-  logo,
-  name = "remocn",
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = serif,
-  resolveAt = 100,
-  sink = SINK,
-  scale = 1,
-  delay = 0,
-  grain = true,
-  speed = 1,
-  theme = "light",
-  seed = 3,
-}: InkBloomProps) {
+export function InkBloom(props: InkBloomProps) {
+  const {
+    logo,
+    name = "remocn",
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = serif,
+    sink = SINK,
+    scale = 1,
+    delay = 0,
+    grain = true,
+    speed = 1,
+    theme = "light",
+    seed = 3,
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width, height } = useSceneConfig();
+  const { width, height, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    inkBloomTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const drop = tl.get("drop");
+  const thinning = tl.get("thin");
+  const lockup = tl.get("lockup");
   const u = height / 720;
   const pal = THEMES[theme];
   const fg = ink ?? pal.fg;
-  const late = resolveAt - 100;
   const id = useId().replace(/[^a-zA-Z0-9_-]/g, "");
 
   const ox = width / 2;
   const oy = height * 0.17;
-  const age = t - IMPACT;
+  const age = t - tl.get("bloom").start;
   const puffs = bloom(age, ox, oy, height, seed, sink);
 
   // The noise field evolves: seeds cross-fade, features grow as the ink diffuses.
@@ -342,7 +357,7 @@ export function InkBloom({
   const warp = (60 + 40 * sat(age, 40)) * u;
 
   // resolve: the cloud thins while the lockup condenses from the same turbulence
-  const thin = interpolate(t, [92 + late, 150 + late], [0, 1], {
+  const thin = interpolate(t, [thinning.start, thinning.end], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
@@ -350,7 +365,7 @@ export function InkBloom({
   const envBlur = (3 + 3 * sat(age, 60) + thin * 5) * u;
   const veinK = 0.85;
   const fray = (26 + 14 * sat(age, 40)) * u;
-  const resolve = interpolate(t, [100 + late, 150 + late], [0, 1], {
+  const resolve = interpolate(t, [lockup.start, lockup.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
@@ -358,10 +373,10 @@ export function InkBloom({
   const lockBlur = (1 - resolve) ** 1.5 * 10 * u;
 
   // the drop: accelerates in from above with a short trail of ghosts
-  const fall = interpolate(t, [0, IMPACT], [0, 1], CLAMP);
+  const fall = interpolate(t, [drop.start, drop.end], [0, 1], CLAMP);
   const dropY = interpolate(fall ** 1.7, [0, 1], [10 * u, oy]);
   const stretch = fall * 2;
-  const dropShow = t < IMPACT + 1;
+  const dropShow = t < drop.end + 1;
 
   const soft = `ink${id}`;
   const softA = `inkA${id}`;

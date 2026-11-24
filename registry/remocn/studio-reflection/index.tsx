@@ -8,6 +8,11 @@ import { useId } from "react";
 import { AbsoluteFill, Easing, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  type StudioReflectionElementId,
+  studioReflectionTimeline,
+} from "./timeline";
 
 const exa = loadLexendExa("normal", { weights: ["400"], subsets: ["latin"] });
 const geist = loadGeist("normal", { weights: ["400"], subsets: ["latin"] });
@@ -34,6 +39,12 @@ export interface StudioReflectionProps {
   grain?: boolean;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches the body light, the push, the bands, the
+   * chrome and the caption, by the ids in `./timeline`.
+   * Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<StudioReflectionElementId>;
 }
 
 const WAVES = ["#a9c1df", "#5479b0", "#24467e", "#0f1c38"] as const;
@@ -116,8 +127,6 @@ function Grain({ opacity }: { opacity: number }) {
 type Band = {
   from: number;
   to: number;
-  t0: number;
-  t1: number;
   core: number;
   soft: number;
   peak: number;
@@ -125,14 +134,12 @@ type Band = {
 };
 
 const BANDS: Band[] = [
-  { from: -0.15, to: 1.2, t0: 6, t1: 30, core: 0.008, soft: 0.03, peak: 1 },
-  { from: -0.35, to: 1.35, t0: 12, t1: 46, core: 0.035, soft: 0.16, peak: 0.8 },
-  { from: -0.15, to: 1.2, t0: 22, t1: 48, core: 0.01, soft: 0.04, peak: 0.95 },
+  { from: -0.15, to: 1.2, core: 0.008, soft: 0.03, peak: 1 },
+  { from: -0.35, to: 1.35, core: 0.035, soft: 0.16, peak: 0.8 },
+  { from: -0.15, to: 1.2, core: 0.01, soft: 0.04, peak: 0.95 },
   {
     from: -0.25,
     to: 0.5,
-    t0: 30,
-    t1: 64,
     core: 0.012,
     soft: 0.09,
     peak: 1,
@@ -157,25 +164,37 @@ function ScaleLayer({
   );
 }
 
-export function StudioReflection({
-  value = "250+",
-  label = "launch-ready scenes, one command away",
-  eyebrow = "In the library",
-  accent = "#3B5BFD",
-  ink,
-  shine,
-  background,
-  fontFamily = geist.fontFamily,
-  captionAt = 50,
-  scale = 1,
-  delay = 0,
-  grain = true,
-  speed = 1,
-  theme = "dark",
-}: StudioReflectionProps) {
+export function StudioReflection(props: StudioReflectionProps) {
+  const {
+    value = "250+",
+    label = "launch-ready scenes, one command away",
+    eyebrow = "In the library",
+    accent = "#3B5BFD",
+    ink,
+    shine,
+    background,
+    fontFamily = geist.fontFamily,
+    scale = 1,
+    delay = 0,
+    grain = true,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width, height } = useSceneConfig();
+  const { width, height, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    studioReflectionTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const ambientEl = tl.get("ambient");
+  const pushEl = tl.get("push");
+  const chromeEl = tl.get("chrome");
+  const eyeEl = tl.get("eyebrow");
+  const labelEl = tl.get("label");
   const p = PALETTES[theme];
   const reflect = shine ?? p.reflect;
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
@@ -218,22 +237,22 @@ export function StudioReflection({
   const x0 = width / 2 - valueW / 2 - fs * 0.1;
   const x1 = width / 2 + valueW / 2 + fs * 0.1;
 
-  const ambient = interpolate(frame, [0, 40], [0, 1], {
+  const ambient = interpolate(frame, [ambientEl.start, ambientEl.end], [0, 1], {
     ...CLAMP,
     easing: Easing.bezier(0.5, 0, 0.5, 1),
   });
-  const parked = BANDS[BANDS.length - 1];
-  const chrome = interpolate(frame, [parked.t1 - 16, parked.t1 + 8], [0, 1], {
+  const chrome = interpolate(frame, [chromeEl.start, chromeEl.end], [0, 1], {
     ...CLAMP,
     easing: Easing.bezier(0.4, 0, 0.2, 1),
   });
 
   const bandEls = BANDS.map((b, i) => {
-    const t = interpolate(frame, [b.t0, b.t1], [0, 1], {
+    const el = tl.get(`band:${i}`);
+    const t = interpolate(frame, [el.start, el.end], [0, 1], {
       ...CLAMP,
       easing: b.park ? EASE_PARK : EASE_GLIDE,
     });
-    if (frame < b.t0) return null;
+    if (frame < el.start) return null;
     const life = b.park
       ? 1
       : interpolate(t, [0, 0.08, 0.85, 1], [0, 1, 1, 0], CLAMP);
@@ -263,9 +282,15 @@ export function StudioReflection({
   });
 
   const pushAt = (f: number) =>
-    interpolate(f, [0, 120], [1.06, 1], { ...CLAMP, easing: EASE_OUT });
+    interpolate(f, [pushEl.start, pushEl.end], [1.06, 1], {
+      ...CLAMP,
+      easing: EASE_OUT,
+    });
   const driftAt = (f: number) =>
-    interpolate(f, [0, 120], [10 * s, 0], { ...CLAMP, easing: EASE_OUT });
+    interpolate(f, [pushEl.start, pushEl.end], [10 * s, 0], {
+      ...CLAMP,
+      easing: EASE_OUT,
+    });
   const push = pushAt(frame);
   const drift = driftAt(frame);
   // The push eases out over the whole clip, so it has no clean progress to
@@ -277,11 +302,11 @@ export function StudioReflection({
   const pushing =
     step(frame + 1, frame) > 1e-3 || step(frame, frame - 1) > 1e-3;
 
-  const eyeIn = interpolate(frame, [captionAt, captionAt + 22], [0, 1], {
+  const eyeIn = interpolate(frame, [eyeEl.start, eyeEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
-  const labelIn = interpolate(frame, [captionAt + 6, captionAt + 32], [0, 1], {
+  const labelIn = interpolate(frame, [labelEl.start, labelEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });

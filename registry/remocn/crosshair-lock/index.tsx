@@ -7,6 +7,8 @@ import { useId } from "react";
 import { AbsoluteFill, Easing, interpolate, spring } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import { type CrosshairLockElementId, crosshairLockTimeline } from "./timeline";
 
 const { fontFamily: display } = loadDisplay("normal", {
   weights: ["400", "500"],
@@ -41,6 +43,12 @@ export interface CrosshairLockProps {
   grain?: boolean;
   theme?: "dark" | "light";
   speed?: number;
+  /**
+   * Moves, trims or stretches the axis, the columns, the two hairlines, the
+   * bloom, the lock, the leader line and the callout, by the ids in
+   * `./timeline`. Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<CrosshairLockElementId>;
 }
 
 const CLAMP = {
@@ -50,10 +58,6 @@ const CLAMP = {
 
 const EASE_IO = Easing.bezier(0.65, 0, 0.35, 1);
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
-
-const V_AT = 14;
-const H_AT = 18;
-const SLIDE = 26;
 
 const THEMES = {
   dark: {
@@ -149,33 +153,45 @@ function ScaleLayer({
   );
 }
 
-export function CrosshairLock({
-  x = 0.7,
-  y = 0.94,
-  label = "Peak",
-  value = "2.4k/min",
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = display,
-  fontWeight = 500,
-  slide = SLIDE,
-  scale = 1,
-  delay = 0,
-  grain = true,
-  theme = "dark",
-  speed = 1,
-}: CrosshairLockProps) {
+export function CrosshairLock(props: CrosshairLockProps) {
+  const {
+    x = 0.7,
+    y = 0.94,
+    label = "Peak",
+    value = "2.4k/min",
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = display,
+    fontWeight = 500,
+    scale = 1,
+    delay = 0,
+    grain = true,
+    theme = "dark",
+    speed = 1,
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H, fps } = useSceneConfig();
+  const { width: W, height: H, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    crosshairLockTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const axisEl = tl.get("axis");
+  const columnsEl = tl.get("columns");
+  const vEl = tl.get("vertical");
+  const hEl = tl.get("horizontal");
+  const bloomEl = tl.get("bloom");
+  const lockEl = tl.get("lock");
+  const leadEl = tl.get("leader");
+  const popEl = tl.get("callout");
   const u = Math.min(W / 1280, H / 720);
   const p = THEMES[theme];
   const fg = ink ?? p.fg;
   const stage = background ?? p.bg;
-  const LOCK = H_AT + slide;
-  const LEAD_AT = LOCK + 8;
-  const POP_AT = LEAD_AT + 10;
 
   const left = 0.14 * W;
   const right = 0.9 * W;
@@ -208,26 +224,36 @@ export function CrosshairLock({
   const px = left + peakCol * step;
   const py = bottom - (peakRows - 1) * step;
 
-  const vk = EASE_IO(interpolate(t, [V_AT, V_AT + slide], [0, 1], CLAMP));
-  const hk = EASE_IO(interpolate(t, [H_AT, H_AT + slide], [0, 1], CLAMP));
+  const vk = EASE_IO(interpolate(t, [vEl.start, vEl.end], [0, 1], CLAMP));
+  const hk = EASE_IO(interpolate(t, [hEl.start, hEl.end], [0, 1], CLAMP));
   const fromLeft = fx > 0.5;
   const vStart = fromLeft ? left - 0.07 * W : right + 0.07 * W;
   const vx = vStart + (px - vStart) * vk;
   const hStart = bottom + 0.1 * H;
   const hy = hStart + (py - hStart) * hk;
-  const vOn = interpolate(t, [V_AT, V_AT + 6], [0, 1], CLAMP);
-  const hOn = interpolate(t, [H_AT, H_AT + 6], [0, 1], CLAMP);
+  const vOn = interpolate(
+    t,
+    [vEl.start, vEl.start + vEl.beat("on")],
+    [0, 1],
+    CLAMP,
+  );
+  const hOn = interpolate(
+    t,
+    [hEl.start, hEl.start + hEl.beat("on")],
+    [0, 1],
+    CLAMP,
+  );
 
-  const ring = interpolate(t, [LOCK, LOCK + 20], [0, 1], {
+  const ring = interpolate(t, [lockEl.start, lockEl.end], [0, 1], {
     ...CLAMP,
     easing: Easing.bezier(0.22, 1, 0.36, 1),
   });
   const lock = spring({
-    frame: t - LOCK,
+    frame: t - lockEl.start,
     fps,
     config: { damping: 14, stiffness: 220, mass: 0.6 },
   });
-  const locked = t >= LOCK;
+  const locked = t >= lockEl.start;
 
   const num = parseValue(value);
   const yFrac = Math.max(0, (bottom - hy) / (bottom - py));
@@ -246,10 +272,12 @@ export function CrosshairLock({
   const elbowX = px + dir * diag;
   const endX = elbowX + dir * run;
   const leadLen = Math.SQRT2 * diag + run;
-  const lead = EASE_IO(interpolate(t, [LEAD_AT, LEAD_AT + 14], [0, 1], CLAMP));
+  const lead = EASE_IO(
+    interpolate(t, [leadEl.start, leadEl.end], [0, 1], CLAMP),
+  );
   const popAt = (tt: number) =>
     spring({
-      frame: tt - POP_AT,
+      frame: tt - popEl.start,
       fps,
       config: { damping: 16, stiffness: 200, mass: 0.6 },
     });
@@ -259,10 +287,10 @@ export function CrosshairLock({
   const popMoving =
     Math.abs(popAt(t + speed) - pop) > 1e-6 ||
     Math.abs(pop - popAt(t - speed)) > 1e-6;
-  const popOp = interpolate(t, [POP_AT, POP_AT + 8], [0, 1], CLAMP);
+  const popOp = interpolate(t, [popEl.start, popEl.end], [0, 1], CLAMP);
   const { head, tail } = splitValue(value);
   const gradId = `mesh${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
-  const bloom = interpolate(t, [LOCK - 2, LOCK + 34], [0, 1], {
+  const bloom = interpolate(t, [bloomEl.start, bloomEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
@@ -271,7 +299,10 @@ export function CrosshairLock({
   const dots: React.ReactNode[] = [];
   for (let c = 0; c <= cols; c++) {
     const f = c / cols;
-    const rise = EASE_OUT(interpolate(t, [f * 14, f * 14 + 12], [0, 1], CLAMP));
+    const at = columnsEl.start + f * columnsEl.beat("spread");
+    const rise = EASE_OUT(
+      interpolate(t, [at, at + columnsEl.beat("each")], [0, 1], CLAMP),
+    );
     const isPeak = c === peakCol;
     for (let r = 0; r < heights[c]; r++) {
       const top1 = isPeak && r === heights[c] - 1;
@@ -330,7 +361,7 @@ export function CrosshairLock({
             y2={bottom + 14 * u}
             stroke={p.axis}
             strokeWidth={hair}
-            opacity={interpolate(t, [0, 10], [0, 1], CLAMP)}
+            opacity={interpolate(t, [axisEl.start, axisEl.end], [0, 1], CLAMP)}
           />
           {dots}
           <line

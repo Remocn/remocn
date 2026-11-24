@@ -5,6 +5,8 @@ import type React from "react";
 import { useId } from "react";
 import { AbsoluteFill, Easing, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import { type ScanRevealElementId, scanRevealTimeline } from "./timeline";
 
 const { fontFamily: sans } = loadFont("normal", {
   weights: ["400", "500"],
@@ -48,6 +50,12 @@ export interface ScanRevealProps {
   delay?: number;
   theme?: "dark" | "light";
   speed?: number;
+  /**
+   * Moves, trims or stretches single guides drawing in, the scan line drawing
+   * in, its sweep down and back up, and its parking, by the ids in
+   * `./timeline`. Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<ScanRevealElementId>;
 }
 
 const CLAMP = {
@@ -59,17 +67,6 @@ const CAP = 0.7;
 const XH = 0.4925;
 const DESC = 0.2;
 const BASE = 0.846;
-
-const GUIDE_AT = -10;
-const GUIDE_END = 14;
-const LINE_IN_AT = -2;
-const LINE_IN_END = 12;
-const DOWN_AT = 10;
-const DOWN_END = 66;
-const UP_AT = 71;
-const UP_END = 89;
-const PARK_AT = 89;
-const PARK_END = 107;
 
 const SCAN = Easing.bezier(0.65, 0, 0.35, 1);
 const RISE = Easing.bezier(0.45, 0, 0.12, 1);
@@ -186,27 +183,37 @@ function ScaleLayer({
   );
 }
 
-export function ScanReveal({
-  title = "Built frame by frame",
-  subtitle = "Launch films from components you own.",
-  scan = DOWN_END - DOWN_AT,
-  guides: showGuides = true,
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = sans,
-  grain = true,
-  scale = 1,
-  delay = 0,
-  theme = "dark",
-  speed = 1,
-}: ScanRevealProps) {
+export function ScanReveal(props: ScanRevealProps) {
+  const {
+    title = "Built frame by frame",
+    subtitle = "Launch films from components you own.",
+    guides: showGuides = true,
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = sans,
+    grain = true,
+    scale = 1,
+    delay = 0,
+    theme = "dark",
+    speed = 1,
+    timing,
+  } = props;
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H } = useSceneConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    scanRevealTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const lineEl = tl.get("line");
+  const downEl = tl.get("down");
+  const upEl = tl.get("up");
+  const parkEl = tl.get("park");
   const u = H / 720;
   const c = STAGES[theme];
   const fg = ink ?? c.fg;
-  const late = scan - (DOWN_END - DOWN_AT);
 
   const s = Math.min(150 * u, (0.84 * W) / widthEm(title, TRACK));
   const ss = Math.min(
@@ -229,12 +236,12 @@ export function ScanReveal({
   const y1 = yS + 0.11 * H;
 
   const downAt = (f: number) =>
-    SCAN(interpolate(f, [DOWN_AT, DOWN_END + late], [0, 1], CLAMP));
+    SCAN(interpolate(f, [downEl.start, downEl.end], [0, 1], CLAMP));
   const upAt = (f: number) =>
-    RISE(interpolate(f, [UP_AT + late, UP_END + late], [0, 1], CLAMP));
+    RISE(interpolate(f, [upEl.start, upEl.end], [0, 1], CLAMP));
   const down = downAt(t);
   const up = upAt(t);
-  const goingUp = t >= UP_AT + late;
+  const goingUp = t >= upEl.start;
   const downY = y0 + (y1 - y0) * down;
   const upY = y1 + (yU - y1) * up;
   const lineY = goingUp ? upY : downY;
@@ -243,20 +250,20 @@ export function ScanReveal({
   // pass ends and the travel is a transform, exactly 0 at that end; at rest
   // it keeps the plain layout it always had.
   const lineYAt = (f: number) =>
-    f >= UP_AT + late ? y1 + (yU - y1) * upAt(f) : y0 + (y1 - y0) * downAt(f);
+    f >= upEl.start ? y1 + (yU - y1) * upAt(f) : y0 + (y1 - y0) * downAt(f);
   const lineMoving =
     Math.abs(lineYAt(t + speed) - lineY) > 1 / 64 ||
     Math.abs(lineY - lineYAt(t - speed)) > 1 / 64;
   const lineRest = goingUp ? yU : y1;
   const lineTravel = goingUp ? (y1 - yU) * (1 - up) : (y0 - y1) * (1 - down);
 
-  const lineIn = OUT(interpolate(t, [LINE_IN_AT, LINE_IN_END], [0, 1], CLAMP));
-  const park = PARK(
-    interpolate(t, [PARK_AT + late, PARK_END + late], [0, 1], CLAMP),
-  );
+  const lineIn = OUT(interpolate(t, [lineEl.start, lineEl.end], [0, 1], CLAMP));
+  const park = PARK(interpolate(t, [parkEl.start, parkEl.end], [0, 1], CLAMP));
   const guideFade = 1 - park;
-  const guideIn = (i: number) =>
-    OUT(interpolate(t, [GUIDE_AT + i * 2, GUIDE_END + i * 2], [0, 1], CLAMP));
+  const guideIn = (i: number) => {
+    const guideEl = tl.get(`guide:${i}`);
+    return OUT(interpolate(t, [guideEl.start, guideEl.end], [0, 1], CLAMP));
+  };
 
   const band = 0.42 * s;
   const soft = 0.22 * s;
@@ -309,7 +316,12 @@ export function ScanReveal({
 
   // Silk sheen across the developed title; the bright band slides a few
   // percent over the shot, so the hold never sits perfectly still.
-  const sheen = interpolate(t, [DOWN_AT, PARK_END + late + 40], [0, 1], CLAMP);
+  const sheen = interpolate(
+    t,
+    [downEl.start, parkEl.end + parkEl.beat("tail")],
+    [0, 1],
+    CLAMP,
+  );
   const silk =
     theme === "dark"
       ? `linear-gradient(102deg, ${SILK[1]} ${-6 + 10 * sheen}%, #d9c3e6 ${26 + 10 * sheen}%, ${SILK[2]} ${62 + 8 * sheen}%, #6f6ef2 100%)`

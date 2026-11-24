@@ -5,6 +5,8 @@ import type React from "react";
 import { useId } from "react";
 import { AbsoluteFill, Easing, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import { type FlutedGlassElementId, flutedGlassTimeline } from "./timeline";
 
 const { fontFamily: display } = loadDisplay("normal", {
   weights: ["400"],
@@ -32,6 +34,11 @@ export interface FlutedGlassProps {
   grain?: boolean;
   theme?: "dark" | "light";
   speed?: number;
+  /**
+   * Moves, trims or stretches the orb's drift and the glass sweep, by the ids
+   * in `./timeline`. Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<FlutedGlassElementId>;
 }
 
 const EASE_IO = Easing.bezier(0.65, 0, 0.35, 1);
@@ -137,6 +144,8 @@ function useLayout(title: string): Layout {
 
 function Backdrop({
   t,
+  orbStart,
+  orbEnd,
   title,
   accent,
   L,
@@ -145,6 +154,9 @@ function Backdrop({
   fontFamily,
 }: {
   t: number;
+  /** Frames the orb drifts in between. */
+  orbStart: number;
+  orbEnd: number;
   title: string;
   accent: string;
   p: Palette;
@@ -154,7 +166,7 @@ function Backdrop({
   fontFamily: string;
 }) {
   const { width, height } = useSceneConfig();
-  const drift = EASE_IO(interpolate(t, [0, 62], [0, 1], CLAMP));
+  const drift = EASE_IO(interpolate(t, [orbStart, orbEnd], [0, 1], CLAMP));
   const ox = -width * 0.34 * (1 - drift);
   const oy = Math.sin(drift * Math.PI) * -46 * L.u;
   const angle = 168 + 10 * Math.sin(t / 44);
@@ -227,22 +239,31 @@ function ScaleLayer({
   );
 }
 
-export function FlutedGlass({
-  title = "In focus.",
-  accent = "#3B5BFD",
-  fluteWidth = 26,
-  sweep = 46,
-  ink,
-  background,
-  fontFamily = display,
-  scale = 1,
-  delay = 0,
-  grain = true,
-  theme = "dark",
-  speed = 1,
-}: FlutedGlassProps) {
+export function FlutedGlass(props: FlutedGlassProps) {
+  const {
+    title = "In focus.",
+    accent = "#3B5BFD",
+    fluteWidth = 26,
+    ink,
+    background,
+    fontFamily = display,
+    scale = 1,
+    delay = 0,
+    grain = true,
+    theme = "dark",
+    speed = 1,
+    timing,
+  } = props;
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width, height } = useSceneConfig();
+  const { width, height, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    flutedGlassTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const orb = tl.get("orb");
+  const sweep = tl.get("sweep");
   const p = THEMES[theme];
   const fg = ink ?? p.fg;
   const bg =
@@ -254,7 +275,7 @@ export function FlutedGlass({
   const lens = 0.3;
   const travel = width + 90 * u;
   const slideAt = (f: number) =>
-    EASE_IO(interpolate(f, [66, 66 + sweep], [0, 1], CLAMP)) * travel;
+    EASE_IO(interpolate(f, [sweep.start, sweep.end], [0, 1], CLAMP)) * travel;
   const gx = slideAt(t);
   const vel = (gx - slideAt(t - 1)) / u;
   const smear = interpolate(vel, [8, 40], [0, 5], CLAMP) * u;
@@ -266,7 +287,18 @@ export function FlutedGlass({
   const flutes: number[] = [];
   for (let i = 0; gx + i * fw < width; i++) flutes.push(i);
 
-  const scene = { t, title, accent, p, L, fg, bg, fontFamily };
+  const scene = {
+    t,
+    orbStart: orb.start,
+    orbEnd: orb.end,
+    title,
+    accent,
+    p,
+    L,
+    fg,
+    bg,
+    fontFamily,
+  };
 
   return (
     <AbsoluteFill style={{ background: bg, overflow: "hidden" }}>

@@ -17,6 +17,18 @@ import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  type AiAnswerSourcesElementId,
+  type AnswerUnit,
+  aiAnswerSourcesTimeline,
+  DEFAULT_ANSWER,
+  DEFAULT_QUERY,
+  DEFAULT_RELATED,
+  planAnswer,
+  RATE,
+  TYPE_RATE,
+} from "./timeline";
 
 const geist = loadGeist("normal", {
   weights: ["300", "400"],
@@ -68,6 +80,12 @@ export interface AiAnswerSourcesProps {
   theme?: "light" | "dark";
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
+  /**
+   * Moves, trims or stretches the question, the research steps, each block of
+   * the answer and the citation the pointer opens, by the ids in
+   * `./timeline`. Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<AiAnswerSourcesElementId>;
 }
 
 const DEFAULT_SOURCES: AnswerSource[] = [
@@ -123,32 +141,6 @@ const DEFAULT_SOURCES: AnswerSource[] = [
   { site: "quarry.dev", title: "Device mockups in React", color: "#2D5F8A" },
   { site: "lumen.news", title: "Why demo videos win", color: "#5B5B9A" },
   { site: "orbitly.co", title: "Rendering in CI", color: "#9A3B33" },
-];
-
-const DEFAULT_ANSWER: AnswerBlock[] = [
-  {
-    type: "p",
-    text: "The fastest way is to skip the timeline editor and assemble the video from prebuilt motion components. With **remocn** you install animated scenes into a Remotion project and render them straight from code.[0,1,2] Most solo builders ship a 30-second launch video in a single afternoon.[3]",
-  },
-  { type: "h", text: "A one-afternoon workflow" },
-  {
-    type: "ul",
-    items: [
-      "**Pick your beats.** Hook, product, proof and call to action, one component each.[2]",
-      "**Drop in your UI.** Every scene accepts your screenshots or live React.[4]",
-      "**Render from the terminal.** One command gives you 1080p or 4K, no export dialog.[1,5]",
-    ],
-  },
-  {
-    type: "p",
-    text: "If you already have a landing page, start with a device mockup and a URL-bar call to action; that pair alone covers most launch posts.[0,2,6]",
-  },
-];
-
-const DEFAULT_RELATED = [
-  "How long should a launch video be?",
-  "Which scenes work best for a SaaS demo?",
-  "Can I render launch videos in CI?",
 ];
 
 const LIGHT = {
@@ -215,14 +207,6 @@ function layoutHeight(el: Element) {
         Number.parseFloat(style.paddingBottom);
 }
 
-const TYPE_AT = 10;
-const SUBMIT = 60;
-const THREAD = 64;
-const STEP1 = 76;
-const STEP2 = 94;
-const STEPS_DONE = 120;
-const ANSWER_AT = 132;
-const RATE = 6;
 const STEPS_OPEN = 122;
 const STEPS_SHUT = 32;
 const TILE = 96;
@@ -401,66 +385,8 @@ function Spinner({
   );
 }
 
-type Tok =
-  | { t: "w"; s: string; b: boolean; at: number }
-  | { t: "c"; ids: number[]; at: number };
-
-function tokenize(text: string) {
-  const toks: Tok[] = [];
-  let n = 0;
-  let bold = false;
-  for (const part of text.split(/(\[\d+(?:,\d+)*\])/)) {
-    const m = part.match(/^\[(\d+(?:,\d+)*)\]$/);
-    if (m) {
-      toks.push({ t: "c", ids: m[1].split(",").map(Number), at: n });
-      continue;
-    }
-    part.split("**").forEach((seg, i) => {
-      if (i > 0) bold = !bold;
-      for (const w of seg.match(/\S+\s*|\s+/g) ?? []) {
-        toks.push({ t: "w", s: w, b: bold, at: n });
-        n += w.length;
-      }
-    });
-  }
-  return { toks, len: n };
-}
-
-interface Unit {
-  kind: "p" | "h" | "li";
-  toks: Tok[];
-  len: number;
-  start: number;
-  end: number;
-}
-
-function plan(answer: AnswerBlock[]) {
-  const units: Unit[] = [];
-  let t = ANSWER_AT;
-  const add = (kind: Unit["kind"], text: string) => {
-    const { toks, len } = tokenize(text);
-    const end = t + len / RATE;
-    units.push({ kind, toks, len, start: t, end });
-    t = end + (kind === "h" ? 2 : 5);
-  };
-  for (const b of answer) {
-    if (b.type === "ul") for (const it of b.items) add("li", it);
-    else add(b.type, b.text);
-  }
-  let hover = { u: -1, k: -1, from: 0 };
-  units.forEach((u, ui) => {
-    let prev = -1;
-    u.toks.forEach((tk, k) => {
-      if (tk.t !== "c") return;
-      hover = { u: ui, k, from: prev + 1 };
-      prev = k;
-    });
-  });
-  return { units, end: t, hover };
-}
-
 export const AI_ANSWER_SOURCES_DURATION =
-  Math.ceil(plan(DEFAULT_ANSWER).end) + 150;
+  Math.ceil(planAnswer(DEFAULT_ANSWER).end) + 150;
 
 function tint(color: string, alpha: number, fallback: string) {
   if (!/^#[0-9a-f]{6}$/i.test(color)) return fallback;
@@ -468,6 +394,12 @@ function tint(color: string, alpha: number, fallback: string) {
     .toString(16)
     .padStart(2, "0");
   return `${color}${a}`;
+}
+
+/** An answer unit as it streams in now: chars per frame, and when it settles. */
+interface StreamUnit extends AnswerUnit {
+  rate: number;
+  settle: number;
 }
 
 function arc(
@@ -644,29 +576,37 @@ function ScaleLayer({
   );
 }
 
-export function AiAnswerSources({
-  query = "What is the fastest way to make a launch video?",
-  sources = DEFAULT_SOURCES,
-  answer = DEFAULT_ANSWER,
-  related = DEFAULT_RELATED,
-  brand = "sift",
-  placeholder = "Ask anything",
-  followUpPlaceholder = "Ask a follow-up",
-  searchLabel = "Searching the web",
-  accent = "#20808D",
-  ink,
-  background,
-  fontFamily = sans,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "light",
-  ground,
-  groundParams,
-}: AiAnswerSourcesProps) {
+export function AiAnswerSources(props: AiAnswerSourcesProps) {
+  const {
+    query = DEFAULT_QUERY,
+    sources = DEFAULT_SOURCES,
+    answer = DEFAULT_ANSWER,
+    related = DEFAULT_RELATED,
+    brand = "sift",
+    placeholder = "Ask anything",
+    followUpPlaceholder = "Ask a follow-up",
+    searchLabel = "Searching the web",
+    accent = "#20808D",
+    ink,
+    background,
+    fontFamily = sans,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "light",
+    ground,
+    groundParams,
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay);
-  const { fps, width, height } = useSceneConfig();
+  const { fps, width, height, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    aiAnswerSourcesTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const f = frame * speed;
   const dark = theme === "dark";
   const base = dark ? DARK : LIGHT;
@@ -696,7 +636,25 @@ export function AiAnswerSources({
   const easeAt = (g: number, a: number, b: number, e = ENTER) =>
     interpolate(g, [a, b], [0, 1], { ...CL, easing: e });
   const ease = (a: number, b: number, e = ENTER) => easeAt(f, a, b, e);
-  const winMoving = springing(0, 48, HEAVY);
+  const appEl = tl.get("app");
+  const typeEl = tl.get("type");
+  const cursorEl = tl.get("cursor");
+  const submitEl = tl.get("submit");
+  const threadEl = tl.get("thread");
+  const searchEl = tl.get("search");
+  const readEl = tl.get("read");
+  const reviewEl = tl.get("review");
+  const actionsEl = tl.get("actions");
+  const barEl = tl.get("bar");
+  const relatedEl = tl.get("related");
+  const hoverEl = tl.get("hover");
+  const clickEl = tl.get("click");
+  const panelEl = tl.get("panel");
+  const SUBMIT = submitEl.start;
+  const THREAD = threadEl.start;
+  const STEP1 = searchEl.start;
+  const STEP2 = readEl.start;
+  const winMoving = springing(appEl.start, 48, HEAVY);
   // One tilt per chain: `carried` is set where an ancestor already tilts.
   const enter = (
     at: number,
@@ -717,29 +675,65 @@ export function AiAnswerSources({
         spring({ frame: f - at, fps, config: CHIP }),
     );
 
-  const { units, end, hover } = plan(answer);
-  const ACTIONS = end + 4;
-  const RELATED = end + 10;
-  const BAR = end + 8;
-  const HOVER = end + 34;
-  const CARD_AT = HOVER + 22;
-  const CLICK = HOVER + 50;
-  const PANEL_AT = CLICK + 2;
+  const { units: planned, hover } = planAnswer(answer);
+  const units: StreamUnit[] = planned.map((u, i) => {
+    const e = tl.get(`unit:${i}`);
+    return {
+      ...u,
+      start: e.start,
+      end: e.end,
+      rate: RATE / e.beat("stream"),
+      settle: e.beat("settle"),
+    };
+  });
+  const ACTIONS = actionsEl.start;
+  const RELATED = relatedEl.start;
+  const BAR = barEl.start;
+  const HOVER = hoverEl.start;
+  const CARD_AT = HOVER + hoverEl.beat("card");
+  const CLICK = clickEl.start;
+  const PANEL_AT = panelEl.start;
 
-  const typed = Math.floor(Math.max(0, (f - TYPE_AT) * 1.5));
+  const typed = Math.floor(
+    Math.max(0, (f - typeEl.start) * (TYPE_RATE / typeEl.beat("stream"))),
+  );
   const shown = query.slice(0, typed);
-  const home = 1 - ease(SUBMIT + 1, SUBMIT + 7, EXIT);
-  const threadIn = ease(SUBMIT + 2, SUBMIT + 12);
+  const home =
+    1 -
+    ease(
+      SUBMIT + submitEl.beat("homeAt"),
+      SUBMIT + submitEl.beat("homeEnd"),
+      EXIT,
+    );
+  const threadIn = ease(
+    SUBMIT + submitEl.beat("threadAt"),
+    SUBMIT + submitEl.beat("threadEnd"),
+  );
   const press = click(SUBMIT);
   const inputTop = AH * 0.4;
   const inputH = 128;
   const sendPt: [number, number] = [COL_X + COL - 34, inputTop + inputH - 32];
   const homeCur = {
-    ...arc(Math.min(1, sp(30, GLIDE)), [AW * 0.78, AH * 0.94], sendPt, -80),
-    o: interpolate(f, [30, 36, SUBMIT + 4, SUBMIT + 8], [0, 1, 1, 0], CL),
+    ...arc(
+      Math.min(1, sp(cursorEl.start, GLIDE)),
+      [AW * 0.78, AH * 0.94],
+      sendPt,
+      -80,
+    ),
+    o: interpolate(
+      f,
+      [
+        cursorEl.start,
+        cursorEl.start + cursorEl.beat("fadeIn"),
+        SUBMIT + submitEl.beat("cursorOut"),
+        SUBMIT + submitEl.beat("cursorGone"),
+      ],
+      [0, 1, 1, 0],
+      CL,
+    ),
   };
 
-  const stepsCollapse = sp(STEPS_DONE + 2, MORPH);
+  const stepsCollapse = sp(reviewEl.start + reviewEl.beat("collapse"), MORPH);
   const panel = sp(PANEL_AT, HEAVY);
   // Layout rounds a box and a baseline to whole pixels, so a column eased by
   // `left` clicks sideways. Once the panel starts, layout holds each piece
@@ -748,14 +742,20 @@ export function AiAnswerSources({
   const slide = (d: number) => (slid ? settle((1 - panel) * d) : 0);
   const slideX = (d: number) =>
     slide(d) ? `translateX(${slide(d)}px)` : undefined;
-  const hoverOn = f >= HOVER + 20;
+  const hoverOn = f >= HOVER + hoverEl.beat("lit");
   const card = sp(CARD_AT, CARD);
-  const cardOut = 1 - ease(CLICK, CLICK + 6, EXIT);
+  const cardOut = 1 - ease(CLICK, CLICK + clickEl.beat("cardOut"), EXIT);
   const cardMoving =
     // Vertical travel: 10px of rise plus the scale over its ~130px height.
     springing(CARD_AT, 10 + 0.08 * 130) ||
-    stirs((g) => easeAt(g, CLICK, CLICK + 6, EXIT) * 4, f);
-  const mark = ease(HOVER + 18, HOVER + 26);
+    stirs(
+      (g) => easeAt(g, CLICK, CLICK + clickEl.beat("cardOut"), EXIT) * 4,
+      f,
+    );
+  const mark = ease(
+    HOVER + hoverEl.beat("markAt"),
+    HOVER + hoverEl.beat("markEnd"),
+  );
   const citePress = click(CLICK);
   const hoverIds =
     hover.u >= 0
@@ -763,17 +763,17 @@ export function AiAnswerSources({
       : [0, 1, 2];
   const relCur = {
     ...arc(Math.min(1.02, sp(HOVER, GLIDE)), [300, 170], [34, 14], 60),
-    o: ease(HOVER, HOVER + 6),
+    o: ease(HOVER, HOVER + hoverEl.beat("fadeIn")),
   };
   const relRest = { x: 34, y: 14 };
 
   const bodySize = 19;
-  const cplFor = (kind: Unit["kind"]) =>
+  const cplFor = (kind: AnswerUnit["kind"]) =>
     Math.floor((kind === "li" ? COL - 28 : COL) / (bodySize * 0.46));
   /** Height a unit of the answer is allowed while it streams in. */
-  const unitRoom = (u: Unit, g: number) =>
+  const unitRoom = (u: StreamUnit, g: number) =>
     (u.kind === "h" ? 34 : 30) *
-      (1 + Math.min((g - u.start) * RATE, u.len) / cplFor(u.kind)) +
+      (1 + Math.min((g - u.start) * u.rate, u.len) / cplFor(u.kind)) +
     16;
 
   // The thread sticks to its bottom edge, so a block that opens pushes every
@@ -837,7 +837,7 @@ export function AiAnswerSources({
   const natural = (key: string) => heights[key] ?? 0;
   const stepsHeight = (g: number) =>
     interpolate(
-      spAt(g, STEPS_DONE + 2, MORPH),
+      spAt(g, reviewEl.start + reviewEl.beat("collapse"), MORPH),
       [0, 1],
       [g >= STEP1 ? STEPS_OPEN : 0, STEPS_SHUT],
     );
@@ -847,14 +847,14 @@ export function AiAnswerSources({
   const hiddenAt: ((g: number) => number)[] = [
     (g) => STEPS_OPEN - stepsHeight(g),
     (g) => {
-      const v = spAt(g, STEP2 + 6, MORPH);
+      const v = spAt(g, STEP2 + readEl.beat("tilesOpen"), MORPH);
       return (
         TILE - Math.min(TILE, TILES_ROOM * v) + TILES_GAP * (1 - Math.min(1, v))
       );
     },
     ...units.map(
       (u, ui) => (g: number) =>
-        g <= u.start || g > u.end + 8
+        g <= u.start || g > u.end + u.settle
           ? 0
           : Math.max(0, natural(`u${ui}`) - unitRoom(u, g)),
     ),
@@ -899,11 +899,11 @@ export function AiAnswerSources({
   const cut = (i: number): React.CSSProperties =>
     hidden[i] > 1e-3 ? { clipPath: `inset(0 0 ${hidden[i]}px 0)` } : {};
 
-  const renderUnit = (u: Unit, ui: number) => {
-    const r = (f - u.start) * RATE;
+  const renderUnit = (u: StreamUnit, ui: number) => {
+    const r = (f - u.start) * u.rate;
     if (r <= 0) return null;
     const lh = u.kind === "h" ? 34 : 30;
-    const done = f > u.end + 8;
+    const done = f > u.end + u.settle;
     const row = UNITS + ui;
     return (
       <div
@@ -970,7 +970,7 @@ export function AiAnswerSources({
                   </span>
                 );
               }
-              const popAt = u.start + tk.at / RATE + 1;
+              const popAt = u.start + tk.at / u.rate + 1;
               const isHover = ui === hover.u && k === hover.k;
               return (
                 <CitePill
@@ -1111,8 +1111,8 @@ export function AiAnswerSources({
               boxShadow: c.window,
               color: c.ink,
               WebkitFontSmoothing: "antialiased",
-              opacity: ease(0, 12),
-              transform: `translateY(${(1 - sp(0, HEAVY)) * 48}px) scale(${0.96 + 0.04 * sp(0, HEAVY)})${glide(winMoving)}`,
+              opacity: ease(appEl.start, appEl.end),
+              transform: `translateY(${(1 - sp(appEl.start, HEAVY)) * 48}px) scale(${0.96 + 0.04 * sp(appEl.start, HEAVY)})${glide(winMoving)}`,
             }}
           >
             {home > 0 ? (
@@ -1413,22 +1413,38 @@ export function AiAnswerSources({
                       }}
                     >
                       <div style={{ opacity: 1 - stepsCollapse }}>
-                        {stepRow(STEP1, STEP2 - 2, searchLabel, [
-                          queryChip("fastest launch video workflow", STEP1 + 4),
-                          portrait
-                            ? null
-                            : queryChip("remotion launch templates", STEP1 + 9),
-                        ])}
+                        {stepRow(
+                          STEP1,
+                          STEP1 + searchEl.beat("done"),
+                          searchLabel,
+                          [
+                            queryChip(
+                              "fastest launch video workflow",
+                              STEP1 + searchEl.beat("chip1"),
+                            ),
+                            portrait
+                              ? null
+                              : queryChip(
+                                  "remotion launch templates",
+                                  STEP1 + searchEl.beat("chip2"),
+                                ),
+                          ],
+                        )}
                         {stepRow(
                           STEP2,
-                          STEPS_DONE,
+                          readEl.end,
                           `Reading ${sources.length} sources`,
                           [
                             <div
                               key="fav"
                               style={{
                                 display: "flex",
-                                ...enter(STEP2 + 4, 6, CHIP, lifted(0)),
+                                ...enter(
+                                  STEP2 + readEl.beat("favs"),
+                                  6,
+                                  CHIP,
+                                  lifted(0),
+                                ),
                               }}
                             >
                               {sources.slice(0, 6).map((src, i) => (
@@ -1479,7 +1495,12 @@ export function AiAnswerSources({
                       }}
                     >
                       {[...sources.slice(0, tiles), null].map((src, i) => {
-                        const v = sp(STEP2 + 8 + i * 4, CARD);
+                        const v = sp(
+                          STEP2 +
+                            readEl.beat("tiles") +
+                            i * readEl.beat("tileStagger"),
+                          CARD,
+                        );
                         return (
                           <div
                             key={src ? `${src.site}${i}` : "more"}
@@ -1652,7 +1673,9 @@ export function AiAnswerSources({
                               fontSize: 17,
                               color: c.body,
                               ...enter(
-                                RELATED + 4 + i * 4,
+                                RELATED +
+                                  relatedEl.beat("rows") +
+                                  i * relatedEl.beat("rowStagger"),
                                 10,
                                 CARD,
                                 lifted(RELATED_ROW),
@@ -1795,7 +1818,12 @@ export function AiAnswerSources({
                         style={{
                           padding: "16px 0",
                           boxShadow: i ? `inset 0 1px 0 ${c.hair}` : "none",
-                          ...enter(PANEL_AT + 6 + i * 4, 14),
+                          ...enter(
+                            PANEL_AT +
+                              panelEl.beat("rows") +
+                              i * panelEl.beat("rowStagger"),
+                            14,
+                          ),
                         }}
                       >
                         <div

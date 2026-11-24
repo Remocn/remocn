@@ -4,6 +4,13 @@ import type { ReactNode } from "react";
 import { Easing } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import {
+  type ResolvedTimeline,
+  resolve,
+  type Timing,
+  useTimeline,
+} from "@/lib/remocn/timeline";
+import { type CursorGravityElementId, cursorGravityTimeline } from "./timeline";
 
 export interface CursorGravityProps {
   /** Custom content in a 300 × 88 reference-pixel slot. */
@@ -17,6 +24,12 @@ export interface CursorGravityProps {
   backgroundColor?: string;
   speed?: number;
   className?: string;
+  /**
+   * Moves, trims or stretches the cursor's entry, approach, each tug, the
+   * release, the wobble, the let-go and the exit, by the ids in `./timeline`.
+   * Frames on the scene timeline, after `speed`.
+   */
+  timing?: Timing<CursorGravityElementId>;
 }
 
 export const cursorGravityLength = 151;
@@ -29,6 +42,9 @@ const progress = (frame: number, start: number, end: number) =>
   clamp((frame - start) / (end - start));
 const ease = Easing.bezier(0.65, 0, 0.35, 1);
 const pullEase = Easing.bezier(0.12, 0.8, 0.22, 1);
+/** The schedule without `timing`, for poses read outside the component. */
+const DEFAULT_TIMELINE = resolve(cursorGravityTimeline({}, { length: 0 }));
+type GravityTimeline = ResolvedTimeline<CursorGravityElementId>;
 
 /** Complete transition plus a one-second hold, in frames at 30 fps. */
 export function getCursorGravityDuration({
@@ -39,16 +55,22 @@ export function getCursorGravityDuration({
 }
 
 /** A pull advances sharply, pauses under load, then recoils before the next tug. */
-function pullDistance(t: number, strength: number) {
+function pullDistance(t: number, strength: number, tl: GravityTimeline) {
+  const a = tl.get("tug:0");
+  const b = tl.get("tug:1");
+  const c = tl.get("tug:2");
+  // A tug moved later holds the load of the one before until it starts.
   const keys = [
-    [48, 0],
-    [59, 116],
-    [64, 116],
-    [70, 116 - 30 * strength],
-    [83, 292],
-    [87, 292],
-    [94, 292 - 42 * strength],
-    [112, 772],
+    [a.start, 0],
+    [a.start + a.beat("grab"), 116],
+    [a.start + a.beat("hold"), 116],
+    [a.end, 116 - 30 * strength],
+    ...(b.start !== a.end ? [[b.start, 116 - 30 * strength]] : []),
+    [b.start + b.beat("grab"), 292],
+    [b.start + b.beat("hold"), 292],
+    [b.end, 292 - 42 * strength],
+    ...(c.start !== b.end ? [[c.start, 292 - 42 * strength]] : []),
+    [c.end, 772],
   ];
   if (t <= keys[0][0]) return 0;
   for (let i = 1; i < keys.length; i++) {
@@ -67,8 +89,24 @@ export function getCursorGravityState(
     width = 1280,
     height = 720,
     tension = 1,
-  }: { width?: number; height?: number; tension?: number } = {},
+    timeline: tl = DEFAULT_TIMELINE,
+  }: {
+    width?: number;
+    height?: number;
+    tension?: number;
+    /** The resolved schedule; the one without `timing` by default. */
+    timeline?: GravityTimeline;
+  } = {},
 ) {
+  const enter = tl.get("enter");
+  const approachEl = tl.get("approach");
+  const tug0 = tl.get("tug:0");
+  const tug1 = tl.get("tug:1");
+  const tug2 = tl.get("tug:2");
+  const releaseEl = tl.get("release");
+  const wobbleEl = tl.get("wobble");
+  const letgo = tl.get("letgo");
+  const leaveEl = tl.get("leave");
   const w = Math.max(1, finite(width, 1280));
   const h = Math.max(1, finite(height, 720));
   const unit = Math.min(w / 1280, h / 720);
@@ -78,56 +116,71 @@ export function getCursorGravityState(
   const finalLeft = w / 2 - 150 * unit;
   const finalRight = w / 2 + 150 * unit;
   const edgeTip = w - 24 * unit;
-  const distance = pullDistance(t, strength) / 772;
+  const distance = pullDistance(t, strength, tl) / 772;
   const extraction = distance * (edgeTip - (finalLeft - 14 * unit));
   // The back of the button resists the first two tugs beyond the frame edge.
-  const releaseTime = progress(t, 94, 132);
+  const releaseTime = progress(t, releaseEl.start, releaseEl.end);
   // Closed-form damped spring stays continuous at fractional frames too.
   const springRelease =
     1 -
     Math.exp(-7 * releaseTime) *
       (Math.cos(10 * releaseTime) + 0.7 * Math.sin(10 * releaseTime));
-  const release = mix(springRelease, 1, ease(progress(t, 122, 132)));
+  const release = mix(
+    springRelease,
+    1,
+    ease(
+      progress(t, releaseEl.start + releaseEl.beat("settleAt"), releaseEl.end),
+    ),
+  );
   const front = mix(w + 12 * unit, finalLeft, distance);
   const right = mix(w + 312 * unit - distance * 70 * unit, finalRight, release);
   const buttonWidth = Math.max(220 * unit, right - front);
   const strain = clamp((buttonWidth / (300 * unit) - 1) / 1.3) * strength;
+  const w0 = wobbleEl.start;
   const wobble =
-    t < 112
+    t < w0
       ? 0
-      : Math.sin((t - 112) * 0.48) *
-        Math.exp(-(t - 112) * 0.14) *
+      : Math.sin((t - w0) * 0.48) *
+        Math.exp(-(t - w0) * 0.14) *
         5 *
         unit *
         strength *
-        (1 - progress(t, 132, 140));
+        (1 - progress(t, w0 + wobbleEl.beat("fadeAt"), wobbleEl.end));
   const y = centerY + wobble;
-  const entry = ease(progress(t, 10, 39));
-  const approach = ease(progress(t, 39, 48));
-  const leave = ease(progress(t, 127, 151));
+  const entry = ease(progress(t, enter.start, enter.end));
+  const approach = ease(progress(t, approachEl.start, approachEl.end));
+  const leave = ease(progress(t, leaveEl.start, leaveEl.end));
+  const entered = enter.end;
+  const arrived = approachEl.end;
   const holdTip = mix(w * 0.28, edgeTip - 80 * unit, entry);
   const pullTip = edgeTip - extraction;
   const cursorX =
-    t < 48 ? mix(holdTip, edgeTip, approach) : mix(pullTip, w * 0.25, leave);
+    t < arrived
+      ? mix(holdTip, edgeTip, approach)
+      : mix(pullTip, w * 0.25, leave);
   const cursorY =
-    t < 39
+    t < entered
       ? mix(h + 110 * unit, centerY + 70 * unit, entry)
-      : t < 48
+      : t < arrived
         ? mix(centerY + 70 * unit, centerY, approach)
         : mix(centerY, h + 110 * unit, leave);
   // Triangle points toward the edge while pulling; turns toward its exit afterward.
-  const cursorAngle = t < 48 ? mix(-32, 0, approach) : mix(0, 115, leave);
+  const cursorAngle = t < arrived ? mix(-32, 0, approach) : mix(0, 115, leave);
   const effortPulse = (
     start: number,
     peak: number,
     hold: number,
     end: number,
   ) => ease(progress(t, start, peak)) * (1 - ease(progress(t, hold, end)));
+  const pulseOf = (e: typeof tug0) =>
+    effortPulse(
+      e.start,
+      e.start + e.beat("peak"),
+      e.start + e.beat("ease"),
+      e.start + e.beat("relax"),
+    );
   const cursorEffort =
-    strength *
-    (0.8 * effortPulse(48, 58, 64, 70) +
-      effortPulse(70, 81, 87, 94) +
-      1.15 * effortPulse(94, 100, 104, 118));
+    strength * (0.8 * pulseOf(tug0) + pulseOf(tug1) + 1.15 * pulseOf(tug2));
   return {
     frame: t,
     unit,
@@ -142,8 +195,14 @@ export function getCursorGravityState(
     cursorY,
     cursorAngle,
     cursorEffort,
-    attached: t >= 48 && t <= 121,
-    tetherOpacity: progress(t, 46, 49) * (1 - progress(t, 115, 122)),
+    attached: t >= tug0.start && t <= letgo.start + letgo.beat("detach"),
+    tetherOpacity:
+      progress(
+        t,
+        tug0.start + tug0.beat("tetherAt"),
+        tug0.start + tug0.beat("tether"),
+      ) *
+      (1 - progress(t, letgo.start, letgo.end)),
   };
 }
 
@@ -179,25 +238,38 @@ export function getGravityButtonPath(
     Q 0 ${a} 0 ${a - r} L 0 ${-a + r} Q 0 ${-a} ${r} ${-a} Z`;
 }
 
-export function CursorGravity({
-  children,
-  label = "Create something",
-  tension = 1,
-  cursorColor = "#fffaf0",
-  color = "#fffaf0",
-  textColor = "#32153c",
-  backgroundColor = "#a800b7",
-  speed = 1,
-  className,
-}: CursorGravityProps) {
+export function CursorGravity(props: CursorGravityProps) {
+  const {
+    children,
+    label = "Create something",
+    tension = 1,
+    cursorColor = "#fffaf0",
+    color = "#fffaf0",
+    textColor = "#32153c",
+    backgroundColor = "#a800b7",
+    speed = 1,
+    className,
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = useSceneFrame();
-  const { width, height, fps } = useSceneConfig();
+  const { width, height, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    cursorGravityTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const step = (30 / fps) * Math.max(0, finite(speed, 1));
   const t = frame * step;
   // Content travels with the material, without stretching the lettering.
   const contentAt = (tt: number) => {
-    const s = getCursorGravityState(tt, { width, height, tension });
+    const s = getCursorGravityState(tt, {
+      width,
+      height,
+      tension,
+      timeline: tl,
+    });
     const cu = s.unit * Math.min(1, s.buttonWidth / (300 * s.unit));
     return { s, cu, x: s.front + s.buttonWidth - 150 * cu, y: s.centerY };
   };

@@ -13,6 +13,14 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_TITLE,
+  DOTLESS,
+  type TittleDropElementId,
+  tittleDropTimeline,
+  wordIndices,
+} from "./timeline";
 
 const face = loadFont("normal", {
   weights: ["400"],
@@ -43,6 +51,12 @@ export interface TittleDropProps {
   delay?: number;
   theme?: "dark" | "light";
   speed?: number;
+  /**
+   * Moves, trims or stretches the bubble, its rise, the words setting in,
+   * each dot's hop and the subline, by the ids in `./timeline`. Frames on
+   * the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<TittleDropElementId>;
 }
 
 const THEMES = {
@@ -53,22 +67,10 @@ const THEMES = {
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
 const EASE_IN_OUT = Easing.bezier(0.65, 0, 0.35, 1);
 
-// Beats, in frames at 30fps (before `speed`).
-const BUBBLE_IN = 0;
-const RISE = 30;
-const RISE_LEN = 30;
-const SET = 34;
-const WORD_STAGGER = 5;
-const SET_LEN = 24;
-const HOP0 = 72;
-const HOP_GAP = 12;
-const HOP_LEN = 17;
-const SHIFT_LEN = 9;
 /** The bubble is this much larger while it is alone on the stage. */
 const SOLO_SCALE = 2.3;
 /** Bubble scale once it waits above the line. */
 const REST_SCALE = 1.3;
-const DOTLESS: Record<string, string> = { i: "ı", j: "ȷ" };
 
 interface Ink {
   left: number;
@@ -198,24 +200,32 @@ function ScaleLayer({
   );
 }
 
-export function TittleDrop({
-  title = "Ship it in minutes.",
-  subline = "Launch videos from ready-made Remotion components.",
-  accentDot = -1,
-  stagger = WORD_STAGGER,
-  hopGap = HOP_GAP,
-  accent = "#3B5BFD",
-  ink: inkColor,
-  background,
-  fontFamily = face.fontFamily,
-  scale = 1,
-  delay = 0,
-  theme = "light",
-  speed = 1,
-}: TittleDropProps) {
+export function TittleDrop(props: TittleDropProps) {
+  const {
+    title = DEFAULT_TITLE,
+    subline = "Launch videos from ready-made Remotion components.",
+    accentDot = -1,
+    accent = "#3B5BFD",
+    ink: inkColor,
+    background,
+    fontFamily = face.fontFamily,
+    scale = 1,
+    delay = 0,
+    theme = "light",
+    speed = 1,
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width, height } = useSceneConfig();
+  const { width, height, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    tittleDropTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const bubbleEl = tl.get("bubble");
+  const riseEl = tl.get("rise");
   const t = THEMES[theme];
   const fg = inkColor ?? t.fg;
   const stage =
@@ -225,10 +235,7 @@ export function TittleDrop({
   const subSize = Math.round(width * 0.0165);
   const chars = Array.from(title);
   const hasStop = chars.at(-1) === ".";
-  const wordOf: number[] = [];
-  chars.forEach((ch, i) => {
-    wordOf.push((wordOf[i - 1] ?? 0) + (ch === " " ? 1 : 0));
-  });
+  const wordOf = wordIndices(chars);
 
   const rowRef = useRef<HTMLDivElement>(null);
   const glyphRefs = useRef<(HTMLSpanElement | null)[]>([]);
@@ -300,17 +307,20 @@ export function TittleDrop({
   const d = layout?.dot ?? fontSize * 0.12;
   const accentIndex = n === 0 ? -1 : ((accentDot % n) + n) % n;
 
-  const hopStart = (k: number) => HOP0 + k * hopGap;
+  // One element per dot the line asks for, in order; a glyph whose ink
+  // couldn't be measured drops out of `targets`, and the last element goes
+  // unused.
+  const dotEls = targets.map((_, k) => tl.get(`dot:${k}`));
 
   // The whole bubble-and-dots geometry is a function of the frame, so a dot
   // can be compared with its neighbouring frames to tell motion from rest.
   const geometry = (f: number) => {
     // The bubble: in, alone and large, then up to its place above the line.
-    const bubbleIn = interpolate(f, [BUBBLE_IN, BUBBLE_IN + 16], [0, 1], {
+    const bubbleIn = interpolate(f, [bubbleEl.start, bubbleEl.end], [0, 1], {
       ...clamp,
       easing: EASE_OUT,
     });
-    const rise = interpolate(f, [RISE, RISE + RISE_LEN], [0, 1], {
+    const rise = interpolate(f, [riseEl.start, riseEl.end], [0, 1], {
       ...clamp,
       easing: EASE_IN_OUT,
     });
@@ -326,9 +336,11 @@ export function TittleDrop({
     // forward and a new one surfaces at the back until the line is dotted.
     let departed = 0;
     for (let k = 0; k < n; k++) {
+      const e = dotEls[k];
+      const shiftAt = e.start + e.beat("shift");
       departed += interpolate(
         f,
-        [hopStart(k) + 2, hopStart(k) + 2 + SHIFT_LEN],
+        [shiftAt, shiftAt + e.beat("shiftLen")],
         [0, 1],
         { ...clamp, easing: EASE_IN_OUT },
       );
@@ -350,12 +362,10 @@ export function TittleDrop({
       return u < 13 ? Math.sin((u / 13) * Math.PI) : 0;
     };
 
-    let lastLand = HOP0;
-    if (n > 0) lastLand = hopStart(n - 1) + HOP_LEN;
-
     const dots = targets.map((target, k) => {
-      const start = hopStart(k);
-      const land = start + HOP_LEN;
+      const e = dotEls[k];
+      const start = e.start;
+      const land = e.end;
       const isAccent = k === accentIndex;
       const ink = isAccent ? accent : fg;
       if (f < start) {
@@ -363,7 +373,12 @@ export function TittleDrop({
         if (slot > 3) return null;
         const show = interpolate(slot, [2, 3], [1, 0], clamp);
         const b = bounce(Math.round(slot));
-        const pre = interpolate(f, [start - 3, start], [0, 1], clamp);
+        const pre = interpolate(
+          f,
+          [start + e.beat("pre"), start],
+          [0, 1],
+          clamp,
+        );
         return {
           key: k,
           x: slotX(slot),
@@ -406,7 +421,6 @@ export function TittleDrop({
       bubbleH,
       bubbleOpacity,
       bubbleK,
-      lastLand,
       dots,
     };
   };
@@ -418,7 +432,6 @@ export function TittleDrop({
     bubbleH,
     bubbleOpacity,
     bubbleK,
-    lastLand,
     dots,
   } = geometry(frame);
   const prevDots = geometry(frame - 1).dots;
@@ -442,23 +455,27 @@ export function TittleDrop({
   const dip = (glyph: number, f: number) => {
     const k = targets.findIndex((x) => x.glyph === glyph);
     if (k < 0) return 0;
-    const dt = f - (hopStart(k) + HOP_LEN);
-    if (dt < 0 || dt > 9) return 0;
-    return Math.sin((dt / 9) * Math.PI) * fontSize * 0.028;
+    const e = dotEls[k];
+    const give = e.beat("give");
+    const dt = f - e.end;
+    if (dt < 0 || dt > give) return 0;
+    return Math.sin((dt / give) * Math.PI) * fontSize * 0.028;
   };
-  const setIn = (w: number, f: number) =>
-    interpolate(f, [SET + w * stagger, SET + w * stagger + SET_LEN], [0, 1], {
+  const setIn = (w: number, f: number) => {
+    const e = tl.get(`word:${w}`);
+    return interpolate(f, [e.start, e.end], [0, 1], {
       ...clamp,
       easing: EASE_OUT,
     });
+  };
   const words: number[][] = [];
   chars.forEach((_, i) => {
     words[wordOf[i]] ??= [];
     words[wordOf[i]].push(i);
   });
 
-  const subStart = lastLand + 8;
-  const subP = interpolate(frame, [subStart, subStart + 30], [0, 1], {
+  const subEl = tl.get("subline");
+  const subP = interpolate(frame, [subEl.start, subEl.end], [0, 1], {
     ...clamp,
     easing: EASE_OUT,
   });
