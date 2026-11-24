@@ -7,6 +7,12 @@ import { useId } from "react";
 import { AbsoluteFill, Easing, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_NAME,
+  type LogoConstructElementId,
+  logoConstructTimeline,
+} from "./timeline";
 
 const { fontFamily: mono } = loadMono("normal", {
   weights: ["400", "500"],
@@ -43,6 +49,12 @@ export interface LogoConstructProps {
   speed?: number;
   /** Light = blueprint paper (default); dark = drafting film on black. */
   theme?: "light" | "dark";
+  /**
+   * Moves, trims or stretches the construction steps, the camera moves and
+   * single letters of the name, by the ids in `./timeline`. Frames on the
+   * scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<LogoConstructElementId>;
 }
 
 const EASE_IO = Easing.bezier(0.65, 0, 0.35, 1);
@@ -203,24 +215,54 @@ function Grain({ opacity }: { opacity: number }) {
   );
 }
 
-export function LogoConstruct({
-  logo,
-  name = "emocn",
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = manrope.fontFamily,
-  stagger = 3,
-  grid = true,
-  scale = 1,
-  delay = 0,
-  grain = true,
-  speed = 1,
-  theme = "light",
-}: LogoConstructProps) {
+export function LogoConstruct(props: LogoConstructProps) {
+  const {
+    logo,
+    name = DEFAULT_NAME,
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = manrope.fontFamily,
+    grid = true,
+    scale = 1,
+    delay = 0,
+    grain = true,
+    speed = 1,
+    theme = "light",
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width, height } = useSceneConfig();
+  const { width, height, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    logoConstructTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const driftEl = tl.get("drift");
+  const pullEl = tl.get("pull");
+  const holdEl = tl.get("hold");
+  const guidesEl = tl.get("guides");
+  const compass = tl.get("compass");
+  const rulerEl = tl.get("ruler");
+  const legEl = tl.get("leg");
+  const handlesEl = tl.get("handles");
+  const outlineEl = tl.get("outline");
+  const fillEl = tl.get("fill");
+  const settleEl = tl.get("settle");
+  const wordEl = tl.get("word-guides");
+  const wordSettleEl = tl.get("word-settle");
+  /** 0 → 1 over the `len` beat of `e`, starting `at` beat after its start. */
+  const win = (
+    e: typeof compass,
+    at: string | null,
+    len: string,
+    easing = EASE_DRAW,
+  ) => {
+    const a = at === null ? e.start : e.start + e.beat(at);
+    return p(a, a + e.beat(len), easing);
+  };
   const u = height / 720;
   const pal = THEMES[theme];
   const fg = ink ?? pal.ink;
@@ -240,8 +282,8 @@ export function LogoConstruct({
   const dimRoom = 30;
   const s1 = 3.05 * u;
   const s2 = Math.min((width * 0.6) / (lockR + dimRoom - lockL), 1.25 * u);
-  const pull = p(120, 168, EASE_IO);
-  const drift = interpolate(t, [0, 120], [0, 1], CLAMP);
+  const pull = p(pullEl.start, pullEl.end, EASE_IO);
+  const drift = interpolate(t, [driftEl.start, driftEl.end], [0, 1], CLAMP);
   const sCam = Math.exp(
     interpolate(
       pull,
@@ -251,7 +293,7 @@ export function LogoConstruct({
   );
   const camX = interpolate(pull, [0, 1], [R_W / 2 + 4, (lockL + lockR) / 2]);
   const camY = interpolate(pull, [0, 1], [H / 2 - 2, H / 2 + 4]);
-  const hold = interpolate(t, [160, 260], [1, 1.03], {
+  const hold = interpolate(t, [holdEl.start, holdEl.end], [1, 1.03], {
     ...CLAMP,
     easing: EASE_IO,
   });
@@ -268,9 +310,15 @@ export function LogoConstruct({
   // The pull starts as the drift ends and both ease in or out there, so the
   // motion is read off the neighbouring frames rather than off progress.
   const drivers = (f: number) => [
-    interpolate(f, [0, 120], [0, 1], CLAMP),
-    interpolate(f, [120, 168], [0, 1], { ...CLAMP, easing: EASE_IO }),
-    interpolate(f, [160, 260], [0, 1], { ...CLAMP, easing: EASE_IO }),
+    interpolate(f, [driftEl.start, driftEl.end], [0, 1], CLAMP),
+    interpolate(f, [pullEl.start, pullEl.end], [0, 1], {
+      ...CLAMP,
+      easing: EASE_IO,
+    }),
+    interpolate(f, [holdEl.start, holdEl.end], [0, 1], {
+      ...CLAMP,
+      easing: EASE_IO,
+    }),
   ];
   const now = drivers(t);
   const camMoving = [drivers(t - speed), drivers(t + speed)].some((d) =>
@@ -288,12 +336,17 @@ export function LogoConstruct({
   const guideA = (a: number) => tint(accent, pal.guideMix, a);
 
   // guides settle to hairlines once the mark is solid
-  const settle = p(112, 150, EASE_IO);
+  const settle = win(settleEl, "guidesAt", "guides", EASE_IO);
   const guideLevel = interpolate(settle, [0, 1], [pal.guideAlpha, 0.2]);
-  const labelLevel = interpolate(p(110, 132, EASE_IO), [0, 1], [pal.label, 0]);
+  const labelLevel = interpolate(
+    win(settleEl, null, "labels", EASE_IO),
+    [0, 1],
+    [pal.label, 0],
+  );
 
   // ---- paper grid on the module (half-module minor, module major) ----
-  const gridIn = 0.45 + 0.55 * p(0, 18, EASE_OUT);
+  const gridEl = tl.get("grid");
+  const gridIn = 0.45 + 0.55 * p(gridEl.start, gridEl.end, EASE_OUT);
   const minorStep = M / 2;
   const minorAlpha =
     pal.gridAlpha *
@@ -333,38 +386,47 @@ export function LogoConstruct({
 
   // ---- infinite guides that grow out from the R ----
   const span = Math.max(vx1 - vx0, vy1 - vy0) * 1.2;
+  // `at`: frames after the guides element starts
   const hGuides = [
-    { y: 0, from: 60, at: 8 },
-    { y: H, from: 60, at: 11 },
-    { y: BOWL.y, from: BOWL.x, at: 16 },
-    { y: BAR_IN, from: 50, at: 19 },
-    { y: MID_TOP, from: 50, at: 22 },
-    { y: MID_BOT, from: 50, at: 25 },
+    { y: 0, from: 60, at: 0 },
+    { y: H, from: 60, at: 3 },
+    { y: BOWL.y, from: BOWL.x, at: 8 },
+    { y: BAR_IN, from: 50, at: 11 },
+    { y: MID_TOP, from: 50, at: 14 },
+    { y: MID_BOT, from: 50, at: 17 },
   ];
   const vGuides = [
-    { x: 0, from: 67, at: 13 },
-    { x: STEM_R, from: 67, at: 17 },
-    { x: BOWL.x, from: BOWL.y, at: 21 },
-    { x: R_W, from: BOWL.y, at: 24 },
+    { x: 0, from: 67, at: 5 },
+    { x: STEM_R, from: 67, at: 9 },
+    { x: BOWL.x, from: BOWL.y, at: 13 },
+    { x: R_W, from: BOWL.y, at: 16 },
   ];
+  const guideIn = (at: number) =>
+    p(guidesEl.start + at, guidesEl.start + at + guidesEl.beat("grow"));
   // the wordmark re-lights the baseline
-  const relight = p(146, 166, EASE_OUT) * (1 - p(196, 230, EASE_IO) * 0.5);
+  const relight =
+    win(wordEl, "relightAt", "relight", EASE_OUT) *
+    (1 - win(wordSettleEl, null, "fade", EASE_IO) * 0.5);
   const lineAlpha = (y?: number) =>
     y === H ? guideLevel + relight * (pal.guideAlpha - 0.2) * 0.9 : guideLevel;
 
   // ---- construction draw windows ----
-  const crossIn = p(28, 40, EASE_OUT);
-  const radius = p(32, 46);
-  const outer = p(36, 66);
-  const inner = p(48, 64);
-  const dims = p(44, 60, EASE_OUT);
-  const ruler = p(40, 64);
-  const leg = p(54, 72);
-  const legArc = p(60, 76);
-  const handles = HANDLES.map((_, i) => p(58 + i * 3, 70 + i * 3, EASE_OUT));
-  const outline = p(72, 106);
-  const fill = p(96, 128, EASE_IO);
-  const markDone = p(122, 134, EASE_OUT);
+  const crossIn = win(compass, null, "cross", EASE_OUT);
+  const radius = win(compass, "radiusAt", "radius");
+  const outer = win(compass, "outerAt", "outer");
+  const inner = win(compass, "innerAt", "inner");
+  const quadrant = win(compass, "quadrantAt", "quadrant");
+  const dims = win(rulerEl, "dimsAt", "dims", EASE_OUT);
+  const ruler = p(rulerEl.start, rulerEl.end);
+  const leg = win(legEl, null, "axis");
+  const legArc = win(legEl, "arcAt", "arc");
+  const handles = HANDLES.map((_, i) => {
+    const at = handlesEl.start + i * handlesEl.beat("stagger");
+    return p(at, at + handlesEl.beat("draw"), EASE_OUT);
+  });
+  const outline = p(outlineEl.start, outlineEl.end);
+  const fill = p(fillEl.start, fillEl.end, EASE_IO);
+  const markDone = win(fillEl, "doneAt", "done", EASE_OUT);
 
   const hair = px(1 * u);
   const thin = px(1.25 * u);
@@ -432,11 +494,14 @@ export function LogoConstruct({
 
   // wordmark letters rise out of the baseline, 3 frames apart
   const letters = name.split("");
-  const letterP = (i: number) =>
-    p(144 + i * stagger, 164 + i * stagger, EASE_OUT);
-  const wordGuides = p(140, 160, EASE_OUT);
-  const xGrow = p(138, 166);
-  const wordSettle = p(198, 232, EASE_IO);
+  const letterP = (i: number) => {
+    const e = tl.get(`letter:${i}`);
+    return p(e.start, e.end, EASE_OUT);
+  };
+  const wordGuides = win(wordEl, "guidesAt", "guides", EASE_OUT);
+  const xGrow = win(wordEl, null, "xGrow");
+  const wordLabels = win(wordEl, "labelsAt", "labels", EASE_OUT);
+  const wordSettle = win(wordSettleEl, "settleAt", "fade", EASE_IO);
   const dimX = lockR + 14;
 
   // logo overlay geometry (screen)
@@ -445,7 +510,8 @@ export function LogoConstruct({
     top: ty,
     size: H * s,
   };
-  const logoIn = p(100, 126, EASE_OUT);
+  const logoEl = tl.get("logo");
+  const logoIn = p(logoEl.start, logoEl.end, EASE_OUT);
 
   const legLen = Math.hypot(LEG.x1 - LEG.x0, LEG.y1 - LEG.y0);
   const legUx = (LEG.x1 - LEG.x0) / legLen;
@@ -491,7 +557,7 @@ export function LogoConstruct({
           {/* infinite construction guides */}
           <g stroke={guide} strokeWidth={hair} fill="none">
             {hGuides.map((g) => {
-              const k = p(g.at, g.at + 26);
+              const k = guideIn(g.at);
               return (
                 <line
                   key={`h${g.y}`}
@@ -504,7 +570,7 @@ export function LogoConstruct({
               );
             })}
             {vGuides.map((g) => {
-              const k = p(g.at, g.at + 26);
+              const k = guideIn(g.at);
               return (
                 <line
                   key={`v${g.x}`}
@@ -552,7 +618,7 @@ export function LogoConstruct({
             )}
             {/* 90° quadrant marker */}
             <path
-              d={arc(BOWL.x, BOWL.y, 9, 270, 90 * p(46, 60))}
+              d={arc(BOWL.x, BOWL.y, 9, 270, 90 * quadrant)}
               opacity={0.8}
             />
 
@@ -708,7 +774,7 @@ export function LogoConstruct({
             />
           </g>
           <g
-            opacity={p(156, 174, EASE_OUT) * (1 - wordSettle * 0.75)}
+            opacity={wordLabels * (1 - wordSettle * 0.75)}
             stroke={guide}
             strokeWidth={thin}
           >
@@ -717,7 +783,7 @@ export function LogoConstruct({
             {tick(dimX, H, false, 4)}
           </g>
           <g
-            opacity={p(156, 174, EASE_OUT) * (1 - wordSettle * 0.75)}
+            opacity={wordLabels * (1 - wordSettle * 0.75)}
             fontFamily={mono}
             fontSize={fs}
             fontWeight={500}

@@ -15167,12 +15167,21 @@
       "title": "Logo Construct",
       "description": "A blueprint grid draws the logo construction lines and the wordmark inks in.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/logo-construct/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/logo-construct.tsx"
+          "target": "components/remocn/logo-construct/index.tsx"
+        },
+        {
+          "path": "registry/remocn/logo-construct/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/logo-construct/timeline.ts"
         }
       ],
       "type": "registry:component"
