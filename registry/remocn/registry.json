@@ -15935,13 +15935,19 @@
       "registryDependencies": [
         "@remocn/gsh",
         "@remocn/glide",
-        "@remocn/frame-rate"
+        "@remocn/frame-rate",
+        "@remocn/timeline"
       ],
       "files": [
         {
           "path": "world-signups/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/world-signups.tsx"
+          "target": "components/remocn/world-signups/index.tsx"
+        },
+        {
+          "path": "world-signups/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/world-signups/timeline.ts"
         }
       ]
     },
