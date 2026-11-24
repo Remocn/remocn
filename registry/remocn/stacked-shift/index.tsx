@@ -8,6 +8,13 @@ import { useId, useLayoutEffect, useRef, useState } from "react";
 import { AbsoluteFill, Easing, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  STACKED_SERIES,
+  STACKED_YEARS,
+  type StackedShiftElementId,
+  stackedShiftTimeline,
+} from "./timeline";
 
 const { fontFamily: sans } = loadFont("normal", {
   weights: ["400", "500"],
@@ -50,16 +57,13 @@ export interface StackedShiftProps {
   grain?: boolean;
   theme?: "dark" | "light";
   speed?: number;
+  /**
+   * Moves, trims or stretches the entrance, single year shifts and the final
+   * pose, by the ids in `./timeline`. Frames on the scene timeline, after
+   * `delay` and `speed`.
+   */
+  timing?: Timing<StackedShiftElementId>;
 }
-
-const DEFAULT_SERIES: StackedSeries[] = [
-  { label: "remocn", values: [6, 24, 52] },
-  { label: "Kitebase", values: [34, 28, 18] },
-  { label: "Lumen", values: [26, 22, 14] },
-  { label: "Fernway", values: [18, 14, 9] },
-  { label: "Other", values: [16, 12, 7] },
-];
-const DEFAULT_YEARS = ["2023", "2024", "2025"];
 
 const EASE_IO = Easing.bezier(0.65, 0, 0.35, 1);
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
@@ -89,13 +93,6 @@ const THEMES = {
     ember: ["#8a2c1d", "#e0703b", "#f6b27e"],
   },
 } as const;
-
-const ENTER = [0, 26] as const;
-const FIRST_SHIFT = 34;
-const SHIFT_EVERY = 54;
-const OUT = [0, 12] as const;
-const MOVE = [10, 36] as const;
-const IN = [32, 44] as const;
 
 type Slot = { y0: number; y1: number; share: number };
 
@@ -272,28 +269,37 @@ function ScaleLayer({
   );
 }
 
-export function StackedShift({
-  series = DEFAULT_SERIES,
-  years = DEFAULT_YEARS,
-  highlight = 0,
-  caption = "of launch videos",
-  hold = SHIFT_EVERY,
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = sans,
-  logo,
-  scale = 1,
-  delay = 0,
-  grain = true,
-  theme = "dark",
-  speed = 1,
-}: StackedShiftProps) {
+export function StackedShift(props: StackedShiftProps) {
+  const {
+    series = STACKED_SERIES,
+    years = STACKED_YEARS,
+    highlight = 0,
+    caption = "of launch videos",
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = sans,
+    logo,
+    scale = 1,
+    delay = 0,
+    grain = true,
+    theme = "dark",
+    speed = 1,
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = useSceneFrame();
   const timeAt = (f: number) => Math.max(0, f - delay) * speed;
   const t = timeAt(frame);
-  const { width, height } = useSceneConfig();
+  const { width, height, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    stackedShiftTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const enter = tl.get("enter");
+  const finalEl = tl.get("final");
   const u = Math.min(width / 1280, height / 720);
   const p = THEMES[theme];
   const fg = ink ?? p.fg;
@@ -335,29 +341,40 @@ export function StackedShift({
     return out;
   });
 
+  const shifts = Array.from({ length: Y - 1 }, (_, k) => tl.get(`shift:${k}`));
   const yearAt = (time: number) => {
     let year = 0;
-    for (let k = 0; k < Y - 1; k++) {
-      const T = FIRST_SHIFT + k * hold;
-      year += interpolate(time, [T + MOVE[0], T + MOVE[1]], [0, 1], {
-        ...CLAMP,
-        easing: EASE_IO,
-      });
+    for (const e of shifts) {
+      const T = e.start;
+      year += interpolate(
+        time,
+        [T + e.beat("moveAt"), T + e.beat("moveTo")],
+        [0, 1],
+        {
+          ...CLAMP,
+          easing: EASE_IO,
+        },
+      );
     }
     const from = Math.min(Math.floor(year), Y - 1);
     return { from, to: Math.min(from + 1, Y - 1), f: year - from };
   };
   let laneK = 0;
-  for (let k = 0; k < Y - 1; k++) {
-    const T = FIRST_SHIFT + k * hold;
-    const o = interpolate(t, [T + OUT[0], T + OUT[1]], [0, 1], {
+  for (const e of shifts) {
+    const T = e.start;
+    const o = interpolate(t, [T, T + e.beat("outTo")], [0, 1], {
       ...CLAMP,
       easing: EASE_IO,
     });
-    const back = interpolate(t, [T + IN[0], T + IN[1]], [0, 1], {
-      ...CLAMP,
-      easing: EASE_IO,
-    });
+    const back = interpolate(
+      t,
+      [T + e.beat("inAt"), T + e.beat("inTo")],
+      [0, 1],
+      {
+        ...CLAMP,
+        easing: EASE_IO,
+      },
+    );
     laneK += o - back;
   }
   const { from: kA, to: kB, f } = yearAt(t);
@@ -371,29 +388,36 @@ export function StackedShift({
     };
   });
 
-  const lastEnd = FIRST_SHIFT + (Y - 2) * hold + IN[1];
-  const reveal = interpolate(t, [ENTER[0], ENTER[1]], [0, 1], {
+  const reveal = interpolate(t, [enter.start, enter.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
   const revealTop = colBottom - (colH + 4 * u) * reveal;
-  const finalK = interpolate(t, [lastEnd - 6, lastEnd + 14], [0, 1], {
+  const finalK = interpolate(t, [finalEl.start, finalEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
-  const capIn = interpolate(t, [lastEnd - 2, lastEnd + 18], [0, 1], {
+  const capAt = finalEl.start + finalEl.beat("capAt");
+  const capIn = interpolate(t, [capAt, capAt + finalEl.beat("cap")], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
-  const yearIn = interpolate(t, [8, 26], [0, 1], {
-    ...CLAMP,
-    easing: EASE_OUT,
-  });
-  const pushK = interpolate(t, [0, lastEnd + 30], [0, 1], {
+  const yearInAt = enter.start + enter.beat("yearAt");
+  const yearIn = interpolate(
+    t,
+    [yearInAt, yearInAt + enter.beat("year")],
+    [0, 1],
+    {
+      ...CLAMP,
+      easing: EASE_OUT,
+    },
+  );
+  const settled = finalEl.start + finalEl.beat("push");
+  const pushK = interpolate(t, [0, settled], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
-  const push = interpolate(t, [0, lastEnd + 30], [1.025, 1], {
+  const push = interpolate(t, [0, settled], [1.025, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
@@ -452,7 +476,7 @@ export function StackedShift({
     HERO_LEADING * (live.hero - laid.hero) + (live.lift - laid.lift);
   const blockGrow = nameDrop + nameGrow;
   const offX = laneDx * laneK;
-  const sheen = interpolate(t, [0, lastEnd + 30], [0, 1], {
+  const sheen = interpolate(t, [0, settled], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });

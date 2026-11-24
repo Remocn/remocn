@@ -12858,12 +12858,21 @@
       "title": "Stacked Shift",
       "description": "A stacked share bar shifts over the years until the logo series reaches 52%.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/stacked-shift/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/stacked-shift.tsx"
+          "target": "components/remocn/stacked-shift/index.tsx"
+        },
+        {
+          "path": "registry/remocn/stacked-shift/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/stacked-shift/timeline.ts"
         }
       ],
       "type": "registry:component"
