@@ -3712,12 +3712,17 @@
       "title": "Speed Lines",
       "description": "Parallel streaks trail an element as it flies in at its real speed, the element stretching with that speed and landing with a squash and a small bounce as the streaks die, or radial lines rush in from the frame edges and snap onto one point for a manga-style impact frame.",
       "dependencies": ["remotion"],
-      "registryDependencies": ["@remocn/frame-rate"],
+      "registryDependencies": ["@remocn/frame-rate", "@remocn/timeline"],
       "files": [
         {
           "path": "speed-lines/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/speed-lines.tsx"
+          "target": "components/remocn/speed-lines/index.tsx"
+        },
+        {
+          "path": "speed-lines/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/speed-lines/timeline.ts"
         }
       ]
     },

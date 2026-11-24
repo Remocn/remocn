@@ -3,6 +3,23 @@
 import type { ReactNode } from "react";
 import { random } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import {
+  type ResolvedTimeline,
+  resolve,
+  type Timing,
+  useTimeline,
+} from "@/lib/remocn/timeline";
+import {
+  bounceOf,
+  IMPACT,
+  modeOf,
+  RELEASE,
+  RETRACT,
+  type SpeedLinesElementId,
+  speedLinesTimeline,
+  springOf,
+  travelOf,
+} from "./timeline";
 
 export type SpeedLinesMode = "trail" | "focus";
 
@@ -29,15 +46,23 @@ export interface SpeedLinesProps {
   speed?: number;
   children?: ReactNode;
   className?: string;
+  /**
+   * Moves, trims or stretches the travel and settle (trail mode) or the
+   * rush and release (focus mode), by the ids in `./timeline`.
+   * Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<SpeedLinesElementId>;
 }
 
 type Paint = "color" | "children" | "className";
-type Unset = "to" | "children" | "className";
+type Unset = "to" | "children" | "className" | "timing";
 
 export interface SpeedLinesOptions extends Omit<SpeedLinesProps, Paint> {
   width?: number;
   height?: number;
   fps?: number;
+  /** The resolved schedule; without it the options' `timing` is applied. */
+  timeline?: ResolvedTimeline<SpeedLinesElementId>;
 }
 
 export interface SpeedLinesSegment {
@@ -66,6 +91,8 @@ export interface SpeedLinesRayTiming {
   outer: number;
   start?: number;
   release?: number;
+  impact?: number;
+  retract?: number;
 }
 
 export const speedLinesDefaults: Required<Omit<SpeedLinesProps, Unset>> = {
@@ -86,11 +113,6 @@ export const speedLinesDefaults: Required<Omit<SpeedLinesProps, Unset>> = {
 };
 
 const REFERENCE = 720;
-const LANDING = 0.3;
-const CARRY = 0.3;
-const ECHO = 0.2;
-const SOFTEN = 1.2;
-const SETTLE = 6;
 const STRETCH = Math.log(1.3);
 const SQUASH = Math.log(1.25);
 const STRETCH_GAIN = 0.007;
@@ -110,14 +132,8 @@ const SETBACK = 0.35;
 const SLOW = 5;
 const FAST = 14;
 const GOLDEN = (Math.sqrt(5) - 1) / 2;
-const IMPACT = 3;
-const RUSH_JITTER = 1;
 const RELAX = 0.12;
 const RELAX_RATE = 1.5;
-const RELEASE = 8;
-const RELEASE_JITTER = 1.5;
-const RETRACT = 3.5;
-const FOCUS_END = RELEASE + RELEASE_JITTER + RETRACT;
 const ANGLE_JITTER = 0.6;
 const RADIUS_JITTER = 0.6;
 const MAX_COUNT = 64;
@@ -125,8 +141,6 @@ const MIN_WEIGHT = 0.5;
 const MAX_WEIGHT = 12;
 const MIN_SPREAD = 8;
 const MAX_SPREAD = 480;
-const MIN_DURATION = 4;
-const MAX_DURATION = 120;
 
 const finite = (value: number | undefined, fallback: number) =>
   typeof value === "number" && Number.isFinite(value) ? value : fallback;
@@ -135,10 +149,6 @@ const clamp = (value: number, min: number, max: number) =>
 const round = (value: number) => Math.round(value * 100) / 100;
 const fine = (value: number) => Math.round(value * 10000) / 10000;
 const fraction = (value: number) => value - Math.floor(value);
-const modeOf = (value: string | undefined): SpeedLinesMode =>
-  value === "focus" ? "focus" : "trail";
-const travelOf = (value: number | undefined) =>
-  clamp(finite(value, speedLinesDefaults.duration), MIN_DURATION, MAX_DURATION);
 
 function smoothstep(value: number) {
   const t = clamp(value, 0, 1);
@@ -161,7 +171,47 @@ function key(seed: number, index: number, name: string) {
   return random(`speed-lines-${seed}-${index}-${name}`);
 }
 
+// The element spans the drawing reads, from the resolved schedule.
+function spansOf(options: SpeedLinesOptions, mode: SpeedLinesMode) {
+  const tl =
+    options.timeline ??
+    resolve(speedLinesTimeline(options, { length: 0 }), options.timing);
+  if (mode === "focus") {
+    const rush = tl.get("rush");
+    const release = tl.get("release");
+    return {
+      travelStart: 0,
+      duration: travelOf(options.duration),
+      gap: 0,
+      settle: undefined,
+      impact: rush.end,
+      end: release.end,
+      rushStart: rush.start,
+      rushJitter: rush.beat("jitter"),
+      release: release.start,
+      releaseJitter: release.beat("jitter"),
+      retract: release.beat("retract"),
+    };
+  }
+  const travel = tl.get("travel");
+  const settle = tl.get("settle");
+  return {
+    travelStart: travel.start,
+    duration: travel.length,
+    gap: settle.start - travel.end,
+    settle: settle.length,
+    impact: travel.end,
+    end: settle.end,
+    rushStart: 0,
+    rushJitter: 0,
+    release: RELEASE,
+    releaseJitter: 0,
+    retract: RETRACT,
+  };
+}
+
 function settingsOf(options: SpeedLinesOptions) {
+  const mode = modeOf(options.mode);
   const height = Math.max(1, finite(options.height, 720));
   const x = finite(options.x, speedLinesDefaults.x);
   const y = finite(options.y, speedLinesDefaults.y);
@@ -169,7 +219,8 @@ function settingsOf(options: SpeedLinesOptions) {
   const weight = finite(options.weight, speedLinesDefaults.weight);
   const spread = finite(options.spread, speedLinesDefaults.spread);
   return {
-    mode: modeOf(options.mode),
+    ...spansOf(options, mode),
+    mode,
     width: Math.max(1, finite(options.width, 1280)),
     height,
     fps: Math.max(1, finite(options.fps, 30)),
@@ -181,8 +232,7 @@ function settingsOf(options: SpeedLinesOptions) {
     count: Math.round(clamp(count, 1, MAX_COUNT)),
     weight: clamp(weight, MIN_WEIGHT, MAX_WEIGHT),
     spread: clamp(spread, MIN_SPREAD, MAX_SPREAD),
-    duration: travelOf(options.duration),
-    bounce: clamp(finite(options.bounce, speedLinesDefaults.bounce), 0, 1),
+    bounce: bounceOf(options.bounce),
     squash: clamp(finite(options.squash, speedLinesDefaults.squash), 0, 1),
     seed: finite(options.seed, speedLinesDefaults.seed),
     delay: Math.max(0, finite(options.delay, speedLinesDefaults.delay)),
@@ -224,33 +274,24 @@ function exitDistance(
   return Math.min(along(cx, width, cos), along(cy, height, sin));
 }
 
-function springOf(bounce: number) {
-  const landing = LANDING + CARRY * bounce;
-  const kappa = (1 + Math.sqrt(1 - landing)) / 2;
-  const gain = 1 / (0.5 - kappa / 3);
-  const echo = ECHO * bounce;
-  const decrement = -Math.log(echo);
-  const damping = echo > 0 ? decrement / Math.hypot(Math.PI, decrement) : 1;
-  const natural = 1 / (1 + SOFTEN * bounce);
-  const decay = damping * natural;
-  return {
-    kappa,
-    gain,
-    contact: gain * (1 - kappa),
-    decay,
-    ring: natural * Math.sqrt(1 - damping * damping),
-    settle: Math.ceil(SETTLE / decay),
-  };
-}
-
-function easeOf(time: number, travel: number, bounce: number) {
+// `gap` holds the landing before the settle starts; `span` is the settle's
+// length when `timing` trimmed or stretched it.
+function easeOf(
+  time: number,
+  travel: number,
+  bounce: number,
+  gap = 0,
+  span?: number,
+) {
   if (time <= 0) return 0;
   const { kappa, gain, contact, decay, ring, settle } = springOf(bounce);
   if (time < travel) {
     const w = time / travel;
     return gain * ((w * w) / 2 - (kappa * w * w * w) / 3);
   }
-  const since = time - travel;
+  const late = time - travel - gap;
+  if (late < 0) return 1;
+  const since = span === undefined ? late : late * (settle / span);
   if (since >= settle) return 1;
   const taper = smoothstep((2 * since) / settle - 1);
   const wave = ring > 1e-9 ? Math.sin(ring * since) / ring : since;
@@ -259,9 +300,8 @@ function easeOf(time: number, travel: number, bounce: number) {
 }
 
 export function getSpeedLinesTimeline(options: SpeedLinesOptions = {}) {
-  const { mode, duration, bounce } = settingsOf(options);
-  if (mode === "focus") return { mode, impact: IMPACT, end: FOCUS_END };
-  return { mode, impact: duration, end: duration + springOf(bounce).settle };
+  const { mode, impact, end } = settingsOf(options);
+  return { mode, impact, end };
 }
 
 export type SpeedLinesTimeline = ReturnType<typeof getSpeedLinesTimeline>;
@@ -288,8 +328,8 @@ export function getSpeedLinesEase(
   time: number,
   options: SpeedLinesOptions = {},
 ) {
-  const { duration, bounce } = settingsOf(options);
-  return easeOf(finite(time, 0), duration, bounce);
+  const { travelStart, duration, bounce, gap, settle } = settingsOf(options);
+  return easeOf(finite(time, 0) - travelStart, duration, bounce, gap, settle);
 }
 
 function positionAt(time: number, settings: Settings) {
@@ -297,7 +337,8 @@ function positionAt(time: number, settings: Settings) {
   if (mode === "focus") {
     return { x: settings.x * width, y: settings.y * height, progress: 1 };
   }
-  const progress = easeOf(time, duration, bounce);
+  const { travelStart, gap, settle } = settings;
+  const progress = easeOf(time - travelStart, duration, bounce, gap, settle);
   const startX = from.x * width;
   const startY = from.y * height;
   return {
@@ -315,19 +356,22 @@ export function getSpeedLinesPosition(
   return { x, y };
 }
 
-function shapeAt(time: number, settings: Settings) {
+function shapeAt(at: number, settings: Settings) {
   const { mode, duration, bounce, squash, unit, speed } = settings;
   if (mode === "focus") return { rotation: 0, along: 1, across: 1 };
+  const { gap, settle } = settings;
+  const time = at - settings.travelStart;
   const { dx, dy, distance } = directionOf(settings);
   const rotation = (Math.atan2(dy, dx) * 180) / Math.PI;
   if (squash === 0 || distance === 0 || time <= 0) {
     return { rotation, along: 1, across: 1 };
   }
   const span = distance / unit;
-  const ahead = easeOf(time + PROBE, duration, bounce);
-  const behind = easeOf(time - PROBE, duration, bounce);
+  const ahead = easeOf(time + PROBE, duration, bounce, gap, settle);
+  const behind = easeOf(time - PROBE, duration, bounce, gap, settle);
   const rate = (Math.abs(ahead - behind) / (2 * PROBE)) * span * speed;
-  const landed = time > duration ? easeOf(time, duration, bounce) - 1 : 0;
+  const landed =
+    time > duration ? easeOf(time, duration, bounce, gap, settle) - 1 : 0;
   const past = Math.max(0, landed) * span;
   const stretch = STRETCH * Math.tanh((squash * STRETCH_GAIN * rate) / STRETCH);
   const compression =
@@ -384,7 +428,8 @@ export function getSpeedLinesStreaks(
 ): SpeedLinesStreak[] {
   const settings = settingsOf(options);
   if (settings.mode !== "trail") return [];
-  const time = getSpeedLinesTime(frame, options);
+  const at = getSpeedLinesTime(frame, options);
+  const time = at - settings.travelStart;
   const { dx, dy, distance } = directionOf(settings);
   if (distance === 0 || time <= 0) return [];
   const { forward } = getSpeedLinesVelocity(frame, options);
@@ -392,7 +437,7 @@ export function getSpeedLinesStreaks(
   const fast = smoothstep((forward - SLOW * unit) / ((FAST - SLOW) * unit));
   const gate = fast * (1 - smoothstep(time - duration));
   if (gate <= 0) return [];
-  const center = positionAt(time, settings);
+  const center = positionAt(at, settings);
   const progress = time / duration;
   const life = Math.max(MIN_LIFE, LIFE * duration) / duration;
   const minimum = 0.5 * weight * unit;
@@ -427,18 +472,25 @@ export function getSpeedLinesStreaks(
 }
 
 export function getSpeedLinesRadius(time: number, ray: SpeedLinesRayTiming) {
-  const { rest, outer, start = 0, release = RELEASE } = ray;
+  const {
+    rest,
+    outer,
+    start = 0,
+    release = RELEASE,
+    impact = IMPACT,
+    retract = RETRACT,
+  } = ray;
   const t = finite(time, 0);
   if (t <= start) return outer;
-  if (t < IMPACT) {
-    const q = (t - start) / (IMPACT - start);
+  if (t < impact) {
+    const q = (t - start) / (impact - start);
     return outer + (rest - outer) * q * q;
   }
   const settle = (at: number) =>
-    rest * (1 + RELAX * (1 - Math.exp(-(at - IMPACT) / RELAX_RATE)));
+    rest * (1 + RELAX * (1 - Math.exp(-(at - impact) / RELAX_RATE)));
   if (t < release) return settle(t);
   const held = settle(release);
-  const q = clamp((t - release) / RETRACT, 0, 1);
+  const q = clamp((t - release) / retract, 0, 1);
   return outer - (outer - held) * (1 - q * q);
 }
 
@@ -449,7 +501,7 @@ export function getSpeedLinesRays(
   const settings = settingsOf(options);
   if (settings.mode !== "focus") return [];
   const time = getSpeedLinesTime(frame, options);
-  if (time <= 0 || time >= FOCUS_END) return [];
+  if (time <= settings.rushStart || time >= settings.end) return [];
   const { seed, count, spread, weight, unit, width, height } = settings;
   const cx = settings.x * width;
   const cy = settings.y * height;
@@ -467,8 +519,12 @@ export function getSpeedLinesRays(
     const inner = getSpeedLinesRadius(time, {
       rest,
       outer,
-      start: RUSH_JITTER * key(seed, index, "rush"),
-      release: RELEASE + RELEASE_JITTER * key(seed, index, "release"),
+      start:
+        settings.rushStart + settings.rushJitter * key(seed, index, "rush"),
+      release:
+        settings.release + settings.releaseJitter * key(seed, index, "release"),
+      impact: settings.impact,
+      retract: settings.retract,
     });
     const length = outer - inner;
     if (length < minimum) continue;
@@ -530,27 +586,35 @@ export function getSpeedLinesState(
 
 export type SpeedLinesState = ReturnType<typeof getSpeedLinesState>;
 
-export function SpeedLines({
-  mode = speedLinesDefaults.mode,
-  from = speedLinesDefaults.from,
-  to,
-  x = speedLinesDefaults.x,
-  y = speedLinesDefaults.y,
-  count = speedLinesDefaults.count,
-  weight = speedLinesDefaults.weight,
-  spread = speedLinesDefaults.spread,
-  duration = speedLinesDefaults.duration,
-  bounce = speedLinesDefaults.bounce,
-  squash = speedLinesDefaults.squash,
-  color = speedLinesDefaults.color,
-  seed = speedLinesDefaults.seed,
-  delay = speedLinesDefaults.delay,
-  speed = speedLinesDefaults.speed,
-  children,
-  className,
-}: SpeedLinesProps) {
+export function SpeedLines(props: SpeedLinesProps) {
+  const {
+    mode = speedLinesDefaults.mode,
+    from = speedLinesDefaults.from,
+    to,
+    x = speedLinesDefaults.x,
+    y = speedLinesDefaults.y,
+    count = speedLinesDefaults.count,
+    weight = speedLinesDefaults.weight,
+    spread = speedLinesDefaults.spread,
+    duration = speedLinesDefaults.duration,
+    bounce = speedLinesDefaults.bounce,
+    squash = speedLinesDefaults.squash,
+    color = speedLinesDefaults.color,
+    seed = speedLinesDefaults.seed,
+    delay = speedLinesDefaults.delay,
+    speed = speedLinesDefaults.speed,
+    children,
+    className,
+    timing,
+  } = props;
   const frame = useSceneFrame();
-  const { width, height, fps } = useSceneConfig();
+  const { width, height, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    speedLinesTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const state = getSpeedLinesState(frame, {
     mode,
     from,
@@ -569,6 +633,7 @@ export function SpeedLines({
     width,
     height,
     fps,
+    timeline: tl,
   });
   const fallback = state.mode === "trail" && children === undefined;
   const placed = children !== undefined && children !== null;
