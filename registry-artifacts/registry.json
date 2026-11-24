@@ -14405,13 +14405,19 @@
       "registryDependencies": [
         "@remocn/gsh",
         "@remocn/glide",
-        "@remocn/frame-rate"
+        "@remocn/frame-rate",
+        "@remocn/timeline"
       ],
       "files": [
         {
           "path": "registry/remocn/toggle-on/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/toggle-on.tsx"
+          "target": "components/remocn/toggle-on/index.tsx"
+        },
+        {
+          "path": "registry/remocn/toggle-on/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/toggle-on/timeline.ts"
         }
       ],
       "type": "registry:component"

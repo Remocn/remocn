@@ -8,6 +8,8 @@ import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import { type ToggleOnElementId, toggleOnTimeline } from "./timeline";
 
 const { fontFamily: sans } = loadFont("normal", {
   weights: ["300", "400"],
@@ -36,6 +38,12 @@ export interface ToggleOnProps {
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
   speed?: number;
+  /**
+   * Moves, trims or stretches the camera, the press, the flip, the glow,
+   * the label and the state word, by the ids in `./timeline`. Frames on the
+   * scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<ToggleOnElementId>;
 }
 
 const ENTER = Easing.bezier(0.32, 0.72, 0, 1);
@@ -43,14 +51,6 @@ const MOVE = Easing.bezier(0.65, 0, 0.35, 1);
 const CLAMP = {
   extrapolateLeft: "clamp",
   extrapolateRight: "clamp",
-} as const;
-
-const BEATS = {
-  press: 12,
-  flip: 24,
-  light: 26,
-  label: 34,
-  state: 42,
 } as const;
 
 const THEMES = {
@@ -118,25 +118,36 @@ function ScaleLayer({
   );
 }
 
-export function ToggleOn({
-  label = "Auto-captions",
-  state = "On",
-  accent = "#3B5BFD",
-  fontWeight = 400,
-  stagger = BEATS.state - BEATS.label,
-  ink: inkColor,
-  background,
-  fontFamily = sans,
-  scale = 1,
-  delay = 0,
-  theme = "dark",
-  ground,
-  groundParams,
-  speed = 1,
-}: ToggleOnProps) {
+export function ToggleOn(props: ToggleOnProps) {
+  const {
+    label = "Auto-captions",
+    state = "On",
+    accent = "#3B5BFD",
+    fontWeight = 400,
+    ink: inkColor,
+    background,
+    fontFamily = sans,
+    scale = 1,
+    delay = 0,
+    theme = "dark",
+    ground,
+    groundParams,
+    speed = 1,
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: VW, height: VH, fps } = useSceneConfig();
+  const { width: VW, height: VH, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    toggleOnTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const camEl = tl.get("camera");
+  const pressEl = tl.get("press");
+  const flip = tl.get("flip");
+  const light = tl.get("light");
   const tall = VH > VW;
   const u = tall ? VW / 760 : Math.min(VW / 1280, VH / 720);
   const p = THEMES[theme];
@@ -153,17 +164,17 @@ export function ToggleOn({
   const d = H - pad * 2;
   const travel = W - pad * 2 - d;
 
-  const press = interpolate(t, [BEATS.press, BEATS.flip], [0, 1], {
+  const press = interpolate(t, [pressEl.start, pressEl.end], [0, 1], {
     ...CLAMP,
     easing: ENTER,
   });
   const pos = spring({
-    frame: t - BEATS.flip,
+    frame: t - flip.start,
     fps,
     config: { mass: 0.8, damping: 18, stiffness: 160 },
   });
   const relax = spring({
-    frame: t - BEATS.flip - 6,
+    frame: t - flip.start - flip.beat("relax"),
     fps,
     config: { mass: 0.5, damping: 12, stiffness: 200 },
   });
@@ -184,10 +195,10 @@ export function ToggleOn({
   const camAt = (f: number) =>
     interpolate(
       spring({
-        frame: f,
+        frame: f - camEl.start,
         fps,
         config: { mass: 1, damping: 26, stiffness: 120 },
-        durationInFrames: 54,
+        durationInFrames: camEl.length,
       }),
       [0, 1],
       [1.1, 1],
@@ -196,22 +207,32 @@ export function ToggleOn({
   const camMoving =
     Math.abs(camAt(t + speed) - camK) > 1e-6 ||
     Math.abs(camK - camAt(t - speed)) > 1e-6;
-  const lit = interpolate(t, [BEATS.light, BEATS.light + 30], [0, 1], {
+  const lit = interpolate(t, [light.start, light.end], [0, 1], {
     ...CLAMP,
     easing: ENTER,
   });
   const scrim = interpolate(lit, [0, 1], [p.scrimFrom, p.scrimTo]);
-  const open = interpolate(t, [BEATS.flip + 2, BEATS.flip + 26], [0, 1], {
-    ...CLAMP,
-    easing: MOVE,
-  });
+  const open = interpolate(
+    t,
+    [flip.start + flip.beat("openAt"), flip.start + flip.beat("openEnd")],
+    [0, 1],
+    {
+      ...CLAMP,
+      easing: MOVE,
+    },
+  );
 
   const sliding = open > 0 && open < 1;
 
-  const word = (start: number) =>
-    interpolate(t, [start, start + 14], [0, 1], { ...CLAMP, easing: ENTER });
-  const wLabel = word(BEATS.label);
-  const wState = word(BEATS.label + stagger);
+  const word = (id: "label" | "state") => {
+    const e = tl.get(id);
+    return interpolate(t, [e.start, e.end], [0, 1], {
+      ...CLAMP,
+      easing: ENTER,
+    });
+  };
+  const wLabel = word("label");
+  const wState = word("state");
   const fontSize = (tall ? 92 : 76) * u;
 
   const ink = (v: number) => ({
