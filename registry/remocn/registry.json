@@ -15997,13 +15997,19 @@
       "registryDependencies": [
         "@remocn/gsh",
         "@remocn/glide",
-        "@remocn/frame-rate"
+        "@remocn/frame-rate",
+        "@remocn/timeline"
       ],
       "files": [
         {
           "path": "analytics-funnel/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/analytics-funnel.tsx"
+          "target": "components/remocn/analytics-funnel/index.tsx"
+        },
+        {
+          "path": "analytics-funnel/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/analytics-funnel/timeline.ts"
         }
       ]
     },
