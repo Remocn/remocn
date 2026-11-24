@@ -13,6 +13,13 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  CELL,
+  DEFAULT_TITLE,
+  type GridCellElementId,
+  gridCellTimeline,
+} from "./timeline";
 
 const geist = loadGeist("normal", {
   weights: ["400"],
@@ -46,6 +53,12 @@ export interface GridCellProps {
   /** Playback multiplier. */
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches the grid, the cell, the label, the typing and
+   * the dim, by the ids in `./timeline`. Frames on the scene timeline, after
+   * `delay` and `speed`.
+   */
+  timing?: Timing<GridCellElementId>;
 }
 
 const THEMES = {
@@ -71,8 +84,6 @@ const THEMES = {
   },
 } as const;
 
-/** Base cell at 1280 wide: 16 × 9 cells tile the frame exactly. */
-const CELL = 80;
 const FONT_SIZE = 54;
 const TRACK = -0.035;
 const PAD_X = 0.9; // em of air either side of the headline inside the cell
@@ -85,21 +96,6 @@ const CLAMP = {
 } as const;
 
 const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
-
-const T = {
-  gridStart: 2,
-  gridStep: 2.4, // frames per cell of distance from the centre
-  gridDur: 26,
-  edgeStart: 38,
-  edgeDur: 22,
-  mergeStart: 44,
-  mergeDur: 22,
-  labelStart: 58,
-  typeStart: 70,
-  perChar: 1.5,
-  dimStart: 96,
-  dimDur: 34,
-};
 
 /** Headline width in em, measured once the face is ready. */
 function useTitleWidth(title: string, fontFamily: string) {
@@ -150,23 +146,36 @@ function ScaleLayer({
   );
 }
 
-export function GridCell({
-  title = "Introducing remocn 2.0",
-  label = "v2.0",
-  stagger = T.perChar,
-  cellSize = CELL,
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = geist.fontFamily,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: GridCellProps) {
+export function GridCell(props: GridCellProps) {
+  const {
+    title = DEFAULT_TITLE,
+    label = "v2.0",
+    cellSize = CELL,
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = geist.fontFamily,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H } = useSceneConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    gridCellTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const gridEl = tl.get("grid");
+  const edgeEl = tl.get("edge");
+  const mergeEl = tl.get("merge");
+  const labelEl = tl.get("label");
+  const titleEl = tl.get("title");
+  const dimEl = tl.get("dim");
   const c = THEMES[theme];
   const fg = ink ?? c.fg;
   const stage =
@@ -202,62 +211,60 @@ export function GridCell({
     interpolate(
       frame,
       [
-        T.gridStart + Math.abs(k) * T.gridStep,
-        T.gridStart + Math.abs(k) * T.gridStep + T.gridDur,
+        gridEl.start + Math.abs(k) * gridEl.beat("step"),
+        gridEl.start + Math.abs(k) * gridEl.beat("step") + gridEl.beat("grow"),
       ],
       [0, 1],
       { ...CLAMP, easing: EASE_OUT },
     );
 
-  const merge = interpolate(
-    frame,
-    [T.mergeStart, T.mergeStart + T.mergeDur],
-    [0, 1],
-    { ...CLAMP, easing: EASE_IO },
-  );
-  const edge = interpolate(
-    frame,
-    [T.edgeStart, T.edgeStart + T.edgeDur],
-    [0, 1],
-    { ...CLAMP, easing: EASE_OUT },
-  );
+  const merge = interpolate(frame, [mergeEl.start, mergeEl.end], [0, 1], {
+    ...CLAMP,
+    easing: EASE_IO,
+  });
+  const edge = interpolate(frame, [edgeEl.start, edgeEl.end], [0, 1], {
+    ...CLAMP,
+    easing: EASE_OUT,
+  });
   const ticks = interpolate(
     frame,
-    [T.labelStart - 4, T.labelStart + 12],
+    [
+      labelEl.start + labelEl.beat("ticksIn"),
+      labelEl.start + labelEl.beat("ticksDone"),
+    ],
     [0, 1],
     {
       ...CLAMP,
       easing: EASE_OUT,
     },
   );
-  const labelIn = interpolate(
-    frame,
-    [T.labelStart, T.labelStart + 16],
-    [0, 1],
-    { ...CLAMP, easing: EASE_OUT },
-  );
-  const dim = interpolate(
-    frame,
-    [T.dimStart, T.dimStart + T.dimDur],
-    [1, 0.5],
-    {
-      ...CLAMP,
-      easing: EASE_IO,
-    },
-  );
+  const labelIn = interpolate(frame, [labelEl.start, labelEl.end], [0, 1], {
+    ...CLAMP,
+    easing: EASE_OUT,
+  });
+  const dim = interpolate(frame, [dimEl.start, dimEl.end], [1, 0.5], {
+    ...CLAMP,
+    easing: EASE_IO,
+  });
 
   const chars = [...title];
   const typed = Math.max(
     0,
-    Math.min(chars.length, Math.floor((frame - T.typeStart) / stagger) + 1),
+    Math.min(
+      chars.length,
+      Math.floor((frame - titleEl.start) / titleEl.beat("perChar")) + 1,
+    ),
   );
-  const typingDone = T.typeStart + chars.length * stagger;
+  const typingDone = titleEl.end;
   const caretOn =
-    frame >= T.typeStart - 6 &&
+    frame >= titleEl.start + titleEl.beat("caretOn") &&
     (frame < typingDone + 6 || Math.floor((frame - typingDone) / 15) % 2 === 1);
   const caretIn = interpolate(
     frame,
-    [T.typeStart - 8, T.typeStart - 2],
+    [
+      titleEl.start + titleEl.beat("caretIn"),
+      titleEl.start + titleEl.beat("caretFull"),
+    ],
     [0, 1],
     CLAMP,
   );
