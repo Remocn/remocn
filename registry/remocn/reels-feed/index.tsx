@@ -10,6 +10,8 @@ import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import { type ReelsFeedElementId, reelsFeedTimeline } from "./timeline";
 
 const { fontFamily: onest } = loadFont("normal", {
   weights: ["300", "400"],
@@ -54,6 +56,12 @@ export interface ReelsFeedProps {
   lines?: [string, string, string];
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
+  /**
+   * Moves, trims or stretches the copy lines, the taps, the story slides,
+   * the swipe, the reel and the like, by the ids in `./timeline`.
+   * Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<ReelsFeedElementId>;
 }
 
 const SW = 393;
@@ -61,14 +69,6 @@ const SH = 852;
 const BEZEL = 11;
 const BW = SW + BEZEL * 2;
 const BH = SH + BEZEL * 2;
-
-const TAP_STORY = 34;
-const OPEN = 37;
-const SEG = [44, 96, 144, 200];
-const POLL_TAP = 170;
-const SWIPE = 200;
-const REEL = 214;
-const DT = 240;
 
 const clamp = { extrapolateLeft: "clamp", extrapolateRight: "clamp" } as const;
 const glide = Easing.bezier(0.65, 0, 0.35, 1);
@@ -1116,32 +1116,52 @@ function ScaleLayer({
   );
 }
 
-export function ReelsFeed({
-  account = "remocn",
-  stories = [],
-  reelSrc,
-  pollQuestion = "Shipping a launch video this week?",
-  pollOptions = ["Yes, this week", "Not yet"],
-  likes = ["12.4K", "12.5K"],
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = onest,
-  postCaption = "Our launch film is out. Cut it in an afternoon with remocn",
-  reelCaption = "v2 is live. 200+ components for launch videos",
-  logo,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "light",
-  lines,
-  ground,
-  groundParams,
-}: ReelsFeedProps) {
+export function ReelsFeed(props: ReelsFeedProps) {
+  const {
+    account = "remocn",
+    stories = [],
+    reelSrc,
+    pollQuestion = "Shipping a launch video this week?",
+    pollOptions = ["Yes, this week", "Not yet"],
+    likes = ["12.4K", "12.5K"],
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = onest,
+    postCaption = "Our launch film is out. Cut it in an afternoon with remocn",
+    reelCaption = "v2 is live. 200+ components for launch videos",
+    logo,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "light",
+    lines,
+    ground,
+    groundParams,
+    timing,
+  } = props;
   // `glide` names an easing in this file, so the glide mark is `tilt`.
   const tilt = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay);
-  const { fps, width, height } = useSceneConfig();
+  const { fps, width, height, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    reelsFeedTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const tapEl = tl.get("tap");
+  const openEl = tl.get("open");
+  const slides = [0, 1, 2].map((i) => tl.get(`story:${i}`));
+  const pollEl = tl.get("poll");
+  const swipeEl = tl.get("swipe");
+  const reelEl = tl.get("reel");
+  const likeEl = tl.get("like");
+  const tapAt = tapEl.start;
+  const openAt = openEl.start;
+  const pollAt = pollEl.start;
+  const swipeAt = swipeEl.start;
+  const likeAt = likeEl.start;
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
   const f = frame * speed;
   const dark = theme === "dark";
@@ -1177,18 +1197,15 @@ export function ReelsFeed({
     `${likes[1]} likes by lunch.`,
   ];
   const chapters = ["Story", "Poll", "Reel"];
-  const beats = [
-    [0, 136],
-    [136, 206],
-    [206, 1e9],
-  ];
   const lineEls = copy.map((line, i) => {
-    const [a, b] = beats[i];
-    const inn = interpolate(f, [a + (i ? 4 : 14), a + (i ? 20 : 30)], [0, 1], {
+    const e = tl.get(`line:${i}`);
+    const a = e.start;
+    const b = e.end;
+    const inn = interpolate(f, [a + e.beat("inAt"), a + e.beat("in")], [0, 1], {
       ...clamp,
       easing: ENTER,
     });
-    const out = interpolate(f, [b, b + 8], [0, 1], {
+    const out = interpolate(f, [b, b + e.beat("out")], [0, 1], {
       ...clamp,
       easing: EXIT,
     });
@@ -1235,46 +1252,68 @@ export function ReelsFeed({
   const ringY = 106 + RING / 2;
   const ringPress = interpolate(
     f,
-    [TAP_STORY - 1, TAP_STORY + 2, TAP_STORY + 8],
+    [
+      tapAt + tapEl.beat("dip"),
+      tapAt + tapEl.beat("pressed"),
+      tapAt + tapEl.beat("release"),
+    ],
     [1, 0.96, 1],
     clamp,
   );
-  const open = interpolate(f, [OPEN, OPEN + 16], [0, 1], {
+  const open = interpolate(f, [openAt, openEl.end], [0, 1], {
     ...clamp,
     easing: ENTER,
   });
-  const seg = SEG.findIndex((s, i) => f >= s && f < (SEG[i + 1] ?? 1e9));
-  const storyIdx = Math.max(0, Math.min(2, seg));
-  const segT = f - SEG[storyIdx];
-  const swipe = interpolate(f, [SWIPE, REEL], [0, 1], {
+  // The slide showing is the last one started, the first before any has.
+  let storyIdx = 0;
+  slides.forEach((e, i) => {
+    if (f >= e.start) storyIdx = i;
+  });
+  const segT = f - slides[storyIdx].start;
+  const swipe = interpolate(f, [swipeAt, swipeEl.end], [0, 1], {
     ...clamp,
     easing: ENTER,
   });
-  const vote = interpolate(f, [POLL_TAP + 1, POLL_TAP + 16], [0, 1], {
-    ...clamp,
-    easing: Easing.bezier(0.22, 1, 0.36, 1),
-  });
+  const vote = interpolate(
+    f,
+    [pollAt + pollEl.beat("voteAt"), pollAt + pollEl.beat("vote")],
+    [0, 1],
+    {
+      ...clamp,
+      easing: Easing.bezier(0.22, 1, 0.36, 1),
+    },
+  );
 
-  const burst = sp(DT + 6, CHIP);
-  const burstOut = interpolate(f, [DT + 26, DT + 40], [0, 1], {
-    ...clamp,
-    easing: EXIT,
-  });
-  const liked = sp(DT + 7, CHIP);
-  const tick = interpolate(f, [DT + 8, DT + 16], [0, 1], {
-    ...clamp,
-    easing: Easing.bezier(0.22, 1, 0.36, 1),
-  });
+  const burst = sp(likeAt + likeEl.beat("burst"), CHIP);
+  const burstOut = interpolate(
+    f,
+    [likeAt + likeEl.beat("outAt"), likeAt + likeEl.beat("out")],
+    [0, 1],
+    {
+      ...clamp,
+      easing: EXIT,
+    },
+  );
+  const liked = sp(likeAt + likeEl.beat("liked"), CHIP);
+  const tick = interpolate(
+    f,
+    [likeAt + likeEl.beat("tickAt"), likeAt + likeEl.beat("tick")],
+    [0, 1],
+    {
+      ...clamp,
+      easing: Easing.bezier(0.22, 1, 0.36, 1),
+    },
+  );
 
   const keys = [
-    { t: 20, x: 300, y: 420 },
-    { t: TAP_STORY - 2, x: ringX, y: ringY },
-    { t: POLL_TAP - 16, x: ringX, y: ringY },
-    { t: POLL_TAP - 2, x: 120, y: 456 },
-    { t: SWIPE - 6, x: 200, y: 700 },
-    { t: SWIPE, x: 200, y: 700 },
-    { t: REEL - 2, x: 200, y: 300 },
-    { t: DT - 10, x: 196, y: 410 },
+    { t: tapAt + tapEl.beat("appear"), x: 300, y: 420 },
+    { t: tapAt + tapEl.beat("arrive"), x: ringX, y: ringY },
+    { t: pollAt + pollEl.beat("approach"), x: ringX, y: ringY },
+    { t: pollAt + pollEl.beat("arrive"), x: 120, y: 456 },
+    { t: swipeAt + swipeEl.beat("approach"), x: 200, y: 700 },
+    { t: swipeAt, x: 200, y: 700 },
+    { t: swipeEl.end + swipeEl.beat("land"), x: 200, y: 300 },
+    { t: likeAt + likeEl.beat("approach"), x: 196, y: 410 },
   ];
   let tap = keys[0];
   for (let i = 0; i < keys.length - 1; i++) {
@@ -1292,10 +1331,10 @@ export function ReelsFeed({
   const show = (a: number, b: number) =>
     interpolate(f, [a, a + 6, b, b + 6], [0, 1, 1, 0], clamp);
   const tapOpacity = Math.max(
-    show(20, TAP_STORY + 4),
-    show(POLL_TAP - 14, POLL_TAP + 4),
-    show(SWIPE - 8, REEL),
-    show(DT - 12, DT + 12),
+    show(tapAt + tapEl.beat("appear"), tapAt + tapEl.beat("hide")),
+    show(pollAt + pollEl.beat("show"), pollAt + pollEl.beat("hide")),
+    show(swipeAt + swipeEl.beat("show"), swipeEl.end),
+    show(likeAt + likeEl.beat("show"), likeAt + likeEl.beat("hide")),
   );
   const bump = (at: number) =>
     interpolate(f, [at - 1, at + 2, at + 7], [0, 1, 0], clamp);
@@ -1303,11 +1342,11 @@ export function ReelsFeed({
     1 -
     0.2 *
       Math.max(
-        bump(TAP_STORY),
-        bump(POLL_TAP),
-        bump(DT),
-        bump(DT + 6),
-        f >= SWIPE - 2 && f < REEL ? 1 : 0,
+        bump(tapAt),
+        bump(pollAt),
+        bump(likeAt),
+        bump(likeAt + likeEl.beat("second")),
+        f >= swipeAt + swipeEl.beat("hold") && f < swipeEl.end ? 1 : 0,
       );
 
   const storyHeader = (
@@ -1321,7 +1360,7 @@ export function ReelsFeed({
               ? 1
               : i > storyIdx
                 ? 0
-                : interpolate(segT, [0, SEG[i + 1] - SEG[i]], [0, 1], clamp);
+                : interpolate(segT, [0, slides[i].length], [0, 1], clamp);
           return (
             <div
               key={i}
@@ -1448,7 +1487,7 @@ export function ReelsFeed({
             }}
           />
           <Phone>
-            {f < OPEN + 16 && (
+            {f < openEl.end && (
               <AbsoluteFill style={{ background: c.bg, color: c.text }}>
                 <StatusBar color={c.text} />
                 <div
@@ -1708,7 +1747,7 @@ export function ReelsFeed({
               </AbsoluteFill>
             )}
 
-            {f >= OPEN && (
+            {f >= openAt && (
               <AbsoluteFill
                 style={{
                   background: "#000",
@@ -1800,7 +1839,7 @@ export function ReelsFeed({
               </AbsoluteFill>
             )}
 
-            {f >= SWIPE && (
+            {f >= swipeAt && (
               <AbsoluteFill
                 style={{
                   background: "#000",
@@ -1818,7 +1857,7 @@ export function ReelsFeed({
                   }}
                 >
                   <Scene src={reelSrc}>
-                    <ReelScene t={f - SWIPE} />
+                    <ReelScene t={f - swipeAt} />
                   </Scene>
                   <div
                     style={{
@@ -2004,7 +2043,7 @@ export function ReelsFeed({
                 >
                   <div
                     style={{
-                      width: `${interpolate(f, [REEL, REEL + 120], [4, 60], clamp)}%`,
+                      width: `${interpolate(f, [reelEl.start, reelEl.end], [4, 60], clamp)}%`,
                       height: "100%",
                       background: "#fff",
                     }}
@@ -2039,7 +2078,7 @@ export function ReelsFeed({
                     glyph="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8z"
                   />
                 </div>
-                {f >= DT + 6 && (
+                {f >= likeAt + likeEl.beat("burst") && (
                   <div
                     style={{
                       position: "absolute",
@@ -2078,7 +2117,7 @@ export function ReelsFeed({
               </AbsoluteFill>
             )}
 
-            {f >= OPEN + 8 && <StatusBar color="#fff" />}
+            {f >= openAt + openEl.beat("status") && <StatusBar color="#fff" />}
             <div
               style={{
                 position: "absolute",
@@ -2105,7 +2144,8 @@ export function ReelsFeed({
                 width: 136,
                 height: 5,
                 borderRadius: 3,
-                background: f >= OPEN + 4 || dark ? "#fff" : "#111",
+                background:
+                  f >= openAt + openEl.beat("bar") || dark ? "#fff" : "#111",
                 zIndex: 36,
               }}
             />
