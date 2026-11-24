@@ -9693,12 +9693,21 @@
       "title": "Walkout Name",
       "description": "A fighter-style name stack, 'The Launch Kid', with a light slash, record and a serif nickname.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/walkout-name/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/walkout-name.tsx"
+          "target": "components/remocn/walkout-name/index.tsx"
+        },
+        {
+          "path": "registry/remocn/walkout-name/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/walkout-name/timeline.ts"
         }
       ],
       "type": "registry:component"

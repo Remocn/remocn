@@ -9698,10 +9698,19 @@
         {
           "path": "walkout-name/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/walkout-name.tsx"
+          "target": "components/remocn/walkout-name/index.tsx"
+        },
+        {
+          "path": "walkout-name/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/walkout-name/timeline.ts"
         }
       ],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"]
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ]
     },
     {
       "name": "ko-count",
