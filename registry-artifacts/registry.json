@@ -10118,12 +10118,21 @@
       "title": "Axis Flex",
       "description": "A gradient word flexes its width and weight like an elastic variable font.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/axis-flex/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/axis-flex.tsx"
+          "target": "components/remocn/axis-flex/index.tsx"
+        },
+        {
+          "path": "registry/remocn/axis-flex/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/axis-flex/timeline.ts"
         }
       ],
       "type": "registry:component"

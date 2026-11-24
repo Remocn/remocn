@@ -13,6 +13,16 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import {
+  type ResolvedElement,
+  type Timing,
+  useTimeline,
+} from "@/lib/remocn/timeline";
+import {
+  type AxisFlexElementId,
+  axisFlexTimeline,
+  DEFAULT_WORD,
+} from "./timeline";
 
 const flex = loadVariableFont("normal", { subsets: ["latin"] });
 
@@ -37,6 +47,12 @@ export interface AxisFlexProps {
   theme?: "dark" | "light";
   /** Playback multiplier. */
   speed?: number;
+  /**
+   * Moves, trims or stretches the fade-in, the wave, single letters and the
+   * second line, by the ids in `./timeline`. Frames on the scene timeline,
+   * after `delay` and `speed`.
+   */
+  timing?: Timing<AxisFlexElementId>;
 }
 
 /**
@@ -71,14 +87,8 @@ const NARROW: Axes = { wdth: 75, wght: 400 };
 
 const TRACK = -0.02;
 
-// Timeline (frames at speed 1).
-const WAVE_IN = 6;
-const WAVE_FULL = 22;
-const PERIOD = 30;
-const SETTLE = 84;
-const SETTLE_STAGGER = 2;
-const LINE_IN = SETTLE + 16;
-const SAMPLE_END = SETTLE + 24;
+/** The flex is sampled for the widest row until this long after the line starts. */
+const SAMPLE_TAIL = 8;
 
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
 const CLAMP = {
@@ -103,12 +113,17 @@ const fvs = (a: Axes) =>
   `"wdth" ${a.wdth.toFixed(2)}, "wght" ${a.wght.toFixed(1)}`;
 
 /** Equalizer level of glyph i at time t: a travelling wave plus a faster ripple. */
-function level(i: number, t: number) {
-  const amp = interpolate(t, [WAVE_IN, WAVE_FULL], [0, 1], {
-    ...CLAMP,
-    easing: Easing.bezier(0.45, 0, 0.55, 1),
-  });
-  const ph = ((t - WAVE_IN) / PERIOD) * Math.PI * 2;
+function level(i: number, t: number, wave: ResolvedElement) {
+  const amp = interpolate(
+    t,
+    [wave.start, wave.start + wave.beat("full")],
+    [0, 1],
+    {
+      ...CLAMP,
+      easing: Easing.bezier(0.45, 0, 0.55, 1),
+    },
+  );
+  const ph = ((t - wave.start) / wave.beat("period")) * Math.PI * 2;
   const main = Math.sin(ph - i * 0.95);
   const ripple = Math.sin(ph * 1.85 - i * 1.7 + 1.1);
   const v = (main * 0.72 + ripple * 0.28 + 1) / 2;
@@ -207,27 +222,34 @@ function ScaleLayer({
   );
 }
 
-export function AxisFlex({
-  word = "elastic",
-  line = "One family, every width",
-  accent = "#3B5BFD",
-  background,
-  fontFamily = flex.fontFamily,
-  settleAt = SETTLE,
-  stagger = SETTLE_STAGGER,
-  scale = 1,
-  delay = 0,
-  theme = "dark",
-  speed = 1,
-}: AxisFlexProps) {
+export function AxisFlex(props: AxisFlexProps) {
+  const {
+    word = DEFAULT_WORD,
+    line = "One family, every width",
+    accent = "#3B5BFD",
+    background,
+    fontFamily = flex.fontFamily,
+    scale = 1,
+    delay = 0,
+    theme = "dark",
+    speed = 1,
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H, fps } = useSceneConfig();
+  const { width: W, height: H, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    axisFlexTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const c = THEMES[theme];
   const stage =
     background === "transparent" ? "transparent" : (background ?? c.bg);
-  const lineIn = settleAt + (LINE_IN - SETTLE);
-  const sampleEnd = settleAt + (SAMPLE_END - SETTLE);
+  const wave = tl.get("wave");
+  const lineEl = tl.get("line");
+  const sampleEnd = lineEl.start + SAMPLE_TAIL;
   const chars = useMemo(() => Array.from(word), [word]);
   const m = useMetrics(chars, line, fontFamily);
 
@@ -237,11 +259,12 @@ export function AxisFlex({
     let max = m.finalWidth;
     for (let f = 0; f <= sampleEnd; f++) {
       let w = 0;
-      for (let i = 0; i < chars.length; i++) w += advAt(m.adv[i], level(i, f));
+      for (let i = 0; i < chars.length; i++)
+        w += advAt(m.adv[i], level(i, f, wave));
       max = Math.max(max, w);
     }
     return max;
-  }, [m, chars, sampleEnd]);
+  }, [m, chars, sampleEnd, wave]);
 
   if (!m) {
     return (
@@ -252,17 +275,26 @@ export function AxisFlex({
   const F = Math.min((W * 0.84) / widest, H * 0.36);
   const F2 = Math.min(F * 0.26, (W * 0.8) / Math.max(0.1, m.lineWidth));
 
-  const lineP = interpolate(t, [lineIn, lineIn + 20], [0, 1], {
-    ...CLAMP,
-    easing: EASE_OUT,
-  });
-  const lineSqueeze = interpolate(t, [lineIn, lineIn + 24], [0, 1], {
+  const lineP = interpolate(
+    t,
+    [lineEl.start, lineEl.start + lineEl.beat("rise")],
+    [0, 1],
+    {
+      ...CLAMP,
+      easing: EASE_OUT,
+    },
+  );
+  const lineSqueeze = interpolate(t, [lineEl.start, lineEl.end], [0, 1], {
     ...CLAMP,
     easing: Easing.bezier(0.3, 0, 0.1, 1),
   });
   const lineAxes = mix({ ...NARROW, wdth: 100 }, NARROW, lineSqueeze);
 
-  const enter = interpolate(t, [0, 10], [0, 1], { ...CLAMP, easing: EASE_OUT });
+  const enterEl = tl.get("enter");
+  const enter = interpolate(t, [enterEl.start, enterEl.end], [0, 1], {
+    ...CLAMP,
+    easing: EASE_OUT,
+  });
   const stops = c.fill(accent);
   const angle = 100 + Math.sin(t / 45) * 6;
   const fill = `linear-gradient(${angle.toFixed(2)}deg, ${stops[0]} 0%, ${stops[1]} 30%, ${stops[2]} 62%, ${stops[3]} 100%)`;
@@ -302,11 +334,11 @@ export function AxisFlex({
         >
           {chars.map((ch, i) => {
             const snap = spring({
-              frame: t - settleAt - i * stagger,
+              frame: t - tl.get(`letter:${i}`).start,
               fps,
               config: SPRING_SNAP,
             });
-            const l = level(i, t);
+            const l = level(i, t, wave);
             const axes = clampAxes(mix(mix(LOW, HIGH, l), FINAL, snap));
             return (
               <span
