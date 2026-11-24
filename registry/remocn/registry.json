@@ -15770,12 +15770,21 @@
       "title": "Testimonial Stack",
       "description": "A social post card with a highlighted line stacks in with other testimonials.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/gsh", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/gsh",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "testimonial-stack/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/testimonial-stack.tsx"
+          "target": "components/remocn/testimonial-stack/index.tsx"
+        },
+        {
+          "path": "testimonial-stack/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/testimonial-stack/timeline.ts"
         }
       ]
     },

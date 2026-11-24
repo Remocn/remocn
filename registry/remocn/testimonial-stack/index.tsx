@@ -14,6 +14,13 @@ import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_QUOTES,
+  type TestimonialStackElementId,
+  type TestimonialStackQuote,
+  testimonialStackTimeline,
+} from "./timeline";
 
 const { fontFamily: instrumentSans } = loadFont("normal", {
   weights: ["400"],
@@ -24,17 +31,7 @@ const { fontFamily: serif } = loadSerif("normal", {
   subsets: ["latin"],
 });
 
-export interface TestimonialQuote {
-  text: string;
-  highlight?: string;
-  name: string;
-  role: string;
-  handle?: string;
-  avatarColor?: string;
-  stars?: number;
-  date?: string;
-  source?: "x" | "none";
-}
+export type TestimonialQuote = TestimonialStackQuote;
 
 export interface TestimonialStackProps {
   quotes?: TestimonialQuote[];
@@ -60,46 +57,13 @@ export interface TestimonialStackProps {
   delay?: number;
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
+  /**
+   * Moves, trims or stretches single quote cards and the finale, by the ids
+   * in `./timeline`.
+   * Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<TestimonialStackElementId>;
 }
-
-const DEFAULT_QUOTES: TestimonialQuote[] = [
-  {
-    text: "We shipped our launch video in a single afternoon. The motion looks like a design team spent weeks on it.",
-    highlight: "looks like a design team spent weeks on it",
-    name: "Maya Chen",
-    role: "Founder, Kitebase",
-    handle: "@mayachen",
-    date: "Oct 14",
-    source: "x",
-  },
-  {
-    text: "Dropped three components into our Remotion project and the demo basically built itself. Owning the code is the right call.",
-    highlight: "the demo basically built itself",
-    name: "Leo Park",
-    role: "Staff Engineer, Lumen",
-    handle: "@leopark",
-    date: "Oct 15",
-    source: "x",
-  },
-  {
-    text: "Our launch clip got 3.4× the replies of anything we posted this year. The best tool we added this quarter.",
-    highlight: "3.4× the replies",
-    name: "Priya Raman",
-    role: "Head of Growth, Fernway",
-    stars: 5,
-    date: "Oct 16",
-    source: "none",
-  },
-  {
-    text: "I’m not a motion designer and it doesn’t matter anymore. Every scene is production-ready out of the box.",
-    highlight: "production-ready out of the box",
-    name: "Daniel Okafor",
-    role: "Indie hacker",
-    handle: "@danokafor",
-    date: "Oct 18",
-    source: "x",
-  },
-];
 
 function hash(n: number) {
   const x = Math.sin(n * 127.1 + 311.7) * 43758.5453;
@@ -333,25 +297,32 @@ function ScaleLayer({
   );
 }
 
-export function TestimonialStack({
-  quotes = DEFAULT_QUOTES,
-  ending = "pile",
-  title = "What builders said after launch week",
-  theme = "light",
-  speed = 1,
-  framesPerQuote = 50,
-  ink,
-  background,
-  fontFamily = instrumentSans,
-  radius = RADIUS,
-  tilt = 1,
-  scale: sceneScale = 1,
-  delay = 0,
-  ground,
-  groundParams,
-}: TestimonialStackProps) {
+export function TestimonialStack(props: TestimonialStackProps) {
+  const {
+    quotes = DEFAULT_QUOTES,
+    ending = "pile",
+    title = "What builders said after launch week",
+    theme = "light",
+    speed = 1,
+    ink,
+    background,
+    fontFamily = instrumentSans,
+    radius = RADIUS,
+    tilt = 1,
+    scale: sceneScale = 1,
+    delay = 0,
+    ground,
+    groundParams,
+    timing,
+  } = props;
   const rawFrame = Math.max(0, useSceneFrame() - delay);
-  const { fps, width, height } = useSceneConfig();
+  const { fps, width, height, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    testimonialStackTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const frame = rawFrame * speed;
   const tall = height > width;
   const SW = tall ? 700 : 1280;
@@ -360,17 +331,17 @@ export function TestimonialStack({
   const c = THEMES[theme];
 
   const n = quotes.length;
-  const per = framesPerQuote;
-  const startOf = (i: number) => (i === 0 ? -6 : 4 + i * per);
+  const cards = quotes.map((_, i) => tl.get(`quote:${i}`));
+  const finale = tl.get("finale");
 
-  const lands = quotes.map((_, i) =>
-    spring({ frame: frame - startOf(i), fps, config: CARD }),
+  const lands = cards.map((e) =>
+    spring({ frame: frame - e.start, fps, config: CARD }),
   );
-  const covers = quotes.map((_, i) =>
-    ramp(frame, startOf(i) + 4, startOf(i) + 16),
+  const covers = cards.map((e) =>
+    ramp(frame, e.start + e.beat("coverAt"), e.start + e.beat("cover")),
   );
 
-  const fanStart = startOf(n - 1) + per - 6;
+  const fanStart = finale.start;
   const cols = tall ? 1 : n <= 3 ? n : Math.ceil(n / 2);
   const rows = Math.ceil(n / cols);
   const gap = tall ? 20 : 22;
@@ -388,10 +359,10 @@ export function TestimonialStack({
   const fanOf = (i: number) =>
     ending === "fan"
       ? spring({
-          frame: frame - fanStart - (n - 1 - i) * 3,
+          frame: frame - fanStart - (n - 1 - i) * finale.beat("stagger"),
           fps,
           config: MORPH,
-          durationInFrames: 22,
+          durationInFrames: finale.beat("morph"),
         })
       : 0;
   const fanAll =
@@ -400,14 +371,27 @@ export function TestimonialStack({
           frame: frame - fanStart,
           fps,
           config: MORPH,
-          durationInFrames: 22 + (n - 1) * 3,
+          durationInFrames:
+            finale.beat("morph") + (n - 1) * finale.beat("stagger"),
         })
       : 0;
-  const titleIn = ramp(frame, fanStart + 10, fanStart + 24);
+  const titleIn =
+    ending === "fan"
+      ? ramp(
+          frame,
+          fanStart + finale.beat("titleAt"),
+          fanStart + finale.beat("title"),
+        )
+      : 0;
 
-  const camScale = interpolate(frame, [0, fanStart + 60], [1.02, 1.06], {
-    extrapolateRight: "clamp",
-  });
+  const camScale = interpolate(
+    frame,
+    [0, fanStart + finale.beat("push")],
+    [1.02, 1.06],
+    {
+      extrapolateRight: "clamp",
+    },
+  );
   const cam = interpolate(fanAll, [0, 1], [camScale, 1]);
   const pileScale = 1;
 
@@ -478,7 +462,8 @@ export function TestimonialStack({
               </div>
             ) : null}
             {quotes.map((quote, i) => {
-              if (frame < startOf(i)) return null;
+              const card = cards[i];
+              if (frame < card.start) return null;
               const p = lands[i];
               const dx = i % 2 === 0 ? -1 : 1;
               const finalRot = dx * (1 + hash(i + 1) * 1.8) * tilt;
@@ -525,7 +510,12 @@ export function TestimonialStack({
               }
 
               const air = 1 - Math.min(1, p);
-              const lit = ramp(frame - startOf(i), 14, 30, MOVE);
+              const lit = ramp(
+                frame - card.start,
+                card.beat("litAt"),
+                card.beat("lit"),
+                MOVE,
+              );
 
               return (
                 <div
