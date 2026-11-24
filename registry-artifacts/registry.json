@@ -8276,12 +8276,21 @@
       "title": "Core Sum",
       "description": "A monospace figure sums up to 2,097,152 beside a divider and a small caption.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/core-sum/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/core-sum.tsx"
+          "target": "components/remocn/core-sum/index.tsx"
+        },
+        {
+          "path": "registry/remocn/core-sum/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/core-sum/timeline.ts"
         }
       ],
       "type": "registry:component"
