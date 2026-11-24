@@ -15708,13 +15708,19 @@
       "registryDependencies": [
         "@remocn/gsh",
         "@remocn/glide",
-        "@remocn/frame-rate"
+        "@remocn/frame-rate",
+        "@remocn/timeline"
       ],
       "files": [
         {
           "path": "ui-callout/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/ui-callout.tsx"
+          "target": "components/remocn/ui-callout/index.tsx"
+        },
+        {
+          "path": "ui-callout/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/ui-callout/timeline.ts"
         }
       ]
     },
