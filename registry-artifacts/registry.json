@@ -15550,12 +15550,21 @@
       "title": "Paper Plane",
       "description": "A dotted flight path loops past three stops and lands on the Remocn wordmark.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/paper-plane/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/paper-plane.tsx"
+          "target": "components/remocn/paper-plane/index.tsx"
+        },
+        {
+          "path": "registry/remocn/paper-plane/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/paper-plane/timeline.ts"
         }
       ],
       "type": "registry:component"
