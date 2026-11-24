@@ -6155,13 +6155,19 @@
       "registryDependencies": [
         "@remocn/gsh",
         "@remocn/glide",
-        "@remocn/frame-rate"
+        "@remocn/frame-rate",
+        "@remocn/timeline"
       ],
       "files": [
         {
           "path": "registry/remocn/word-gap-media/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/word-gap-media.tsx"
+          "target": "components/remocn/word-gap-media/index.tsx"
+        },
+        {
+          "path": "registry/remocn/word-gap-media/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/word-gap-media/timeline.ts"
         }
       ],
       "type": "registry:component"
