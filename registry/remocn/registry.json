@@ -5165,12 +5165,17 @@
       "title": "Line Boil",
       "description": "A hand-drawn outline boils like a cel animation, redrawn every few frames with a varying pen weight, then fills with color while it keeps boiling.",
       "dependencies": ["remotion", "@remotion/paths"],
-      "registryDependencies": ["@remocn/frame-rate"],
+      "registryDependencies": ["@remocn/frame-rate", "@remocn/timeline"],
       "files": [
         {
           "path": "line-boil/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/line-boil.tsx"
+          "target": "components/remocn/line-boil/index.tsx"
+        },
+        {
+          "path": "line-boil/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/line-boil/timeline.ts"
         }
       ]
     },
