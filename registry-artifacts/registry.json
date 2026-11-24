@@ -15503,13 +15503,19 @@
       "registryDependencies": [
         "@remocn/gsh",
         "@remocn/glide",
-        "@remocn/frame-rate"
+        "@remocn/frame-rate",
+        "@remocn/timeline"
       ],
       "files": [
         {
           "path": "registry/remocn/whats-new-modal/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/whats-new-modal.tsx"
+          "target": "components/remocn/whats-new-modal/index.tsx"
+        },
+        {
+          "path": "registry/remocn/whats-new-modal/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/whats-new-modal/timeline.ts"
         }
       ],
       "type": "registry:component"
