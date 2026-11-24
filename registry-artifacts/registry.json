@@ -2645,12 +2645,21 @@
       "title": "Handwrite",
       "description": "Handwritten text laid down letter by letter on a quantized stop-motion clock, each glyph keeping its own slant and baseline wobble.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/stop-motion", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/stop-motion",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/handwrite/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/handwrite.tsx"
+          "target": "components/remocn/handwrite/index.tsx"
+        },
+        {
+          "path": "registry/remocn/handwrite/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/handwrite/timeline.ts"
         }
       ],
       "type": "registry:component"
