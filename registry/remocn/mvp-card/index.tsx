@@ -5,6 +5,12 @@ import { loadFont as loadManrope } from "@remotion/google-fonts/Manrope";
 import { AbsoluteFill, Easing, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_MVP_STATS,
+  type MvpCardElementId,
+  mvpCardTimeline,
+} from "./timeline";
 
 const { fontFamily: antonio } = loadFont("normal", {
   weights: ["400", "500"],
@@ -87,6 +93,12 @@ export interface MvpCardProps {
   delay?: number;
   theme?: "dark" | "light";
   speed?: number;
+  /**
+   * Moves, trims or stretches the card, the sweep, the title, the name row,
+   * the kicker and each stat, by the ids in `./timeline`.
+   * Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<MvpCardElementId>;
 }
 
 // Beat sheet (30fps, speed 1):
@@ -196,32 +208,40 @@ function ScaleLayer({
   );
 }
 
-export function MvpCard({
-  title = "MVP",
-  kicker = "Most valuable player",
-  event = "Grand final 2026",
-  role = "Carry",
-  number = "01",
-  stats = [
-    { value: 12.4, decimals: 1, label: "Renders / min" },
-    { value: 0, from: 37, label: "Bugs" },
-    { value: 100, suffix: "%", label: "Uptime" },
-  ],
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = antonio,
-  stagger = 8,
-  countDuration = 22,
-  logo,
-  scale = 1,
-  delay = 0,
-  theme = "dark",
-  speed = 1,
-}: MvpCardProps) {
+export function MvpCard(props: MvpCardProps) {
+  const {
+    title = "MVP",
+    kicker = "Most valuable player",
+    event = "Grand final 2026",
+    role = "Carry",
+    number = "01",
+    stats = DEFAULT_MVP_STATS,
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = antonio,
+    logo,
+    scale = 1,
+    delay = 0,
+    theme = "dark",
+    speed = 1,
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed + 1;
-  const { width: W, height: H } = useSceneConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    mvpCardTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const driftEl = tl.get("drift");
+  const cardEl = tl.get("card");
+  const sweepEl = tl.get("sweep");
+  const titleEl = tl.get("title");
+  const nameEl = tl.get("name");
+  const kickerEl = tl.get("kicker");
   const c = THEMES[theme];
   const fg = ink ?? c.ink;
   const bg =
@@ -258,17 +278,23 @@ export function MvpCard({
   const capBottom = cardY + cardH;
 
   // ── Entrance ──────────────────────────────────────────────────────────────
-  const open = SLAM(ramp(t, 0, 6));
-  const settle = SLAM(ramp(t, 0, 9));
+  const open = SLAM(ramp(t, cardEl.start, cardEl.beat("open")));
+  const settle = SLAM(ramp(t, cardEl.start, cardEl.length));
   const cardScale = 1 + 0.07 * (1 - settle);
   const cardLift = (1 - settle) * 46 * u;
-  const sweep = interpolate(t, [3, 14], [-0.6, 1.6], CLAMP);
-  const nameIn = OUT(ramp(t, 11, 10));
-  const kickerIn = OUT(ramp(t, 13, 10));
-  const lettersAt = (i: number) => 5 + i * 3;
-  const lastLetter = lettersAt(letters.length - 1) + 5;
+  const sweep = interpolate(
+    t,
+    [sweepEl.start, sweepEl.end],
+    [-0.6, 1.6],
+    CLAMP,
+  );
+  const nameIn = OUT(ramp(t, nameEl.start, nameEl.length));
+  const kickerIn = OUT(ramp(t, kickerEl.start, kickerEl.length));
+  const lettersAt = (i: number) => titleEl.start + i * titleEl.beat("stagger");
+  const lastLetter = lettersAt(letters.length - 1) + titleEl.beat("land");
+  const cardHit = cardEl.start + cardEl.beat("hit");
   const hitAt = (tt: number) =>
-    Math.max(kick(tt - 4, 8), kick(tt - lastLetter, 9) * 0.8);
+    Math.max(kick(tt - cardHit, 8), kick(tt - lastLetter, 9) * 0.8);
   const hit = hitAt(t);
   // The hits jump up in one frame and ease back, with no clean progress:
   // compare the zoom with the neighbouring frames, weighed by the reach from
@@ -278,10 +304,7 @@ export function MvpCard({
   const hitting =
     Math.abs(hitAt(t + speed) - hit) * 0.012 * reach > 1e-3 ||
     Math.abs(hit - hitAt(t - speed)) * 0.012 * reach > 1e-3;
-  const drift = interpolate(t, [0, 120], [0, 8], CLAMP);
-
-  const statAt = (i: number) => 18 + i * stagger;
-  const statLen = countDuration;
+  const drift = interpolate(t, [driftEl.start, driftEl.end], [0, 8], CLAMP);
 
   return (
     <AbsoluteFill style={{ background: bg, overflow: "hidden" }}>
@@ -352,7 +375,7 @@ export function MvpCard({
             }}
           >
             {letters.map((ch, i) => {
-              const p = SLAM(ramp(t, lettersAt(i), 9));
+              const p = SLAM(ramp(t, lettersAt(i), titleEl.beat("rise")));
               return (
                 <span
                   key={`${i}-${ch}`}
@@ -492,13 +515,17 @@ export function MvpCard({
 
               {/* Stats. */}
               {stats.map((s, i) => {
-                const at = statAt(i);
+                const stat = tl.get(`stat:${i}`);
+                const at = stat.start;
+                const statLen = stat.length;
                 const p = COUNT(ramp(t, at, statLen));
                 const from = s.from ?? 0;
                 const v = from + (s.value - from) * p;
                 const dec = s.decimals ?? 0;
                 const shown = `${v.toFixed(dec)}${s.suffix ?? ""}`;
-                const rowIn = OUT(ramp(t, at - 2, 8));
+                const rowIn = OUT(
+                  ramp(t, at + stat.beat("rowFrom"), stat.beat("row")),
+                );
                 const land = kick(t - at - statLen, 9);
                 const landing =
                   kick(t + speed - at - statLen, 9) !== land ||

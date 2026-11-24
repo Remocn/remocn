@@ -10534,10 +10534,19 @@
         {
           "path": "mvp-card/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/mvp-card.tsx"
+          "target": "components/remocn/mvp-card/index.tsx"
+        },
+        {
+          "path": "mvp-card/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/mvp-card/timeline.ts"
         }
       ],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"]
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ]
     },
     {
       "name": "bracket-win",
