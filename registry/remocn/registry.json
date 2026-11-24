@@ -10151,12 +10151,17 @@
       "title": "Lights Out",
       "description": "Five lights go out and a heavy italic headline slams in, with a blue period.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/frame-rate"],
+      "registryDependencies": ["@remocn/frame-rate", "@remocn/timeline"],
       "files": [
         {
           "path": "lights-out/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/lights-out.tsx"
+          "target": "components/remocn/lights-out/index.tsx"
+        },
+        {
+          "path": "lights-out/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/lights-out/timeline.ts"
         }
       ]
     },

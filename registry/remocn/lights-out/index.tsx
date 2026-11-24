@@ -5,6 +5,8 @@ import type React from "react";
 import { useId } from "react";
 import { AbsoluteFill, Easing, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import { type LightsOutElementId, lightsOutTimeline } from "./timeline";
 
 const { fontFamily: display } = loadFont("normal", {
   weights: ["500"],
@@ -35,6 +37,12 @@ export interface LightsOutProps {
   delay?: number;
   theme?: "dark" | "light";
   speed?: number;
+  /**
+   * Moves, trims or stretches single lamps, the slam, lights out and the
+   * glow, by the ids in `./timeline`. Frames on the scene timeline, after
+   * `delay` and `speed`.
+   */
+  timing?: Timing<LightsOutElementId>;
 }
 
 // Unbounded 500, per 1000 em, chars 32–126 then ’ “ ” … – — (harfbuzz): advance,
@@ -144,10 +152,6 @@ const SLANT = 11;
 //  74–78   the headline brakes to a hard stop and the bands line up; the dark
 //          row snaps up and shrinks to sit above it
 //  78–     poster hold, the ground glow comes back low under the headline
-const FIRST_LIGHT = 10;
-const SLAM_LEN = 5;
-const RISE_LEN = 9;
-
 const SLAM = Easing.bezier(0.22, 1, 0.36, 1);
 const RISE = Easing.bezier(0.2, 0.9, 0.3, 1);
 const PUSH = Easing.bezier(0.5, 0, 0.75, 0.4);
@@ -222,30 +226,38 @@ function ScaleLayer({
   );
 }
 
-export function LightsOut({
-  title = "SHIP IT.",
-  beat = 10,
-  hold = 24,
-  slant = SLANT,
-  glow: showGlow = true,
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = display,
-  scale = 1,
-  delay = 0,
-  theme = "dark",
-  speed = 1,
-}: LightsOutProps) {
+export function LightsOut(props: LightsOutProps) {
+  const {
+    title = "SHIP IT.",
+    slant = SLANT,
+    glow: showGlow = true,
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = display,
+    scale = 1,
+    delay = 0,
+    theme = "dark",
+    speed = 1,
+    timing,
+  } = props;
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H } = useSceneConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    lightsOutTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const c = THEMES[theme];
   const fg = ink ?? c.ink;
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
 
   const text = title.trim().toUpperCase() || "GO";
-  const lastLight = FIRST_LIGHT + 4 * beat;
-  const outAt = lastLight + hold;
+  const outEl = tl.get("out");
+  const slamEl = tl.get("slam");
+  const glowEl = tl.get("glow");
+  const outAt = outEl.start;
   const out = t >= outAt;
 
   // Headline metrics: sized so its ink spans ~86% of the width.
@@ -269,13 +281,13 @@ export function LightsOut({
   const baseline = top + d * small + blockGap + cap;
 
   const push = 1 + 0.06 * PUSH(interpolate(t, [0, outAt], [0, 1], CLAMP));
-  const rise = RISE(interpolate(t, [outAt, outAt + RISE_LEN], [0, 1], CLAMP));
+  const rise = RISE(interpolate(t, [outAt, outEl.end], [0, 1], CLAMP));
   const rowScale = push + (small - push) * rise;
   const rowCy = H / 2 + (smallCy - H / 2) * rise;
 
   // Slam: its clock starts a frame early, so on the out frame the headline is
   // already halfway across, then it brakes hard.
-  const slamStart = outAt - 1;
+  const slamStart = slamEl.start;
   // The shear pushes the cap line right; center the sheared ink, not the
   // upright one.
   const shear = Math.tan((slant * Math.PI) / 180);
@@ -284,7 +296,7 @@ export function LightsOut({
   const xAt = (f: number) =>
     from +
     (restX - from) *
-      SLAM(interpolate(f, [slamStart, slamStart + SLAM_LEN], [0, 1], CLAMP));
+      SLAM(interpolate(f, [slamStart, slamEl.end], [0, 1], CLAMP));
   const x = xAt(t);
   const velocity = x - xAt(t - 1);
   const smear = Math.min(velocity * 1.15, 0.9 * W);
@@ -326,7 +338,7 @@ export function LightsOut({
   const moving = out && smear > 0.025 * W;
   const step = 0.07 * fs;
   const lights = Array.from({ length: 5 }, (_, i) => {
-    const on = !out && t >= FIRST_LIGHT + i * beat;
+    const on = !out && t >= tl.get(`light:${i}`).start;
     const cx = W / 2 + (i - 2) * (d + gap) * rowScale;
     return { cx, on };
   });
@@ -335,20 +347,21 @@ export function LightsOut({
 
   // Ground: a warm "rise" glow from below that builds with every lamp, dies
   // on lights out, and comes back low under the landed headline.
-  const lit = lights.reduce(
-    (acc, _, i) =>
+  const lit = lights.reduce((acc, _, i) => {
+    const lamp = tl.get(`light:${i}`);
+    return (
       acc +
       RISE(
         interpolate(
           t,
-          [FIRST_LIGHT + i * beat, FIRST_LIGHT + i * beat + 6],
+          [lamp.start, lamp.start + lamp.beat("warm")],
           [0, 1],
           CLAMP,
         ),
-      ),
-    0,
-  );
-  const after = interpolate(t, [outAt + 4, outAt + 30], [0, 0.42], {
+      )
+    );
+  }, 0);
+  const after = interpolate(t, [glowEl.start, glowEl.end], [0, 0.42], {
     ...CLAMP,
     easing: Easing.bezier(0.3, 0, 0.2, 1),
   });
