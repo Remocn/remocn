@@ -8,6 +8,13 @@ import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_TEXT,
+  type SocialSchedulerElementId,
+  socialSchedulerTimeline,
+  typedCount,
+} from "./timeline";
 
 const onest = loadFont("normal", {
   weights: ["300", "400"],
@@ -59,10 +66,13 @@ export interface SocialSchedulerProps {
   speed?: number;
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
+  /**
+   * Moves, trims or stretches the composer, the typing, each click, the card
+   * landing, the toast and the camera, by the ids in `./timeline`. Frames on
+   * the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<SocialSchedulerElementId>;
 }
-
-const DEFAULT_TEXT =
-  "remocn 2.0 is live: 120 Remotion components you copy, paste and own. Your next launch video takes an afternoon, not a sprint.";
 
 const DEFAULT_SLOTS: SchedulerSlot[] = [
   { label: "Mon 17:30" },
@@ -148,20 +158,6 @@ function withAlpha(color: string, alpha: number) {
   if (!/^[0-9a-fA-F]{6}$/.test(full)) return color;
   const n = Number.parseInt(full, 16);
   return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${alpha})`;
-}
-
-const hash = (i: number) => {
-  const s = Math.sin(i * 127.1 + 311.7) * 43758.5453;
-  return s - Math.floor(s);
-};
-
-function typedCount(text: string, frame: number, start: number) {
-  let t = start;
-  for (let i = 0; i < text.length; i++) {
-    t += 0.38 + hash(i) * 0.22 + (/[.:,]/.test(text[i - 1] ?? "") ? 2 : 0);
-    if (t > frame) return i;
-  }
-  return text.length;
 }
 
 interface Pt {
@@ -462,47 +458,61 @@ function ScaleLayer({
   );
 }
 
-const T = {
-  comp: 0,
-  type: 10,
-  cursorIn: 62,
-  media: 90,
-  time: 110,
-  slot: 128,
-  sched: 144,
-  land: 160,
-  toast: 184,
-  end: 228,
-};
-
-export function SocialScheduler({
-  text = DEFAULT_TEXT,
-  brand = "remocn",
-  handle = "remocn",
-  mediaSrc,
-  networks = ["Quill", "Guild"],
-  slots = DEFAULT_SLOTS,
-  pick = 1,
-  queue = DEFAULT_QUEUE,
-  weekLabel = "Oct 26 – 30, 2026",
-  days = DEFAULT_DAYS,
-  composerTitle = "New post",
-  queueTitle = "Queue",
-  ctaLabel = "Schedule",
-  theme = "light",
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = onest.fontFamily,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  ground,
-  groundParams,
-}: SocialSchedulerProps) {
+export function SocialScheduler(props: SocialSchedulerProps) {
+  const {
+    text = DEFAULT_TEXT,
+    brand = "remocn",
+    handle = "remocn",
+    mediaSrc,
+    networks = ["Quill", "Guild"],
+    slots = DEFAULT_SLOTS,
+    pick = 1,
+    queue = DEFAULT_QUEUE,
+    weekLabel = "Oct 26 – 30, 2026",
+    days = DEFAULT_DAYS,
+    composerTitle = "New post",
+    queueTitle = "Queue",
+    ctaLabel = "Schedule",
+    theme = "light",
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = onest.fontFamily,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    ground,
+    groundParams,
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H, fps } = useSceneConfig();
+  const { width: W, height: H, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    socialSchedulerTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const comp = tl.get("comp");
+  const media = tl.get("media");
+  const time = tl.get("time");
+  const slotEl = tl.get("slot");
+  const sched = tl.get("sched");
+  const land = tl.get("land");
+  const toastEl = tl.get("toast");
+  const camera = tl.get("camera");
+  const T = {
+    comp: comp.start,
+    type: tl.get("type").start,
+    cursorIn: tl.get("cursor").start,
+    media: media.start,
+    time: time.start,
+    slot: slotEl.start,
+    sched: sched.start,
+    land: land.start,
+    toast: toastEl.start,
+  };
   const base = palette(theme);
   const pal = {
     ...base,
@@ -588,26 +598,47 @@ export function SocialScheduler({
   const body = text.slice(0, typed);
 
   const compIn = sp(T.comp, HEAVY);
-  const compInA = tween(frame, 0, 10);
-  const compOut = tween(frame, T.sched + 4, T.sched + 16, exitEase);
-  const boardFocus = sp(T.sched + 11, HEAVY);
-  const mediaIn = sp(T.media + 2, CARD);
-  const mediaGrow = sp(T.media + 2, MORPH);
-  const popIn = sp(T.time + 2, CARD);
+  const compInA = tween(frame, comp.start, comp.end);
+  const compOut = tween(
+    frame,
+    T.sched + sched.beat("fold"),
+    T.sched + sched.beat("foldEnd"),
+    exitEase,
+  );
+  const boardFocus = sp(T.sched + sched.beat("focus"), HEAVY);
+  const mediaAt = T.media + media.beat("add");
+  const mediaIn = sp(mediaAt, CARD);
+  const mediaGrow = sp(mediaAt, MORPH);
+  const popIn = sp(T.time + time.beat("pop"), CARD);
   const popA =
-    tween(frame, T.time + 1, T.time + 7) *
-    (1 - tween(frame, T.slot + 3, T.slot + 9, exitEase));
-  const picked = frame >= T.slot + 2;
-  const pickLabel = sp(T.slot + 2, CHIP);
-  const fly = sp(T.land - 4, HEAVY);
+    tween(frame, T.time + time.beat("fade"), T.time + time.beat("fadeEnd")) *
+    (1 -
+      tween(
+        frame,
+        T.slot + slotEl.beat("close"),
+        T.slot + slotEl.beat("closeEnd"),
+        exitEase,
+      ));
+  const pickAt = T.slot + slotEl.beat("pick");
+  const picked = frame >= pickAt;
+  const pickLabel = sp(pickAt, CHIP);
+  const flyAt = T.land + land.beat("fly");
+  const fly = sp(flyAt, HEAVY);
   const shift = sp(T.land, CARD);
-  const landed = frame >= T.land + 18;
+  const landed = frame >= T.land + land.beat("landed");
   const ringA =
-    tween(frame, T.land + 14, T.land + 22) *
-    (1 - 0.6 * tween(frame, T.land + 50, T.land + 70));
+    tween(frame, T.land + land.beat("ring"), T.land + land.beat("ringEnd")) *
+    (1 -
+      0.6 *
+        tween(frame, T.land + land.beat("dim"), T.land + land.beat("dimEnd")));
   const toast = sp(T.toast, CARD);
-  const toastA = tween(frame, T.toast, T.toast + 8);
-  const cam = tween(frame, T.sched, T.end, camEase);
+  const toastA = tween(frame, T.toast, T.toast + toastEl.beat("fade"));
+  const cam = tween(frame, camera.start, camera.end, camEase);
+  const labelIn = tween(
+    frame,
+    comp.start + comp.beat("label"),
+    comp.start + comp.beat("labelEnd"),
+  );
 
   const columns = dayNames.map((d) =>
     queue
@@ -638,10 +669,10 @@ export function SocialScheduler({
   const startPt = { x: D.w * 0.82, y: D.h + 40 };
   const legs: [number, Pt, Pt][] = [
     [T.cursorIn, startPt, tilePt],
-    [T.media + 6, tilePt, timePt],
-    [T.time + 4, timePt, slotPt],
-    [T.slot + 4, slotPt, schedPt],
-    [T.sched + 8, schedPt, restPt],
+    [T.media + media.beat("leave"), tilePt, timePt],
+    [T.time + time.beat("leave"), timePt, slotPt],
+    [T.slot + slotEl.beat("leave"), slotPt, schedPt],
+    [T.sched + sched.beat("leave"), schedPt, restPt],
   ];
   let cur: Pt = startPt;
   for (const [t0, a, b] of legs) {
@@ -653,8 +684,14 @@ export function SocialScheduler({
   const pressOf = (c: number) => pressAt(c, frame);
   const press = Math.max(...clicks.map(pressOf));
   const cursorA =
-    tween(frame, T.cursorIn, T.cursorIn + 6) *
-    (1 - tween(frame, T.toast + 20, T.toast + 28, exitEase));
+    tween(frame, T.cursorIn, T.cursorIn + tl.get("cursor").length) *
+    (1 -
+      tween(
+        frame,
+        T.toast + toastEl.beat("leave"),
+        T.toast + toastEl.beat("leaveEnd"),
+        exitEase,
+      ));
 
   const qCard = (post: QueuePost, hl = 0, isNew = false) => (
     <div
@@ -817,7 +854,7 @@ export function SocialScheduler({
                 >
                   <div
                     style={{
-                      transform: `translateY(${(picked ? 1 - pickLabel : 1 - tween(frame, 4, 18)) * 100}%)${glide(picked ? moves((f) => spAt(f, T.slot + 2, CHIP)) : midway(tween(frame, 4, 18)))}`,
+                      transform: `translateY(${(picked ? 1 - pickLabel : 1 - labelIn) * 100}%)${glide(picked ? moves((f) => spAt(f, pickAt, CHIP)) : midway(labelIn))}`,
                     }}
                   >
                     {picked ? slot.label : "Draft"}
@@ -837,7 +874,11 @@ export function SocialScheduler({
                 background: pal.board,
                 boxShadow: pal.winShadow,
                 overflow: "hidden",
-                opacity: tween(frame, 0, 8),
+                opacity: tween(
+                  frame,
+                  comp.start,
+                  comp.start + comp.beat("board"),
+                ),
                 transform: `scale(${0.95 + 0.05 * boardFocus})`,
                 filter: `blur(${(1 - clamp(boardFocus, 0, 1)) * 5}px)`,
               }}
@@ -929,7 +970,7 @@ export function SocialScheduler({
               />
             </div>
 
-            {frame >= T.land - 4 ? (
+            {frame >= flyAt ? (
               <div
                 style={{
                   position: "absolute",
@@ -939,7 +980,7 @@ export function SocialScheduler({
                   top: target.y,
                   transform: `translate(${flyPos.x - target.x}px, ${flyPos.y - target.y}px) scale(${1 + 0.18 * (1 - clamp(fly, 0, 1))})`,
                   transformOrigin: "0 0",
-                  opacity: tween(frame, T.land - 4, T.land + 2),
+                  opacity: tween(frame, flyAt, T.land + land.beat("fadeEnd")),
                   zIndex: 3,
                 }}
               >
@@ -1025,7 +1066,16 @@ export function SocialScheduler({
                           boxShadow: `inset 0 0 0 1px ${pal.ring}`,
                           fontSize: 16,
                           color: pal.text,
-                          opacity: tween(frame, 6 + i * 3, 16 + i * 3),
+                          opacity: tween(
+                            frame,
+                            comp.start +
+                              comp.beat("networks") +
+                              i * comp.beat("stagger"),
+                            comp.start +
+                              (comp.beat("networks") +
+                                comp.beat("networksLen")) +
+                              i * comp.beat("stagger"),
+                          ),
                         }}
                       >
                         <NetworkMark kind={i as 0 | 1} size={22} pal={pal} />
@@ -1073,12 +1123,12 @@ export function SocialScheduler({
                       gap: 12,
                     }}
                   >
-                    {frame >= T.media + 2 ? (
+                    {frame >= mediaAt ? (
                       <div
                         style={{
                           width: TILE,
                           height: TILE,
-                          transform: `scale(${0.7 + 0.3 * mediaIn})${glide(moves((f) => spAt(f, T.media + 2, CARD)))}`,
+                          transform: `scale(${0.7 + 0.3 * mediaIn})${glide(moves((f) => spAt(f, mediaAt, CARD)))}`,
                           transformOrigin: "0 50%",
                           opacity: clamp(mediaIn * 2, 0, 1),
                         }}
@@ -1110,7 +1160,7 @@ export function SocialScheduler({
                         // room it makes as it grows is a transform here, as
                         // layout would round this box to whole pixels on the
                         // way.
-                        transform: `translateX(${frame >= T.media + 2 ? -TILE * (1 - clamp(mediaGrow, 0, 1)) : 0}px) scale(${1 - 0.04 * pressOf(T.media)})${glide(moves((f) => pressAt(T.media, f)))}`,
+                        transform: `translateX(${frame >= mediaAt ? -TILE * (1 - clamp(mediaGrow, 0, 1)) : 0}px) scale(${1 - 0.04 * pressOf(T.media)})${glide(moves((f) => pressAt(T.media, f)))}`,
                       }}
                     >
                       <Icon name="image" color={pal.muted} size={20} />
@@ -1265,7 +1315,7 @@ export function SocialScheduler({
                         style={{
                           display: "inline-block",
                           transform: picked
-                            ? `translateY(${(1 - pickLabel) * 8}px)${glide(moves((f) => spAt(f, T.slot + 2, CHIP)))}`
+                            ? `translateY(${(1 - pickLabel) * 8}px)${glide(moves((f) => spAt(f, pickAt, CHIP)))}`
                             : undefined,
                         }}
                       >
@@ -1294,7 +1344,7 @@ export function SocialScheduler({
                       boxShadow: pal.popShadow,
                       padding: "12px 6px 6px",
                       opacity: popA,
-                      transform: `translateY(${(1 - popIn) * 10}px) scale(${0.94 + 0.06 * popIn})${glide(moves((f) => spAt(f, T.time + 2, CARD)))}`,
+                      transform: `translateY(${(1 - popIn) * 10}px) scale(${0.94 + 0.06 * popIn})${glide(moves((f) => spAt(f, T.time + time.beat("pop"), CARD)))}`,
                       transformOrigin: "20% 100%",
                     }}
                   >
@@ -1308,7 +1358,8 @@ export function SocialScheduler({
                       Suggested times
                     </div>
                     {slots.map((sl, i) => {
-                      const hot = i === pick && frame >= T.slot - 8;
+                      const hot =
+                        i === pick && frame >= T.slot + slotEl.beat("hover");
                       return (
                         <div
                           key={sl.label}

@@ -16262,13 +16262,19 @@
       "registryDependencies": [
         "@remocn/gsh",
         "@remocn/glide",
-        "@remocn/frame-rate"
+        "@remocn/frame-rate",
+        "@remocn/timeline"
       ],
       "files": [
         {
           "path": "registry/remocn/social-scheduler/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/social-scheduler.tsx"
+          "target": "components/remocn/social-scheduler/index.tsx"
+        },
+        {
+          "path": "registry/remocn/social-scheduler/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/social-scheduler/timeline.ts"
         }
       ],
       "type": "registry:component"
