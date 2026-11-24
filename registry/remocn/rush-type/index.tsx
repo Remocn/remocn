@@ -3,6 +3,22 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { continueRender, delayRender } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import {
+  type ResolvedElement,
+  type ResolvedTimeline,
+  resolve,
+  type Timing,
+  useTimeline,
+} from "@/lib/remocn/timeline";
+import {
+  cycleLengthOf,
+  DEFAULT_HOLD_FRAMES,
+  DEFAULT_REST_FRAMES,
+  phraseWords,
+  RUSH_PHRASE,
+  type RushTypeElementId,
+  rushTypeTimeline,
+} from "./timeline";
 
 export interface RushTypeProps {
   /** A short phrase. One whitespace-delimited word is shown per cycle. */
@@ -23,6 +39,11 @@ export interface RushTypeProps {
   peakHoldDuration?: number;
   /** Global playback multiplier. */
   speed?: number;
+  /**
+   * Moves, trims or stretches single word cycles, by the ids in
+   * `./timeline`. Frames on the scene timeline, after `speed`.
+   */
+  timing?: Timing<RushTypeElementId>;
   className?: string;
 }
 
@@ -44,12 +65,8 @@ export interface RushTypeFrameState {
   groundAmount: number;
 }
 
-export const rushTypeDefaultPhrase = "gone before you look";
+export const rushTypeDefaultPhrase = RUSH_PHRASE;
 
-const ARRIVE_FRAMES = 7;
-const LEAVE_FRAMES = 4;
-const DEFAULT_REST_FRAMES = 12;
-const DEFAULT_HOLD_FRAMES = 3;
 const SHUTTER_SECONDS = 0.04;
 const SMEAR_GAIN = 1.6;
 const SAMPLES = 28;
@@ -122,22 +139,9 @@ function sampleTable(table: readonly number[], progress: number): number {
   return table[index] + (table[index + 1] - table[index]) * (x - index);
 }
 
-export function normalizeRushTypePhrase(phrase: string): string[] {
-  const words = phrase.trim().split(/\s+/).filter(Boolean);
-  return words.length > 0 ? words : rushTypeDefaultPhrase.split(" ");
-}
+export const normalizeRushTypePhrase = phraseWords;
 
-export function getRushTypeCycleLength(
-  restDuration = DEFAULT_REST_FRAMES,
-  peakHoldDuration = DEFAULT_HOLD_FRAMES,
-): number {
-  return (
-    ARRIVE_FRAMES +
-    LEAVE_FRAMES +
-    Math.max(restDuration, 1) +
-    Math.max(peakHoldDuration, 0)
-  );
-}
+export const getRushTypeCycleLength = cycleLengthOf;
 
 export function getRushTypeDuration({
   phrase = rushTypeDefaultPhrase,
@@ -170,28 +174,32 @@ interface TimelinePose {
   wordIndex: number;
 }
 
-interface TimelineOptions {
-  wordCount: number;
-  restDuration: number;
-  peakHoldDuration: number;
+type Cycle = ResolvedElement<RushTypeElementId>;
+
+/** The cycle playing at `frame`: the last one that has started. */
+function cycleAt(frame: number, cycles: Cycle[]): number {
+  let cycle = 0;
+  for (let k = 1; k < cycles.length; k++) {
+    if (cycles[k].start <= frame) cycle = k;
+  }
+  return cycle;
 }
 
 function getTimelinePose(
   frame: number,
-  { wordCount, restDuration, peakHoldDuration }: TimelineOptions,
+  cycles: Cycle[],
+  wordCount: number,
 ): TimelinePose {
   const safeWordCount = Math.max(Math.floor(wordCount), 1);
-  const safeRest = Math.max(restDuration, 1);
-  const safeHold = Math.max(peakHoldDuration, 0);
-  const halfHold = safeHold / 2;
-  const cycleLength = getRushTypeCycleLength(safeRest, safeHold);
-  const arriveEnd = halfHold + ARRIVE_FRAMES;
-  const restEnd = arriveEnd + safeRest;
-  const leaveEnd = restEnd + LEAVE_FRAMES;
-  const startOffset = arriveEnd + safeRest / 2;
-  const shifted = frame + startOffset;
-  const cycle = Math.floor(shifted / cycleLength);
-  const tau = positiveModulo(shifted, cycleLength);
+  const cycle = cycleAt(frame, cycles);
+  const e = cycles[cycle];
+  const halfHold = e.beat("hold");
+  const arriveFrames = e.beat("arrive");
+  const leaveFrames = e.beat("leave");
+  const arriveEnd = halfHold + arriveFrames;
+  const restEnd = arriveEnd + e.beat("rest");
+  const leaveEnd = restEnd + leaveFrames;
+  const tau = frame - e.start;
   const wordIndex = positiveModulo(cycle, safeWordCount);
 
   if (tau < halfHold) {
@@ -205,7 +213,7 @@ function getTimelinePose(
   }
 
   if (tau < arriveEnd) {
-    const progress = (tau - halfHold) / ARRIVE_FRAMES;
+    const progress = (tau - halfHold) / arriveFrames;
     return {
       phase: "arrive",
       p: sampleTable(FALL, progress),
@@ -220,7 +228,7 @@ function getTimelinePose(
   }
 
   if (tau < leaveEnd) {
-    const progress = (tau - restEnd) / LEAVE_FRAMES;
+    const progress = (tau - restEnd) / leaveFrames;
     return {
       phase: "depart",
       p: sampleTable(RISE, progress),
@@ -230,7 +238,8 @@ function getTimelinePose(
     };
   }
 
-  const progress = (tau - leaveEnd) / Math.max(halfHold, 1e-6);
+  // Clamped for a cycle trimmed past its hang; untouched it stays below 1.
+  const progress = Math.min(1, (tau - leaveEnd) / Math.max(halfHold, 1e-6));
   return {
     phase: "hang",
     p: 1,
@@ -253,33 +262,26 @@ function computeFrame({
   frame,
   fps,
   wordCount,
-  restDuration,
-  peakHoldDuration,
   chromaticSpread,
+  cycles,
 }: {
   frame: number;
   fps: number;
   wordCount: number;
-  restDuration: number;
-  peakHoldDuration: number;
   chromaticSpread: number;
+  cycles: Cycle[];
 }): ComputedFrame {
   const shutterFrames = SHUTTER_SECONDS * Math.max(fps, 1);
   const halfShutter = shutterFrames / 2;
-  const options = { wordCount, restDuration, peakHoldDuration };
-  const before = getTimelinePose(frame - halfShutter, options);
-  const here = getTimelinePose(frame, options);
-  const after = getTimelinePose(frame + halfShutter, options);
-  const cycleLength = getRushTypeCycleLength(restDuration, peakHoldDuration);
-  const halfHold = Math.max(peakHoldDuration, 0) / 2;
-  const arriveEnd = halfHold + ARRIVE_FRAMES;
-  const startOffset = arriveEnd + Math.max(restDuration, 1) / 2;
-  const shifted = frame + startOffset;
-  const nearestBoundary = Math.round(shifted / cycleLength) * cycleLength;
-  const boundaryDistance = shifted - nearestBoundary;
+  const before = getTimelinePose(frame - halfShutter, cycles, wordCount);
+  const here = getTimelinePose(frame, cycles, wordCount);
+  const after = getTimelinePose(frame + halfShutter, cycles, wordCount);
+  // Distance to the nearer word swap: this cycle's start or its end.
+  const current = cycles[here.cycle];
+  const boundaryDistance = Math.min(frame - current.start, current.end - frame);
   const crossesSwap = wordCount > 1 && after.cycle > before.cycle;
   const swapU = crossesSwap
-    ? (after.cycle * cycleLength - shifted) / shutterFrames
+    ? (cycles[after.cycle].start - frame) / shutterFrames
     : 2;
   const swapAmount =
     wordCount > 1
@@ -296,29 +298,44 @@ function computeFrame({
   };
 }
 
-export function getRushTypeFrameState({
-  frame,
-  fps = 30,
-  phrase = rushTypeDefaultPhrase,
-  restDuration = DEFAULT_REST_FRAMES,
-  peakHoldDuration = DEFAULT_HOLD_FRAMES,
-  chromaticSpread = 1,
-  speed = 1,
-}: {
-  frame: number;
-  fps?: number;
-} & Pick<
-  RushTypeProps,
-  "phrase" | "restDuration" | "peakHoldDuration" | "chromaticSpread" | "speed"
->): RushTypeFrameState {
+/**
+ * The state at `frame`. `timeline` is the resolved schedule; by default the
+ * untouched one, long enough to reach `frame`.
+ */
+export function getRushTypeFrameState(
+  {
+    frame,
+    fps = 30,
+    phrase = rushTypeDefaultPhrase,
+    restDuration = DEFAULT_REST_FRAMES,
+    peakHoldDuration = DEFAULT_HOLD_FRAMES,
+    chromaticSpread = 1,
+    speed = 1,
+  }: {
+    frame: number;
+    fps?: number;
+  } & Pick<
+    RushTypeProps,
+    "phrase" | "restDuration" | "peakHoldDuration" | "chromaticSpread" | "speed"
+  >,
+  timeline?: ResolvedTimeline<RushTypeElementId>,
+): RushTypeFrameState {
   const words = normalizeRushTypePhrase(phrase);
+  const effectiveFrame = frame * Math.max(speed, 0);
+  const tl =
+    timeline ??
+    resolve(
+      rushTypeTimeline(
+        { phrase, restDuration, peakHoldDuration },
+        { length: effectiveFrame + 1 },
+      ),
+    );
   const computed = computeFrame({
-    frame: frame * Math.max(speed, 0),
+    frame: effectiveFrame,
     fps,
     wordCount: words.length,
-    restDuration,
-    peakHoldDuration,
     chromaticSpread,
+    cycles: tl.elements,
   });
   const motion = computed.here.p;
 
@@ -990,22 +1007,28 @@ function drawRushType({
   gl.drawArrays(gl.TRIANGLES, 0, 3);
 }
 
-export function RushType({
-  phrase = rushTypeDefaultPhrase,
-  fontSize = 68,
-  fontFamily = "Arial, Helvetica, sans-serif",
-  fontWeight = 400,
-  color = "#ffffff",
-  backgroundColor = "#000000",
-  verticalStretch = 7,
-  chromaticSpread = 1,
-  restDuration = DEFAULT_REST_FRAMES,
-  peakHoldDuration = DEFAULT_HOLD_FRAMES,
-  speed = 1,
-  className,
-}: RushTypeProps) {
+export function RushType(props: RushTypeProps) {
+  const {
+    phrase = rushTypeDefaultPhrase,
+    fontSize = 68,
+    fontFamily = "Arial, Helvetica, sans-serif",
+    fontWeight = 400,
+    color = "#ffffff",
+    backgroundColor = "#000000",
+    verticalStretch = 7,
+    chromaticSpread = 1,
+    speed = 1,
+    timing,
+    className,
+  } = props;
   const frame = useSceneFrame();
-  const { fps, width, height } = useSceneConfig();
+  const { fps, width, height, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    rushTypeTimeline,
+    props,
+    durationInFrames * Math.max(speed, 0),
+    timing,
+  );
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const stateRef = useRef<GlState | null>(null);
   const [fontReady, setFontReady] = useState(false);
@@ -1027,9 +1050,8 @@ export function RushType({
     frame: effectiveFrame,
     fps,
     wordCount: words.length,
-    restDuration,
-    peakHoldDuration,
     chromaticSpread,
+    cycles: tl.elements,
   });
 
   useEffect(() => {
