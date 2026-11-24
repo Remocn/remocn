@@ -7699,10 +7699,19 @@
         {
           "path": "bug-dock/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/bug-dock.tsx"
+          "target": "components/remocn/bug-dock/index.tsx"
+        },
+        {
+          "path": "bug-dock/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/bug-dock/timeline.ts"
         }
       ],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"]
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ]
     },
     {
       "name": "two-hit",
