@@ -9,6 +9,15 @@ import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_NODES,
+  type FlowBuilderElementId,
+  type FlowIconKind,
+  type FlowStep,
+  flowBuilderTimeline,
+  flowDepths,
+} from "./timeline";
 
 const hanken = loadHanken("normal", {
   weights: ["300", "400"],
@@ -16,21 +25,8 @@ const hanken = loadHanken("normal", {
 });
 const mono = loadMono("normal", { weights: ["400"], subsets: ["latin"] });
 
-export type FlowIcon = "bolt" | "kite" | "split" | "mail" | "hash" | "sheet";
-
-export interface FlowNode {
-  id: string;
-  title: string;
-  subtitle: string;
-  icon: FlowIcon;
-  /** Icon tint. */
-  color: string;
-  /** Run time shown once the packet passes, e.g. "0.4s". */
-  duration: string;
-  width?: number;
-  /** Ids of the nodes this one connects to. */
-  next?: string[];
-}
+export type FlowIcon = FlowIconKind;
+export type FlowNode = FlowStep;
 
 export interface FlowBuilderProps {
   nodes?: FlowNode[];
@@ -58,54 +54,13 @@ export interface FlowBuilderProps {
   speed?: number;
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
+  /**
+   * Moves, trims or stretches the window, the nodes, the run level by level
+   * and the publish, by the ids in `./timeline`. Frames on the scene
+   * timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<FlowBuilderElementId>;
 }
-
-const DEFAULT_NODES: FlowNode[] = [
-  {
-    id: "signup",
-    title: "New signup",
-    subtitle: "Webhook · /signup",
-    icon: "bolt",
-    color: "#E8590C",
-    duration: "0.1s",
-    next: ["enrich"],
-  },
-  {
-    id: "enrich",
-    title: "Enrich lead",
-    subtitle: "Company and role",
-    icon: "kite",
-    color: "#0E9F9A",
-    duration: "1.2s",
-    next: ["paths"],
-  },
-  {
-    id: "paths",
-    title: "Split by plan",
-    subtitle: "2 paths",
-    icon: "split",
-    color: "#7A7F8C",
-    duration: "12ms",
-    width: 176,
-    next: ["email", "notify"],
-  },
-  {
-    id: "email",
-    title: "Welcome email",
-    subtitle: "Free plan · Day 0",
-    icon: "mail",
-    color: "#D6455D",
-    duration: "0.4s",
-  },
-  {
-    id: "notify",
-    title: "Notify #growth",
-    subtitle: "Pro plan · post",
-    icon: "hash",
-    color: "#3B82C4",
-    duration: "0.3s",
-  },
-];
 
 const HEAVY = { mass: 1, damping: 26, stiffness: 120 };
 const CARD = { mass: 0.8, damping: 18, stiffness: 160 };
@@ -122,15 +77,6 @@ const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
 
 const NODE_H = 68;
 const BAR = 56;
-const B = {
-  node: 10,
-  nodeStep: 6,
-  cursor: 46,
-  run: 72,
-  level: 18,
-  travel: 10,
-};
-
 function withAlpha(color: string, alpha: number) {
   const hex = color.replace("#", "");
   const full = hex.length === 3 ? hex.replace(/(.)/g, "$1$1") : hex;
@@ -367,28 +313,40 @@ function ScaleLayer({
   );
 }
 
-export function FlowBuilder({
-  nodes = DEFAULT_NODES,
-  title = "Welcome new signups",
-  workspace = "remocn",
-  toast = "Live · runs on every signup",
-  publishLabel = "Publish",
-  publishedLabel = "Published",
-  stagger = B.nodeStep,
-  theme = "light",
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = hanken.fontFamily,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  ground,
-  groundParams,
-}: FlowBuilderProps) {
+export function FlowBuilder(props: FlowBuilderProps) {
+  const {
+    nodes = DEFAULT_NODES,
+    title = "Welcome new signups",
+    workspace = "remocn",
+    toast = "Live · runs on every signup",
+    publishLabel = "Publish",
+    publishedLabel = "Published",
+    theme = "light",
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = hanken.fontFamily,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    ground,
+    groundParams,
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width, height, fps } = useSceneConfig();
+  const { width, height, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    flowBuilderTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const winEl = tl.get("app");
+  const header = tl.get("header");
+  const cursorEl = tl.get("cursor");
+  const run = tl.get("run");
+  const publish = tl.get("publish");
   const tall = height > width;
   const SW = tall ? 720 : 1280;
   const SH = tall ? 1280 : 720;
@@ -405,21 +363,7 @@ export function FlowBuilder({
   const CH = WIN.h - BAR;
 
   const byId = new Map(nodes.map((n) => [n.id, n]));
-  const parents = new Map<string, string>();
-  for (const n of nodes)
-    for (const id of n.next ?? []) if (!parents.has(id)) parents.set(id, n.id);
-  const depth = new Map<string, number>();
-  const queue = nodes.filter((n) => !parents.has(n.id)).map((n) => n.id);
-  for (const id of queue) depth.set(id, 0);
-  while (queue.length) {
-    const id = queue.shift() as string;
-    for (const nx of byId.get(id)?.next ?? []) {
-      if (!depth.has(nx)) {
-        depth.set(nx, (depth.get(id) ?? 0) + 1);
-        queue.push(nx);
-      }
-    }
-  }
+  const depth = flowDepths(nodes);
   const maxDepth = Math.max(0, ...depth.values());
   const levels = Array.from({ length: maxDepth + 1 }, (_, d) =>
     nodes.filter((n) => (depth.get(n.id) ?? 0) === d),
@@ -497,11 +441,12 @@ export function FlowBuilder({
     return { x: k("x"), y: k("y") };
   };
 
-  const dropAt = (i: number) => B.node + i * stagger;
-  const arriveAt = (d: number) => B.run + 4 + d * B.level;
-  const checkAt = (d: number) => arriveAt(d) + 8;
+  const dropAt = (i: number) => tl.get(`node:${i}`).start;
+  const level = (d: number) => tl.get(`level:${d}`);
+  const arriveAt = (d: number) => level(d).start;
+  const checkAt = (d: number) => level(d).start + level(d).beat("check");
   const runEnd = checkAt(maxDepth);
-  const PUBLISH = runEnd + 12;
+  const PUBLISH = publish.start;
 
   const RUN_W = 88;
   const PUB_W = 112;
@@ -510,12 +455,16 @@ export function FlowBuilder({
   const runPt = { x: runX + RUN_W / 2 + 4, y: BAR / 2 + 4 };
   const pubPt = { x: pubX + PUB_W / 2 + 8, y: BAR / 2 + 4 };
   const keys: Key[] = [
-    { t: B.cursor, x: CW + 70, y: WIN.h * 0.62 },
-    { t: B.run - 2, ...runPt },
+    { t: cursorEl.start, x: CW + 70, y: WIN.h * 0.62 },
+    { t: run.start + run.beat("reach"), ...runPt },
     { t: runEnd, ...runPt },
-    { t: PUBLISH - 2, ...pubPt },
-    { t: PUBLISH + 18, ...pubPt },
-    { t: PUBLISH + 42, x: pubPt.x - 70, y: pubPt.y + 120 },
+    { t: PUBLISH + publish.beat("reach"), ...pubPt },
+    { t: PUBLISH + publish.beat("rest"), ...pubPt },
+    {
+      t: PUBLISH + publish.beat("leave"),
+      x: pubPt.x - 70,
+      y: pubPt.y + 120,
+    },
   ];
   let cur: Pt = keys[0];
   for (let i = 1; i < keys.length; i++) {
@@ -545,10 +494,10 @@ export function FlowBuilder({
       ? undefined
       : `translate(${cursorDx}px, ${cursorDy}px)`;
   const pressAt = (at: number) => sp(at - 2, PRESS) - sp(at + 3, PRESS);
-  const runPress = pressAt(B.run);
+  const runPress = pressAt(run.start);
   const pubPress = pressAt(PUBLISH);
   const press = Math.max(runPress, pubPress);
-  const cursorIn = interpolate(frame, [B.cursor, B.cursor + 8], [0, 1], {
+  const cursorIn = interpolate(frame, [cursorEl.start, cursorEl.end], [0, 1], {
     ...CL,
     easing: ENTER,
   });
@@ -557,8 +506,11 @@ export function FlowBuilder({
   // it moving to the last frames, so its tilt covers all of their text. The
   // spring never lands exactly, so "moving" is read off neighbouring frames.
   const winAt = (f: number) => {
-    const w = spring({ frame: f, fps, config: HEAVY });
-    const c = interpolate(f, [0, 205], [1, 1.035], { ...CL, easing: CAMERA });
+    const w = spring({ frame: f - winEl.start, fps, config: HEAVY });
+    const c = interpolate(f, [winEl.start, winEl.end], [1, 1.035], {
+      ...CL,
+      easing: CAMERA,
+    });
     return { ty: (1 - w) * 60, k: (0.96 + 0.04 * w) * c };
   };
   const winNow = winAt(frame);
@@ -567,27 +519,39 @@ export function FlowBuilder({
       Math.abs(o.ty - winNow.ty) + (Math.abs(o.k - winNow.k) * WIN.w) / 2 >
       1e-3,
   );
-  const win = sp(0, HEAVY);
-  const winFade = interpolate(frame, [0, 12], [0, 1], { ...CL, easing: ENTER });
-  const running = frame >= B.run && frame < runEnd + 2;
-  const published = frame >= PUBLISH + 2;
-  const pubS = sp(PUBLISH + 2, CARD);
-  const toastS = sp(PUBLISH + 8, HEAVY);
-  const toastFade = interpolate(frame, [PUBLISH + 8, PUBLISH + 18], [0, 1], {
-    ...CL,
-    easing: ENTER,
-  });
-  const cam = interpolate(frame, [0, 205], [1, 1.035], {
+  const win = sp(winEl.start, HEAVY);
+  const winFade = interpolate(
+    frame,
+    [winEl.start, winEl.start + winEl.beat("fade")],
+    [0, 1],
+    { ...CL, easing: ENTER },
+  );
+  const running = frame >= run.start && frame < runEnd + 2;
+  const published = frame >= PUBLISH + publish.beat("live");
+  const pubS = sp(PUBLISH + publish.beat("live"), CARD);
+  const toastAt = PUBLISH + publish.beat("toast");
+  const toastS = sp(toastAt, HEAVY);
+  const toastFade = interpolate(
+    frame,
+    [toastAt, PUBLISH + publish.beat("toastIn")],
+    [0, 1],
+    { ...CL, easing: ENTER },
+  );
+  const cam = interpolate(frame, [winEl.start, winEl.end], [1, 1.035], {
     ...CL,
     easing: CAMERA,
   });
-  const headIn = interpolate(frame, [4, 20], [0, 1], { ...CL, easing: ENTER });
+  const headIn = interpolate(frame, [header.start, header.end], [0, 1], {
+    ...CL,
+    easing: ENTER,
+  });
 
   const nodeEls = nodes.map((n, i) => {
     const bx = box.get(n.id);
     if (!bx) return null;
-    const s = sp(dropAt(i), CARD);
-    const o = interpolate(frame, [dropAt(i), dropAt(i) + 8], [0, 1], {
+    const node = tl.get(`node:${i}`);
+    const s = sp(node.start, CARD);
+    const o = interpolate(frame, [node.start, node.end], [0, 1], {
       ...CL,
       easing: ENTER,
     });
@@ -660,15 +624,21 @@ export function FlowBuilder({
   const edgeEls = edges.map((e) => {
     const ti = nodes.indexOf(e.to);
     const fi = nodes.indexOf(e.from);
-    const start = Math.max(dropAt(ti), dropAt(fi)) + 6;
-    const draw = interpolate(frame, [start, start + 12], [0, 1], {
-      ...CL,
-      easing: MOVE,
-    });
+    const into = tl.get(`node:${ti}`);
+    const start = Math.max(dropAt(ti), dropAt(fi)) + into.beat("edge");
+    const draw = interpolate(
+      frame,
+      [start, start + into.beat("edgeLen")],
+      [0, 1],
+      {
+        ...CL,
+        easing: MOVE,
+      },
+    );
     const d0 = depth.get(e.from.id) ?? 0;
     const lit = interpolate(
       frame,
-      [checkAt(d0), checkAt(d0) + B.travel],
+      [checkAt(d0), checkAt(d0) + level(d0).beat("travel")],
       [0, 1],
       { ...CL, easing: MOVE },
     );
@@ -711,7 +681,7 @@ export function FlowBuilder({
 
   const packets = edges.map((e) => {
     const d0 = depth.get(e.from.id) ?? 0;
-    const t = (frame - checkAt(d0)) / B.travel;
+    const t = (frame - checkAt(d0)) / level(d0).beat("travel");
     if (t < 0 || t > 1.25) return null;
     const pt = bez(e, MOVE(clamp(t)));
     const fade = interpolate(t, [0, 0.12, 1, 1.25], [0, 1, 1, 0], CL);
@@ -909,7 +879,7 @@ export function FlowBuilder({
                 </svg>
                 {packets}
                 {nodeEls}
-                {frame >= PUBLISH + 8 ? (
+                {frame >= toastAt ? (
                   <div
                     style={{
                       position: "absolute",
@@ -938,7 +908,10 @@ export function FlowBuilder({
                       size={16}
                       draw={interpolate(
                         frame,
-                        [PUBLISH + 14, PUBLISH + 24],
+                        [
+                          PUBLISH + publish.beat("check"),
+                          PUBLISH + publish.beat("checkEnd"),
+                        ],
                         [0, 1],
                         { ...CL, easing: ENTER },
                       )}
