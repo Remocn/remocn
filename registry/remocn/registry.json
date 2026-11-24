@@ -11136,10 +11136,19 @@
         {
           "path": "anagram-shuffle/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/anagram-shuffle.tsx"
+          "target": "components/remocn/anagram-shuffle/index.tsx"
+        },
+        {
+          "path": "anagram-shuffle/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/anagram-shuffle/timeline.ts"
         }
       ],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"]
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ]
     },
     {
       "name": "word-ladder",
