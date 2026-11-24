@@ -6638,12 +6638,21 @@
       "title": "Name Gloss",
       "description": "Two big words, \"Brand kit\", each get a small gloss line and a closing teal sentence.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/name-gloss/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/name-gloss.tsx"
+          "target": "components/remocn/name-gloss/index.tsx"
+        },
+        {
+          "path": "registry/remocn/name-gloss/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/name-gloss/timeline.ts"
         }
       ],
       "type": "registry:component"
