@@ -5,6 +5,15 @@ import { type ReactNode, useId } from "react";
 import { AbsoluteFill, Easing, interpolate, spring } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_HIGHLIGHT,
+  DEFAULT_LINE,
+  type FractionSplitElementId,
+  fractionSplitTimeline,
+  LEVELS,
+  splitWords,
+} from "./timeline";
 
 const { fontFamily: sans } = loadFont("normal", {
   weights: ["400", "500"],
@@ -39,17 +48,15 @@ export interface FractionSplitProps {
   grain?: boolean;
   theme?: "dark" | "light";
   speed?: number;
+  /**
+   * Moves, trims or stretches the push, the wipe, the splits, the regroup
+   * and the words, by the ids in `./timeline`.
+   * Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<FractionSplitElementId>;
 }
 
 const SEGS = 8;
-const LEVELS = [
-  { at: 24, label: "1/2", size: 4 },
-  { at: 50, label: "1/4", size: 2 },
-  { at: 76, label: "1/8", size: 1 },
-];
-const REG = 104;
-const REG_LEN = 26;
-const TEXT_IN = REG + 12;
 
 const EASE_IO = Easing.bezier(0.65, 0, 0.35, 1);
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
@@ -124,25 +131,36 @@ function ScaleLayer({
   );
 }
 
-export function FractionSplit({
-  line = "Renders in 1/8 the time.",
-  highlight = "1/8",
-  accentPiece = 0,
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = sans,
-  stagger = 3,
-  radius = 8,
-  scale = 1,
-  delay = 0,
-  grain = true,
-  theme = "dark",
-  speed = 1,
-}: FractionSplitProps) {
+export function FractionSplit(props: FractionSplitProps) {
+  const {
+    line = DEFAULT_LINE,
+    highlight = DEFAULT_HIGHLIGHT,
+    accentPiece = 0,
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = sans,
+    radius = 8,
+    scale = 1,
+    delay = 0,
+    grain = true,
+    theme = "dark",
+    speed = 1,
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width, height, fps } = useSceneConfig();
+  const { width, height, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    fractionSplitTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const splits = LEVELS.map((_, i) => tl.get(`split:${i}`));
+  const regEl = tl.get("regroup");
+  const wipeEl = tl.get("wipe");
+  const pushEl = tl.get("push");
   const u = Math.min(width / 1280, height / 720);
   const p = THEMES[theme];
   const fg = ink ?? p.fg;
@@ -165,19 +183,23 @@ export function FractionSplit({
   const geometry = (tt: number, settled = false) => {
     const open: number[] = [0];
     for (let b = 1; b < SEGS; b++) {
-      const lv = LEVELS[boundaryLevel(b)];
-      const stagger = boundaryLevel(b) === 2 ? Math.abs(b - 4) * 0.6 : 0;
+      const lv = splits[boundaryLevel(b)];
+      const stagger = Math.abs(b - 4) * lv.beat("spread");
       open.push(
         settled
           ? 1
-          : spring({ frame: tt - lv.at - stagger, fps, config: SPLIT_SPRING }),
+          : spring({
+              frame: tt - lv.start - stagger,
+              fps,
+              config: SPLIT_SPRING,
+            }),
       );
     }
     const totalGap = open.reduce((s, x) => s + x, 0) * G;
     const segW = (barW - totalGap) / SEGS;
     const reg = settled
       ? 1
-      : interpolate(tt, [REG, REG + REG_LEN], [0, 1], {
+      : interpolate(tt, [regEl.start, regEl.end], [0, 1], {
           ...CLAMP,
           easing: EASE_IO,
         });
@@ -196,21 +218,29 @@ export function FractionSplit({
   const before = geometry(t - speed);
   const after = geometry(t + speed);
   const landed = geometry(t, true);
-  const rise = interpolate(t, [REG, REG + 16], [0, 1], {
-    ...CLAMP,
-    easing: EASE_IO,
-  });
+  const rise = interpolate(
+    t,
+    [regEl.start, regEl.start + regEl.beat("rise")],
+    [0, 1],
+    {
+      ...CLAMP,
+      easing: EASE_IO,
+    },
+  );
   const drainOf = (j: number) => {
     const order = j > ap ? j - 1 : j;
     return interpolate(
       t,
-      [REG + 2 + order * 1.5, REG + 16 + order * 1.5],
+      [
+        regEl.start + regEl.beat("drainAt") + order * regEl.beat("drainStep"),
+        regEl.start + regEl.beat("drainEnd") + order * regEl.beat("drainStep"),
+      ],
       [0, 1],
       { ...CLAMP, easing: EASE_IO },
     );
   };
 
-  const wipe = interpolate(t, [2, 22], [0, 1], {
+  const wipe = interpolate(t, [wipeEl.start, wipeEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
@@ -237,10 +267,15 @@ export function FractionSplit({
     whiteSpace: "nowrap",
   } as const;
   const lastLabel = LEVELS[LEVELS.length - 1].label;
-  const drift = interpolate(t, [REG, REG + REG_LEN + 50], [0, 1], {
-    ...CLAMP,
-    easing: EASE_IO,
-  });
+  const drift = interpolate(
+    t,
+    [regEl.start, regEl.start + regEl.beat("drift")],
+    [0, 1],
+    {
+      ...CLAMP,
+      easing: EASE_IO,
+    },
+  );
   // the palette's blue stop follows the accent prop
   const blue = accent;
   const flute = (deg: number) =>
@@ -333,13 +368,21 @@ export function FractionSplit({
 
   const labels: ReactNode[] = [];
   LEVELS.forEach((lv, li) => {
-    const inK = interpolate(t, [lv.at + 6, lv.at + 16], [0, 1], {
-      ...CLAMP,
-      easing: EASE_OUT,
-    });
-    const next = LEVELS[li + 1];
+    const el = splits[li];
+    const inK = interpolate(
+      t,
+      [el.start + el.beat("labelIn"), el.start + el.beat("labelShown")],
+      [0, 1],
+      { ...CLAMP, easing: EASE_OUT },
+    );
+    const next = splits[li + 1];
     const outK = next
-      ? interpolate(t, [next.at - 5, next.at], [0, 1], CLAMP)
+      ? interpolate(
+          t,
+          [next.start + next.beat("handover"), next.start],
+          [0, 1],
+          CLAMP,
+        )
       : 0;
     if (!next && reg > 0) return;
     for (let g = 0; g < SEGS / lv.size; g++) {
@@ -364,29 +407,10 @@ export function FractionSplit({
     }
   });
 
-  const idx = highlight ? line.indexOf(highlight) : -1;
-  const words: { text: string; hl: boolean }[] = [];
-  const pushWords = (s: string, hl: boolean) => {
-    for (const w of s.split(/\s+/).filter(Boolean)) words.push({ text: w, hl });
-  };
-  if (idx >= 0) {
-    pushWords(line.slice(0, idx), false);
-    words.push({ text: highlight, hl: true });
-    const rest = line.slice(idx + highlight.length);
-    if (/^\S/.test(rest) && words.length) {
-      const m = /^(\S+)(.*)$/.exec(rest);
-      if (m) {
-        words[words.length - 1] = {
-          text: `${highlight}${m[1]}`,
-          hl: true,
-        };
-        pushWords(m[2], false);
-      }
-    } else pushWords(rest, false);
-  } else pushWords(line, false);
+  const words = splitWords(line, highlight);
 
   const pushAt = (tt: number) =>
-    interpolate(tt, [0, REG + REG_LEN + 40], [0.985, 1.01], {
+    interpolate(tt, [pushEl.start, pushEl.end], [0.985, 1.01], {
       ...CLAMP,
       easing: EASE_IO,
     });
@@ -439,12 +463,11 @@ export function FractionSplit({
             }}
           >
             {words.map((w, i) => {
-              const k = interpolate(
-                t,
-                [TEXT_IN + i * stagger, TEXT_IN + i * stagger + 18],
-                [0, 1],
-                { ...CLAMP, easing: EASE_OUT },
-              );
+              const wordEl = tl.get(`word:${i}`);
+              const k = interpolate(t, [wordEl.start, wordEl.end], [0, 1], {
+                ...CLAMP,
+                easing: EASE_OUT,
+              });
               return (
                 <span key={`w${i.toString()}`}>
                   <span

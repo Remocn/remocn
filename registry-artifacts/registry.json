@@ -12576,12 +12576,21 @@
       "title": "Fraction Split",
       "description": "A row of eight boxes shows one filled, matching the headline \"1/8 the time\".",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/fraction-split/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/fraction-split.tsx"
+          "target": "components/remocn/fraction-split/index.tsx"
+        },
+        {
+          "path": "registry/remocn/fraction-split/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/fraction-split/timeline.ts"
         }
       ],
       "type": "registry:component"
