@@ -8,6 +8,11 @@ import { useId } from "react";
 import { AbsoluteFill, Easing, interpolate, interpolateColors } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  type LightSignatureElementId,
+  lightSignatureTimeline,
+} from "./timeline";
 
 const manrope = loadManrope("normal", {
   weights: ["500", "600"],
@@ -40,6 +45,12 @@ export interface LightSignatureProps {
   grain?: boolean;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches the chase, the return, the eyebrow, the
+   * tagline and the lockup's settle, by the ids in `./timeline`.
+   * Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<LightSignatureElementId>;
 }
 
 const CHROME = ["#e0202e", "#ffd6b8", "#4fe3f0"] as const;
@@ -156,11 +167,6 @@ type Glyph = {
   w: number;
 };
 
-const CHASE_START = 12;
-const CHASE_LEN = 40;
-const RETURN_START = 50;
-const RETURN_LEN = 26;
-
 /** The foreground at `scale`, around the frame's center; nothing extra at 1. */
 function ScaleLayer({
   scale,
@@ -177,29 +183,40 @@ function ScaleLayer({
   );
 }
 
-export function LightSignature({
-  eyebrow = "The all-new",
-  name = "remocn",
-  logo,
-  tagline = "Launch-video scenes, ready to render.",
-  lightColor = CHROME[0],
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = geist.fontFamily,
-  sweep = CHASE_LEN,
-  glow = 6,
-  scale = 1,
-  delay = 0,
-  grain = true,
-  speed = 1,
-  theme = "dark",
-}: LightSignatureProps) {
+export function LightSignature(props: LightSignatureProps) {
+  const {
+    eyebrow = "The all-new",
+    name = "remocn",
+    logo,
+    tagline = "Launch-video scenes, ready to render.",
+    lightColor = CHROME[0],
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = geist.fontFamily,
+    glow = 6,
+    scale = 1,
+    delay = 0,
+    grain = true,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay) * speed;
-  const shift = sweep - CHASE_LEN;
-  const returnStart = RETURN_START + shift;
-  const { width, height } = useSceneConfig();
+  const { width, height, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    lightSignatureTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const chase = tl.get("chase");
+  const ret = tl.get("return");
+  const eye = tl.get("eyebrow");
+  const tag = tl.get("tagline");
+  const settleEl = tl.get("settle");
+  const returnStart = ret.start;
   const p = PALETTES[theme];
   const fg = ink ?? p.fg;
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
@@ -269,14 +286,16 @@ export function LightSignature({
   const reach = D * 1.04;
   const CHASE_POW = 1.8;
   const chaseR = (f: number) =>
-    reach * Math.min(1, Math.max(0, (f - CHASE_START) / sweep)) ** CHASE_POW;
+    reach *
+    Math.min(1, Math.max(0, (f - chase.start) / chase.length)) ** CHASE_POW;
   const hitTime = (d: number) =>
-    CHASE_START + sweep * Math.min(1, d / reach) ** (1 / CHASE_POW);
+    chase.start + chase.length * Math.min(1, d / reach) ** (1 / CHASE_POW);
   const r = chaseR(frame);
-  const chasing = frame >= CHASE_START - 4 && frame < CHASE_START + sweep;
+  const igniteAt = chase.start + chase.beat("igniteAt");
+  const chasing = frame >= igniteAt && frame < chase.end;
   const ignite = interpolate(
     frame,
-    [CHASE_START - 4, CHASE_START + 2],
+    [igniteAt, igniteAt + chase.beat("ignite")],
     [0, 1],
     {
       ...CLAMP,
@@ -285,18 +304,18 @@ export function LightSignature({
   );
   const returnQ = (f: number) =>
     reach *
-    (1 - EASE_RETURN(Math.min(1, Math.max(0, (f - returnStart) / RETURN_LEN))));
+    (1 - EASE_RETURN(Math.min(1, Math.max(0, (f - returnStart) / ret.length))));
   const q = returnQ(frame);
   const passTime = (d: number) => {
     let prevF = returnStart;
     let prevQ = reach;
-    for (let f = returnStart + 1; f <= returnStart + RETURN_LEN; f++) {
+    for (let f = returnStart + 1; f <= ret.end; f++) {
       const qf = returnQ(f);
       if (qf <= d) return prevF + (prevQ - d) / Math.max(1e-6, prevQ - qf);
       prevF = f;
       prevQ = qf;
     }
-    return returnStart + RETURN_LEN;
+    return ret.end;
   };
   const returning = frame >= returnStart;
 
@@ -314,11 +333,11 @@ export function LightSignature({
 
   const segLevel = (d: number) => {
     let b = 0;
-    if (frame >= CHASE_START - 4) {
+    if (frame >= igniteAt) {
       if (d <= 0.5 * pitch) {
         const hold = interpolate(
           frame,
-          [CHASE_START, CHASE_START + 10],
+          [chase.start, chase.start + chase.beat("hold")],
           [1, 0],
           CLAMP,
         );
@@ -335,7 +354,7 @@ export function LightSignature({
     let merge = 0;
     if (returning && q <= d) {
       const since = frame - passTime(d);
-      merge = interpolate(since, [0, 9], [0, 1], {
+      merge = interpolate(since, [0, ret.beat("merge")], [0, 1], {
         ...CLAMP,
         easing: EASE_OUT,
       });
@@ -378,10 +397,10 @@ export function LightSignature({
   }
 
   const heads: React.ReactNode[] = [];
-  if (chasing && frame >= CHASE_START) {
+  if (chasing && frame >= chase.start) {
     const fade = interpolate(
       frame,
-      [CHASE_START + sweep - 6, CHASE_START + sweep],
+      [chase.end - chase.beat("fade"), chase.end],
       [1, 0],
       CLAMP,
     );
@@ -407,15 +426,25 @@ export function LightSignature({
   const letterState = (g: Glyph) => {
     const gx = lockupX + (g.x + g.w / 2) * nameFs;
     const t0 = hitTime(Math.abs(gx - cx));
-    const fill = interpolate(frame, [t0 - 1, t0 + 6], [0, 1], {
-      ...CLAMP,
-      easing: EASE_OUT,
-    });
-    const flash = interpolate(frame, [t0, t0 + 4, t0 + 18], [0, 1, 0], CLAMP);
-    const tR = returnStart + RETURN_LEN * 0.8;
+    const fill = interpolate(
+      frame,
+      [t0 + chase.beat("letterLead"), t0 + chase.beat("letterFill")],
+      [0, 1],
+      {
+        ...CLAMP,
+        easing: EASE_OUT,
+      },
+    );
+    const flash = interpolate(
+      frame,
+      [t0, t0 + chase.beat("flashPeak"), t0 + chase.beat("flashOut")],
+      [0, 1, 0],
+      CLAMP,
+    );
+    const tR = returnStart + ret.beat("pulseAt");
     const pulse = interpolate(
       frame,
-      [tR, tR + 4, tR + 16],
+      [tR, tR + ret.beat("pulsePeak"), tR + ret.beat("pulseOut")],
       [0, 0.35, 0],
       CLAMP,
     );
@@ -427,7 +456,7 @@ export function LightSignature({
       ? `linear-gradient(0deg, ${p.warm} 0%, ${p.hot} 22%, ${fg} 62%)`
       : `linear-gradient(0deg, ${p.warm} 0%, ${fg} 40%)`;
 
-  const eyeIn = interpolate(frame, [58 + shift, 82 + shift], [0, 1], {
+  const eyeIn = interpolate(frame, [eye.start, eye.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
@@ -438,12 +467,12 @@ export function LightSignature({
     ? (interpolate(eyeIn, [0, 1], [0.5, 0.22]) - 0.22) * [...eyebrow].length
     : 0;
   const eyeSlide = eyeExtra * eyeFs > 1e-3 ? (-eyeExtra * eyeFs) / 2 : 0;
-  const tagIn = interpolate(frame, [64 + shift, 90 + shift], [0, 1], {
+  const tagIn = interpolate(frame, [tag.start, tag.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
   const settleAt = (f: number) =>
-    interpolate(f, [0, 110], [1.04, 1], {
+    interpolate(f, [settleEl.start, settleEl.end], [1.04, 1], {
       ...CLAMP,
       easing: EASE_OUT,
     });
@@ -455,7 +484,7 @@ export function LightSignature({
     Math.abs(settle - settleAt(frame - 1)) > 1e-6;
 
   const hazeLevel = returning
-    ? interpolate(frame, [returnStart, returnStart + RETURN_LEN], [0.55, 1], {
+    ? interpolate(frame, [returnStart, ret.end], [0.55, 1], {
         ...CLAMP,
         easing: EASE_OUT,
       })

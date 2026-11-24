@@ -10231,12 +10231,21 @@
       "title": "Light Signature",
       "description": "A red horizontal light streak flares as the remocn wordmark appears under 'The all-new'.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/light-signature/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/light-signature.tsx"
+          "target": "components/remocn/light-signature/index.tsx"
+        },
+        {
+          "path": "registry/remocn/light-signature/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/light-signature/timeline.ts"
         }
       ],
       "type": "registry:component"
