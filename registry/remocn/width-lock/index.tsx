@@ -13,6 +13,19 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import {
+  type ResolvedElement,
+  type Timing,
+  useTimeline,
+} from "@/lib/remocn/timeline";
+import {
+  DEFAULT_AFTER,
+  DEFAULT_BEFORE,
+  DEFAULT_WORDS,
+  type WidthLockElementId,
+  widthLockTimeline,
+  wordsOf,
+} from "./timeline";
 
 const flex = loadVariableFont("oblique 0deg 10deg", { subsets: ["latin"] });
 
@@ -36,6 +49,12 @@ export interface WidthLockProps {
   grain?: boolean;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches the haze, the fixed lines, single words rising
+   * in and single words leaving, by the ids in `./timeline`. Frames on the
+   * scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<WidthLockElementId>;
 }
 
 const LIMB = ["#e9ecff", "#8a8bff", "#4b2bd6", "#160c3a"] as const;
@@ -223,28 +242,35 @@ function ScaleLayer({
   );
 }
 
-export function WidthLock({
-  before = "Ship the",
-  words = ["trailer", "transitions", "captions", "launch video"],
-  after = "by tonight.",
-  hold = 30,
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = flex.fontFamily,
-  fontWeight = WGHT,
-  scale = 1,
-  delay = 0,
-  grain = true,
-  speed = 1,
-  theme = "dark",
-}: WidthLockProps) {
+export function WidthLock(props: WidthLockProps) {
+  const {
+    before = DEFAULT_BEFORE,
+    words = DEFAULT_WORDS,
+    after = DEFAULT_AFTER,
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = flex.fontFamily,
+    fontWeight = WGHT,
+    scale = 1,
+    delay = 0,
+    grain = true,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H, fps } = useSceneConfig();
+  const { width: W, height: H, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    widthLockTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const c = THEMES[theme];
   const fg = ink ?? c.ink;
-  const list = words.length > 0 ? words : ["launch video"];
+  const list = wordsOf(words);
   const strings = useMemo(
     () => [before, after, ...list].map((s) => s || " "),
     [before, after, list],
@@ -289,15 +315,6 @@ export function WidthLock({
       extra: short > 0.001 ? Math.min(MAX_EXTRA_TRACK, short / n) : 0,
     };
   };
-
-  const LOCK_AT = 18;
-  const FIRST_SWAP = 46;
-  const STEP = Math.max(16, hold);
-  const swapAt = (k: number) => FIRST_SWAP + (k - 1) * STEP;
-  const OUT = 7;
-  const IN_AT = 6;
-  const IN = 10;
-  const SWAP_LOCK = 13;
 
   const lineH = F * LINE;
   const blockH = rows * lineH;
@@ -352,11 +369,15 @@ export function WidthLock({
     extra: Math.max(0, a.extra + (b.extra - a.extra) * k),
   });
 
-  const lock = (start: number) =>
-    spring({ frame: t - start, fps, config: LOCK_SPRING });
+  const lock = (el: ResolvedElement<WidthLockElementId>) =>
+    spring({
+      frame: t - (el.start + el.beat("lock")),
+      fps,
+      config: LOCK_SPRING,
+    });
 
-  const riseY = (start: number, len: number) => {
-    const p = interpolate(t, [start, start + len], [0, 1], {
+  const riseY = (el: ResolvedElement<WidthLockElementId>) => {
+    const p = interpolate(t, [el.start, el.end], [0, 1], {
       ...CLAMP,
       easing: EASE_OUT,
     });
@@ -386,9 +407,9 @@ export function WidthLock({
   const bands: React.ReactNode[] = [];
   let row = 0;
 
-  const fixed = (idx: number, enterAt: number) => {
-    const r = riseY(enterAt, 18);
-    const state = lerpFit(NATURAL, fit(idx), lock(LOCK_AT + row * 3));
+  const fixed = (idx: number, el: ResolvedElement<WidthLockElementId>) => {
+    const r = riseY(el);
+    const state = lerpFit(NATURAL, fit(idx), lock(el));
     bands.push(
       band(
         row,
@@ -409,24 +430,23 @@ export function WidthLock({
     row++;
   };
 
-  if (before) fixed(0, 0);
+  if (before) fixed(0, tl.get("before"));
 
   {
     const runs: React.ReactNode[] = [];
     list.forEach((_, k) => {
       const idx = 2 + k;
-      const enterAt = k === 0 ? 3 : swapAt(k) + IN_AT;
-      const lockAt = k === 0 ? LOCK_AT + row * 3 : swapAt(k) + SWAP_LOCK;
-      const leaveAt = k < list.length - 1 ? swapAt(k + 1) : null;
-      if (t < enterAt - 1) return;
-      if (leaveAt !== null && t > leaveAt + OUT + 1) return;
-      const r = riseY(enterAt, k === 0 ? 18 : IN);
-      const state = lerpFit(NATURAL, fit(idx), lock(lockAt));
+      const wordEl = tl.get(`word:${k}`);
+      const leaveEl = k < list.length - 1 ? tl.get(`leave:${k}`) : null;
+      if (t < wordEl.start - 1) return;
+      if (leaveEl !== null && t > leaveEl.end + 1) return;
+      const r = riseY(wordEl);
+      const state = lerpFit(NATURAL, fit(idx), lock(wordEl));
       let o = r.o;
       let blur = r.blur;
       let sx = 1;
-      if (leaveAt !== null) {
-        const p = interpolate(t, [leaveAt, leaveAt + OUT], [0, 1], {
+      if (leaveEl !== null) {
+        const p = interpolate(t, [leaveEl.start, leaveEl.end], [0, 1], {
           ...CLAMP,
           easing: EASE_IN,
         });
@@ -452,7 +472,7 @@ export function WidthLock({
     row++;
   }
 
-  if (after) fixed(1, 6);
+  if (after) fixed(1, tl.get("after"));
 
   return (
     <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
@@ -462,7 +482,12 @@ export function WidthLock({
             position: "absolute",
             inset: 0,
             background: c.haze(accent),
-            opacity: interpolate(t, [0, 30], [0.4, 1], CLAMP),
+            opacity: interpolate(
+              t,
+              [tl.get("haze").start, tl.get("haze").end],
+              [0.4, 1],
+              CLAMP,
+            ),
           }}
         />
       )}

@@ -8764,12 +8764,21 @@
       "title": "Width Lock",
       "description": "A condensed line stays width-locked while a word swaps, 'Ship the launch video by tonight.'.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/width-lock/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/width-lock.tsx"
+          "target": "components/remocn/width-lock/index.tsx"
+        },
+        {
+          "path": "registry/remocn/width-lock/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/width-lock/timeline.ts"
         }
       ],
       "type": "registry:component"
