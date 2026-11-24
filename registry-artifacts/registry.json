@@ -5595,13 +5595,19 @@
       "registryDependencies": [
         "@remocn/gsh",
         "@remocn/glide",
-        "@remocn/frame-rate"
+        "@remocn/frame-rate",
+        "@remocn/timeline"
       ],
       "files": [
         {
           "path": "registry/remocn/device-grows-around/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/device-grows-around.tsx"
+          "target": "components/remocn/device-grows-around/index.tsx"
+        },
+        {
+          "path": "registry/remocn/device-grows-around/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/device-grows-around/timeline.ts"
         }
       ],
       "type": "registry:component"

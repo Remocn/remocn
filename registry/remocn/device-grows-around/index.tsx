@@ -15,6 +15,14 @@ import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_NAME,
+  DEFAULT_SUBTITLE,
+  type DeviceGrowsAroundElementId,
+  deviceGrowsAroundTimeline,
+  SCENE_END,
+} from "./timeline";
 
 const sora = loadSora("normal", {
   weights: ["300", "400"],
@@ -32,28 +40,7 @@ const HEAVY = { mass: 1, damping: 26, stiffness: 120 };
 const CHIP = { mass: 0.5, damping: 12, stiffness: 200 };
 const CARD = { mass: 0.8, damping: 18, stiffness: 160 };
 
-const B = {
-  avatar: 2,
-  name: 6,
-  nameStep: 2,
-  sub: 30,
-  subStep: 1,
-  grow: 48,
-  status: 54,
-  icons: 60,
-  price: 60,
-  delta: 66,
-  chart: 66,
-  tabs: 78,
-  card: 84,
-  list: 90,
-  flood: 96,
-  push: 108,
-  lock: 150,
-  end: 186,
-};
-
-export const DEVICE_GROWS_AROUND_DURATION = B.end;
+export const DEVICE_GROWS_AROUND_DURATION = SCENE_END;
 
 const PW = 420;
 const PH = 900;
@@ -182,6 +169,12 @@ export interface DeviceGrowsAroundProps {
   grain?: boolean;
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
+  /**
+   * Moves, trims or stretches the typing, the phone growing, each section of
+   * the screen and the camera push, by the ids in `./timeline`. Frames on
+   * the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<DeviceGrowsAroundElementId>;
 }
 
 /** The foreground at `scale`, around the frame's center; nothing extra at 1. */
@@ -200,33 +193,57 @@ function ScaleLayer({
   );
 }
 
-export function DeviceGrowsAround({
-  theme = "dark",
-  accent = "#3B5BFD",
-  name = "Launch Film",
-  badge = "v2",
-  subtitle = "Remocn Studio export",
-  metric = 48213,
-  delta = "6,904 (16.7%) today",
-  total = 1284507,
-  gain = 412880,
-  unit = "views",
-  liveLabel = "Live",
-  listTitle = "Top sources",
-  logo,
-  ink: inkProp,
-  background,
-  fontFamily = sora.fontFamily,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  grain = true,
-  ground,
-  groundParams,
-}: DeviceGrowsAroundProps) {
+export function DeviceGrowsAround(props: DeviceGrowsAroundProps) {
+  const {
+    theme = "dark",
+    accent = "#3B5BFD",
+    name = DEFAULT_NAME,
+    badge = "v2",
+    subtitle = DEFAULT_SUBTITLE,
+    metric = 48213,
+    delta = "6,904 (16.7%) today",
+    total = 1284507,
+    gain = 412880,
+    unit = "views",
+    liveLabel = "Live",
+    listTitle = "Top sources",
+    logo,
+    ink: inkProp,
+    background,
+    fontFamily = sora.fontFamily,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    grain = true,
+    ground,
+    groundParams,
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width, height, fps } = useSceneConfig();
+  const { width, height, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    deviceGrowsAroundTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const avatarEl = tl.get("avatar");
+  const nameEl = tl.get("name");
+  const badgeEl = tl.get("badge");
+  const subEl = tl.get("subtitle");
+  const growEl = tl.get("grow");
+  const statusEl = tl.get("status");
+  const iconsEl = tl.get("icons");
+  const priceEl = tl.get("price");
+  const deltaEl = tl.get("delta");
+  const chartEl = tl.get("chart");
+  const tabsEl = tl.get("tabs");
+  const cardEl = tl.get("card");
+  const listEl = tl.get("list");
+  const floodEl = tl.get("flood");
+  const pushEl = tl.get("push");
+  const lockEl = tl.get("lock");
   const dark = theme === "dark";
   const portrait = height > width * 1.2;
   const stageW = portrait ? 1080 : 1280;
@@ -249,18 +266,18 @@ export function DeviceGrowsAround({
 
   const nameChars = Array.from(name);
   const subChars = Array.from(subtitle);
-  const subStart = Math.max(B.sub, B.name + nameChars.length * B.nameStep);
-  const nameTyped = nameChars.filter(
-    (_, i) => frame >= B.name + i * B.nameStep,
-  ).length;
+  const subStart = subEl.start;
+  const subStep = subEl.beat("step");
+  const nameAt = (i: number) => nameEl.start + i * nameEl.beat("step");
+  const nameTyped = nameChars.filter((_, i) => frame >= nameAt(i)).length;
   const subTyped = subChars.filter(
-    (_, i) => frame >= subStart + i * B.subStep,
+    (_, i) => frame >= subStart + i * subStep,
   ).length;
-  const badgeAt = B.name + nameChars.length * B.nameStep;
-  const subEnd = subStart + subChars.length * B.subStep;
+  const badgeAt = badgeEl.start;
+  const subEnd = subEl.end;
 
   const tint = (at: number) =>
-    interpolateColors(frame, [at, at + 9], [accent, ink]);
+    interpolateColors(frame, [at, at + nameEl.beat("tint")], [accent, ink]);
 
   const nameW = nameChars.length * 23 * 0.6 + (badge ? 46 : 0);
   const subW = subChars.length * 16 * 0.56;
@@ -290,12 +307,12 @@ export function DeviceGrowsAround({
         a1: [cx, 360],
       };
 
-  const p = ramp(frame, B.push, 36, CAM);
-  const pPrev = ramp(frame - 1, B.push, 36, CAM);
+  const p = ramp(frame, pushEl.start, pushEl.length, CAM);
+  const pPrev = ramp(frame - 1, pushEl.start, pushEl.length, CAM);
   const camAt = (f: number) => {
-    const g = spring({ frame: f - B.grow, fps, config: HEAVY });
-    const push = ramp(f, B.push, 36, CAM);
-    const drift = ramp(f, B.push + 36, B.end - B.push - 36, MOVE);
+    const g = spring({ frame: f - growEl.start, fps, config: HEAVY });
+    const push = ramp(f, pushEl.start, pushEl.length, CAM);
+    const drift = ramp(f, pushEl.end, pushEl.beat("drift"), MOVE);
     const sA = Math.exp(mix(Math.log(K.sT), Math.log(K.s0), g));
     const s =
       Math.exp(mix(Math.log(sA), Math.log(K.s1), push)) * (1 + 0.025 * drift);
@@ -315,40 +332,48 @@ export function DeviceGrowsAround({
   );
   const camBlur = Math.min(3, Math.abs(p - pPrev) * 70);
 
-  const bezelIn = ramp(frame, B.grow, 18, SOFT);
+  const bezelIn = ramp(frame, growEl.start, growEl.length, SOFT);
   const bezelScale = mix(
     1.07,
     1,
-    spring({ frame: frame - B.grow, fps, config: CARD }),
+    spring({ frame: frame - growEl.start, fps, config: CARD }),
   );
   const baseCol = interpolateColors(bezelIn, [0, 1], [stage, screenBase]);
-  const flood = ramp(frame, B.flood, 26, MOVE);
-  const bezelOut = ramp(frame, B.push + 18, 16, MOVE);
+  const flood = ramp(frame, floodEl.start, floodEl.length, MOVE);
+  const bezelOut = ramp(
+    frame,
+    pushEl.start + pushEl.beat("outAt"),
+    pushEl.beat("out"),
+    MOVE,
+  );
 
-  const avatarIn = spring({ frame: frame - B.avatar, fps, config: CHIP });
+  const avatarIn = spring({ frame: frame - avatarEl.start, fps, config: CHIP });
   const badgeSpring = (f: number) =>
     spring({ frame: f - badgeAt, fps, config: CHIP });
   const badgeIn = badgeSpring(frame);
-  const statusIn = ramp(frame, B.status, 12);
-  const iconsIn = spring({ frame: frame - B.icons, fps, config: CHIP });
-  const priceIn = ramp(frame, B.price, 14);
-  const deltaIn = ramp(frame, B.delta, 14);
-  const chartIn = ramp(frame, B.chart, 30, MOVE);
+  const statusIn = ramp(frame, statusEl.start, statusEl.length);
+  const iconsIn = spring({ frame: frame - iconsEl.start, fps, config: CHIP });
+  const priceIn = ramp(frame, priceEl.start, priceEl.length);
+  const deltaIn = ramp(frame, deltaEl.start, deltaEl.length);
+  const chartIn = ramp(frame, chartEl.start, chartEl.length, MOVE);
   const cardAt = (f: number) =>
-    spring({ frame: f - B.card, fps, config: CARD });
+    spring({ frame: f - cardEl.start, fps, config: CARD });
   const cardIn = cardAt(frame);
-  const count = ramp(frame, B.card, B.lock - B.card, MOVE);
-  const lockTick = spring({ frame: frame - B.lock, fps, config: CHIP });
+  const count = ramp(frame, cardEl.start, cardEl.length, MOVE);
+  const lockTick = spring({ frame: frame - lockEl.start, fps, config: CHIP });
   const tick =
-    frame >= B.lock ? 1 + 0.05 * Math.sin(Math.min(1, lockTick) * Math.PI) : 1;
+    frame >= lockEl.start
+      ? 1 + 0.05 * Math.sin(Math.min(1, lockTick) * Math.PI)
+      : 1;
   const ticking = Math.abs(tick - 1) > 1e-5;
 
   const caretOn =
-    frame < subEnd + 6
-      ? frame < B.name
+    frame < subEnd + subEl.beat("caretHold")
+      ? frame < nameEl.start
         ? Math.floor(frame / 6) % 2 === 0
         : true
-      : Math.floor((frame - subEnd) / 7) % 2 === 0 && frame < B.grow + 14;
+      : Math.floor((frame - subEnd) / 7) % 2 === 0 &&
+        frame < growEl.start + growEl.beat("caretOff");
   const caretOnSub = subTyped > 0;
 
   const chartX0 = 24;
@@ -533,7 +558,11 @@ export function DeviceGrowsAround({
                     display: "flex",
                     alignItems: "center",
                     gap: 6,
-                    opacity: ramp(frame, B.status + 4, 10),
+                    opacity: ramp(
+                      frame,
+                      statusEl.start + statusEl.beat("iconsAt"),
+                      statusEl.beat("icons"),
+                    ),
                   }}
                 >
                   <svg width={18} height={12} viewBox="0 0 18 12" aria-hidden>
@@ -617,7 +646,7 @@ export function DeviceGrowsAround({
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
-                      transform: `scale(${Math.max(0, spring({ frame: frame - B.icons - 2 - k * 2, fps, config: CHIP }))})`,
+                      transform: `scale(${Math.max(0, spring({ frame: frame - iconsEl.start - iconsEl.beat("btnAt") - k * iconsEl.beat("btnStep"), fps, config: CHIP }))})`,
                     }}
                   >
                     <Icon d={d} size={17} color={ink} />
@@ -662,7 +691,7 @@ export function DeviceGrowsAround({
                       borderRadius: 7,
                       background: green,
                       boxShadow: `0 0 0 3px ${baseCol}`,
-                      transform: `scale(${Math.max(0, spring({ frame: frame - B.icons, fps, config: CHIP }))})`,
+                      transform: `scale(${Math.max(0, spring({ frame: frame - iconsEl.start, fps, config: CHIP }))})`,
                     }}
                   />
                 </div>
@@ -684,7 +713,7 @@ export function DeviceGrowsAround({
                   {nameChars.slice(0, nameTyped).map((ch, i) => (
                     <span
                       key={`n${i.toString()}`}
-                      style={{ color: tint(B.name + i * B.nameStep) }}
+                      style={{ color: tint(nameAt(i)) }}
                     >
                       {ch}
                     </span>
@@ -742,12 +771,12 @@ export function DeviceGrowsAround({
                       key={`s${i.toString()}`}
                       style={{
                         color:
-                          frame < subStart + i * B.subStep + 8
+                          frame < subStart + i * subStep + subEl.beat("tint")
                             ? interpolateColors(
                                 frame,
                                 [
-                                  subStart + i * B.subStep,
-                                  subStart + i * B.subStep + 8,
+                                  subStart + i * subStep,
+                                  subStart + i * subStep + subEl.beat("tint"),
                                 ],
                                 [accent, soft],
                               )
@@ -851,7 +880,7 @@ export function DeviceGrowsAround({
                       y2={chartY0 + k * 64}
                       stroke={hair}
                       strokeDasharray="2 5"
-                      opacity={ramp(frame, B.chart, 10)}
+                      opacity={ramp(frame, chartEl.start, chartEl.beat("grid"))}
                     />
                   ))}
                   <g clipPath="url(#dga-clip)" opacity={chartIn > 0 ? 1 : 0}>
@@ -883,7 +912,11 @@ export function DeviceGrowsAround({
                   }}
                 >
                   {tabs.map((tb, k) => {
-                    const tIn = ramp(frame, B.tabs + k * 2, 12);
+                    const tIn = ramp(
+                      frame,
+                      tabsEl.start + k * tabsEl.beat("step"),
+                      tabsEl.beat("tab"),
+                    );
                     const active = tb === "1W";
                     return (
                       <div
@@ -1052,14 +1085,27 @@ export function DeviceGrowsAround({
                       fontSize: 13,
                       color: soft,
                       marginBottom: 12,
-                      opacity: ramp(frame, B.list, 12),
+                      opacity: ramp(frame, listEl.start, listEl.beat("title")),
                     }}
                   >
                     {listTitle}
                   </div>
                   {sources.map(([label, v], k) => {
-                    const rIn = ramp(frame, B.list + 4 + k * 3, 14);
-                    const bar = ramp(frame, B.list + 8 + k * 3, 24, MOVE);
+                    const rIn = ramp(
+                      frame,
+                      listEl.start +
+                        listEl.beat("rowAt") +
+                        k * listEl.beat("rowStep"),
+                      listEl.beat("row"),
+                    );
+                    const bar = ramp(
+                      frame,
+                      listEl.start +
+                        listEl.beat("barAt") +
+                        k * listEl.beat("rowStep"),
+                      listEl.beat("bar"),
+                      MOVE,
+                    );
                     return (
                       <div
                         key={label}
