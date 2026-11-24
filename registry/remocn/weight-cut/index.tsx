@@ -13,6 +13,12 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  easeCount,
+  type WeightCutElementId,
+  weightCutTimeline,
+} from "./timeline";
 
 const WEIGHTS = ["100", "200", "300", "400", "500"] as const;
 const barlow = loadFont("normal", {
@@ -43,6 +49,12 @@ export interface WeightCutProps {
   delay?: number;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches the entry, the eyebrow, the count, single
+   * digit drops and the label, by the ids in `./timeline`. Frames on the
+   * scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<WeightCutElementId>;
 }
 
 const THEMES = {
@@ -61,13 +73,7 @@ const THEMES = {
 const TRACK = 0.01;
 const SUFFIX_SCALE = 0.3;
 
-const ENTER_END = 14;
-const COUNT_AT = 20;
-const COUNT_END = 78;
-const LABEL_AT = 64;
-
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
-const EASE_COUNT = Easing.bezier(0.3, 0, 0.12, 1);
 const CLAMP = {
   extrapolateLeft: "clamp",
   extrapolateRight: "clamp",
@@ -157,11 +163,6 @@ function format(v: number, decimals: number) {
   });
 }
 
-function intDigits(v: number, decimals: number) {
-  const shown = Math.round(Math.abs(v) * 10 ** decimals) / 10 ** decimals;
-  return Math.max(1, Math.floor(shown).toString().length);
-}
-
 const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
 
 /** The foreground at `scale`, around the frame's center; nothing extra at 1. */
@@ -180,32 +181,43 @@ function ScaleLayer({
   );
 }
 
-export function WeightCut({
-  value = 6.8,
-  from = 94,
-  decimals = 1,
-  prefix = "",
-  suffix = "KB",
-  eyebrow = "Per scene, gzipped",
-  label = "Lighter than your logo file.",
-  lightWeight = 100,
-  accent,
-  ink,
-  background,
-  fontFamily = barlow.fontFamily,
-  count = COUNT_END - COUNT_AT,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: WeightCutProps) {
+export function WeightCut(props: WeightCutProps) {
+  const {
+    value = 6.8,
+    from = 94,
+    decimals = 1,
+    prefix = "",
+    suffix = "KB",
+    eyebrow = "Per scene, gzipped",
+    label = "Lighter than your logo file.",
+    lightWeight = 100,
+    accent,
+    ink,
+    background,
+    fontFamily = barlow.fontFamily,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H, fps } = useSceneConfig();
+  const { width: W, height: H, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    weightCutTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const enterEl = tl.get("enter");
+  const eyebrowEl = tl.get("eyebrow");
+  const countEl = tl.get("count");
+  const labelEl = tl.get("label");
+  const countEnd = countEl.end;
   const c = THEMES[theme];
   const spot = accent ?? c.accent;
   const fg = ink ?? c.ink;
-  const countEnd = COUNT_AT + count;
   const light = snapWeight(lightWeight);
   const chars = useMemo(
     () =>
@@ -219,19 +231,7 @@ export function WeightCut({
   const transparent = background === "transparent";
   const stage = transparent ? "transparent" : (background ?? c.bg);
 
-  const drops = useMemo(() => {
-    const out: { at: number }[] = [];
-    let prev = intDigits(from, decimals);
-    for (let f = COUNT_AT; f <= countEnd; f += 0.25) {
-      const g = EASE_COUNT((f - COUNT_AT) / (countEnd - COUNT_AT));
-      const d = intDigits(from + (value - from) * g, decimals);
-      if (d < prev) {
-        for (let k = prev; k > d; k--) out.push({ at: f });
-        prev = d;
-      }
-    }
-    return out;
-  }, [from, value, decimals, countEnd]);
+  const drops = tl.lane("Digits").map((e) => ({ at: e.start }));
 
   if (!m) {
     return (
@@ -242,9 +242,9 @@ export function WeightCut({
   const portrait = H > W * 1.1;
   const s = portrait ? W / 1080 : Math.min(W / 1280, H / 720);
 
-  const g = interpolate(t, [COUNT_AT, countEnd], [0, 1], {
+  const g = interpolate(t, [countEl.start, countEnd], [0, 1], {
     ...CLAMP,
-    easing: EASE_COUNT,
+    easing: easeCount,
   });
   const raw = from + (value - from) * g;
   const shown = Math.round(raw * 10 ** decimals) / 10 ** decimals;
@@ -252,12 +252,12 @@ export function WeightCut({
   const span = from - value;
   const heavy = span === 0 ? 0 : Math.min(1, Math.max(0, (raw - value) / span));
 
-  const enter = interpolate(t, [-5, ENTER_END], [0, 1], {
+  const enter = interpolate(t, [enterEl.start, enterEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
   const relax = spring({
-    frame: t - (countEnd - 10),
+    frame: t - (countEnd - countEl.beat("relax")),
     fps,
     config: { damping: 18, stiffness: 120, mass: 0.9 },
   });
@@ -315,11 +315,11 @@ export function WeightCut({
 
   const eyebrowFs = (portrait ? 40 : 26) * s;
   const labelFs = (portrait ? 72 : 52) * s;
-  const eyebrowP = interpolate(t, [2, 18], [0, 1], {
+  const eyebrowP = interpolate(t, [eyebrowEl.start, eyebrowEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
-  const labelP = interpolate(t, [LABEL_AT, LABEL_AT + 18], [0, 1], {
+  const labelP = interpolate(t, [labelEl.start, labelEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });

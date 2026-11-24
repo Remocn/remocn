@@ -8159,12 +8159,21 @@
       "title": "Weight Cut",
       "description": "A large light-weight figure counts up to 6.8 KB as its strokes thin, with a small caps eyebrow.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/weight-cut/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/weight-cut.tsx"
+          "target": "components/remocn/weight-cut/index.tsx"
+        },
+        {
+          "path": "registry/remocn/weight-cut/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/weight-cut/timeline.ts"
         }
       ],
       "type": "registry:component"

@@ -8164,10 +8164,19 @@
         {
           "path": "weight-cut/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/weight-cut.tsx"
+          "target": "components/remocn/weight-cut/index.tsx"
+        },
+        {
+          "path": "weight-cut/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/weight-cut/timeline.ts"
         }
       ],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"]
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ]
     },
     {
       "name": "hook-uncurl",
