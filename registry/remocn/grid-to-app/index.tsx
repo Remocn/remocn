@@ -16,6 +16,12 @@ import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_PRODUCTS,
+  type GridToAppElementId,
+  gridToAppTimeline,
+} from "./timeline";
 
 const inter = loadInterTight("normal", {
   weights: ["300", "400"],
@@ -29,18 +35,6 @@ const MOVE = Easing.bezier(0.65, 0, 0.35, 1);
 const HEAVY = { mass: 1, damping: 26, stiffness: 120 };
 const CARD = { mass: 0.8, damping: 18, stiffness: 160 };
 const CHIP = { mass: 0.5, damping: 12, stiffness: 200 };
-
-const B = {
-  row1: [-8, -5, -2, 1],
-  pull: 14,
-  pullLen: 40,
-  chrome: 24,
-  side: 28,
-  row2: [50, 53, 56, 59],
-  count: 50,
-  publish: 84,
-  end: 132,
-};
 
 const ramp = (f: number, start: number, dur: number, easing = ENTER) =>
   interpolate(f, [start, start + dur], [0, 1], {
@@ -117,6 +111,12 @@ export interface GridToAppProps {
   speed?: number;
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
+  /**
+   * Moves, trims or stretches the product cards, the camera pull, the chrome,
+   * the count and the publish, by the ids in `./timeline`. Frames on the
+   * scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<GridToAppElementId>;
 }
 
 /** The foreground at `scale`, around the frame's center; nothing extra at 1. */
@@ -135,47 +135,51 @@ function ScaleLayer({
   );
 }
 
-export function GridToApp({
-  theme = "dark",
-  accent = "#ff6a2b",
-  storeName = "Studio Goods",
-  pageTitle = "Products",
-  images = [
-    staticFile("templates/brand-guidelines/ceramics.jpg"),
-    staticFile("templates/brand-guidelines/chair.jpg"),
-    staticFile("templates/product-showcase/sculpture.jpg"),
-    staticFile("templates/brand-guidelines/materials.jpg"),
-    staticFile("templates/launch-anything/desk.jpg"),
-    staticFile("templates/product-showcase/workbench.jpg"),
-    staticFile("templates/product-showcase/gallery.jpg"),
-    staticFile("templates/product-showcase/courtyard.jpg"),
-  ],
-  products = [
-    { name: "Ceramic pitcher", price: "$48.00" },
-    { name: "Oak stool", price: "$120.00" },
-    { name: "Arch sculpture", price: "$86.00" },
-    { name: "Material kit", price: "$32.00" },
-    { name: "Writing desk", price: "$640.00" },
-    { name: "Oak dining table", price: "$1,180.00" },
-    { name: "Travertine bench", price: "$420.00" },
-    { name: "Olive planter", price: "$64.00" },
-  ],
-  publishLabel = "Publish",
-  liveLabel = "Store live",
-  addLabel = "Add product",
-  ink: inkProp,
-  background,
-  fontFamily = inter.fontFamily,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  ground,
-  groundParams,
-}: GridToAppProps) {
+export function GridToApp(props: GridToAppProps) {
+  const {
+    theme = "dark",
+    accent = "#ff6a2b",
+    storeName = "Studio Goods",
+    pageTitle = "Products",
+    images = [
+      staticFile("templates/brand-guidelines/ceramics.jpg"),
+      staticFile("templates/brand-guidelines/chair.jpg"),
+      staticFile("templates/product-showcase/sculpture.jpg"),
+      staticFile("templates/brand-guidelines/materials.jpg"),
+      staticFile("templates/launch-anything/desk.jpg"),
+      staticFile("templates/product-showcase/workbench.jpg"),
+      staticFile("templates/product-showcase/gallery.jpg"),
+      staticFile("templates/product-showcase/courtyard.jpg"),
+    ],
+    products = DEFAULT_PRODUCTS,
+    publishLabel = "Publish",
+    liveLabel = "Store live",
+    addLabel = "Add product",
+    ink: inkProp,
+    background,
+    fontFamily = inter.fontFamily,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    ground,
+    groundParams,
+    timing,
+  } = props;
   const glide = useGlide();
   const clock = useSceneFrame() - delay;
   const frame = Math.max(0, clock) * speed;
-  const { width, height, fps } = useSceneConfig();
+  const { width, height, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    gridToAppTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const pullEl = tl.get("pull");
+  const chromeEl = tl.get("chrome");
+  const side = tl.get("sidebar");
+  const count = tl.get("count");
+  const publish = tl.get("publish");
   const dark = theme === "dark";
   const portrait = height > width * 1.2;
   const stageW = portrait ? 720 : 1280;
@@ -214,21 +218,29 @@ export function GridToApp({
     y: gridTop + Math.floor(i / cols) * (cardH + gap),
   });
 
-  const pull = ramp(frame, B.pull, B.pullLen, CAM);
-  const pullPrev = ramp(frame - 1, B.pull, B.pullLen, CAM);
+  const pull = ramp(frame, pullEl.start, pullEl.length, CAM);
+  const pullPrev = ramp(frame - 1, pullEl.start, pullEl.length, CAM);
   const tilt = spring({
-    frame: frame - B.pull,
+    frame: frame - pullEl.start,
     fps,
     config: HEAVY,
-    durationInFrames: B.pullLen + 10,
+    durationInFrames: pullEl.beat("tilt"),
   });
   const focusX = sideW + pad + (mainW - pad * 2) / 2 - winW / 2;
   const focusY = gridTop + cardH / 2 - winH / 2 + (portrait ? cardH / 2 : 0);
   const z0 = portrait ? 1.2 : 1.42;
   const z =
     mix(z0, 1, pull) *
-      (1 + 0.03 * ramp(frame, B.pull + B.pullLen, B.end, Easing.linear)) +
-    0.025 * ramp(frame, -10, B.pull + 6, Easing.linear) * (1 - pull);
+      (1 +
+        0.03 * ramp(frame, pullEl.end, pullEl.beat("drift"), Easing.linear)) +
+    0.025 *
+      ramp(
+        frame,
+        pullEl.start + pullEl.beat("breathe"),
+        pullEl.beat("breatheLen"),
+        Easing.linear,
+      ) *
+      (1 - pull);
   const fx = mix(focusX, 0, pull);
   const fy = mix(focusY, portrait ? 10 : 6, pull);
   const rotX = mix(0, 7, tilt) + 6 * Math.sin(Math.PI * pull);
@@ -237,13 +249,14 @@ export function GridToApp({
   const pullV = Math.abs(pull - pullPrev);
   const camBlur = Math.min(4, pullV * 60);
 
-  const chrome = ramp(frame, B.chrome, 18);
-  const sideItem = (i: number) => ramp(frame, B.side + i * 2, 12);
-  const countRoll = ramp(frame, B.count, 12, MOVE);
+  const chrome = ramp(frame, chromeEl.start, chromeEl.length);
+  const sideItem = (i: number) =>
+    ramp(frame, side.start + i * side.beat("stagger"), side.beat("item"));
+  const countRoll = ramp(frame, count.start, count.beat("roll"), MOVE);
   const countVal = Math.round(mix(4, products.length, countRoll));
-  const pub = spring({ frame: frame - B.publish, fps, config: CHIP });
-  const live = frame >= B.publish;
-  const pubDip = dip(frame, B.publish - 4, 0.08);
+  const pub = spring({ frame: frame - publish.start, fps, config: CHIP });
+  const live = frame >= publish.start;
+  const pubDip = dip(frame, publish.start + publish.beat("dip"), 0.08);
 
   const resolvedPreset: GshPresetId | undefined = ground;
   const resolvedParams: Partial<GradientParams> | undefined =
@@ -479,7 +492,7 @@ export function GridToApp({
                     >
                       <div
                         style={{
-                          width: `${mix(50, 67, ramp(frame, B.count, 18))}%`,
+                          width: `${mix(50, 67, ramp(frame, count.start, count.length))}%`,
                           height: "100%",
                           borderRadius: 3,
                           background: accent,
@@ -746,10 +759,8 @@ export function GridToApp({
               {products.slice(0, cols * (portrait ? 3 : 2)).map((p, i) => {
                 const pos = cardPos(i);
                 const firstRow = i < 4;
-                const at = firstRow
-                  ? (B.row1[i] ?? 0)
-                  : (B.row2[(i - 4) % B.row2.length] ?? 50) +
-                    Math.floor((i - 4) / B.row2.length) * 6;
+                const card = tl.get(`card:${i}`);
+                const at = card.start;
                 const pop = spring({ frame: frame - at, fps, config: CARD });
                 const shown = frame >= at;
                 return (
@@ -789,7 +800,7 @@ export function GridToApp({
                           width: "100%",
                           height: "100%",
                           objectFit: "cover",
-                          transform: `scale(${1.06 - 0.06 * ramp(frame, at, 60, Easing.linear)})`,
+                          transform: `scale(${1.06 - 0.06 * ramp(frame, at, card.length, Easing.linear)})`,
                         }}
                       />
                       {i === 1 ? (

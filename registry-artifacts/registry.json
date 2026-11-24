@@ -6450,13 +6450,19 @@
       "registryDependencies": [
         "@remocn/gsh",
         "@remocn/glide",
-        "@remocn/frame-rate"
+        "@remocn/frame-rate",
+        "@remocn/timeline"
       ],
       "files": [
         {
           "path": "registry/remocn/grid-to-app/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/grid-to-app.tsx"
+          "target": "components/remocn/grid-to-app/index.tsx"
+        },
+        {
+          "path": "registry/remocn/grid-to-app/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/grid-to-app/timeline.ts"
         }
       ],
       "type": "registry:component"
