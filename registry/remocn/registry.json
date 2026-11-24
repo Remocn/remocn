@@ -13973,10 +13973,19 @@
         {
           "path": "embossed-mark/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/embossed-mark.tsx"
+          "target": "components/remocn/embossed-mark/index.tsx"
+        },
+        {
+          "path": "embossed-mark/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/embossed-mark/timeline.ts"
         }
       ],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"]
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ]
     },
     {
       "name": "halftone-cut",

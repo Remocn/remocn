@@ -13968,12 +13968,21 @@
       "title": "Embossed Mark",
       "description": "The R mark and wordmark are debossed into a brushed grey surface as it lights up.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/embossed-mark/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/embossed-mark.tsx"
+          "target": "components/remocn/embossed-mark/index.tsx"
+        },
+        {
+          "path": "registry/remocn/embossed-mark/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/embossed-mark/timeline.ts"
         }
       ],
       "type": "registry:component"
