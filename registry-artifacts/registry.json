@@ -16015,13 +16015,19 @@
       "registryDependencies": [
         "@remocn/gsh",
         "@remocn/glide",
-        "@remocn/frame-rate"
+        "@remocn/frame-rate",
+        "@remocn/timeline"
       ],
       "files": [
         {
           "path": "registry/remocn/theme-flip/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/theme-flip.tsx"
+          "target": "components/remocn/theme-flip/index.tsx"
+        },
+        {
+          "path": "registry/remocn/theme-flip/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/theme-flip/timeline.ts"
         }
       ],
       "type": "registry:component"
