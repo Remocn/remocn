@@ -3,6 +3,8 @@
 import { useId, useMemo } from "react";
 import { AbsoluteFill, Easing, interpolate, random } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import { type SynthwaveElementId, synthwaveTimeline } from "./timeline";
 
 export type SynthwaveColors = {
   skyTop: string;
@@ -32,6 +34,11 @@ export type SynthwaveProps = {
   /** Scroll the sun stripes downward. */
   sunStripes?: boolean;
   speed?: number;
+  /**
+   * Moves, trims or stretches the sun rise and the two mountain ranges, by
+   * the ids in `./timeline`. Frames on the scene timeline, after `speed`.
+   */
+  timing?: Timing<SynthwaveElementId>;
 };
 
 export const synthwaveDefaults = {
@@ -80,19 +87,30 @@ function ridge(
   return points.join(" ");
 }
 
-export function Synthwave({
-  colors,
-  grid,
-  sunTop,
-  sunBottom,
-  skyHorizon,
-  gridSpeed = synthwaveDefaults.gridSpeed,
-  horizon = synthwaveDefaults.horizon,
-  sunStripes = synthwaveDefaults.sunStripes,
-  speed = synthwaveDefaults.speed,
-}: SynthwaveProps) {
+export function Synthwave(props: SynthwaveProps) {
+  const {
+    colors,
+    grid,
+    sunTop,
+    sunBottom,
+    skyHorizon,
+    gridSpeed = synthwaveDefaults.gridSpeed,
+    horizon = synthwaveDefaults.horizon,
+    sunStripes = synthwaveDefaults.sunStripes,
+    speed = synthwaveDefaults.speed,
+    timing,
+  } = props;
   const frame = useSceneFrame();
-  const { width: W, height: H, fps } = useSceneConfig();
+  const { width: W, height: H, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    synthwaveTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const sun = tl.get("sun");
+  const backRange = tl.get("back");
+  const frontRange = tl.get("front");
   const id = useId().replace(/[^a-zA-Z0-9_-]/g, "");
   const merged = { ...synthwaveDefaults.colors, ...colors };
   const c: SynthwaveColors = {
@@ -122,7 +140,7 @@ export function Synthwave({
   const colSpread = W * 0.16;
   const nearZ = 0.35;
 
-  const rise = interpolate(t, [0, 40], [0, 1], {
+  const rise = interpolate(t, [sun.start, sun.end], [0, 1], {
     ...clamp,
     easing: Easing.out(Easing.cubic),
   });
@@ -145,14 +163,19 @@ export function Synthwave({
     [W, H, yh],
   );
   // Ranges slide in sideways while rising from behind the horizon.
-  const slideBack = interpolate(t, [4, 34], [1, 0], {
+  const slideBack = interpolate(t, [backRange.start, backRange.end], [1, 0], {
     ...clamp,
     easing: Easing.out(Easing.cubic),
   });
-  const slideFront = interpolate(t, [8, 38], [1, 0], {
-    ...clamp,
-    easing: Easing.out(Easing.cubic),
-  });
+  const slideFront = interpolate(
+    t,
+    [frontRange.start, frontRange.end],
+    [1, 0],
+    {
+      ...clamp,
+      easing: Easing.out(Easing.cubic),
+    },
+  );
   const stars = Array.from({ length: 70 }, (_, i) => ({
     x: random(`synthwave-sx-${i}`) * W,
     y: random(`synthwave-sy-${i}`) * yh * 0.8,

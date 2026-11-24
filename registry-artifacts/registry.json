@@ -5211,12 +5211,17 @@
       "title": "Synthwave",
       "description": "A retro neon horizon: a scrolling perspective grid, a rising striped sun and mountain ranges that slide in.",
       "dependencies": ["remotion"],
-      "registryDependencies": ["@remocn/frame-rate"],
+      "registryDependencies": ["@remocn/frame-rate", "@remocn/timeline"],
       "files": [
         {
           "path": "registry/remocn/synthwave/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/synthwave.tsx"
+          "target": "components/remocn/synthwave/index.tsx"
+        },
+        {
+          "path": "registry/remocn/synthwave/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/synthwave/timeline.ts"
         }
       ],
       "type": "registry:component"
