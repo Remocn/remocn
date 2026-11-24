@@ -16246,13 +16246,19 @@
       "registryDependencies": [
         "@remocn/gsh",
         "@remocn/glide",
-        "@remocn/frame-rate"
+        "@remocn/frame-rate",
+        "@remocn/timeline"
       ],
       "files": [
         {
           "path": "feature-flag-rollout/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/feature-flag-rollout.tsx"
+          "target": "components/remocn/feature-flag-rollout/index.tsx"
+        },
+        {
+          "path": "feature-flag-rollout/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/feature-flag-rollout/timeline.ts"
         }
       ]
     },
