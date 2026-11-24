@@ -12,6 +12,13 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_LINES,
+  linesOf,
+  type TldrOnTopElementId,
+  tldrOnTopTimeline,
+} from "./timeline";
 
 const rubik = loadFont("normal", {
   weights: ["400", "500"],
@@ -38,6 +45,12 @@ export interface TldrOnTopProps {
   delay?: number;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches the wall's fade, the label, single summary
+   * lines and the final push, by the ids in `./timeline`. Frames on the
+   * scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<TldrOnTopElementId>;
 }
 
 const THEMES = {
@@ -47,12 +60,6 @@ const THEMES = {
 
 const DEFAULT_TEXT =
   "Last spring we had a launch on Thursday and no video. The timeline editor crashed twice, every export took forty minutes, and each copy change meant opening the project, finding the layer and rendering the whole thing again. So we tried something else: we wrote the video the way we write the product. Every scene became a React component, with props for its words and its colors. The brand moved into one config file, so a new color reached every shot at once. A typo turned into a one-line commit. Transitions became functions you could read, review and reuse. The film now lives in the same repo as the code, gets reviewed in pull requests like everything else, and renders on the laptop it was written on. You install a scene with one command, change its words, and every file is yours to keep. That’s the whole story, more or less, and it took us a lot longer to tell than it will take you to try.";
-
-const DEFAULT_LINES = [
-  "Every scene is a component.",
-  "Your brand is one file.",
-  "It renders on your laptop.",
-];
 
 const WGHT = 500;
 const TRACK = -0.03;
@@ -170,31 +177,38 @@ function ScaleLayer({
   );
 }
 
-export function TldrOnTop({
-  text = DEFAULT_TEXT,
-  label = "TL;DR",
-  lines = DEFAULT_LINES,
-  read = 34,
-  fontWeight = WGHT,
-  accent,
-  ink,
-  background,
-  fontFamily = rubik.fontFamily,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: TldrOnTopProps) {
+export function TldrOnTop(props: TldrOnTopProps) {
+  const {
+    text = DEFAULT_TEXT,
+    label = "TL;DR",
+    lines = DEFAULT_LINES,
+    fontWeight = WGHT,
+    accent,
+    ink,
+    background,
+    fontFamily = rubik.fontFamily,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
   const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    tldrOnTopTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const c = THEMES[theme];
   const hi = accent ?? c.accent;
   const fg = ink ?? c.ink;
   const stage =
     background === "transparent" ? "transparent" : (background ?? c.bg);
 
-  const list = lines.length > 0 ? lines : DEFAULT_LINES;
+  const list = linesOf(lines);
   const m = useMetrics(
     [label, ...list.flatMap(prefixes)],
     text,
@@ -248,14 +262,13 @@ export function TldrOnTop({
   ];
   const headGap = F * 0.5;
 
-  const span = durationInFrames * speed;
-  const READ = read;
-  const STEP = Math.min(30, Math.max(18, (span - READ - 110) / list.length));
-  const insertAt = (k: number) => READ + k * STEP;
-  const OPEN = 18;
+  // Slot `k` is the label, then the summary lines.
+  const slots = heights.map((_, k) =>
+    tl.get(k === 0 ? "label" : `line:${k - 1}`),
+  );
   const opensAt = (tt: number) =>
-    heights.map((_, k) =>
-      interpolate(tt, [insertAt(k), insertAt(k) + OPEN], [0, 1], {
+    slots.map((e) =>
+      interpolate(tt, [e.start, e.end], [0, 1], {
         ...CLAMP,
         easing: EASE_IN_OUT,
       }),
@@ -264,10 +277,10 @@ export function TldrOnTop({
   const headTotal = heights.reduce((a, h, k) => a + h * opens[k], 0);
   const restTop = mY + heights.reduce((a, h) => a + h, 0) + headGap;
   const sliverTop = Math.min(H - wallRowH * 3.4, restTop + H * 0.12);
-  const pushStart = insertAt(heights.length - 1) + OPEN - 4;
+  const pushEl = tl.get("push");
   const wallAt = (tt: number) => {
     const o = opensAt(tt);
-    const push = interpolate(tt, [pushStart, pushStart + 26], [0, 1], {
+    const push = interpolate(tt, [pushEl.start, pushEl.end], [0, 1], {
       ...CLAMP,
       easing: Easing.bezier(0.5, 0, 0.2, 1),
     });
@@ -290,7 +303,8 @@ export function TldrOnTop({
     Math.abs(wallAt(t + speed) - wallTop) > 1e-3 ||
     Math.abs(wallTop - wallAt(t - speed)) > 1e-3;
 
-  const wallIn = interpolate(t, [0, 16], [0, 1], {
+  const wallEl = tl.get("wall");
+  const wallIn = interpolate(t, [wallEl.start, wallEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
@@ -308,9 +322,10 @@ export function TldrOnTop({
     if (open <= 0) {
       continue;
     }
+    const slot = slots[k];
     const reveal = interpolate(
       t,
-      [insertAt(k) + 8, insertAt(k) + OPEN + 8],
+      [slot.start + slot.beat("reveal"), slot.end + slot.beat("reveal")],
       [0, 1],
       { ...CLAMP, easing: EASE_OUT },
     );

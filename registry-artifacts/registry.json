@@ -6749,12 +6749,21 @@
       "title": "Tldr on Top",
       "description": "A TL;DR summary sits on top of a long body paragraph that fades off.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/tldr-on-top/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/tldr-on-top.tsx"
+          "target": "components/remocn/tldr-on-top/index.tsx"
+        },
+        {
+          "path": "registry/remocn/tldr-on-top/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/tldr-on-top/timeline.ts"
         }
       ],
       "type": "registry:component"
