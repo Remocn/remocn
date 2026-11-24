@@ -8945,10 +8945,19 @@
         {
           "path": "press-stat/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/press-stat.tsx"
+          "target": "components/remocn/press-stat/index.tsx"
+        },
+        {
+          "path": "press-stat/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/press-stat/timeline.ts"
         }
       ],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"]
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ]
     },
     {
       "name": "unmask-line",

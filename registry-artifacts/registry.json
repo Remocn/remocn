@@ -8940,12 +8940,21 @@
       "title": "Press Stat",
       "description": "A mono caption presses out and a huge green 73% lands beside 'Edit time down'.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/press-stat/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/press-stat.tsx"
+          "target": "components/remocn/press-stat/index.tsx"
+        },
+        {
+          "path": "registry/remocn/press-stat/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/press-stat/timeline.ts"
         }
       ],
       "type": "registry:component"

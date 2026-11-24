@@ -13,6 +13,12 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_BEFORE,
+  type PressStatElementId,
+  pressStatTimeline,
+} from "./timeline";
 
 const plex = loadPlexMono("normal", {
   weights: ["400", "500"],
@@ -41,6 +47,12 @@ export interface PressStatProps {
   delay?: number;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches the caption words, the number's rise and the
+   * press, by the ids in `./timeline`. Frames on the scene timeline, after
+   * `delay` and `speed`.
+   */
+  timing?: Timing<PressStatElementId>;
 }
 
 const GREEN = { dark: "#00C805", light: "#00873C" } as const;
@@ -49,11 +61,6 @@ const THEMES = {
   dark: { bg: "#000000", ink: "#FFFFFF" },
   light: { bg: "#FFFFFF", ink: "#000000" },
 } as const;
-
-const RISE_LEN = 14;
-const RISE_GAP = 4;
-const PRESS_AT = 30;
-const COUNT_LEN = 42;
 
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
 const EASE_COUNT = Easing.bezier(0.45, 0, 0.2, 1);
@@ -130,28 +137,35 @@ function ScaleLayer({
   );
 }
 
-export function PressStat({
-  before = "Edit time down",
-  value = 73,
-  from = 0,
-  prefix = "",
-  suffix = "%",
-  accent,
-  ink,
-  background,
-  fontFamily = plex.fontFamily,
-  pressAt = PRESS_AT,
-  countLength = COUNT_LEN,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: PressStatProps) {
+export function PressStat(props: PressStatProps) {
+  const {
+    before = DEFAULT_BEFORE,
+    value = 73,
+    from = 0,
+    prefix = "",
+    suffix = "%",
+    accent,
+    ink,
+    background,
+    fontFamily = plex.fontFamily,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = useSceneFrame();
   const tAt = (df: number) => Math.max(0, frame + df - delay) * speed;
   const t = tAt(0);
-  const { width: W, height: H, fps } = useSceneConfig();
+  const { width: W, height: H, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    pressStatTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const press = tl.get("press");
   const c = THEMES[theme];
   const green = accent ?? GREEN[theme];
   const fg = ink ?? c.ink;
@@ -204,13 +218,13 @@ export function PressStat({
 
   // The press at time `tt`, so the blocks can tell motion from rest.
   const pressState = (tt: number) => {
-    const pCount = interpolate(tt, [pressAt, pressAt + countLength], [0, 1], {
+    const pCount = interpolate(tt, [press.start, press.end], [0, 1], {
       ...CLAMP,
       easing: EASE_COUNT,
     });
     const shown = Math.round(start + (target - start) * pCount);
     const numText = `${prefix}${fmt(shown)}${suffix}`;
-    const g = spring({ frame: tt - pressAt, fps, config: INFLATE });
+    const g = spring({ frame: tt - press.start, fps, config: INFLATE });
     const gc = Math.min(1, Math.max(0, g));
     const Fn = Fw + (Fh - Fw) * g;
     const numW = len(numText) * m.adv * Fn;
@@ -246,11 +260,13 @@ export function PressStat({
     reach(now, pressState(tAt(-1))) > 1e-3;
   const Fwords1 = fitWords(W - margin - len(finalText) * m.adv * Fh, margin);
 
-  const rise = (i: number) =>
-    interpolate(t, [i * RISE_GAP, i * RISE_GAP + RISE_LEN], [0, 1], {
+  const rise = (i: number) => {
+    const e = tl.get(i < words.length ? `word:${i}` : "number");
+    return interpolate(t, [e.start, e.end], [0, 1], {
       ...CLAMP,
       easing: EASE_OUT,
     });
+  };
 
   const masked = (
     key: string,
