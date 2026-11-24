@@ -8747,12 +8747,21 @@
       "title": "Smash Count",
       "description": "A giant red 64 smash-cuts up from zero beside a small caption.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/smash-count/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/smash-count.tsx"
+          "target": "components/remocn/smash-count/index.tsx"
+        },
+        {
+          "path": "registry/remocn/smash-count/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/smash-count/timeline.ts"
         }
       ],
       "type": "registry:component"

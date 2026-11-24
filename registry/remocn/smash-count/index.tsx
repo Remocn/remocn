@@ -12,6 +12,12 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  cutValues,
+  type SmashCountElementId,
+  smashCountTimeline,
+} from "./timeline";
 
 const rubik = loadRubik("normal", {
   weights: ["400", "500"],
@@ -41,6 +47,11 @@ export interface SmashCountProps {
   delay?: number;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches single cuts, by the ids in `./timeline`.
+   * Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<SmashCountElementId>;
 }
 
 const RED = "#E60012";
@@ -54,10 +65,6 @@ type Anchor = "c" | "tl" | "tr" | "bl" | "br";
 const ROUTE: Anchor[] = ["c", "tr", "bl", "tl", "br", "c", "tr", "tl"];
 
 const TRACK = -0.04;
-const FIRST_GAP = 13;
-const LAST_GAP = 6;
-const PUNCH_LEN = 5;
-const LAND_LEN = 12;
 
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
 const CLAMP = {
@@ -70,30 +77,6 @@ interface Metrics {
   cap: number;
   base: number;
   label: number;
-}
-
-function cutValues(from: number, value: number, cuts: number) {
-  const n = Math.max(2, Math.min(cuts, Math.abs(value - from) + 1));
-  const out: number[] = [];
-  for (let k = 0; k < n; k++) {
-    const x = k / (n - 1);
-    const e = 1 - (1 - x) ** 1.7;
-    out.push(Math.round(from + (value - from) * e));
-  }
-  for (let k = 1; k < n; k++) {
-    if (out[k] === out[k - 1]) out[k] = out[k - 1] + Math.sign(value - from);
-  }
-  out[n - 1] = value;
-  return out;
-}
-
-function cutTimes(n: number, firstGap: number, lastGap: number) {
-  const out = [0];
-  for (let k = 1; k < n; k++) {
-    const g = firstGap + (lastGap - firstGap) * ((k - 1) / Math.max(1, n - 2));
-    out.push(out[k - 1] + g);
-  }
-  return out.map((v) => Math.round(v));
 }
 
 function measure(texts: string[], label: string, fontFamily: string): Metrics {
@@ -187,27 +170,33 @@ function ScaleLayer({
   );
 }
 
-export function SmashCount({
-  value = 64,
-  from = 1,
-  cuts = 6,
-  prefix = "",
-  suffix = "",
-  label = "scenes, zero keyframes",
-  accent = RED,
-  ink,
-  background,
-  fontFamily = rubik.fontFamily,
-  firstGap = FIRST_GAP,
-  lastGap = LAST_GAP,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: SmashCountProps) {
+export function SmashCount(props: SmashCountProps) {
+  const {
+    value = 64,
+    from = 1,
+    cuts = 6,
+    prefix = "",
+    suffix = "",
+    label = "scenes, zero keyframes",
+    accent = RED,
+    ink,
+    background,
+    fontFamily = rubik.fontFamily,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H } = useSceneConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    smashCountTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const c = THEMES[theme];
   const values = useMemo(
     () => cutValues(Math.round(from), Math.round(value), Math.round(cuts)),
@@ -235,11 +224,11 @@ export function SmashCount({
 
   const portrait = H > W * 1.1;
   const n = texts.length;
-  const times = cutTimes(n, firstGap, lastGap);
+  const cutEls = texts.map((_, i) => tl.get(`cut:${i}`));
   let k = 0;
-  for (let i = 0; i < n; i++) if (t >= times[i]) k = i;
+  for (let i = 0; i < n; i++) if (t >= cutEls[i].start) k = i;
   const last = k === n - 1;
-  const local = t - times[k];
+  const local = t - cutEls[k].start;
 
   const margin = Math.min(W, H) * 0.07;
   const anchor: Anchor = last ? "bl" : ROUTE[k % ROUTE.length];
@@ -270,11 +259,11 @@ export function SmashCount({
         : H - margin;
 
   const punch = last
-    ? interpolate(local, [0, LAND_LEN], [1.05, 1], {
+    ? interpolate(local, [0, cutEls[k].beat("punch")], [1.05, 1], {
         ...CLAMP,
         easing: EASE_OUT,
       })
-    : interpolate(local, [0, PUNCH_LEN], [1.08, 1], {
+    : interpolate(local, [0, cutEls[k].beat("punch")], [1.08, 1], {
         ...CLAMP,
         easing: EASE_OUT,
       });
