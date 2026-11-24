@@ -15864,13 +15864,19 @@
       "registryDependencies": [
         "@remocn/gsh",
         "@remocn/glide",
-        "@remocn/frame-rate"
+        "@remocn/frame-rate",
+        "@remocn/timeline"
       ],
       "files": [
         {
           "path": "registry/remocn/coupon-apply/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/coupon-apply.tsx"
+          "target": "components/remocn/coupon-apply/index.tsx"
+        },
+        {
+          "path": "registry/remocn/coupon-apply/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/coupon-apply/timeline.ts"
         }
       ],
       "type": "registry:component"

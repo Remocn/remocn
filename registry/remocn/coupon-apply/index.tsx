@@ -8,6 +8,13 @@ import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  type CouponApplyElementId,
+  couponApplyTimeline,
+  DEFAULT_CODE,
+  DEFAULT_INVALID_CODE,
+} from "./timeline";
 
 const instrument = loadFont("normal", {
   weights: ["400"],
@@ -55,6 +62,12 @@ export interface CouponApplyProps {
   speed?: number;
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
+  /**
+   * Moves, trims or stretches the card, the camera, each step of typing and
+   * applying the codes, the total rolling down and the pay, by the ids in
+   * `./timeline`. Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<CouponApplyElementId>;
 }
 
 const DEFAULT_ITEMS: CouponLineItem[] = [
@@ -280,12 +293,18 @@ function RollingAmount({
   to,
   frame,
   start,
+  stagger,
+  roll,
   lh,
 }: {
   from: string;
   to: string;
   frame: number;
   start: number;
+  /** Frames between one changing digit and the next. */
+  stagger: number;
+  /** Frames one digit rolls over. */
+  roll: number;
   lh: number;
 }) {
   const a = from.padStart(to.length, " ");
@@ -307,8 +326,8 @@ function RollingAmount({
             </span>
           );
         }
-        const s = start + k++ * 3;
-        const p = tween(frame, s, s + 16, ENTER2);
+        const s = start + k++ * stagger;
+        const p = tween(frame, s, s + roll, ENTER2);
         const pos = lerp(Number(prev), Number(ch), p);
         const shown = Math.round(pos);
         const off = pos - shown;
@@ -350,33 +369,41 @@ function ScaleLayer({
   );
 }
 
-export function CouponApply({
-  merchant = "Lumen",
-  items = DEFAULT_ITEMS,
-  invalidCode = "LAUNCH",
-  code = "LAUNCH24",
-  percentOff = 10,
-  currency = "$",
-  payLabel = "Subscribe",
-  email = "maya@kitebase.com",
-  cardholder = "Maya Chen",
-  formTitle = "Pay with card",
-  placeholder = "Add promotion code",
-  errorLabel = "That code isn’t valid.",
-  theme = "light",
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = instrument.fontFamily,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  ground,
-  groundParams,
-}: CouponApplyProps) {
+export function CouponApply(props: CouponApplyProps) {
+  const {
+    merchant = "Lumen",
+    items = DEFAULT_ITEMS,
+    invalidCode = DEFAULT_INVALID_CODE,
+    code = DEFAULT_CODE,
+    percentOff = 10,
+    currency = "$",
+    payLabel = "Subscribe",
+    email = "maya@kitebase.com",
+    cardholder = "Maya Chen",
+    formTitle = "Pay with card",
+    placeholder = "Add promotion code",
+    errorLabel = "That code isn’t valid.",
+    theme = "light",
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = instrument.fontFamily,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    ground,
+    groundParams,
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay) * speed;
   const { width, height, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    couponApplyTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const tall = height > width;
   const DW = tall ? 720 : 1280;
   const DH = tall ? 1280 : 720;
@@ -395,30 +422,53 @@ export function CouponApply({
     hasInvalid && code.startsWith(invalidCode)
       ? code.slice(invalidCode.length)
       : code;
-  const CH = 3;
-  const t: Record<string, number> = { focus: 30, type1: 34 };
-  t.apply1 = t.type1 + (hasInvalid ? invalidCode.length * CH : 0) + 8;
-  t.reject = t.apply1 + 9;
-  t.refocus = hasInvalid ? t.reject + 18 : t.focus;
-  t.type2 = hasInvalid ? t.refocus + 4 : t.type1;
-  t.apply2 = t.type2 + retype.length * CH + 8;
-  t.accept = t.apply2 + 10;
-  t.strike = t.accept + 6;
-  t.roll = t.strike + 4;
-  t.pay = t.roll + 4;
+  const cardEl = tl.get("card");
+  const zoomEl = tl.get("zoom");
+  const cursorEl = tl.get("cursor");
+  const focusEl = tl.get("focus");
+  const typeEl = tl.get("type");
+  const applyEl = tl.get("apply");
+  const acceptEl = tl.get("accept");
+  const strikeEl = tl.get("strike");
+  const rollEl = tl.get("roll");
+  const payEl = tl.get("pay");
+  // The rejected attempt only exists with an `invalidCode`.
+  const typeBad = hasInvalid ? tl.get("type-invalid") : typeEl;
+  const applyBad = hasInvalid ? tl.get("apply-invalid") : applyEl;
+  const rejectEl = hasInvalid ? tl.get("reject") : applyEl;
+  const refocusEl = hasInvalid ? tl.get("refocus") : focusEl;
+  const t = {
+    focus: focusEl.start,
+    type1: typeBad.start,
+    apply1: applyBad.start,
+    reject: rejectEl.start,
+    refocus: refocusEl.start,
+    type2: typeEl.start,
+    apply2: applyEl.start,
+    accept: acceptEl.start,
+    strike: strikeEl.start,
+    roll: rollEl.start,
+    pay: payEl.start,
+  };
 
   const typed = (() => {
     if (!hasInvalid)
-      return code.slice(0, Math.max(0, Math.floor((frame - t.type1) / CH)));
+      return code.slice(
+        0,
+        Math.max(0, Math.floor((frame - t.type1) / typeEl.beat("char"))),
+      );
     const first = invalidCode.slice(
       0,
-      Math.max(0, Math.floor((frame - t.type1) / CH)),
+      Math.max(0, Math.floor((frame - t.type1) / typeBad.beat("char"))),
     );
     if (frame < t.type2) return first;
     const base = code.startsWith(invalidCode) ? invalidCode : "";
     return (
       base +
-      retype.slice(0, Math.max(0, Math.floor((frame - t.type2) / CH) + 1))
+      retype.slice(
+        0,
+        Math.max(0, Math.floor((frame - t.type2) / typeEl.beat("char")) + 1),
+      )
     );
   })();
 
@@ -464,13 +514,18 @@ export function CouponApply({
         spring({ frame: frame - at - 4, fps, config: CHIP }),
     );
 
-  const enterAt = (f: number) => spring({ frame: f, fps, config: HEAVY });
+  const enterAt = (f: number) =>
+    spring({ frame: f - cardEl.start, fps, config: HEAVY });
   const enter = enterAt(frame);
   // Whether a value built from the frame moves into or out of this frame.
   const stirs = (at: (f: number) => number, eps: number) =>
     Math.abs(at(frame + 1) - at(frame)) > eps ||
     Math.abs(at(frame) - at(frame - 1)) > eps;
-  const sideIn = spring({ frame: frame - 6, fps, config: CARD });
+  const sideIn = spring({
+    frame: frame - tl.get("side").start,
+    fps,
+    config: CARD,
+  });
 
   const errAt = (f: number) =>
     hasInvalid
@@ -496,19 +551,32 @@ export function CouponApply({
     ? { x: DW - 90, y: card.y + S_H + 120 }
     : { x: DW - 120, y: DH - 70 };
   const keys: Key[] = [
-    { t: 10, ...startPt },
-    { t: t.focus - 2, ...fieldPt },
-    { t: t.focus + 4, ...fieldPt },
-    { t: t.apply1 - 2, ...applyPt },
+    { t: cursorEl.start, ...startPt },
+    { t: t.focus + focusEl.beat("reach"), ...fieldPt },
+    { t: t.focus + focusEl.beat("rest"), ...fieldPt },
+    {
+      t: hasInvalid
+        ? t.apply1 + applyBad.beat("reach")
+        : t.type2 + typeEl.beat("hover"),
+      ...applyPt,
+    },
   ];
   if (hasInvalid) {
-    keys.push({ t: t.reject + 6, ...applyPt });
-    keys.push({ t: t.refocus - 2, x: fieldPt.x + 60, y: fieldPt.y });
-    keys.push({ t: t.refocus + 3, x: fieldPt.x + 60, y: fieldPt.y });
+    keys.push({ t: t.reject + rejectEl.beat("leave"), ...applyPt });
+    keys.push({
+      t: t.refocus + refocusEl.beat("reach"),
+      x: fieldPt.x + 60,
+      y: fieldPt.y,
+    });
+    keys.push({
+      t: t.refocus + refocusEl.beat("rest"),
+      x: fieldPt.x + 60,
+      y: fieldPt.y,
+    });
   }
-  keys.push({ t: t.apply2 - 2, ...applyPt });
-  keys.push({ t: t.accept + 2, ...applyPt });
-  keys.push({ t: t.pay + 22, ...payPt });
+  keys.push({ t: t.apply2 + applyEl.beat("reach"), ...applyPt });
+  keys.push({ t: t.accept + acceptEl.beat("cursor"), ...applyPt });
+  keys.push({ t: t.pay + payEl.beat("cursor"), ...payPt });
   const cur = pathAt(keys, frame);
   const clicks = [
     t.focus,
@@ -516,22 +584,23 @@ export function CouponApply({
     ...(hasInvalid ? [t.apply1, t.refocus] : []),
   ];
   const press = Math.max(...clicks.map(pressAt));
-  const cursorIn = tween(frame, 10, 18, ENTER2);
+  const cursorIn = tween(frame, cursorEl.start, cursorEl.end, ENTER2);
 
   const focused = frame >= t.focus && frame < t.accept;
-  const focusP = tween(frame, t.focus, t.focus + 6);
+  const focusP = tween(frame, t.focus, t.focus + focusEl.beat("ring"));
   const errorOn = hasInvalid && frame >= t.reject && frame < t.type2;
   const errBorder = hasInvalid
-    ? tween(frame, t.reject, t.reject + 4) *
-      (1 - tween(frame, t.type2, t.type2 + 6, MOVE))
+    ? tween(frame, t.reject, t.reject + rejectEl.beat("border")) *
+      (1 - tween(frame, t.type2, t.type2 + typeEl.beat("clear"), MOVE))
     : 0;
-  const shakeT = (frame - t.reject) / 12;
+  const shakeT = hasInvalid ? (frame - t.reject) / rejectEl.beat("shake") : 0;
   const shake =
     errorOn && shakeT < 1
       ? Math.sin(shakeT * Math.PI * 5) * 8 * (1 - shakeT)
       : 0;
-  const loading1 = hasInvalid && frame >= t.apply1 + 1 && frame < t.reject;
-  const loading2 = frame >= t.apply2 + 1 && frame < t.accept;
+  const loading1 =
+    hasInvalid && frame >= t.apply1 + applyBad.beat("load") && frame < t.reject;
+  const loading2 = frame >= t.apply2 + applyEl.beat("load") && frame < t.accept;
   const pressBtn = Math.max(
     ...[t.apply2, ...(hasInvalid ? [t.apply1] : [])].map(pressAt),
   );
@@ -539,20 +608,52 @@ export function CouponApply({
     (frame >= t.type1 && frame < t.apply1) ||
     (frame >= t.type2 && frame < t.apply2);
   const caretOn = focused && (typing || Math.floor(frame / 8) % 2 === 0);
-  const fieldOut = tween(frame, t.accept, t.accept + 5, EXIT);
-  const discIn = spring({ frame: frame - t.accept - 2, fps, config: CARD });
-  const chipIn = spring({ frame: frame - t.accept - 4, fps, config: CHIP });
-  const strike = tween(frame, t.strike, t.strike + 8, MOVE);
-  const oldIn = tween(frame, t.strike, t.strike + 10, ENTER2);
-  const payP = tween(frame, t.pay, t.pay + 10, MOVE);
-  const payGlow = tween(frame, t.pay + 18, t.pay + 26, ENTER2);
+  const fieldOut = tween(
+    frame,
+    t.accept,
+    t.accept + acceptEl.beat("fieldOut"),
+    EXIT,
+  );
+  const discIn = spring({
+    frame: frame - t.accept - acceptEl.beat("discount"),
+    fps,
+    config: CARD,
+  });
+  const chipIn = spring({
+    frame: frame - t.accept - acceptEl.beat("chip"),
+    fps,
+    config: CHIP,
+  });
+  const strike = tween(
+    frame,
+    t.strike,
+    t.strike + strikeEl.beat("strike"),
+    MOVE,
+  );
+  const oldIn = tween(frame, t.strike, t.strike + strikeEl.beat("old"), ENTER2);
+  const payP = tween(frame, t.pay, t.pay + payEl.beat("press"), MOVE);
+  const payGlow = tween(
+    frame,
+    t.pay + payEl.beat("glow"),
+    t.pay + payEl.beat("glowEnd"),
+    ENTER2,
+  );
 
+  // The last drift runs to the clip's end in composition frames, as before.
   const camAt = (f: number) =>
     (1 +
       (tall ? 0.16 : 0.14) *
-        tween(f, 8, 40, MOVE) *
-        (1 - tween(f, t.accept - 2, t.accept + 26, CAMERA))) *
-    (1 + 0.02 * tween(f, t.accept + 20, durationInFrames, MOVE));
+        tween(f, zoomEl.start, zoomEl.end, MOVE) *
+        (1 -
+          tween(
+            f,
+            t.accept + acceptEl.beat("zoomOut"),
+            t.accept + acceptEl.beat("zoomOutEnd"),
+            CAMERA,
+          ))) *
+    (1 +
+      0.02 *
+        tween(f, t.accept + acceptEl.beat("drift"), durationInFrames, MOVE));
   // The camera carries the whole checkout, so its tilt covers everything
   // under it; the movers below tilt themselves only while it holds still.
   const camMoving = stirs(camAt, 1e-6);
@@ -693,7 +794,7 @@ export function CouponApply({
                 overflow: "hidden",
                 background: pal.card,
                 color: pal.text,
-                opacity: tween(frame, 0, 10, ENTER2),
+                opacity: tween(frame, cardEl.start, cardEl.end, ENTER2),
                 transform: `translateY(${(1 - enter) * 48}px) scale(${0.97 + 0.03 * enter})${glide(cardMoving)}`,
                 boxShadow: pal.cardShadow,
               }}
@@ -751,6 +852,8 @@ export function CouponApply({
                         to={frame >= t.roll ? newStr : oldStr}
                         frame={frame}
                         start={t.roll}
+                        stagger={rollEl.beat("stagger")}
+                        roll={rollEl.beat("digit")}
                         lh={68}
                       />
                     </span>
@@ -927,7 +1030,11 @@ export function CouponApply({
                         color: pal.red,
                         opacity:
                           Math.max(0, errP) *
-                          tween(frame, t.reject + 3, t.reject + 9),
+                          tween(
+                            frame,
+                            t.reject + rejectEl.beat("message"),
+                            t.reject + rejectEl.beat("messageIn"),
+                          ),
                         transform: `translateY(${(1 - Math.max(0, errP)) * -5}px)${glide(errMoving)}`,
                       },
                       <>
@@ -1012,7 +1119,9 @@ export function CouponApply({
                         from={oldStr}
                         to={frame >= t.roll ? newStr : oldStr}
                         frame={frame}
-                        start={t.roll + 2}
+                        start={t.roll + rollEl.beat("button")}
+                        stagger={rollEl.beat("stagger")}
+                        roll={rollEl.beat("digit")}
                         lh={30}
                       />
                     </span>
