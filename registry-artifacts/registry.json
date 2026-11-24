@@ -7121,13 +7121,19 @@
       "registryDependencies": [
         "@remocn/gsh",
         "@remocn/glide",
-        "@remocn/frame-rate"
+        "@remocn/frame-rate",
+        "@remocn/timeline"
       ],
       "files": [
         {
           "path": "registry/remocn/panel-split/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/panel-split.tsx"
+          "target": "components/remocn/panel-split/index.tsx"
+        },
+        {
+          "path": "registry/remocn/panel-split/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/panel-split/timeline.ts"
         }
       ],
       "type": "registry:component"
