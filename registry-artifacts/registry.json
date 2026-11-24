@@ -4626,12 +4626,17 @@
       "title": "Neon Sign",
       "description": "A glass neon tube stutters alive segment by segment with a hot white core and wall glow, buzzes off once, then holds lit.",
       "dependencies": ["remotion", "@remotion/paths"],
-      "registryDependencies": ["@remocn/frame-rate"],
+      "registryDependencies": ["@remocn/frame-rate", "@remocn/timeline"],
       "files": [
         {
           "path": "registry/remocn/neon-sign/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/neon-sign.tsx"
+          "target": "components/remocn/neon-sign/index.tsx"
+        },
+        {
+          "path": "registry/remocn/neon-sign/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/neon-sign/timeline.ts"
         }
       ],
       "type": "registry:component"

@@ -4,6 +4,14 @@ import { getBoundingBox, getSubpaths } from "@remotion/paths";
 import { useId, useMemo } from "react";
 import { AbsoluteFill, interpolate, random } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  BUZZ_LEVELS,
+  DEFAULT_SEED,
+  HELLO,
+  type NeonSignElementId,
+  neonSignTimeline,
+} from "./timeline";
 
 export type NeonSignProps = {
   /** SVG path data for the tube. Each subpath (M command) flickers on its own. */
@@ -25,17 +33,12 @@ export type NeonSignProps = {
   fit?: number;
   seed?: number;
   speed?: number;
+  /**
+   * Moves, trims or stretches each tube's flicker and the buzz, by the ids
+   * in `./timeline`. Frames on the scene timeline, after `speed`.
+   */
+  timing?: Timing<NeonSignElementId>;
 };
-
-// Handwritten "hello" with an underline swash, one subpath per tube.
-const HELLO = [
-  "M 30 132 C 52 112 74 70 70 46 C 67 28 50 30 47 52 C 44 76 42 112 40 140 C 46 116 58 100 72 100 C 86 100 84 122 86 134 C 88 144 100 144 110 132",
-  "M 110 132 C 124 124 142 110 136 98 C 130 88 112 96 112 116 C 112 138 134 146 156 130",
-  "M 156 130 C 176 110 196 66 190 46 C 186 32 170 36 168 60 C 166 90 168 126 172 136 C 176 146 188 142 196 132",
-  "M 196 132 C 216 110 232 66 226 46 C 222 32 206 36 204 60 C 202 90 204 126 208 136 C 212 146 224 142 232 132",
-  "M 232 132 C 238 116 248 100 262 100 C 278 100 280 124 268 136 C 256 146 242 136 248 118 C 252 106 268 104 290 104",
-  "M 52 170 C 120 160 210 162 296 152",
-].join(" ");
 
 export const neonSignDefaults = {
   path: HELLO,
@@ -46,32 +49,27 @@ export const neonSignDefaults = {
   backgroundColor: "#111111",
   strokeWidth: 6,
   fit: 0.62,
-  seed: 7,
+  seed: DEFAULT_SEED,
   speed: 1,
 };
 
-const FIRST = 3;
-const STEP = 3.4;
-const STUTTER = 7;
-// Whole sign drops out once after everything is lit, then holds.
-const BUZZ: [number, number][] = [
-  [29, 0.1],
-  [30, 0],
-  [31, 0.55],
-  [32, 0.2],
-];
 const clamp = {
   extrapolateLeft: "clamp" as const,
   extrapolateRight: "clamp" as const,
 };
 
-function segmentLevel(t: number, i: number, seed: number) {
-  const onset = FIRST + i * STEP + random(`neon-sign-${seed}-${i}`) * 2;
+function segmentLevel(
+  t: number,
+  i: number,
+  seed: number,
+  tube: { start: number; end: number; length: number },
+) {
+  const onset = tube.start;
   if (t < onset) return 0;
-  if (t < onset + STUTTER) {
+  if (t < tube.end) {
     const tick = Math.floor(t);
     const v = random(`neon-sign-${seed}-${i}-${tick}`);
-    const ramp = (t - onset) / STUTTER;
+    const ramp = (t - onset) / tube.length;
     return v < 0.5 - ramp * 0.3 ? 0.04 : 0.55 + 0.45 * v;
   }
   return 1;
@@ -90,11 +88,19 @@ export function NeonSign(props: NeonSignProps) {
     fit,
     seed,
     speed,
+    timing,
   } = { ...neonSignDefaults, ...props };
   const uid = `neon-sign-${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
   const frame = useSceneFrame();
-  const { width, height } = useSceneConfig();
+  const { width, height, durationInFrames } = useSceneConfig();
   const t = frame * Math.max(0, speed);
+  const tl = useTimeline(
+    neonSignTimeline,
+    props,
+    durationInFrames * Math.max(0, speed),
+    timing,
+  );
+  const buzzEl = tl.get("buzz");
 
   const segments = useMemo(() => getSubpaths(path), [path]);
   const box = useMemo(() => {
@@ -112,16 +118,26 @@ export function NeonSign(props: NeonSignProps) {
     };
   }, [path, viewBox, strokeWidth]);
 
-  const tick = Math.floor(t);
-  const buzz = BUZZ.find(([f]) => f === tick)?.[1] ?? 1;
-  const levels = segments.map((_, i) => segmentLevel(t, i, seed) * buzz);
+  const pulse = Math.floor((t - buzzEl.start) / buzzEl.beat("pulse"));
+  const buzz = BUZZ_LEVELS[pulse] ?? 1;
+  const levels = segments.map(
+    (_, i) => segmentLevel(t, i, seed, tl.get(`tube:${i}`)) * buzz,
+  );
   const average =
     levels.reduce((a, b) => a + b, 0) / Math.max(1, levels.length);
 
   const scale = Math.min((width * fit) / box.w, (height * 0.7) / box.h);
   const drawW = box.w * scale;
   const drawH = box.h * scale;
-  const settle = interpolate(t, [32, 40], [0.85, 1], clamp);
+  const settle = interpolate(
+    t,
+    [
+      buzzEl.start + buzzEl.beat("settle"),
+      buzzEl.start + buzzEl.beat("settleEnd"),
+    ],
+    [0.85, 1],
+    clamp,
+  );
 
   return (
     <AbsoluteFill style={{ backgroundColor }}>
