@@ -10634,12 +10634,21 @@
       "title": "Speed Trap",
       "description": "A speed readout locks on 348 km/h over a segmented bar with last year's marker and delta.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/speed-trap/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/speed-trap.tsx"
+          "target": "components/remocn/speed-trap/index.tsx"
+        },
+        {
+          "path": "registry/remocn/speed-trap/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/speed-trap/timeline.ts"
         }
       ],
       "type": "registry:component"
