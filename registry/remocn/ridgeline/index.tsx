@@ -6,6 +6,13 @@ import { useId } from "react";
 import { AbsoluteFill, Easing, interpolate, spring } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_LABELS,
+  greysOf,
+  type RidgelineElementId,
+  ridgelineTimeline,
+} from "./timeline";
 
 const { fontFamily: bricolage } = loadFont("normal", {
   weights: ["400", "500"],
@@ -36,9 +43,14 @@ export interface RidgelineProps {
   delay?: number;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches the push, the baselines, the axis, the ridges'
+   * rise, the shift and the stat, by the ids in `./timeline`.
+   * Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<RidgelineElementId>;
 }
 
-const DEFAULT_LABELS = ["2020", "2021", "2022", "2023", "2024", "2025"];
 const DEFAULT_TICKS = ["0", "5", "10", "15", "20", "25", "30"];
 
 const EASE_IO = Easing.bezier(0.65, 0, 0.35, 1);
@@ -72,14 +84,6 @@ const THEMES = {
   },
 } as const;
 
-const BASE_AT = 0;
-const BASE_STAGGER = 3;
-const BASE_DRAW = 22;
-const RISE_AT = 12;
-const RISE_STAGGER = 7;
-const ACCENT_RISE = 58;
-const SHIFT = [62, 100] as const;
-const HIT = 96;
 const SAMPLES = 180;
 
 function hash(n: number) {
@@ -160,27 +164,39 @@ function ScaleLayer({
   );
 }
 
-export function Ridgeline({
-  labels = DEFAULT_LABELS,
-  highlightLabel = "With remocn",
-  value = "2.6×",
-  caption = "more videos per team",
-  axisLabel = "videos per team, per month",
-  ticks = DEFAULT_TICKS,
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = bricolage,
-  stagger = RISE_STAGGER,
-  grain = true,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: RidgelineProps) {
+export function Ridgeline(props: RidgelineProps) {
+  const {
+    labels = DEFAULT_LABELS,
+    highlightLabel = "With remocn",
+    value = "2.6×",
+    caption = "more videos per team",
+    axisLabel = "videos per team, per month",
+    ticks = DEFAULT_TICKS,
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = bricolage,
+    grain = true,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H, fps } = useSceneConfig();
+  const { width: W, height: H, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    ridgelineTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const pushEl = tl.get("push");
+  const shiftEl = tl.get("shift");
+  const hlEl = tl.get("highlight");
+  const statEl = tl.get("stat");
+  const axisEl = tl.get("axis");
   const u = Math.min(W / 1280, H / 720);
   const p = THEMES[theme];
   const fg = ink ?? p.fg;
@@ -190,7 +206,7 @@ export function Ridgeline({
   // it; with no ground the theme colour still has to do that job.
   const occlude = stage === "transparent" ? p.bg : stage;
 
-  const greys = labels.slice(0, 6);
+  const greys = greysOf(labels);
   const n = greys.length + 1;
   const x0 = W * 0.19;
   const x1 = W * 0.92;
@@ -201,7 +217,10 @@ export function Ridgeline({
   const accentH = Math.min(gap * 4, H * 0.33);
 
   const pushAt = (f: number) =>
-    interpolate(f, [0, HIT + 30], [0, 1], { ...CLAMP, easing: EASE_IO });
+    interpolate(f, [pushEl.start, pushEl.end], [0, 1], {
+      ...CLAMP,
+      easing: EASE_IO,
+    });
   const push = pushAt(t);
   const camAt = (f: number) => 0.975 + 0.025 * pushAt(f);
   const camScale = camAt(t);
@@ -210,7 +229,10 @@ export function Ridgeline({
   const camMoving =
     Math.abs(camAt(t + 1) - camScale) > 1.5e-6 ||
     Math.abs(camScale - camAt(t - 1)) > 1.5e-6;
-  const shift = interpolate(t, SHIFT, [0, 1], { ...CLAMP, easing: EASE_IO });
+  const shift = interpolate(t, [shiftEl.start, shiftEl.end], [0, 1], {
+    ...CLAMP,
+    easing: EASE_IO,
+  });
 
   const rows = Array.from({ length: n }, (_, i) => {
     const isHl = i === n - 1;
@@ -218,12 +240,13 @@ export function Ridgeline({
       ? { m: 0.4, s: 0.085, m2: 0.5, s2: 0.06, w2: 0.45 }
       : shapeFor(i, n - 1);
     const norm = peakOf(sh);
-    const baseStart = BASE_AT + i * BASE_STAGGER;
-    const draw = interpolate(t, [baseStart, baseStart + BASE_DRAW], [0, 1], {
+    const rowEl = tl.get(`row:${i}`);
+    const baseStart = rowEl.start;
+    const draw = interpolate(t, [baseStart, rowEl.end], [0, 1], {
       ...CLAMP,
       easing: EASE_IO,
     });
-    const riseAt = isHl ? ACCENT_RISE : RISE_AT + i * stagger;
+    const riseAt = isHl ? hlEl.start : tl.get(`rise:${i}`).start;
     const rise = spring({
       frame: t - riseAt,
       fps,
@@ -243,10 +266,15 @@ export function Ridgeline({
       off,
       label: isHl ? highlightLabel : greys[i],
       y: yFirst + i * gap,
-      labelIn: interpolate(t, [baseStart + 4, baseStart + 18], [0, 1], {
-        ...CLAMP,
-        easing: EASE_OUT,
-      }),
+      labelIn: interpolate(
+        t,
+        [
+          baseStart + rowEl.beat("labelIn"),
+          baseStart + rowEl.beat("labelShown"),
+        ],
+        [0, 1],
+        { ...CLAMP, easing: EASE_OUT },
+      ),
     };
   });
 
@@ -269,7 +297,7 @@ export function Ridgeline({
 
   const hitAt = (f: number) =>
     spring({
-      frame: f - HIT,
+      frame: f - statEl.start,
       fps,
       config: { damping: 16, stiffness: 160, mass: 0.7 },
     });
@@ -277,16 +305,29 @@ export function Ridgeline({
   const hitMoving =
     Math.abs(hitAt(t + 1) - hit) * 20 * u > 1e-3 ||
     Math.abs(hit - hitAt(t - 1)) * 20 * u > 1e-3;
-  const hitO = interpolate(t, [HIT, HIT + 8], [0, 1], CLAMP);
-  const capIn = interpolate(t, [HIT + 8, HIT + 26], [0, 1], {
+  const hitO = interpolate(
+    t,
+    [statEl.start, statEl.start + statEl.beat("fade")],
+    [0, 1],
+    CLAMP,
+  );
+  const capIn = interpolate(
+    t,
+    [
+      statEl.start + statEl.beat("captionAt"),
+      statEl.start + statEl.beat("captionEnd"),
+    ],
+    [0, 1],
+    {
+      ...CLAMP,
+      easing: EASE_OUT,
+    },
+  );
+  const axisIn = interpolate(t, [axisEl.start, axisEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
-  const axisIn = interpolate(t, [10, 30], [0, 1], {
-    ...CLAMP,
-    easing: EASE_OUT,
-  });
-  const quiet = interpolate(t, [ACCENT_RISE, ACCENT_RISE + 24], [1, 0.62], {
+  const quiet = interpolate(t, [hlEl.start, hlEl.end], [1, 0.62], {
     ...CLAMP,
     easing: EASE_IO,
   });

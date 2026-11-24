@@ -12480,12 +12480,21 @@
       "title": "Ridgeline",
       "description": "Stacked ridgeline distributions per year, the latest one lit in gradient with a 2.6x stat.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/ridgeline/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/ridgeline.tsx"
+          "target": "components/remocn/ridgeline/index.tsx"
+        },
+        {
+          "path": "registry/remocn/ridgeline/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/ridgeline/timeline.ts"
         }
       ],
       "type": "registry:component"
