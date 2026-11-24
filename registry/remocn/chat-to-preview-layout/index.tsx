@@ -3,6 +3,11 @@
 import type { ReactNode } from "react";
 import { Easing, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  type ChatToPreviewLayoutElementId,
+  chatToPreviewLayoutTimeline,
+} from "./timeline";
 
 export interface ChatToPreviewLayoutProps {
   chat?: ReactNode;
@@ -11,6 +16,11 @@ export interface ChatToPreviewLayoutProps {
   endChatRatio?: number;
   speed?: number;
   className?: string;
+  /**
+   * Moves, trims or stretches the morph, by the id in `./timeline`. Frames on
+   * the scene timeline, after `speed`.
+   */
+  timing?: Timing<ChatToPreviewLayoutElementId>;
 }
 
 const FONT_FAMILY =
@@ -158,23 +168,33 @@ function DefaultPreview() {
   );
 }
 
-export function ChatToPreviewLayout({
-  chat,
-  preview,
-  startChatRatio = 0.5,
-  endChatRatio = 0.25,
-  speed = 1,
-  className,
-}: ChatToPreviewLayoutProps) {
+export function ChatToPreviewLayout(props: ChatToPreviewLayoutProps) {
+  const {
+    chat,
+    preview,
+    startChatRatio = 0.5,
+    endChatRatio = 0.25,
+    speed = 1,
+    className,
+    timing,
+  } = props;
   const frame = useSceneFrame() * speed;
   const { durationInFrames } = useSceneConfig();
+  // The morph spans shares of the clip length without `speed`.
+  const tl = useTimeline(
+    chatToPreviewLayoutTimeline,
+    props,
+    durationInFrames,
+    timing,
+  );
 
   // Apple's signature ease — slow start, dramatic settle. Replaces the older
   // symmetric bezier so the morph feels deliberate instead of mechanical.
   const APPLE_EASE = Easing.bezier(0.16, 1, 0.3, 1);
 
-  const morphStart = durationInFrames * 0.1;
-  const morphEnd = durationInFrames * 0.7;
+  const morph = tl.get("morph");
+  const morphStart = morph.start;
+  const morphEnd = morph.end;
 
   const ratio = interpolate(
     frame,

@@ -2227,12 +2227,17 @@
       "title": "Chat to Preview Layout",
       "description": "Two-column layout where chat shrinks and preview expands.",
       "dependencies": ["remotion"],
-      "registryDependencies": ["@remocn/frame-rate"],
+      "registryDependencies": ["@remocn/frame-rate", "@remocn/timeline"],
       "files": [
         {
           "path": "chat-to-preview-layout/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/chat-to-preview-layout.tsx"
+          "target": "components/remocn/chat-to-preview-layout/index.tsx"
+        },
+        {
+          "path": "chat-to-preview-layout/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/chat-to-preview-layout/timeline.ts"
         }
       ]
     },
