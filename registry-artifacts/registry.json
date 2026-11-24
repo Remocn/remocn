@@ -11096,12 +11096,21 @@
       "title": "Live Ticker",
       "description": "A big comma-separated counter rolls its digits up like a live ticker with a feed above.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/live-ticker/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/live-ticker.tsx"
+          "target": "components/remocn/live-ticker/index.tsx"
+        },
+        {
+          "path": "registry/remocn/live-ticker/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/live-ticker/timeline.ts"
         }
       ],
       "type": "registry:component"

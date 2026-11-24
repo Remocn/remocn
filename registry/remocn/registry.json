@@ -11101,10 +11101,19 @@
         {
           "path": "live-ticker/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/live-ticker.tsx"
+          "target": "components/remocn/live-ticker/index.tsx"
+        },
+        {
+          "path": "live-ticker/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/live-ticker/timeline.ts"
         }
       ],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"]
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ]
     },
     {
       "name": "ticker-tape",

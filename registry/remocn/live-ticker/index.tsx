@@ -9,6 +9,12 @@ import { useId, useMemo } from "react";
 import { AbsoluteFill, Easing, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_VALUE,
+  type LiveTickerElementId,
+  liveTickerTimeline,
+} from "./timeline";
 
 const { fontFamily: sans } = loadFont("normal", {
   weights: ["300", "400"],
@@ -88,6 +94,12 @@ export interface LiveTickerProps {
   /** Playback multiplier. */
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches the columns rising, the run, the brake, the
+   * freeze and the label, by the ids in `./timeline`. Frames on the scene
+   * timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<LiveTickerElementId>;
 }
 
 // Geist (wght 300) figures with `tnum`: every digit advances 0.6em, the comma 0.188em.
@@ -109,9 +121,6 @@ const CLAMP = {
 //          edges and get swallowed by the number, each one a small bump
 //  70–104  streams dry up, the rate brakes, columns settle one by one
 //   104    frozen on `value`; label rises under it, poster holds to the end
-const BRAKE_AT = 70;
-const FREEZE_AT = 104;
-const LAST_SPAWN = 70;
 /** Digits per frame above which a column flips instead of rolling. */
 const FAST = 0.2;
 
@@ -245,28 +254,53 @@ function ScaleLayer({
   );
 }
 
-export function LiveTicker({
-  value = 12480312,
-  unit = "renders",
-  name = "remocn",
-  logo,
-  kicker = "Live",
-  feed = ["Lumen", "Kite", "Orbit", "Halden", "Nova", "Ferro", "Vela", "Pico"],
-  connector = "on",
-  fontWeight = 300,
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = sans,
-  grain = true,
-  scale: zoom = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: LiveTickerProps) {
+export function LiveTicker(props: LiveTickerProps) {
+  const {
+    value = DEFAULT_VALUE,
+    unit = "renders",
+    name = "remocn",
+    logo,
+    kicker = "Live",
+    feed = [
+      "Lumen",
+      "Kite",
+      "Orbit",
+      "Halden",
+      "Nova",
+      "Ferro",
+      "Vela",
+      "Pico",
+    ],
+    connector = "on",
+    fontWeight = 300,
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = sans,
+    grain = true,
+    scale: zoom = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H } = useSceneConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    liveTickerTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const rise = tl.get("rise");
+  const run = tl.get("run");
+  const brake = tl.get("brake");
+  const freeze = tl.get("freeze");
+  const labelEl = tl.get("label");
+  const brakeAt = brake.start;
+  const freezeAt = freeze.start;
+  const lastSpawn = run.end;
   const u = H / 720;
   const p = THEMES[theme];
   const fg = ink ?? p.fg;
@@ -297,7 +331,7 @@ export function LiveTicker({
   const numW = cols.width * fs;
   const numLeft = (W - numW) / 2;
   const cap = CAP * fs;
-  const lift = interpolate(t, [FREEZE_AT, FREEZE_AT + 22], [0, 1], {
+  const lift = interpolate(t, [freeze.start, freeze.end], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
@@ -312,8 +346,8 @@ export function LiveTicker({
   const liftY = (1 - lift) * 24 * u;
 
   // ---------------------------------------------------------------- feed
-  const rise = Math.min(target * 0.05, 6000);
-  const scale = rise / 6000;
+  const climb = Math.min(target * 0.05, 6000);
+  const scale = climb / 6000;
 
   const items = useMemo(() => {
     const out: Item[] = [];
@@ -324,7 +358,7 @@ export function LiveTicker({
       const dotGap = 7 + Math.floor(hash(li * 7.3) * 5);
       for (
         let s = -dur + Math.floor(hash(li * 1.7) * dotGap);
-        s <= LAST_SPAWN + 6;
+        s <= lastSpawn + 6;
         s += dotGap
       ) {
         out.push({ lane: li, spawn: s, dur, pill: false, text: "", bump: 30 });
@@ -333,7 +367,7 @@ export function LiveTicker({
       const period = 24 + Math.floor(hash(li * 5.3 + 1) * 10);
       for (
         let s = -dur + Math.floor(hash(li * 1.9 + 5) * period) + 3;
-        s <= LAST_SPAWN;
+        s <= lastSpawn;
         s += period
       ) {
         const count = 1 + Math.floor(hash(k * 5.7) * 3);
@@ -349,20 +383,19 @@ export function LiveTicker({
       }
     });
     return out;
-  }, [feed]);
+  }, [feed, lastSpawn]);
 
   // ---------------------------------------------------------------- value
   const r0 = 34 * scale;
-  const brakeLen = FREEZE_AT - BRAKE_AT;
+  const brakeLen = freezeAt - brakeAt;
   const baseRemaining = (tt: number) => {
-    if (tt >= FREEZE_AT) return 0;
-    if (tt >= BRAKE_AT)
-      return (r0 * (FREEZE_AT - tt) ** 3) / (3 * brakeLen ** 2);
-    return r0 * (BRAKE_AT - tt) + (r0 * brakeLen) / 3;
+    if (tt >= freezeAt) return 0;
+    if (tt >= brakeAt) return (r0 * (freezeAt - tt) ** 3) / (3 * brakeLen ** 2);
+    return r0 * (brakeAt - tt) + (r0 * brakeLen) / 3;
   };
   const hits = items
     .map((it) => ({ at: it.spawn + it.dur, amt: it.bump * scale, it }))
-    .filter((h) => h.at < FREEZE_AT - 8);
+    .filter((h) => h.at < freezeAt + freeze.beat("lastHit"));
   const valueAt = (tt: number) => {
     let rem = baseRemaining(tt);
     for (const h of hits) {
@@ -402,19 +435,29 @@ export function LiveTicker({
   nudge = Math.min(nudge, 1.5);
 
   // ---------------------------------------------------------------- beats
-  const settled = t >= FREEZE_AT;
-  const kickIn = interpolate(t, [0, 14], [0.25, 1], {
-    ...CLAMP,
-    easing: EASE_OUT,
-  });
-  const label = (d: number) =>
-    interpolate(t, [FREEZE_AT + 2 + d, FREEZE_AT + 22 + d], [0, 1], {
+  const settled = t >= freezeAt;
+  const kickIn = interpolate(
+    t,
+    [rise.start, rise.start + rise.beat("kick")],
+    [0.25, 1],
+    {
       ...CLAMP,
       easing: EASE_OUT,
-    });
+    },
+  );
+  const label = (d: number) =>
+    interpolate(
+      t,
+      [labelEl.start + d, labelEl.start + d + labelEl.beat("rise")],
+      [0, 1],
+      {
+        ...CLAMP,
+        easing: EASE_OUT,
+      },
+    );
   const streamsOut = interpolate(
     t,
-    [FREEZE_AT - 12, FREEZE_AT + 16],
+    [freezeAt + freeze.beat("fadeAt"), freezeAt + freeze.beat("fadeEnd")],
     [1, 0.45],
     {
       ...CLAMP,
@@ -474,7 +517,10 @@ export function LiveTicker({
   const gy = (k: number) => numTop - cap * 0.2 + cap * 1.4 * k;
   const step = cap + 0.2 * fs;
   const labelMoving =
-    midway(lift) || midway(label(0)) || midway(label(4)) || midway(label(7));
+    midway(lift) ||
+    midway(label(labelEl.beat("unit"))) ||
+    midway(label(labelEl.beat("connector"))) ||
+    midway(label(labelEl.beat("name")));
   const labelShift = `translateY(${liftY}px)${glide(labelMoving)}`;
   // The digits and the pills are SVG text, placed by attributes: the drawing
   // carries the mark. Digits roll until the freeze, then the whole number
@@ -634,7 +680,13 @@ export function LiveTicker({
                   {cols.out.map((c, i) => {
                     const enter = interpolate(
                       t,
-                      [i * 1.5 - 14, i * 1.5 + 6],
+                      [
+                        rise.start + i * rise.beat("stagger") + rise.beat("at"),
+                        rise.start +
+                          i * rise.beat("stagger") +
+                          rise.beat("at") +
+                          rise.beat("column"),
+                      ],
                       [0, 1],
                       { ...CLAMP, easing: EASE_OUT },
                     );
@@ -667,7 +719,15 @@ export function LiveTicker({
                 {cols.commas.map((c) => {
                   const enter = interpolate(
                     t,
-                    [c.col * 1.5 - 13, c.col * 1.5 + 7],
+                    [
+                      rise.start +
+                        c.col * rise.beat("stagger") +
+                        rise.beat("commaAt"),
+                      rise.start +
+                        c.col * rise.beat("stagger") +
+                        rise.beat("commaAt") +
+                        rise.beat("column"),
+                    ],
                     [0, 1],
                     { ...CLAMP, easing: EASE_OUT },
                   );
@@ -882,8 +942,8 @@ export function LiveTicker({
               fontSize: 60 * u,
               letterSpacing: "-0.01em",
               color: fg,
-              opacity: label(0),
-              transform: `translateY(${(1 - label(0)) * 16 * u}px)`,
+              opacity: label(labelEl.beat("unit")),
+              transform: `translateY(${(1 - label(labelEl.beat("unit"))) * 16 * u}px)`,
             }}
           >
             {unit}
@@ -895,16 +955,16 @@ export function LiveTicker({
               fontSize: 34 * u,
               letterSpacing: "-0.02em",
               color: p.muted,
-              opacity: label(4),
-              transform: `translateY(${(1 - label(4)) * 16 * u}px)`,
+              opacity: label(labelEl.beat("connector")),
+              transform: `translateY(${(1 - label(labelEl.beat("connector"))) * 16 * u}px)`,
             }}
           >
             {connector}
           </span>
           <div
             style={{
-              opacity: label(7),
-              transform: `translateY(${(1 - label(7)) * 16 * u}px)`,
+              opacity: label(labelEl.beat("name")),
+              transform: `translateY(${(1 - label(labelEl.beat("name"))) * 16 * u}px)`,
             }}
           >
             {logo ??
