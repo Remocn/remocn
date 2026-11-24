@@ -10,6 +10,14 @@ import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  type AiImageGridElementId,
+  aiImageGridTimeline,
+  CHARS_PER_FRAME,
+  DEFAULT_PROMPT,
+  tileCountOf,
+} from "./timeline";
 
 const { fontFamily: figtree } = loadFont("normal", {
   weights: ["300", "400"],
@@ -49,13 +57,13 @@ export interface AiImageGridProps {
   theme?: "light" | "dark";
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
+  /**
+   * Moves, trims or stretches the prompt card and its typing, the send
+   * click, single tiles, the pick and the details, by the ids in
+   * `./timeline`. Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<AiImageGridElementId>;
 }
-
-const TYPE_START = 10;
-const CHARS_PER_FRAME = 1.2;
-const GEN = 60;
-const DIFFUSE = [46, 58, 40, 64, 52, 44];
-const STAGGER = 3;
 
 const ENTER = Easing.bezier(0.32, 0.72, 0, 1);
 const ENTER_SOFT = Easing.bezier(0.22, 1, 0.36, 1);
@@ -540,6 +548,7 @@ function Tile({
   index,
   src,
   local,
+  at,
   dur,
   c,
   frame,
@@ -547,12 +556,14 @@ function Tile({
   index: number;
   src?: string;
   local: number;
+  /** Frames into the tile when the image starts to diffuse in. */
+  at: number;
   dur: number;
   c: Palette;
   frame: number;
 }) {
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
-  const p = interpolate(local, [6, 6 + dur], [0, 1], {
+  const p = interpolate(local, [at, at + dur], [0, 1], {
     ...clamp01,
     easing: MOVE,
   });
@@ -707,29 +718,43 @@ function ScaleLayer({
   );
 }
 
-export function AiImageGrid({
-  prompt = "isometric glass city at sunrise, soft light",
-  images = [],
-  model = "remocn Image 2",
-  layout = "2x2",
-  pick = 1,
-  placeholder = "Describe an image",
-  downloadLabel = "Download",
-  stagger = STAGGER,
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = figtree,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-  ground,
-  groundParams,
-}: AiImageGridProps) {
+export function AiImageGrid(props: AiImageGridProps) {
+  const {
+    prompt = DEFAULT_PROMPT,
+    images = [],
+    model = "remocn Image 2",
+    layout = "2x2",
+    pick = 1,
+    placeholder = "Describe an image",
+    downloadLabel = "Download",
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = figtree,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    ground,
+    groundParams,
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width, height, fps } = useSceneConfig();
+  const { width, height, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    aiImageGridTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const camera = tl.get("camera");
+  const cardEl = tl.get("card");
+  const promptEl = tl.get("prompt");
+  const cursorEl = tl.get("cursor");
+  const send = tl.get("send");
+  const pickEl = tl.get("pick");
+  const details = tl.get("details");
   const tall = height > width * 1.2;
   const u = tall ? width / 640 : Math.min(width / 1280, height / 720);
   const dw = width / u;
@@ -737,7 +762,8 @@ export function AiImageGrid({
   const c = PALETTES[theme];
   const fg = ink ?? c.text;
 
-  const count = layout === "3x2" ? 6 : 4;
+  const count = tileCountOf(layout);
+  const tiles = Array.from({ length: count }, (_, i) => tl.get(`tile:${i}`));
   const cols = tall ? 2 : count === 6 ? 3 : 2;
   const rows = count / cols;
   const gap = 8;
@@ -755,12 +781,13 @@ export function AiImageGrid({
     y: gy + Math.floor(i / cols) * (th + gap),
   }));
   const pickIdx = Math.min(Math.max(0, pick), count - 1);
-  const resolved = Math.max(
-    ...rects.map((_, i) => i * stagger + 6 + DIFFUSE[i % DIFFUSE.length]),
-  );
-  const PICK = GEN + 6 + resolved + 20;
+  const tilesEnd = Math.max(...tiles.map((e) => e.end));
+  const PICK = pickEl.start;
 
-  const typed = Math.floor(Math.max(0, frame - TYPE_START) * CHARS_PER_FRAME);
+  const typed = Math.floor(
+    (Math.max(0, frame - promptEl.start) * CHARS_PER_FRAME) /
+      promptEl.beat("pace"),
+  );
   const text = prompt.slice(0, typed);
   const caretOn = Math.floor(frame / 8) % 2 === 0 || typed < prompt.length;
 
@@ -774,9 +801,13 @@ export function AiImageGrid({
     y: introY + cardH / 2 + (sendLocal.y - cardH / 2) * INTRO_S,
   };
 
-  const enter = spring({ frame, fps, config: HEAVY });
-  const dock = spring({ frame: frame - GEN - 2, fps, config: HEAVY });
-  const cardOut = ramp(frame, PICK, 10, EXIT);
+  const enter = spring({ frame: frame - cardEl.start, fps, config: HEAVY });
+  const dock = spring({
+    frame: frame - send.start - send.beat("dockAt"),
+    fps,
+    config: HEAVY,
+  });
+  const cardOut = ramp(frame, PICK, pickEl.beat("cardOut"), EXIT);
   // The card is laid out docked, where it waits longest; the rise in, the
   // dock and the drop out ride a transform.
   const cardDy =
@@ -786,25 +817,42 @@ export function AiImageGrid({
   const pickRect = rects[pickIdx];
   const tilePt = { x: pickRect.x + tw * 0.56, y: pickRect.y + th * 0.5 };
   const cur = along(frame, [
-    { f: 26, x: dw * 0.8, y: dh * 0.78 },
-    { f: GEN - 3, ...sendIntro },
-    { f: GEN + 8, ...sendIntro },
-    { f: GEN + 34, x: dw * 0.78, y: dh * 0.5 },
-    { f: PICK - 30, x: dw * 0.78, y: dh * 0.5 },
-    { f: PICK - 4, ...tilePt },
+    { f: cursorEl.start + cursorEl.beat("keyAt"), x: dw * 0.8, y: dh * 0.78 },
+    { f: send.start + send.beat("arriveAt"), ...sendIntro },
+    { f: send.start + send.beat("leaveAt"), ...sendIntro },
+    { f: send.start + send.beat("awayAt"), x: dw * 0.78, y: dh * 0.5 },
+    { f: PICK + pickEl.beat("waitAt"), x: dw * 0.78, y: dh * 0.5 },
+    { f: PICK + pickEl.beat("arriveAt"), ...tilePt },
   ]);
-  const curOpacity = ramp(frame, 24, 8) * (1 - ramp(frame, PICK + 4, 8, EXIT));
-  const press = pressAt(frame, fps, [GEN, PICK]);
-  const sendPress = pressAt(frame, fps, [GEN]);
-  const generating = frame >= GEN && frame < GEN + 6 + resolved;
+  const curOpacity =
+    ramp(frame, cursorEl.start, cursorEl.length) *
+    (1 -
+      ramp(
+        frame,
+        PICK + pickEl.beat("cursorOutAt"),
+        pickEl.beat("cursorOut"),
+        EXIT,
+      ));
+  const press = pressAt(frame, fps, [send.start, PICK]);
+  const sendPress = pressAt(frame, fps, [send.start]);
+  const generating = frame >= send.start && frame < tilesEnd;
 
-  const hover = spring({ frame: frame - (PICK - 8), fps, config: CHIP });
-  const othersOut = ramp(frame, PICK + 2, 9, EXIT);
+  const hover = spring({
+    frame: frame - (PICK + pickEl.beat("hoverAt")),
+    fps,
+    config: CHIP,
+  });
+  const othersOut = ramp(
+    frame,
+    PICK + pickEl.beat("othersAt"),
+    pickEl.beat("others"),
+    EXIT,
+  );
   const z = spring({
-    frame: frame - PICK - 2,
+    frame: frame - PICK - pickEl.beat("zoomAt"),
     fps,
     config: MORPH,
-    durationInFrames: 26,
+    durationInFrames: pickEl.beat("zoom"),
   });
 
   const heroW = tall ? 576 : 664;
@@ -825,15 +873,28 @@ export function AiImageGrid({
         y: heroY + heroH / 2 - 140,
         w: dw - (heroX + heroW + 56) - 80,
       };
-  const d1 = ramp(frame, PICK + 10, 16);
-  const d2 = ramp(frame, PICK + 14, 16);
-  const d3 = spring({ frame: frame - PICK - 18, fps, config: CARD });
+  const d1 = ramp(frame, details.start, details.length);
+  const d2 = ramp(
+    frame,
+    details.start + details.beat("metaAt"),
+    details.length,
+  );
+  const d3 = spring({
+    frame: frame - details.start - details.beat("actionsAt"),
+    fps,
+    config: CARD,
+  });
 
-  const push = interpolate(frame, [0, 240], [1, 1.03], clamp01);
+  const push = interpolate(
+    frame,
+    [camera.start, camera.end],
+    [1, 1.03],
+    clamp01,
+  );
   // The slow push carries everything, so one tilt on it covers the text that
   // scales or rises anywhere inside.
-  const pushMoving = frame < 240;
-  const tileLocal = (i: number) => frame - GEN - 6 - i * stagger;
+  const pushMoving = frame < camera.end;
+  const tileLocal = (i: number) => frame - tiles[i].start;
 
   return (
     <AbsoluteFill
@@ -911,7 +972,7 @@ export function AiImageGrid({
                     borderRadius: 14,
                     overflow: "hidden",
                     opacity:
-                      ramp(local, 0, 6, ENTER_SOFT) *
+                      ramp(local, 0, tiles[i].beat("appear"), ENTER_SOFT) *
                       (1 - out) *
                       (isPick && z > 0.001 ? 0 : 1),
                     transform: `translateY(${(1 - pop) * 28 + out * 10}px) scale(${(0.95 + 0.05 * pop) * (1 + 0.02 * h) * (1 - 0.03 * out)})`,
@@ -922,7 +983,8 @@ export function AiImageGrid({
                     index={i}
                     src={images[i]}
                     local={local}
-                    dur={DIFFUSE[i % DIFFUSE.length]}
+                    at={tiles[i].beat("appear")}
+                    dur={tiles[i].beat("diffuse")}
                     c={c}
                     frame={frame}
                   />
@@ -943,7 +1005,9 @@ export function AiImageGrid({
                 boxShadow: c.depth,
                 boxSizing: "border-box",
                 padding: "20px 22px 0",
-                opacity: ramp(frame, 0, 10, ENTER_SOFT) * (1 - cardOut),
+                opacity:
+                  ramp(frame, cardEl.start, cardEl.length, ENTER_SOFT) *
+                  (1 - cardOut),
                 transform: `${shift(0, cardDy)}scale(${cardS})`,
                 transformOrigin: "50% 50%",
               }}
@@ -960,7 +1024,7 @@ export function AiImageGrid({
                 }}
               >
                 {text || placeholder}
-                {frame < GEN && (
+                {frame < send.start && (
                   <span
                     style={{
                       display: "inline-block",
@@ -1060,6 +1124,7 @@ export function AiImageGrid({
                     index={pickIdx}
                     src={images[pickIdx]}
                     local={999}
+                    at={tiles[pickIdx].beat("appear")}
                     dur={1}
                     c={c}
                     frame={frame}
