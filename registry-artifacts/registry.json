@@ -11544,12 +11544,17 @@
       "title": "Dynamic Letter",
       "description": "The wordmark appears while one letter morphs through shapes before settling as the final O.",
       "dependencies": ["remotion"],
-      "registryDependencies": ["@remocn/frame-rate"],
+      "registryDependencies": ["@remocn/frame-rate", "@remocn/timeline"],
       "files": [
         {
           "path": "registry/remocn/dynamic-letter/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/dynamic-letter.tsx"
+          "target": "components/remocn/dynamic-letter/index.tsx"
+        },
+        {
+          "path": "registry/remocn/dynamic-letter/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/dynamic-letter/timeline.ts"
         }
       ],
       "type": "registry:component"
