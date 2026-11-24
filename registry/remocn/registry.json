@@ -15066,10 +15066,19 @@
         {
           "path": "dot-field-morph/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/dot-field-morph.tsx"
+          "target": "components/remocn/dot-field-morph/index.tsx"
+        },
+        {
+          "path": "dot-field-morph/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/dot-field-morph/timeline.ts"
         }
       ],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"]
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ]
     },
     {
       "name": "feature-chips-flow",

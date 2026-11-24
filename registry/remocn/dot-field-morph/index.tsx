@@ -7,6 +7,16 @@ import { useId, useMemo } from "react";
 import { AbsoluteFill, Easing, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_LABELS,
+  type DotFieldMorphElementId,
+  dotFieldMorphTimeline,
+  HOLD,
+  LAST_MORPH,
+  MORPH,
+  morphStarts,
+} from "./timeline";
 
 const { fontFamily: MANROPE } = loadManrope("normal", {
   weights: ["400", "500"],
@@ -63,6 +73,11 @@ export interface DotFieldMorphProps {
   grain?: boolean;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches the field and each shape, by the ids in
+   * `./timeline`. Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<DotFieldMorphElementId>;
 }
 
 // ── Built-in shapes (100-unit icons, line style) ────────────────────────────
@@ -121,29 +136,14 @@ const DEFAULT_SHAPES: DotShape[] = [
   ICON_CAPTIONS,
   WORDMARK,
 ];
-const DEFAULT_LABELS = ["Animations", "Transitions", "Captions", ""];
 
 // ── Timing ──────────────────────────────────────────────────────────────────
 
-const FIELD = 14;
-const MORPH = 30;
-const HOLD = 22;
-const LAST_MORPH = 36;
 /** Per-dot flight; the rest of the morph window is stagger. */
 const FLIGHT = 0.62;
 
 const INOUT = Easing.bezier(0.65, 0, 0.35, 1);
 const OUT = Easing.bezier(0.22, 1, 0.36, 1);
-
-function morphStarts(shapeCount: number, hold = HOLD, morph = MORPH): number[] {
-  const starts: number[] = [];
-  let t = FIELD;
-  for (let i = 0; i < shapeCount; i++) {
-    starts.push(t);
-    t += (i === shapeCount - 1 ? LAST_MORPH : morph) + hold;
-  }
-  return starts;
-}
 
 export const dotFieldMorphLength = (
   shapeCount = DEFAULT_SHAPES.length,
@@ -464,26 +464,32 @@ function ScaleLayer({
   );
 }
 
-export function DotFieldMorph({
-  shapes = DEFAULT_SHAPES,
-  labels = DEFAULT_LABELS,
-  count = 2000,
-  accent = "#3B5BFD",
-  hold = HOLD,
-  morph = MORPH,
-  ink,
-  background,
-  fontFamily = MANROPE,
-  scale = 1,
-  // renamed: the per-dot stagger below is also called `delay`
-  delay: wait = 0,
-  grain = true,
-  speed = 1,
-  theme = "dark",
-}: DotFieldMorphProps) {
+export function DotFieldMorph(props: DotFieldMorphProps) {
+  const {
+    shapes = DEFAULT_SHAPES,
+    labels = DEFAULT_LABELS,
+    count = 2000,
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = MANROPE,
+    scale = 1,
+    // renamed: the per-dot stagger below is also called `delay`
+    delay: wait = 0,
+    grain = true,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = Math.max(0, useSceneFrame() - wait) * speed;
-  const { width: W, height: H } = useSceneConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    dotFieldMorphTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
   const isLight = theme === "light";
   const bg = isLight ? "#F5F4F0" : "#0A0A0B";
@@ -503,13 +509,16 @@ export function DotFieldMorph({
     return out;
   }, [list, n, W, H]);
 
-  const starts = morphStarts(list.length, hold, morph);
+  const shapeEls = list.map((_, i) => tl.get(`shape:${i}`));
+  const starts = shapeEls.map((e) => e.start);
   // Which transition we are in (0 = still the field).
   let k = 0;
   for (let i = 0; i < starts.length; i++) if (frame >= starts[i]) k = i + 1;
   const from = states[k - 1] ?? states[0];
   const to = states[k] ?? states[0];
-  const winLen = k === list.length ? LAST_MORPH : morph;
+  const current = shapeEls[k - 1];
+  const winLen = current ? current.beat("morph") : 0;
+  const hold = current ? current.beat("hold") : 0;
   const local = k === 0 ? 0 : (frame - starts[k - 1]) / winLen;
 
   const unit = Math.min(W, H) / 720;
@@ -553,7 +562,8 @@ export function DotFieldMorph({
       y = a.y + dy * e + dx * curl;
       bright = a.b + (b.b - a.b) * e;
       acc = e > 0.5 ? b.accent : a.accent;
-      if (k === 1) x -= (FIELD + 0) * 0.4 * (1 - e);
+      // Where the field's drift had carried the dots when the morph began.
+      if (k === 1) x -= starts[0] * 0.4 * (1 - e);
     }
     // Idle shimmer + a soft diagonal sweep once a shape has settled.
     bright *= 0.9 + 0.1 * Math.sin(frame * 0.18 + hash(i * 1.9) * 6.28);
@@ -569,8 +579,8 @@ export function DotFieldMorph({
   }
 
   // Slow push-in over the whole shot.
-  const end = dotFieldMorphLength(list.length, hold, morph);
-  const push = interpolate(frame, [0, end + 40], [1, 1.06], {
+  const camera = tl.get("camera");
+  const push = interpolate(frame, [camera.start, camera.end], [1, 1.06], {
     easing: INOUT,
     extrapolateRight: "clamp",
   });
@@ -582,17 +592,24 @@ export function DotFieldMorph({
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
   });
-  const nextStart = starts[k] ?? 1e6;
-  const labelOut = interpolate(frame, [nextStart, nextStart + 8], [1, 0], {
-    extrapolateLeft: "clamp",
-    extrapolateRight: "clamp",
-  });
+  const next = shapeEls[k];
+  const nextStart = next ? next.start : 1e6;
+  const release = next ? next.beat("release") : 8;
+  const labelOut = interpolate(
+    frame,
+    [nextStart, nextStart + release],
+    [1, 0],
+    {
+      extrapolateLeft: "clamp",
+      extrapolateRight: "clamp",
+    },
+  );
   const labelOp = labelIn * labelOut;
 
   // gradients.sh "mesh" palette: bg #0a0d24, [#ecdcf2, #8796ee, #2e45b7, #0e1645].
   // It lives in the dots (a user-space gradient across the frame) and as a faint
   // navy pool in the ground. It drifts a few percent over the shot, never more.
-  const drift = interpolate(frame, [0, end + 40], [0, 1], {
+  const drift = interpolate(frame, [camera.start, camera.end], [0, 1], {
     extrapolateRight: "clamp",
   });
   const gx = W * (0.08 + drift * 0.06);
