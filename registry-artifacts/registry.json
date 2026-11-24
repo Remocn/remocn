@@ -3521,12 +3521,21 @@
       "title": "Cursor Gravity",
       "description": "A rounded triangular cursor tugs a button out of the screen edge with pulsed elastic resistance.",
       "dependencies": ["remotion"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/cursor-gravity/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/cursor-gravity.tsx"
+          "target": "components/remocn/cursor-gravity/index.tsx"
+        },
+        {
+          "path": "registry/remocn/cursor-gravity/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/cursor-gravity/timeline.ts"
         }
       ],
       "type": "registry:component"
