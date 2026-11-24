@@ -24,6 +24,16 @@ import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround, gshParams } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  type CardPushLineElementId,
+  cardPushLineTimeline,
+  commandTypeRate,
+  DEFAULT_COMMAND,
+  DEFAULT_LINE,
+  DEFAULT_PROMPT,
+  promptTypeRate,
+} from "./timeline";
 
 const sans = loadFont("normal", {
   weights: ["300", "400"],
@@ -55,6 +65,12 @@ export interface CardPushLineProps {
   /** Frames to hold the first frame before anything moves. */
   delay?: number;
   speed?: number;
+  /**
+   * Moves, trims or stretches single words of the line, the card, the
+   * command and prompt typing, the chip and the send button, by the ids in
+   * `./timeline`. Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<CardPushLineElementId>;
 }
 
 const THEMES = {
@@ -100,16 +116,6 @@ const THEMES = {
     send: "rgba(20,22,28,0.08)",
     tile: "rgba(20,22,28,0.025)",
   },
-};
-
-const BEAT = {
-  wordStep: 3,
-  enter: 12,
-  card: 36,
-  cmd: 60,
-  chip: 72,
-  prompt: 76,
-  arm: 108,
 };
 
 const TRACK = -0.03;
@@ -229,30 +235,42 @@ function ScaleLayer({
   );
 }
 
-export function CardPushLine({
-  line = "You can just write it",
-  command = "/launch-video",
-  prompt = "a teaser for the 2.0 release",
-  placeholder = "Describe your launch…",
-  modelLabel = "Remocn 1",
-  chipLabel = "Brand kit",
-  attachName = "release-notes-2.0.md",
-  attachMeta = "Markdown · 18 KB",
-  accent,
-  ink,
-  background,
-  theme = "dark",
-  ground,
-  groundParams,
-  fontFamily = sans.fontFamily,
-  stagger = BEAT.wordStep,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-}: CardPushLineProps) {
+export function CardPushLine(props: CardPushLineProps) {
+  const {
+    line = DEFAULT_LINE,
+    command = DEFAULT_COMMAND,
+    prompt = DEFAULT_PROMPT,
+    placeholder = "Describe your launch…",
+    modelLabel = "Remocn 1",
+    chipLabel = "Brand kit",
+    attachName = "release-notes-2.0.md",
+    attachMeta = "Markdown · 18 KB",
+    accent,
+    ink,
+    background,
+    theme = "dark",
+    ground,
+    groundParams,
+    fontFamily = sans.fontFamily,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay) * speed;
   const { width: W, height: H, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    cardPushLineTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const cardEl = tl.get("card");
+  const cmdEl = tl.get("command");
+  const chipEl = tl.get("chip");
+  const promptEl = tl.get("prompt");
+  const armEl = tl.get("arm");
   const c = THEMES[theme];
   const inkC = ink ?? c.ink;
   const hi = accent ?? c.accent;
@@ -321,7 +339,7 @@ export function CardPushLine({
     const startLeft = W * 1.04;
     const cardSp = (ff: number) =>
       spring({
-        frame: ff - BEAT.card,
+        frame: ff - cardEl.start,
         fps,
         config: { mass: 0.8, damping: 18, stiffness: 110 },
       });
@@ -332,7 +350,7 @@ export function CardPushLine({
     let off = 0;
     let vel = 0;
     let lastV = 0;
-    for (let k = BEAT.card; k <= f; k++) {
+    for (let k = cardEl.start; k <= f; k++) {
       const limit = cardLeft(k) - gap - restRight;
       const free = off + vel;
       const next = Math.min(free, limit);
@@ -390,8 +408,8 @@ export function CardPushLine({
                 }}
               >
                 {s.split(" ").map((w, wi) => {
-                  const at = (before + wi) * stagger - 4;
-                  const e = interpolate(f, [at, at + BEAT.enter], [0, 1], {
+                  const word = tl.get(`word:${before + wi}`);
+                  const e = interpolate(f, [word.start, word.end], [0, 1], {
                     ...CLAMP,
                     easing: ENTER,
                   });
@@ -428,38 +446,59 @@ export function CardPushLine({
       </div>
     );
 
-    const cmdRate = Math.max(1.2, command.length / 11);
-    const promptRate = Math.max(1.2, prompt.length / 28);
+    // Typing keeps its rate unless `timing` resizes it: then the same
+    // characters spread over the new length (the ratio is exactly 1 without).
+    const pace = (base: number, chars: number, length: number) =>
+      length > 0 ? base * (chars / base / length) : base;
+    const cmdRate = pace(
+      commandTypeRate(command),
+      command.length,
+      cmdEl.length,
+    );
+    const promptRate = pace(
+      promptTypeRate(prompt),
+      prompt.length,
+      promptEl.length,
+    );
     const cmdTyped = Math.max(
       0,
-      Math.min(command.length, Math.floor((f - BEAT.cmd) * cmdRate)),
+      Math.min(command.length, Math.floor((f - cmdEl.start) * cmdRate)),
     );
     const pTyped = Math.max(
       0,
-      Math.min(prompt.length, Math.floor((f - BEAT.prompt) * promptRate)),
+      Math.min(prompt.length, Math.floor((f - promptEl.start) * promptRate)),
     );
-    const promptEnd = BEAT.prompt + prompt.length / promptRate;
+    const promptEnd = promptEl.end;
     const chipPop = spring({
-      frame: f - BEAT.chip,
+      frame: f - chipEl.start,
       fps,
       config: { mass: 0.5, damping: 12, stiffness: 200 },
     });
-    const chipOn = f >= BEAT.chip;
-    const phOp = interpolate(f, [BEAT.cmd - 4, BEAT.cmd], [1, 0], CLAMP);
+    const chipOn = f >= chipEl.start;
+    const phOp = interpolate(
+      f,
+      [cmdEl.start + cmdEl.beat("placeholder"), cmdEl.start],
+      [1, 0],
+      CLAMP,
+    );
     const armP = spring({
-      frame: f - BEAT.arm,
+      frame: f - armEl.start,
       fps,
       config: { mass: 0.5, damping: 12, stiffness: 200 },
     });
-    const armed = f >= BEAT.arm;
+    const armed = f >= armEl.start;
     const attIn = spring({
-      frame: f - (BEAT.card + 8),
+      frame: f - (cardEl.start + cardEl.beat("attach")),
       fps,
       config: { mass: 0.5, damping: 12, stiffness: 200 },
     });
     const toolIn = [0, 1, 2, 3, 4].map((i) =>
       spring({
-        frame: f - (BEAT.card + 12 + i * 2),
+        frame:
+          f -
+          (cardEl.start +
+            cardEl.beat("tools") +
+            i * cardEl.beat("toolStagger")),
         fps,
         config: { mass: 0.5, damping: 12, stiffness: 200 },
       }),
@@ -493,7 +532,7 @@ export function CardPushLine({
     let caretX =
       pad + chipPadX + m(command.slice(0, cmdTyped), monoFont, 0) * cmdT;
     let caretLi = 0;
-    if (f >= BEAT.prompt && pTyped > 0) {
+    if (f >= promptEl.start && pTyped > 0) {
       let rem = pTyped;
       for (let li = 0; li < pLines.length; li++) {
         const len = pLines[li].text.length;
@@ -507,15 +546,16 @@ export function CardPushLine({
         }
         rem -= len + 1;
       }
-    } else if (f >= BEAT.chip) {
+    } else if (f >= chipEl.start) {
       caretX = pad + firstIndent;
     }
     const typing =
-      (f >= BEAT.cmd && f < BEAT.cmd + command.length / cmdRate + 2) ||
-      (f >= BEAT.prompt && f < promptEnd + 2);
+      (f >= cmdEl.start && f < cmdEl.end + 2) ||
+      (f >= promptEl.start && f < promptEnd + 2);
     const caretOn =
-      f >= BEAT.card + 18 && (typing || Math.floor(f / 14) % 2 === 0);
-    const caretShow = f < BEAT.arm ? 1 : 0;
+      f >= cardEl.start + cardEl.beat("caret") &&
+      (typing || Math.floor(f / 14) % 2 === 0);
+    const caretShow = f < armEl.start ? 1 : 0;
 
     const chipStyle: CSSProperties = {
       position: "absolute",

@@ -6417,13 +6417,19 @@
       "registryDependencies": [
         "@remocn/gsh",
         "@remocn/glide",
-        "@remocn/frame-rate"
+        "@remocn/frame-rate",
+        "@remocn/timeline"
       ],
       "files": [
         {
           "path": "card-push-line/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/card-push-line.tsx"
+          "target": "components/remocn/card-push-line/index.tsx"
+        },
+        {
+          "path": "card-push-line/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/card-push-line/timeline.ts"
         }
       ]
     },
