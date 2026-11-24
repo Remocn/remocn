@@ -14665,12 +14665,21 @@
       "title": "Growth Line",
       "description": "An exponential growth curve draws through milestones to a 100k endpoint.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/growth-line/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/growth-line.tsx"
+          "target": "components/remocn/growth-line/index.tsx"
+        },
+        {
+          "path": "registry/remocn/growth-line/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/growth-line/timeline.ts"
         }
       ],
       "type": "registry:component"
