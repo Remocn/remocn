@@ -9,6 +9,8 @@ import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import { type HomeWidgetElementId, homeWidgetTimeline } from "./timeline";
 
 const { fontFamily } = loadFont("normal", {
   weights: ["300", "400"],
@@ -49,6 +51,12 @@ export interface HomeWidgetProps {
   lines?: [string, string, string];
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
+  /**
+   * Moves, trims or stretches the phone, single copy lines and each touch of
+   * the finger with what the screen does after it, by the ids in
+   * `./timeline`. Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<HomeWidgetElementId>;
 }
 
 const SW = 390;
@@ -69,16 +77,6 @@ const SIZES = {
 };
 const SHEET_TOP = 54;
 const PREVIEW_Y = 236;
-
-const T_HOLD = 30;
-const T_JIG = 46;
-const T_PLUS = 66;
-const T_ROW = 100;
-const T_SWIPE = 122;
-const T_SWIPE_UP = 132;
-const T_ADD = 158;
-const T_DONE = 198;
-const T_LIVE = 206;
 
 const clamp = { extrapolateLeft: "clamp", extrapolateRight: "clamp" } as const;
 const glide = Easing.bezier(0.65, 0, 0.35, 1);
@@ -830,41 +828,68 @@ function ScaleLayer({
   );
 }
 
-export function HomeWidget({
-  appName = "remocn",
-  widgetName = "Renders",
-  widgetDescription = "Track renders and views at a glance.",
-  size = "medium",
-  stat = {
-    label: "Renders this week",
-    from: 1236,
-    to: 1284,
-    delta: "+12% vs last week",
-  },
-  bars = [42, 58, 36, 70, 64, 88, 76],
-  searchLabel = "Search Widgets",
-  addLabel = "Add Widget",
-  doneLabel = "Done",
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily: font = fontFamily,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "light",
-  lines = [
-    "Hold the home screen.",
-    "Pick the size that fits.",
-    "Your week, one glance away.",
-  ],
-  ground,
-  groundParams,
-}: HomeWidgetProps) {
+export function HomeWidget(props: HomeWidgetProps) {
+  const {
+    appName = "remocn",
+    widgetName = "Renders",
+    widgetDescription = "Track renders and views at a glance.",
+    size = "medium",
+    stat = {
+      label: "Renders this week",
+      from: 1236,
+      to: 1284,
+      delta: "+12% vs last week",
+    },
+    bars = [42, 58, 36, 70, 64, 88, 76],
+    searchLabel = "Search Widgets",
+    addLabel = "Add Widget",
+    doneLabel = "Done",
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily: font = fontFamily,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "light",
+    lines = [
+      "Hold the home screen.",
+      "Pick the size that fits.",
+      "Your week, one glance away.",
+    ],
+    ground,
+    groundParams,
+    timing,
+  } = props;
   const tilt = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay);
-  const { fps, width, height } = useSceneConfig();
+  const { fps, width, height, durationInFrames } = useSceneConfig();
   const f = frame * speed;
+  const tl = useTimeline(
+    homeWidgetTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const phoneEl = tl.get("phone");
+  const reachEl = tl.get("reach");
+  const holdEl = tl.get("hold");
+  const editEl = tl.get("edit");
+  const plusEl = tl.get("plus");
+  const rowEl = tl.get("row");
+  const addEl = tl.get("add");
+  const doneEl = tl.get("done");
+  const liveEl = tl.get("live");
+  const lineEls = tl.lane("Copy");
+  const at = (
+    e: { start: number; beat: (name: string) => number },
+    b: string,
+  ) => e.start + e.beat(b);
+  const T_HOLD = holdEl.start;
+  const T_PLUS = plusEl.start;
+  const T_ROW = rowEl.start;
+  const T_ADD = addEl.start;
+  const T_DONE = doneEl.start;
   const c: Palette = theme === "dark" ? DARK : LIGHT;
   const tall = height > width;
   const k = tall
@@ -884,42 +909,71 @@ export function HomeWidget({
     interpolate(f, [at - 1, at + 1, at + 6], [0, 1, 0], clamp);
 
   const jig =
-    interpolate(f, [T_JIG, T_JIG + 6], [0, 1], clamp) *
-    interpolate(f, [T_DONE + 1, T_DONE + 6], [1, 0], clamp);
+    interpolate(f, [editEl.start, editEl.end], [0, 1], clamp) *
+    interpolate(
+      f,
+      [at(doneEl, "stopAt"), at(doneEl, "stopEnd")],
+      [1, 0],
+      clamp,
+    );
   const jiggle = (i: number) => ({
     r: Math.sin((f / 7) * Math.PI * 2 + i * 1.9) * 1.7 * jig,
     y: Math.cos((f / 7) * Math.PI * 2 + i * 1.3) * 0.7 * jig,
   });
 
-  const sheetIn = interpolate(f, [T_PLUS + 2, T_PLUS + 14], [0, 1], {
-    ...clamp,
-    easing: sheetEase,
-  });
-  const sheetOut = interpolate(f, [T_ADD + 1, T_ADD + 12], [0, 1], {
-    ...clamp,
-    easing: sheetEase,
-  });
+  const sheetIn = interpolate(
+    f,
+    [at(plusEl, "sheetAt"), at(plusEl, "sheetEnd")],
+    [0, 1],
+    {
+      ...clamp,
+      easing: sheetEase,
+    },
+  );
+  const sheetOut = interpolate(
+    f,
+    [at(addEl, "sheetAt"), at(addEl, "sheetEnd")],
+    [0, 1],
+    {
+      ...clamp,
+      easing: sheetEase,
+    },
+  );
   // The sheet is laid out where it stands open and slides by transform: layout
   // rounds a box and a baseline to whole pixels, so `top` would step it.
   const sheetDy = (SH - SHEET_TOP) * (1 - sheetIn + sheetOut);
   const sheetMoving = midway(sheetIn) || midway(sheetOut);
   const sheetVis = sheetIn * (1 - sheetOut);
-  const push = interpolate(f, [T_ROW + 2, T_ROW + 13], [0, 1], {
-    ...clamp,
-    easing: sheetEase,
-  });
-  const pageDrag = medium
+  const push = interpolate(
+    f,
+    [at(rowEl, "pushAt"), at(rowEl, "pushEnd")],
+    [0, 1],
+    {
+      ...clamp,
+      easing: sheetEase,
+    },
+  );
+  const swipeEl = medium ? tl.get("swipe") : undefined;
+  const T_SWIPE = swipeEl?.start ?? 0;
+  const T_SWIPE_UP = swipeEl ? at(swipeEl, "up") : 0;
+  const pageDrag = swipeEl
     ? interpolate(f, [T_SWIPE, T_SWIPE_UP], [0, 0.6], {
         ...clamp,
         easing: inOut,
       }) +
-      interpolate(f, [T_SWIPE_UP, T_SWIPE_UP + 12], [0, 0.4], {
-        ...clamp,
-        easing: easeOut,
-      })
+      interpolate(
+        f,
+        [T_SWIPE_UP, T_SWIPE_UP + swipeEl.beat("settle")],
+        [0, 0.4],
+        {
+          ...clamp,
+          easing: easeOut,
+        },
+      )
     : 0;
+  const addTap = at(addEl, "tap");
   const rowPress = bump(T_ROW);
-  const addPress = bump(T_ADD - 1);
+  const addPress = bump(addTap);
 
   const fly = spring({ frame: f - T_ADD, fps, config: CARD });
   const from = { x: (SW - W.w) / 2, y: SHEET_TOP + PREVIEW_Y };
@@ -948,7 +1002,7 @@ export function HomeWidget({
     y: ROW0 + Math.floor(cell / 4) * ROW,
   });
 
-  const live = interpolate(f, [T_LIVE, T_LIVE + 50], [0, 1], {
+  const live = interpolate(f, [liveEl.start, liveEl.end], [0, 1], {
     ...clamp,
     easing: easeOut,
   });
@@ -959,12 +1013,12 @@ export function HomeWidget({
 
   const camT = [
     0,
-    T_ROW + 4,
-    T_ROW + 20,
-    T_ADD - 6,
-    T_ADD + 10,
-    T_DONE + 4,
-    T_DONE + 26,
+    at(rowEl, "camAt"),
+    at(rowEl, "camEnd"),
+    at(addEl, "camAt"),
+    at(addEl, "camEnd"),
+    at(doneEl, "camAt"),
+    at(doneEl, "camEnd"),
   ];
   const camEase = { ...clamp, easing: camera };
   const camAt = (ff: number) => {
@@ -994,7 +1048,7 @@ export function HomeWidget({
       [BW / 2, BW / 2, BW / 2, BW / 2, BW / 2, BW / 2, BEZEL + COL0 + W.w / 2],
       camEase,
     );
-    const below = 1 - spring({ frame: ff, fps, config: HEAVY });
+    const below = 1 - spring({ frame: ff - phoneEl.start, fps, config: HEAVY });
     const s = k * camS;
     return {
       s,
@@ -1021,26 +1075,32 @@ export function HomeWidget({
   const rowIdx = LIST.indexOf("remocn");
   const listTop = SHEET_TOP + 64 + 352 + 20;
   const touches = [
-    { t: 16, x: 270, y: 600 },
-    { t: T_HOLD, x: 210, y: 486 },
+    { t: reachEl.start, x: 270, y: 600 },
+    { t: T_HOLD, x: 210, y: 486, hold: true },
     { t: T_PLUS, x: 40, y: 30 },
     { t: T_ROW, x: 120, y: listTop + rowIdx * 50 + 25 },
     ...(medium
       ? [
-          { t: T_SWIPE, x: 310, y: SHEET_TOP + PREVIEW_Y + 78 },
+          { t: T_SWIPE, x: 310, y: SHEET_TOP + PREVIEW_Y + 78, drag: true },
           { t: T_SWIPE_UP, x: 120, y: SHEET_TOP + PREVIEW_Y + 70 },
         ]
       : []),
-    { t: T_ADD - 1, x: SW / 2 + 10, y: SH - 64 },
+    { t: addTap, x: SW / 2 + 10, y: SH - 64 },
     { t: T_DONE, x: SW - 48, y: 30 },
   ];
   const touchEnd = touches[touches.length - 1];
   let touch = { x: touches[0].x, y: touches[0].y };
   for (let i = 0; i < touches.length - 1; i++) {
-    const a = touches[i];
+    const a: {
+      t: number;
+      x: number;
+      y: number;
+      hold?: boolean;
+      drag?: boolean;
+    } = touches[i];
     const b = touches[i + 1];
-    const dragging = a.t === T_SWIPE && medium;
-    const start = a.t === T_HOLD ? T_JIG + 6 : dragging ? a.t : a.t + 3;
+    const dragging = a.drag === true && medium;
+    const start = a.hold ? at(holdEl, "lift") : dragging ? a.t : a.t + 3;
     const end = dragging ? b.t : b.t - 2;
     if (f >= start) {
       const p = Math.min(1, (f - start) / (end - start));
@@ -1056,26 +1116,41 @@ export function HomeWidget({
     1,
     interpolate(
       f,
-      [T_HOLD - 1, T_HOLD + 1, T_JIG + 4, T_JIG + 6],
+      [
+        at(holdEl, "pressIn"),
+        at(holdEl, "press"),
+        at(holdEl, "liftAt"),
+        at(holdEl, "lift"),
+      ],
       [0, 1, 1, 0],
       clamp,
     ) +
       bump(T_PLUS) +
       bump(T_ROW) +
-      (medium
+      (swipeEl
         ? interpolate(
             f,
-            [T_SWIPE - 2, T_SWIPE, T_SWIPE_UP, T_SWIPE_UP + 2],
+            [
+              at(swipeEl, "pressIn"),
+              T_SWIPE,
+              T_SWIPE_UP,
+              T_SWIPE_UP + swipeEl.beat("lift"),
+            ],
             [0, 1, 1, 0],
             clamp,
           )
         : 0) +
-      bump(T_ADD - 1) +
+      bump(addTap) +
       bump(T_DONE),
   );
   const touchOpacity = interpolate(
     f,
-    [16, 22, T_DONE + 3, T_DONE + 8],
+    [
+      reachEl.start,
+      at(reachEl, "fadeIn"),
+      at(doneEl, "fadeAt"),
+      at(doneEl, "fadeEnd"),
+    ],
     [0, 1, 1, 0],
     clamp,
   );
@@ -1084,8 +1159,13 @@ export function HomeWidget({
 
   const statusOp = 1 - jig;
   const editOp =
-    interpolate(f, [T_JIG, T_JIG + 5], [0, 1], clamp) *
-    interpolate(f, [T_DONE + 1, T_DONE + 5], [1, 0], clamp);
+    interpolate(f, [editEl.start, at(editEl, "badges")], [0, 1], clamp) *
+    interpolate(
+      f,
+      [at(doneEl, "stopAt"), at(doneEl, "badgesEnd")],
+      [1, 0],
+      clamp,
+    );
   const homeDim = sheetVis;
 
   const widgetEl = (
@@ -1165,16 +1245,26 @@ export function HomeWidget({
           }}
         >
           {lines.map((line, i) => {
-            const starts = [6, T_PLUS, T_ADD + 4];
-            const ends = [T_PLUS, T_ADD + 4, 99999];
-            const inP = interpolate(f, [starts[i], starts[i] + 14], [0, 1], {
-              ...clamp,
-              easing: sheetEase,
-            });
-            const outP = interpolate(f, [ends[i] - 8, ends[i]], [0, 1], {
-              ...clamp,
-              easing: exitEase,
-            });
+            const lineEl = lineEls[i];
+            const end = i < lineEls.length - 1 ? lineEl.end : 99999;
+            const inP = interpolate(
+              f,
+              [lineEl.start, at(lineEl, "rise")],
+              [0, 1],
+              {
+                ...clamp,
+                easing: sheetEase,
+              },
+            );
+            const outP = interpolate(
+              f,
+              [end - lineEl.beat("out"), end],
+              [0, 1],
+              {
+                ...clamp,
+                easing: exitEase,
+              },
+            );
             if (inP <= 0 || outP >= 1) return null;
             return (
               <div
@@ -1233,11 +1323,17 @@ export function HomeWidget({
               {homeApps.map((app, i) => {
                 const a = cellXY(i);
                 const b = cellXY(freeCells[i]);
-                const t0 = T_ADD + (homeApps.length - 1 - i) * 0.25;
-                const mv = interpolate(f, [t0, t0 + 14], [0, 1], {
-                  ...clamp,
-                  easing: inOut,
-                });
+                const t0 =
+                  T_ADD + (homeApps.length - 1 - i) * addEl.beat("stagger");
+                const mv = interpolate(
+                  f,
+                  [t0, t0 + addEl.beat("shuffle")],
+                  [0, 1],
+                  {
+                    ...clamp,
+                    easing: inOut,
+                  },
+                );
                 const j = jiggle(i);
                 return (
                   <div
