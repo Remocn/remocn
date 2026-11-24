@@ -5090,12 +5090,17 @@
       "title": "Cloth Reveal",
       "description": "A satin sheet draped over the content is yanked from one corner, folding and fluttering as a simulated cloth before it clears the frame.",
       "dependencies": ["remotion"],
-      "registryDependencies": ["@remocn/frame-rate"],
+      "registryDependencies": ["@remocn/frame-rate", "@remocn/timeline"],
       "files": [
         {
           "path": "cloth-reveal/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/cloth-reveal.tsx"
+          "target": "components/remocn/cloth-reveal/index.tsx"
+        },
+        {
+          "path": "cloth-reveal/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/cloth-reveal/timeline.ts"
         }
       ]
     },
