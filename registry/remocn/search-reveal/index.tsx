@@ -2,6 +2,19 @@
 
 import { AbsoluteFill, Easing, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import {
+  type ResolvedTimeline,
+  resolve,
+  type Timing,
+  useTimeline,
+} from "@/lib/remocn/timeline";
+import {
+  clamp,
+  finite,
+  letters,
+  type SearchRevealElementId,
+  searchRevealTimeline,
+} from "./timeline";
 
 export type SearchRevealProps = {
   text?: string;
@@ -19,18 +32,15 @@ export type SearchRevealProps = {
   speed?: number;
   reducedMotion?: boolean;
   className?: string;
+  /**
+   * Moves, trims or stretches the circles, the field, the typing and the
+   * panel, by the ids in `./timeline`.
+   * Frames on the scene timeline, after `speed`.
+   */
+  timing?: Timing<SearchRevealElementId>;
 };
 
 export const searchRevealLength = 90;
-const finite = (value: number | undefined, fallback: number) =>
-  typeof value === "number" && Number.isFinite(value) ? value : fallback;
-const clamp = (value: number, min: number, max: number) =>
-  Math.min(max, Math.max(min, value));
-const letters = (text: string) =>
-  Array.from(
-    new Intl.Segmenter("en", { granularity: "grapheme" }).segment(text),
-    (part) => part.segment,
-  );
 const curve = Easing.bezier(0.22, 1, 0.36, 1);
 const tween = (frame: number, start: number, end: number, from = 0, to = 1) =>
   interpolate(frame, [start, end], [from, to], {
@@ -39,31 +49,64 @@ const tween = (frame: number, start: number, end: number, from = 0, to = 1) =>
     easing: curve,
   });
 
-function timing(props: SearchRevealProps) {
+/** The schedule without `timing`, for the helpers called outside a render. */
+const scheduleOf = (props: SearchRevealProps) =>
+  resolve(searchRevealTimeline(props, { length: searchRevealLength }));
+
+function searchRevealPlan(
+  props: SearchRevealProps,
+  tl: ResolvedTimeline<SearchRevealElementId>,
+) {
   const characters = letters(props.text ?? "remocn");
-  const step = clamp(finite(props.framesPerCharacter, 4), 1, 12);
-  const end = Math.max(searchRevealLength, 54 + characters.length * step + 10);
-  return { characters, step, end, speed: Math.max(0, finite(props.speed, 1)) };
+  const typing = tl.get("typing");
+  const end = Math.max(
+    searchRevealLength,
+    tl.get("panel").end,
+    typing.end + typing.beat("hold"),
+  );
+  return { characters, end, speed: Math.max(0, finite(props.speed, 1)) };
 }
 
 /** Demo duration at 30 fps, including an 18-frame final hold. */
 export function getSearchRevealDuration(props: SearchRevealProps = {}) {
-  const { end, speed } = timing(props);
+  const { end, speed } = searchRevealPlan(props, scheduleOf(props));
   return speed === 0 ? 1 : Math.ceil((end + 18) / speed);
 }
 
-/** Frame is expressed at 30 fps; playback speed is applied here. */
+/**
+ * Frame is expressed at 30 fps; playback speed is applied here. `tl` is the
+ * resolved schedule; without it the one `props` give, with no `timing`.
+ */
 export function getSearchRevealState(
   frame: number,
   props: SearchRevealProps = {},
+  tl: ResolvedTimeline<SearchRevealElementId> = scheduleOf(props),
 ) {
-  const { characters, step, end, speed } = timing(props);
+  const { characters, end, speed } = searchRevealPlan(props, tl);
+  const circles = tl.get("circles");
+  const field = tl.get("field");
+  const typing = tl.get("typing");
+  const panel = tl.get("panel");
+  const step = typing.beat("step");
+  const caretAt = typing.start + typing.beat("caretAt");
+  const iconAt = field.start + field.beat("iconAt");
   const t = props.reducedMotion ? end : Math.max(0, finite(frame, 0)) * speed;
-  const typedCount = clamp(Math.floor((t - 54) / step), 0, characters.length);
+  const typedCount = clamp(
+    Math.floor((t - typing.start) / step),
+    0,
+    characters.length,
+  );
   const width = clamp(finite(props.fieldWidth, 464), 320, 640);
-  const reveal = props.showPanel === false ? 0 : tween(t, 56, 90);
-  const fieldWidth = tween(t, 26, 48, 130, width);
-  const fieldHeight = tween(t, 26, 46, 24, 80);
+  const reveal =
+    props.showPanel === false ? 0 : tween(t, panel.start, panel.end);
+  const fieldWidth = tween(t, field.start, field.end, 130, width);
+  const fieldHeight = tween(
+    t,
+    field.start,
+    field.start + field.beat("grow"),
+    24,
+    80,
+  );
   const panelWidth =
     fieldWidth + (Math.max(774, width + 170) - fieldWidth) * reveal;
   const panelHeight = fieldHeight + (374 - fieldHeight) * reveal;
@@ -72,23 +115,24 @@ export function getSearchRevealState(
     end,
     typedCount,
     text: characters.slice(0, typedCount).join(""),
-    circleRadius: tween(t, 0, 26, 250, 410),
-    circleOffset: tween(t, 0, 26, 62, 185),
-    circlesVisible: t < 26,
-    fieldVisible: t >= 26,
+    circleRadius: tween(t, circles.start, circles.end, 250, 410),
+    circleOffset: tween(t, circles.start, circles.end, 62, 185),
+    circlesVisible: t < circles.end,
+    fieldVisible: t >= field.start,
     fieldWidth,
     fieldHeight,
-    tilt: tween(t, 26, 47, -4, 0),
-    iconOpacity: tween(t, 34, 46),
+    tilt: tween(t, field.start, field.start + field.beat("tilt"), -4, 0),
+    iconOpacity: tween(t, iconAt, iconAt + field.beat("icon")),
     panelWidth,
     panelHeight,
     panelRadius: 40 * (1 - reveal),
-    panelOpacity: tween(t, 56, 60),
+    panelOpacity: tween(t, panel.start, panel.start + panel.beat("fade")),
     reveal,
     caretVisible:
-      t >= 52 &&
+      t >= caretAt &&
       t < end &&
-      (typedCount < characters.length || Math.floor((t - 52) / 12) % 2 === 0),
+      (typedCount < characters.length ||
+        Math.floor((t - caretAt) / typing.beat("blink")) % 2 === 0),
   };
 }
 
@@ -101,33 +145,43 @@ function Cross({ x, y, size = 9 }: { x: number; y: number; size?: number }) {
 }
 
 /** A video scene: expanding construction circles, a search pill, and typed copy. */
-export function SearchReveal({
-  text = "remocn",
-  fieldWidth = 464,
-  fontSize = 34,
-  framesPerCharacter = 4,
-  showPanel = true,
-  showGuides = true,
-  color = "#26232b",
-  fieldColor = "#ffffff",
-  ringColor = "#cbc5cf",
-  panelColor = "#a800b7",
-  accentColor = "#e8f99a",
-  backgroundColor = "#f5f1f5",
-  speed = 1,
-  reducedMotion = false,
-  className,
-}: SearchRevealProps) {
+export function SearchReveal(props: SearchRevealProps) {
+  const {
+    text = "remocn",
+    fieldWidth = 464,
+    fontSize = 34,
+    showPanel = true,
+    showGuides = true,
+    color = "#26232b",
+    fieldColor = "#ffffff",
+    ringColor = "#cbc5cf",
+    panelColor = "#a800b7",
+    accentColor = "#e8f99a",
+    backgroundColor = "#f5f1f5",
+    speed = 1,
+    reducedMotion = false,
+    className,
+    timing,
+  } = props;
   const frame = useSceneFrame();
-  const { width, height, fps } = useSceneConfig();
-  const state = getSearchRevealState((frame * 30) / fps, {
-    text,
-    fieldWidth,
-    framesPerCharacter,
-    showPanel,
-    speed,
-    reducedMotion,
-  });
+  const { width, height, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    searchRevealTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const state = getSearchRevealState(
+    (frame * 30) / fps,
+    {
+      text,
+      fieldWidth,
+      showPanel,
+      speed,
+      reducedMotion,
+    },
+    tl,
+  );
   const scale = Math.min(width / 1280, height / 720);
   const fittedFont = Math.min(
     clamp(finite(fontSize, 34), 18, 54),
@@ -136,14 +190,17 @@ export function SearchReveal({
   // The pill grows about its centre. Its corner rides that growth as a
   // transform from where the settled pill sits, not by `left`/`top`: layout
   // rounds a box edge to whole pixels, so a corner eased by layout clicks.
-  const settled = getSearchRevealState(0, {
-    text,
-    fieldWidth,
-    framesPerCharacter,
-    showPanel,
-    speed,
-    reducedMotion: true,
-  });
+  const settled = getSearchRevealState(
+    0,
+    {
+      text,
+      fieldWidth,
+      showPanel,
+      speed,
+      reducedMotion: true,
+    },
+    tl,
+  );
   const fieldDx = (settled.fieldWidth - state.fieldWidth) / 2;
   const fieldDy = (settled.fieldHeight - state.fieldHeight) / 2;
   const fieldShift =

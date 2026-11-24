@@ -3490,12 +3490,17 @@
       "title": "Search Reveal",
       "description": "Expanding construction circles snap into a search pill, type editable text, and reveal an abstract graphic panel.",
       "dependencies": ["remotion"],
-      "registryDependencies": ["@remocn/frame-rate"],
+      "registryDependencies": ["@remocn/frame-rate", "@remocn/timeline"],
       "files": [
         {
           "path": "search-reveal/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/search-reveal.tsx"
+          "target": "components/remocn/search-reveal/index.tsx"
+        },
+        {
+          "path": "search-reveal/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/search-reveal/timeline.ts"
         }
       ]
     },
