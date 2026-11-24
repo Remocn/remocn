@@ -13555,12 +13555,21 @@
       "title": "Clock Sweep",
       "description": "A clock hand sweeps a glowing wedge as the line From idea to video in 4 minutes appears.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/clock-sweep/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/clock-sweep.tsx"
+          "target": "components/remocn/clock-sweep/index.tsx"
+        },
+        {
+          "path": "registry/remocn/clock-sweep/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/clock-sweep/timeline.ts"
         }
       ],
       "type": "registry:component"
