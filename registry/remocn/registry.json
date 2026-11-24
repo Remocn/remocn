@@ -15624,13 +15624,19 @@
       "registryDependencies": [
         "@remocn/gsh",
         "@remocn/glide",
-        "@remocn/frame-rate"
+        "@remocn/frame-rate",
+        "@remocn/timeline"
       ],
       "files": [
         {
           "path": "ride-tracking/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/ride-tracking.tsx"
+          "target": "components/remocn/ride-tracking/index.tsx"
+        },
+        {
+          "path": "ride-tracking/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/ride-tracking/timeline.ts"
         }
       ]
     },
