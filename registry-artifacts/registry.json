@@ -5151,12 +5151,17 @@
       "title": "Blueprint",
       "description": "The product wipes left to right into a technical drawing: blueprint grid, white linework, dimension lines with ticks, labels and a red callout.",
       "dependencies": ["remotion"],
-      "registryDependencies": ["@remocn/frame-rate"],
+      "registryDependencies": ["@remocn/frame-rate", "@remocn/timeline"],
       "files": [
         {
           "path": "registry/remocn/blueprint/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/blueprint.tsx"
+          "target": "components/remocn/blueprint/index.tsx"
+        },
+        {
+          "path": "registry/remocn/blueprint/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/blueprint/timeline.ts"
         }
       ],
       "type": "registry:component"
