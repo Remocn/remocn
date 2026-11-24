@@ -12,6 +12,8 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import { type CaretLetterElementId, caretLetterTimeline } from "./timeline";
 
 const face = loadFont("normal", {
   weights: ["300", "400"],
@@ -43,6 +45,12 @@ export interface CaretLetterProps {
   delay?: number;
   theme?: "dark" | "light";
   speed?: number;
+  /**
+   * Moves, trims or stretches the caret, the typing, the slide home, the
+   * letters parting, the morph and the subline, by the ids in `./timeline`.
+   * Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<CaretLetterElementId>;
 }
 
 const THEMES = {
@@ -54,19 +62,6 @@ const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
 const EASE_IN_OUT = Easing.bezier(0.65, 0, 0.35, 1);
 const EASE_TYPE = Easing.bezier(0.4, 0, 0.3, 1);
 const clamp = { extrapolateLeft: "clamp", extrapolateRight: "clamp" } as const;
-
-// Beats, in frames at 30fps (before `speed`).
-const CARET_IN = 0;
-const TYPE = 46;
-const TYPE_LEN = 46;
-const LETTER_LEN = 16;
-const SLIDE = 110;
-const SLIDE_LEN = 26;
-const OPEN = 118;
-const OPEN_LEN = 24;
-const MORPH = 134;
-const MORPH_LEN = 16;
-const SUB = 150;
 
 // Letters scale in and the subline rises by a transform; the shared glide
 // mark leans their text off the pixel grid while a progress is midway.
@@ -166,33 +161,42 @@ function ScaleLayer({
   );
 }
 
-export function CaretLetter({
-  word = "launch",
-  stemIndex = 0,
-  subline = "Animated components for your next release.",
-  accent = "#3B5BFD",
-  ink: inkProp,
-  background,
-  fontFamily = face.fontFamily,
-  fontWeight = 300,
-  typeLength = TYPE_LEN,
-  scale = 1,
-  delay = 0,
-  theme = "light",
-  speed = 1,
-}: CaretLetterProps) {
+export function CaretLetter(props: CaretLetterProps) {
+  const {
+    word = "launch",
+    stemIndex = 0,
+    subline = "Animated components for your next release.",
+    accent = "#3B5BFD",
+    ink: inkProp,
+    background,
+    fontFamily = face.fontFamily,
+    fontWeight = 300,
+    scale = 1,
+    delay = 0,
+    theme = "light",
+    speed = 1,
+    timing,
+  } = props;
   const frame = Math.max(0, useSceneFrame() - delay) * speed;
   const glide = useGlide();
-  const { width, height } = useSceneConfig();
+  const { width, height, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    caretLetterTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const caretEl = tl.get("caret");
+  const typeEl = tl.get("type");
+  const slideEl = tl.get("slide");
+  const openEl = tl.get("open");
+  const morphEl = tl.get("morph");
+  const subEl = tl.get("subline");
   const t = THEMES[theme];
   const fg = inkProp ?? t.fg;
   const stage =
     background === "transparent" ? "transparent" : (background ?? t.bg);
-  const shift = typeLength - TYPE_LEN;
-  const slideAt = SLIDE + shift;
-  const openAt = OPEN + shift;
-  const morphAt = MORPH + shift;
-  const subAt = SUB + shift;
+  const slideAt = slideEl.start;
 
   const letters = Array.from(word);
   const stem = Math.max(0, Math.min(letters.length - 1, stemIndex));
@@ -283,7 +287,7 @@ export function CaretLetter({
 
   // Typing: the caret sweeps right, letters grow in its wake.
   const typeX = (f: number) =>
-    interpolate(f, [TYPE, TYPE + typeLength], [0, typedEnd], {
+    interpolate(f, [typeEl.start, typeEl.end], [0, typedEnd], {
       ...clamp,
       easing: EASE_TYPE,
     });
@@ -293,21 +297,21 @@ export function CaretLetter({
   const letterIn = typedLetters.map((_, j) => {
     const left = L?.typed[j] ?? 0;
     const edge = typedRight(j) - (typedRight(j) - left) * 0.1;
-    for (let f = TYPE; f <= TYPE + typeLength; f++)
-      if (typeX(f) >= edge) return f - 2;
-    return TYPE + typeLength;
+    for (let f = typeEl.start; f <= typeEl.end; f++)
+      if (typeX(f) >= edge) return f + typeEl.beat("letterLead");
+    return typeEl.end;
   });
 
   // Slide home: the caret runs back into the word, the letters part for it.
-  const slide = interpolate(frame, [slideAt, slideAt + SLIDE_LEN], [0, 1], {
+  const slide = interpolate(frame, [slideEl.start, slideEl.end], [0, 1], {
     ...clamp,
     easing: EASE_IN_OUT,
   });
-  const open = interpolate(frame, [openAt, openAt + OPEN_LEN], [0, 1], {
+  const open = interpolate(frame, [openEl.start, openEl.end], [0, 1], {
     ...clamp,
     easing: EASE_IN_OUT,
   });
-  const morph = interpolate(frame, [morphAt, morphAt + MORPH_LEN], [0, 1], {
+  const morph = interpolate(frame, [morphEl.start, morphEl.end], [0, 1], {
     ...clamp,
     easing: EASE_OUT,
   });
@@ -340,14 +344,22 @@ export function CaretLetter({
     if (u < 21) return 0;
     return (u - 21) / 3;
   };
-  const caretIn = interpolate(frame, [CARET_IN, CARET_IN + 10], [0, 1], {
+  const caretIn = interpolate(frame, [caretEl.start, caretEl.end], [0, 1], {
     ...clamp,
     easing: EASE_OUT,
   });
   const blink =
-    frame < TYPE
-      ? blinkAt(frame, 8, TYPE - 4)
-      : blinkAt(frame, TYPE + typeLength + 2, slideAt - 2);
+    frame < typeEl.start
+      ? blinkAt(
+          frame,
+          caretEl.start + caretEl.beat("blink"),
+          typeEl.start + typeEl.beat("lead"),
+        )
+      : blinkAt(
+          frame,
+          typeEl.end + typeEl.beat("idle"),
+          slideEl.start + slideEl.beat("lead"),
+        );
 
   // Caret geometry, morphing into the stem of the letter.
   const baseline = L?.baseline ?? 0;
@@ -367,7 +379,7 @@ export function CaretLetter({
     [baseline + fontSize * CARET_DOWN, baseline + ink.bottom],
   );
 
-  const subP = interpolate(frame, [subAt, subAt + 30], [0, 1], {
+  const subP = interpolate(frame, [subEl.start, subEl.end], [0, 1], {
     ...clamp,
     easing: EASE_OUT,
   });
@@ -439,7 +451,10 @@ export function CaretLetter({
           {typedLetters.map((ch, j) => {
             const p = interpolate(
               frame,
-              [letterIn[j] ?? TYPE, (letterIn[j] ?? TYPE) + LETTER_LEN],
+              [
+                letterIn[j] ?? typeEl.start,
+                (letterIn[j] ?? typeEl.start) + typeEl.beat("letter"),
+              ],
               [0, 1],
               { ...clamp, easing: EASE_OUT },
             );

@@ -9700,12 +9700,21 @@
       "title": "Caret Letter",
       "description": "A blinking caret types a word and turns into its letter l: 'launch'.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/caret-letter/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/caret-letter.tsx"
+          "target": "components/remocn/caret-letter/index.tsx"
+        },
+        {
+          "path": "registry/remocn/caret-letter/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/caret-letter/timeline.ts"
         }
       ],
       "type": "registry:component"
