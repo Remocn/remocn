@@ -7,6 +7,8 @@ import type React from "react";
 import { AbsoluteFill, Easing, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import { type KoCountElementId, koCountTimeline, PREROLL } from "./timeline";
 
 const { fontFamily: shoulders } = loadFont("normal", {
   weights: ["400", "500"],
@@ -77,6 +79,12 @@ export interface KoCountProps {
   delay?: number;
   theme?: "dark" | "light";
   speed?: number;
+  /**
+   * Moves, trims or stretches single counts, the word, the hit, the subline
+   * and the logo, by the ids in `./timeline`. Frames on the scene timeline,
+   * after `delay` and `speed`.
+   */
+  timing?: Timing<KoCountElementId>;
 }
 
 // Beat sheet (internal clock = frame + 1, 30fps, speed 1):
@@ -88,12 +96,8 @@ export interface KoCountProps {
 //  69–71   impact: two frames of solid gradient ground with the word knocked
 //          out, then a decaying shake
 //  80–98   the serif subline wipes in, the logo rises; poster hold
-const GAPS = [8, 8, 7, 7, 6, 6, 5, 5, 4];
-const HOLD_TEN = 8;
-const SLAM_LEN = 5;
+/** Composition frames of solid ground on the hit, whatever the speed. */
 const IMPACT_LEN = 2;
-const SUB_DELAY = 11;
-const LOGO_DELAY = 19;
 
 const SLAM = Easing.bezier(0.12, 0.9, 0.25, 1);
 const OUT = Easing.bezier(0.22, 1, 0.36, 1);
@@ -196,37 +200,49 @@ function ScaleLayer({
   );
 }
 
-export function KoCount({
-  word = "Knockout",
-  subline = "The old workflow did not get up.",
-  label = "The count",
-  logo,
-  hold = HOLD_TEN,
-  shake: shakeAmt = 1,
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = shoulders,
-  scale = 1,
-  delay = 0,
-  theme = "dark",
-  speed = 1,
-}: KoCountProps) {
+export function KoCount(props: KoCountProps) {
+  const {
+    word = "Knockout",
+    subline = "The old workflow did not get up.",
+    label = "The count",
+    logo,
+    shake: shakeAmt = 1,
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = shoulders,
+    scale = 1,
+    delay = 0,
+    theme = "dark",
+    speed = 1,
+    timing,
+  } = props;
   const glide = useGlide();
-  const t = Math.max(0, useSceneFrame() - delay) * speed + 1;
-  const { width: W, height: H } = useSceneConfig();
+  const t = Math.max(0, useSceneFrame() - delay) * speed + PREROLL;
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    koCountTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const c = THEMES[theme];
   const fg = ink ?? c.ink;
   const stageFill =
     background === "transparent" ? "transparent" : (background ?? c.stage);
   const u = Math.min(W / 1280, H / 720);
 
-  const countAt: number[] = [0];
-  for (const g of GAPS) countAt.push(countAt[countAt.length - 1] + g);
-  const koAt = countAt[9] + hold;
-  const hitAt = koAt + SLAM_LEN;
-  const subAt = hitAt + SUB_DELAY;
-  const logoAt = hitAt + LOGO_DELAY;
+  // The schedule counts scene frames; `t` runs `PREROLL` ahead of them.
+  const counts = Array.from({ length: 10 }, (_, i) => tl.get(`count:${i}`));
+  const countAt = counts.map((e) => e.start + PREROLL);
+  const wordEl = tl.get("word");
+  const hitEl = tl.get("hit");
+  const subEl = tl.get("subline");
+  const logoEl = tl.get("logo");
+  const koAt = wordEl.start + PREROLL;
+  const hitAt = hitEl.start + PREROLL;
+  const subAt = subEl.start + PREROLL;
+  const logoAt = logoEl.start + PREROLL;
 
   const idxAt = (tt: number) => {
     let i0 = 0;
@@ -242,9 +258,14 @@ export function KoCount({
     const i = idxAt(tt);
     const sk =
       tt < koAt
-        ? shake(tt, countAt[i] + 2, 5, (3 + i * 1.4) * u)
+        ? shake(
+            tt,
+            countAt[i] + counts[i].beat("kick"),
+            counts[i].beat("kickLen"),
+            (3 + i * 1.4) * u,
+          )
         : { x: 0, y: 0 };
-    const sh = shake(tt, hitAt, 14, 22 * u);
+    const sh = shake(tt, hitAt, hitEl.beat("shake"), 22 * u);
     return { x: (sk.x + sh.x) * shakeAmt, y: (sk.y + sh.y) * shakeAmt };
   };
   const cam = camAt(t);
@@ -260,8 +281,11 @@ export function KoCount({
 
   const shot = SHOTS[idx];
   const numFs = shot.fs * H;
-  const numSlam = SLAM(ramp(local, 0, 3));
-  const numScale = (1.16 - 0.16 * numSlam) * (1 + 0.035 * ramp(local, 3, 10));
+  const count = counts[idx];
+  const numSlam = SLAM(ramp(local, 0, count.beat("slam")));
+  const numScale =
+    (1.16 - 0.16 * numSlam) *
+    (1 + 0.035 * ramp(local, count.beat("settle"), count.beat("settleLen")));
   const inverted = counting && idx === 7;
   const stage = inverted ? fg : stageFill;
   const numInk = inverted ? c.stage : fg;
@@ -275,11 +299,11 @@ export function KoCount({
   const wordCapH = CAP * wordFs;
   const wordCy = 0.44 * H;
   const wordScale = (d: number) =>
-    (1.6 - 0.6 * SLAM(ramp(d, koAt, SLAM_LEN))) *
-    (1 + 0.025 * ramp(d, hitAt, 60));
+    (1.6 - 0.6 * SLAM(ramp(d, koAt, wordEl.length))) *
+    (1 + 0.025 * ramp(d, hitAt, hitEl.length));
   const impact = t >= hitAt && t < hitAt + IMPACT_LEN * speed;
-  const subP = OUT(ramp(t, subAt, 12));
-  const logoP = OUT(ramp(t, logoAt, 10));
+  const subP = OUT(ramp(t, subAt, subEl.length));
+  const logoP = OUT(ramp(t, logoAt, logoEl.length));
 
   const hud = (ink: string, dim: string) => (
     <>
@@ -411,7 +435,9 @@ export function KoCount({
                 const ghost = lag > 0;
                 if (ghost && t >= hitAt) return null;
                 const tt = t - lag;
-                const op = ramp(tt, koAt, 2) * (ghost ? 0.22 / lag : 1);
+                const op =
+                  ramp(tt, koAt, wordEl.beat("fade")) *
+                  (ghost ? 0.22 / lag : 1);
                 return (
                   <div
                     key={lag}
@@ -424,8 +450,8 @@ export function KoCount({
                       justifyContent: "center",
                       transform: `scale(${wordScale(tt)})${glide(
                         !camMoving &&
-                          (midway(ramp(tt, koAt, SLAM_LEN)) ||
-                            midway(ramp(tt, hitAt, 60))),
+                          (midway(ramp(tt, koAt, wordEl.length)) ||
+                            midway(ramp(tt, hitAt, hitEl.length))),
                       )}`,
                       transformOrigin: `50% ${CAP_TOP * wordFs + wordCapH / 2}px`,
                       opacity: op,

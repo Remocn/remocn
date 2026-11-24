@@ -9564,12 +9564,21 @@
       "title": "Ko Count",
       "description": "A knockout count ends in a full-frame gradient slam, 'KNOCKOUT', with a serif subline.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/ko-count/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/ko-count.tsx"
+          "target": "components/remocn/ko-count/index.tsx"
+        },
+        {
+          "path": "registry/remocn/ko-count/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/ko-count/timeline.ts"
         }
       ],
       "type": "registry:component"
