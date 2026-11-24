@@ -14464,12 +14464,21 @@
       "title": "Stat Sequence",
       "description": "Three large stats count up in a row: 10,000+, 99.9% and 4.9.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/stat-sequence/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/stat-sequence.tsx"
+          "target": "components/remocn/stat-sequence/index.tsx"
+        },
+        {
+          "path": "registry/remocn/stat-sequence/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/stat-sequence/timeline.ts"
         }
       ],
       "type": "registry:component"

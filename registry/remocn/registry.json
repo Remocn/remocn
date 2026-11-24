@@ -14469,10 +14469,19 @@
         {
           "path": "stat-sequence/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/stat-sequence.tsx"
+          "target": "components/remocn/stat-sequence/index.tsx"
+        },
+        {
+          "path": "stat-sequence/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/stat-sequence/timeline.ts"
         }
       ],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"]
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ]
     },
     {
       "name": "quote-hero",
