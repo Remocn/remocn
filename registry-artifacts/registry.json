@@ -7675,12 +7675,21 @@
       "title": "Yes Run",
       "description": "\"Free?\" is answered by a black \"Yes.\" tag on bright orange.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/yes-run/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/yes-run.tsx"
+          "target": "components/remocn/yes-run/index.tsx"
+        },
+        {
+          "path": "registry/remocn/yes-run/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/yes-run/timeline.ts"
         }
       ],
       "type": "registry:component"
