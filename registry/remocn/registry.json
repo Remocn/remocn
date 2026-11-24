@@ -7051,10 +7051,19 @@
         {
           "path": "run-on/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/run-on.tsx"
+          "target": "components/remocn/run-on/index.tsx"
+        },
+        {
+          "path": "run-on/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/run-on/timeline.ts"
         }
       ],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"]
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ]
     },
     {
       "name": "loop-break",

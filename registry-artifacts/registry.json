@@ -7046,12 +7046,21 @@
       "title": "Run on",
       "description": "A sentence, \"Or change one\", trails off with a joiner and an orange dot.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/run-on/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/run-on.tsx"
+          "target": "components/remocn/run-on/index.tsx"
+        },
+        {
+          "path": "registry/remocn/run-on/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/run-on/timeline.ts"
         }
       ],
       "type": "registry:component"

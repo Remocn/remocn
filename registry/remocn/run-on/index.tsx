@@ -12,6 +12,15 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_PROMISE,
+  DEFAULT_TEXT,
+  promiseBody,
+  type RunOnElementId,
+  runOnTimeline,
+  sentenceBody,
+} from "./timeline";
 
 const dmSans = loadFont("normal", {
   weights: ["400", "500"],
@@ -38,6 +47,12 @@ export interface RunOnProps {
   delay?: number;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches single words of the sentence, the full stop,
+   * the drain, single words of the promise and its highlight, by the ids in
+   * `./timeline`. Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<RunOnElementId>;
 }
 
 const THEMES = {
@@ -53,7 +68,6 @@ const THEMES = {
 const WGHT = 500;
 const TRACK = -0.035;
 const PROBE = 200;
-const BASE = 200;
 const LEAD = 1.08;
 
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
@@ -61,19 +75,6 @@ const CLAMP = {
   extrapolateLeft: "clamp",
   extrapolateRight: "clamp",
 } as const;
-
-const START = 6;
-const FIRST_GAP = 9;
-const LAST_GAP = 2.6;
-const REVEAL = 6;
-const STOP_GAP = 7;
-const SLAM = 5;
-const HOLD = 16;
-const DRAIN = 16;
-const PROMISE_LAG = 5;
-const SCROLL = 10;
-const PROMISE_STAGGER = 4;
-const PROMISE_IN = 16;
 
 interface Word {
   text: string;
@@ -112,7 +113,7 @@ function measure(text: string, promise: string, font: string): Metrics {
   ctx.font = font;
   const em = (x: string) =>
     ctx.measureText(x).width / PROBE + TRACK * Array.from(x).length;
-  const body = promise.replace(/\.$/, "");
+  const body = promiseBody(promise);
   return {
     words: layoutWords(text, em),
     promise: layoutWords(body, em),
@@ -178,33 +179,36 @@ function ScaleLayer({
   );
 }
 
-export function RunOn({
-  text = "Open last year’s project and relink the fonts and nudge every keyframe and render and spot a typo and render it all again",
-  promise = "Or change one line.",
-  highlight = "one line",
-  joiners = ["and", "then"],
-  hold = HOLD,
-  accent,
-  ink,
-  background,
-  fontFamily = dmSans.fontFamily,
-  fontWeight = WGHT,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: RunOnProps) {
+export function RunOn(props: RunOnProps) {
+  const {
+    text = DEFAULT_TEXT,
+    promise = DEFAULT_PROMISE,
+    highlight = "one line",
+    joiners = ["and", "then"],
+    accent,
+    ink,
+    background,
+    fontFamily = dmSans.fontFamily,
+    fontWeight = WGHT,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay);
   const { width: W, height: H, durationInFrames } = useSceneConfig();
-  const k = Math.min(1, durationInFrames / BASE);
-  const t = (frame * speed) / k;
+  // The schedule's compression for short clips counts the clip without
+  // `speed`, as before.
+  const tl = useTimeline(runOnTimeline, props, durationInFrames, timing);
+  const t = frame * speed;
   const c = THEMES[theme];
   const hi = accent ?? c.accent;
   const fg = ink ?? c.ink;
   const stage =
     background === "transparent" ? "transparent" : (background ?? c.bg);
-  const body = text.trim().replace(/[.!?…]+$/, "");
+  const body = sentenceBody(text);
   const said = promise.trim();
   const m = useMetrics(body, said, fontFamily, fontWeight);
 
@@ -234,32 +238,31 @@ export function RunOn({
     placed.push({ line, x: w.x - lineStart });
   });
 
-  const arrive: number[] = [];
-  let acc = START;
-  for (let i = 0; i < n; i++) {
-    arrive.push(acc);
-    const p = n > 1 ? i / (n - 1) : 1;
-    acc += FIRST_GAP + (LAST_GAP - FIRST_GAP) * p ** 0.6;
-  }
-  const stopAt = arrive[n - 1] + STOP_GAP;
-  const drainAt = stopAt + SLAM + hold;
-  const promiseAt = drainAt + DRAIN - PROMISE_LAG;
+  const wordEls = m.words.map((_, i) => tl.get(`word:${i}`));
+  const stopEl = tl.get("stop");
+  const drainEl = tl.get("drain");
+  const lightEl = tl.get("highlight");
 
   const need = (ln: number) => Math.max(0, top0 + (ln + 1) * pitch - floor);
   const scrollAt = (f: number) => {
     let at = 0;
     for (let i = 0; i < n; i++) {
-      if (f < arrive[i]) break;
+      if (f < wordEls[i].start) break;
       const from = i === 0 ? 0 : need(placed[i - 1].line);
       const to = need(placed[i].line);
       if (to !== from) {
         at =
           from +
           (to - from) *
-            interpolate(f, [arrive[i], arrive[i] + SCROLL], [0, 1], {
-              ...CLAMP,
-              easing: EASE_OUT,
-            });
+            interpolate(
+              f,
+              [wordEls[i].start, wordEls[i].start + wordEls[i].beat("scroll")],
+              [0, 1],
+              {
+                ...CLAMP,
+                easing: EASE_OUT,
+              },
+            );
       } else {
         at = to;
       }
@@ -267,11 +270,10 @@ export function RunOn({
     return at;
   };
   const scroll = scrollAt(t);
-  const step = speed / k;
   const scrolling =
-    Math.abs(scrollAt(t + step) - scroll) > 1e-3 ||
-    Math.abs(scroll - scrollAt(t - step)) > 1e-3;
-  const drain = interpolate(t, [drainAt, drainAt + DRAIN], [0, 1], {
+    Math.abs(scrollAt(t + speed) - scroll) > 1e-3 ||
+    Math.abs(scroll - scrollAt(t - speed)) > 1e-3;
+  const drain = interpolate(t, [drainEl.start, drainEl.end], [0, 1], {
     ...CLAMP,
     easing: Easing.bezier(0.55, 0, 1, 0.45),
   });
@@ -330,7 +332,7 @@ export function RunOn({
   const nodes: React.ReactNode[] = [];
   if (drain < 1) {
     m.words.forEach((w, i) => {
-      const r = interpolate(t, [arrive[i], arrive[i] + REVEAL], [0, 1], {
+      const r = interpolate(t, [wordEls[i].start, wordEls[i].end], [0, 1], {
         ...CLAMP,
         easing: EASE_OUT,
       });
@@ -354,14 +356,19 @@ export function RunOn({
     });
   }
 
-  const slam = interpolate(t, [stopAt, stopAt + SLAM], [0, 1], {
+  const slam = interpolate(t, [stopEl.start, stopEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
-  const dotTravel = interpolate(t, [drainAt, drainAt + DRAIN + 6], [0, 1], {
-    ...CLAMP,
-    easing: Easing.bezier(0.65, 0, 0.35, 1),
-  });
+  const dotTravel = interpolate(
+    t,
+    [drainEl.start, drainEl.end + drainEl.beat("tail")],
+    [0, 1],
+    {
+      ...CLAMP,
+      easing: Easing.bezier(0.65, 0, 0.35, 1),
+    },
+  );
   if (slam > 0) {
     const last = n - 1;
     const stopX = marginX + (placed[last].x + m.words[last].w) * F;
@@ -388,15 +395,15 @@ export function RunOn({
   }
 
   m.promise.forEach((w, i) => {
-    const at = promiseAt + i * PROMISE_STAGGER;
-    const r = interpolate(t, [at, at + PROMISE_IN], [0, 1], {
+    const word = tl.get(`promise:${i}`);
+    const r = interpolate(t, [word.start, word.end], [0, 1], {
       ...CLAMP,
       easing: EASE_OUT,
     });
     if (r <= 0) return;
     const lit = interpolate(
       t,
-      [promiseAt + PROMISE_IN + 4, promiseAt + PROMISE_IN + 14],
+      [lightEl.start + lightEl.beat("lit"), lightEl.end],
       [0, 1],
       { ...CLAMP, easing: EASE_OUT },
     );
