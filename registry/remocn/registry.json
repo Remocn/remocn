@@ -7323,10 +7323,19 @@
         {
           "path": "script-cut/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/script-cut.tsx"
+          "target": "components/remocn/script-cut/index.tsx"
+        },
+        {
+          "path": "script-cut/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/script-cut/timeline.ts"
         }
       ],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"]
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ]
     },
     {
       "name": "known-terms",

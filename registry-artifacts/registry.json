@@ -7318,12 +7318,21 @@
       "title": "Script Cut",
       "description": "\"and every piece became a shot.\" with a tiny script line and cut ticks below.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/script-cut/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/script-cut.tsx"
+          "target": "components/remocn/script-cut/index.tsx"
+        },
+        {
+          "path": "registry/remocn/script-cut/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/script-cut/timeline.ts"
         }
       ],
       "type": "registry:component"

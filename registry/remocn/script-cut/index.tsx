@@ -13,6 +13,14 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_SHOTS,
+  type ScriptCutElementId,
+  scriptCutTimeline,
+  shotsOf,
+  splitWords,
+} from "./timeline";
 
 const epilogue = loadFont("normal", {
   weights: ["400", "500"],
@@ -38,18 +46,18 @@ export interface ScriptCutProps {
   delay?: number;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches the script row, single cuts and single shots,
+   * by the ids in `./timeline`. Frames on the scene timeline, after `delay`
+   * and `speed`.
+   */
+  timing?: Timing<ScriptCutElementId>;
 }
 
 const THEMES = {
   dark: { bg: "#111418", ink: "#FFFFFF", accent: "#5CF2B5" },
   light: { bg: "#F4F6F5", ink: "#111418", accent: "#12A06B" },
 } as const;
-
-const DEFAULT_SHOTS = [
-  "We wrote the launch as one line,",
-  "cut it twice,",
-  "and every piece became a shot.",
-];
 
 const WGHT = 500;
 const TRACK = -0.03;
@@ -65,17 +73,6 @@ const CLAMP = {
   extrapolateLeft: "clamp",
   extrapolateRight: "clamp",
 } as const;
-
-const ROW_IN = 16;
-const CUT_AT = 14;
-const CUT_DUR = 14;
-const CUT_STAGGER = 4;
-const FIRST_SHOT = 36;
-const FLY = 24;
-const FLY_STAGGER = 2;
-const EXIT = 10;
-const HANDOFF = 8;
-const HOLD = 32;
 
 const midway = (p: number) => p > 5e-4 && p < 1 - 5e-4;
 
@@ -125,8 +122,6 @@ function useMetrics(texts: string[], fontFamily: string, fontWeight: number) {
   }, [key, handle, fontFamily, fontWeight]);
   return state && state.key === key ? state.m : null;
 }
-
-const splitWords = (s: string) => s.split(" ").filter(Boolean);
 
 function breakBalanced<T>(
   items: T[],
@@ -178,30 +173,36 @@ function ScaleLayer({
   );
 }
 
-export function ScriptCut({
-  shots = DEFAULT_SHOTS,
-  hold = HOLD,
-  stagger = FLY_STAGGER,
-  accent,
-  ink,
-  background,
-  fontFamily = epilogue.fontFamily,
-  fontWeight = WGHT,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: ScriptCutProps) {
+export function ScriptCut(props: ScriptCutProps) {
+  const {
+    shots = DEFAULT_SHOTS,
+    accent,
+    ink,
+    background,
+    fontFamily = epilogue.fontFamily,
+    fontWeight = WGHT,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
   const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    scriptCutTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const c = THEMES[theme];
   const hi = accent ?? c.accent;
   const fg = ink ?? c.ink;
   const stage =
     background === "transparent" ? "transparent" : (background ?? c.bg);
 
-  const list = shots.length > 0 ? shots : DEFAULT_SHOTS;
+  const list = shotsOf(shots);
   const shotWords = list.map(splitWords);
   const m = useMetrics([" ", ...shotWords.flat()], fontFamily, fontWeight);
 
@@ -244,25 +245,11 @@ export function ScriptCut({
   const rowBottom = H - marginY;
   const rowTop = rowBottom - rowLines.length * ROW_LH * rowF;
 
-  const span = durationInFrames * speed;
-  const lastLen = (k: number) =>
-    FLY + stagger * Math.max(0, shotWords[k].length - 1);
-  const period =
-    n > 1
-      ? Math.min(
-          84,
-          Math.max(34, (span - FIRST_SHOT - lastLen(n - 1) - hold) / (n - 1)),
-        )
-      : 0;
-  const shotAt = (k: number) => FIRST_SHOT + k * period;
-
   const cutP = (b: number) =>
-    interpolate(
-      t,
-      [CUT_AT + b * CUT_STAGGER, CUT_AT + b * CUT_STAGGER + CUT_DUR],
-      [0, 1],
-      { ...CLAMP, easing: EASE_MOVE },
-    );
+    interpolate(t, [tl.get(`cut:${b}`).start, tl.get(`cut:${b}`).end], [0, 1], {
+      ...CLAMP,
+      easing: EASE_MOVE,
+    });
 
   interface RowPos {
     x: number;
@@ -388,20 +375,35 @@ export function ScriptCut({
     );
   });
 
+  const row = tl.get("row");
   for (const tk of tokens) {
     const pos = rowPos[tk.index];
     const inP = interpolate(
       t,
-      [tk.index * 0.6, tk.index * 0.6 + ROW_IN],
+      [
+        row.start + tk.index * row.beat("step"),
+        row.start + tk.index * row.beat("step") + row.beat("word"),
+      ],
       [0, 1],
       {
         ...CLAMP,
         easing: EASE_OUT,
       },
     );
-    const live = shotAt(tk.shot);
-    const lit = interpolate(t, [live - 4, live + 2], [0, 1], CLAMP);
-    const spent = interpolate(t, [live + 22, live + 40], [0, 1], CLAMP);
+    const shot = tl.get(`shot:${tk.shot}`);
+    const live = shot.start;
+    const lit = interpolate(
+      t,
+      [live + shot.beat("lit"), live + shot.beat("litEnd")],
+      [0, 1],
+      CLAMP,
+    );
+    const spent = interpolate(
+      t,
+      [live + shot.beat("spent"), live + shot.beat("spentEnd")],
+      [0, 1],
+      CLAMP,
+    );
     const color =
       lit < 1
         ? interpolateColors(lit, [0, 1], [fg, hi])
@@ -425,25 +427,30 @@ export function ScriptCut({
   }
 
   shotWords.forEach((ws, k) => {
-    const start = shotAt(k);
+    const shot = tl.get(`shot:${k}`);
+    const start = shot.start;
     if (t < start) return;
     const { F, pos } = heroLayouts[k];
-    const nextAt = k + 1 < n ? shotAt(k + 1) : Number.POSITIVE_INFINITY;
+    const nextAt =
+      k + 1 < n ? tl.get(`shot:${k + 1}`).start : Number.POSITIVE_INFINITY;
     const first = tokens.findIndex((tk) => tk.shot === k);
     ws.forEach((w, i) => {
       const from = rowPos[first + i];
       const to = pos[i];
-      const d = start + (k > 0 ? HANDOFF : 0) + i * stagger;
+      const d = start + shot.beat("handoff") + i * shot.beat("stagger");
       const s0 = rowF / F;
       const at = (tt: number) => {
-        const p = interpolate(tt, [d, d + FLY], [0, 1], {
+        const p = interpolate(tt, [d, d + shot.beat("fly")], [0, 1], {
           ...CLAMP,
           easing: EASE_MOVE,
         });
         const out = Number.isFinite(nextAt)
           ? interpolate(
               tt,
-              [nextAt + i * 0.5, nextAt + i * 0.5 + EXIT],
+              [
+                nextAt + i * shot.beat("exitStep"),
+                nextAt + i * shot.beat("exitStep") + shot.beat("exit"),
+              ],
               [0, 1],
               { ...CLAMP, easing: EASE_IN },
             )
