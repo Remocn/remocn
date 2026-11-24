@@ -5892,13 +5892,19 @@
       "registryDependencies": [
         "@remocn/gsh",
         "@remocn/glide",
-        "@remocn/frame-rate"
+        "@remocn/frame-rate",
+        "@remocn/timeline"
       ],
       "files": [
         {
           "path": "registry/remocn/macro-letter-pan/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/macro-letter-pan.tsx"
+          "target": "components/remocn/macro-letter-pan/index.tsx"
+        },
+        {
+          "path": "registry/remocn/macro-letter-pan/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/macro-letter-pan/timeline.ts"
         }
       ],
       "type": "registry:component"
