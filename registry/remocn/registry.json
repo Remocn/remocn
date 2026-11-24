@@ -13391,10 +13391,19 @@
         {
           "path": "measure-dim/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/measure-dim.tsx"
+          "target": "components/remocn/measure-dim/index.tsx"
+        },
+        {
+          "path": "measure-dim/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/measure-dim/timeline.ts"
         }
       ],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"]
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ]
     },
     {
       "name": "three-steps",

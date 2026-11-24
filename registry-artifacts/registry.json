@@ -13386,12 +13386,21 @@
       "title": "Measure Dim",
       "description": "A gradient bar is measured by dimension lines as 184 fps overtakes 60 fps.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/measure-dim/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/measure-dim.tsx"
+          "target": "components/remocn/measure-dim/index.tsx"
+        },
+        {
+          "path": "registry/remocn/measure-dim/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/measure-dim/timeline.ts"
         }
       ],
       "type": "registry:component"
