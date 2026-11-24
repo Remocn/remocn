@@ -14940,10 +14940,19 @@
         {
           "path": "signal-resolve/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/signal-resolve.tsx"
+          "target": "components/remocn/signal-resolve/index.tsx"
+        },
+        {
+          "path": "signal-resolve/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/signal-resolve/timeline.ts"
         }
       ],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"]
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ]
     },
     {
       "name": "keycap-press",

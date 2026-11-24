@@ -14935,12 +14935,21 @@
       "title": "Signal Resolve",
       "description": "Noisy scope traces resolve to a clean line and the logo with Less noise. More signal.",
       "dependencies": ["remotion", "@remotion/google-fonts", "@remotion/paths"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/signal-resolve/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/signal-resolve.tsx"
+          "target": "components/remocn/signal-resolve/index.tsx"
+        },
+        {
+          "path": "registry/remocn/signal-resolve/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/signal-resolve/timeline.ts"
         }
       ],
       "type": "registry:component"
