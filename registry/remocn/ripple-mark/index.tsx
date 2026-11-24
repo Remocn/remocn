@@ -6,6 +6,12 @@ import { useId, useMemo } from "react";
 import { AbsoluteFill, Easing, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  type RippleMarkElementId,
+  rippleMarkTimeline,
+  rippleWordOf,
+} from "./timeline";
 
 // Manrope is the remocn.dev brand face: 600 for the logo's "emocn" (the brand
 // asset), 500 for any other name set next to a custom mark.
@@ -35,6 +41,12 @@ export interface RippleMarkProps {
   grain?: boolean;
   theme?: "dark" | "light";
   speed?: number;
+  /**
+   * Moves, trims or stretches the ripple, the pan, single letters of the
+   * name and the camera, by the ids in `./timeline`. Frames on the scene
+   * timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<RippleMarkElementId>;
 }
 
 // The real remocn.dev "R" mark (viewBox 124.06 × 134.26).
@@ -88,10 +100,6 @@ function ramp(stops: string[], n: number) {
 }
 const LIT_STEPS = 8;
 
-const RIPPLE_AT = 7;
-const PAN_AT = 46;
-const PAN_DUR = 30;
-const WORD_AT = 56;
 const BUCKETS = 5;
 
 // Manrope advance widths (per 1000 em) for ASCII 32–126, extracted offline.
@@ -180,24 +188,34 @@ function flattenLogo(paths: string[]) {
   return { parts, minX, minY, w: maxX - minX || 1, h: maxY - minY || 1 };
 }
 
-export function RippleMark({
-  logo,
-  name = "remocn",
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = manrope,
-  stagger = 2.5,
-  density = 80,
-  scale: zoom = 1,
-  delay = 0,
-  grain = true,
-  theme = "dark",
-  speed = 1,
-}: RippleMarkProps) {
+export function RippleMark(props: RippleMarkProps) {
+  const {
+    logo,
+    name = "remocn",
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = manrope,
+    density = 80,
+    scale: zoom = 1,
+    delay = 0,
+    grain = true,
+    theme = "dark",
+    speed = 1,
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H } = useSceneConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    rippleMarkTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const cameraEl = tl.get("camera");
+  const ripple = tl.get("ripple");
+  const panEl = tl.get("pan");
   const u = H / 720;
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
   const pal = THEMES[theme];
@@ -220,7 +238,7 @@ export function RippleMark({
   // letter, "emocn" follows in Manrope 600 with the R 0.76em tall on the
   // baseline. Any other name is set beside the mark in Manrope 500.
   const brand = !logo && name.trim().toLowerCase() === "remocn";
-  const word = brand ? "emocn" : name;
+  const word = rippleWordOf(logo, name);
   const fontSize = brand ? markH / 0.76 : (markH * 0.46) / 0.54;
   const weight = brand ? 600 : 500;
   const tracking = brand ? -0.025 : -0.02;
@@ -274,17 +292,24 @@ export function RippleMark({
   }, [pitch, ox, oy, W, H, pan, markLeft, markTop, markW, markH, scale, shape]);
 
   const v = 13 * u;
-  const panE = EASE_IO(
-    interpolate(t, [PAN_AT, PAN_AT + PAN_DUR], [0, 1], CLAMP),
-  );
+  const panE = EASE_IO(interpolate(t, [panEl.start, panEl.end], [0, 1], CLAMP));
   const px = -pan * panE;
   const r0 = pitch * 0.15;
   const rOut = pitch * 0.09;
   const rIn = pitch * 0.47;
-  const pre = interpolate(t, [0, RIPPLE_AT, RIPPLE_AT + 6], [0, 1, 0], {
-    ...CLAMP,
-    easing: EASE_IO,
-  });
+  const pre = interpolate(
+    t,
+    [
+      ripple.start + ripple.beat("pulse"),
+      ripple.start,
+      ripple.start + ripple.beat("pulseEnd"),
+    ],
+    [0, 1, 0],
+    {
+      ...CLAMP,
+      easing: EASE_IO,
+    },
+  );
   const reach = Math.hypot(W + pan, H) * 0.75;
 
   const neutral: string[][] = Array.from({ length: BUCKETS }, () => []);
@@ -302,7 +327,7 @@ export function RippleMark({
     `M${(x - r).toFixed(2)} ${y.toFixed(2)}a${r.toFixed(2)} ${r.toFixed(2)} 0 1 0 ${(2 * r).toFixed(2)} 0a${r.toFixed(2)} ${r.toFixed(2)} 0 1 0 ${(-2 * r).toFixed(2)} 0`;
 
   for (const p of grid) {
-    const local = t - RIPPLE_AT - p.d / v;
+    const local = t - ripple.start - p.d / v;
     const amp = Math.max(0, 1 - p.d / reach);
     const g = Math.exp(-((local / 3.4) ** 2)) * amp;
     const push = Math.exp(-(((local - 1.5) / 3) ** 2)) * amp;
@@ -314,7 +339,9 @@ export function RippleMark({
 
     let r: number;
     if (p.cov > 0.4 && local > 0) {
-      const k = GROW(interpolate(local, [0, 14], [0, 1], CLAMP));
+      const k = GROW(
+        interpolate(local, [0, ripple.beat("grow")], [0, 1], CLAMP),
+      );
       const fill = Math.min(1, (p.cov - 0.4) / 0.35);
       r = r0 + (rIn * (0.5 + 0.5 * fill) - r0) * k;
       r *= 1 + g * 0.25;
@@ -327,7 +354,9 @@ export function RippleMark({
       );
       continue;
     }
-    const settle = EASE_OUT(interpolate(local, [0, 18], [0, 1], CLAMP));
+    const settle = EASE_OUT(
+      interpolate(local, [0, ripple.beat("settle")], [0, 1], CLAMP),
+    );
     r = r0 + (rOut - r0) * settle;
     r *= 1 + g * 1.5;
     if (p.d < pitch * 0.8) r *= 1 + pre * 1.6;
@@ -340,7 +369,7 @@ export function RippleMark({
   }
 
   const camAt = (f: number) =>
-    interpolate(f, [0, PAN_AT + PAN_DUR + 40], [1.04, 1], {
+    interpolate(f, [cameraEl.start, cameraEl.end], [1.04, 1], {
       ...CLAMP,
       easing: EASE_IO,
     });
@@ -413,9 +442,10 @@ export function RippleMark({
             }}
           >
             {letters.map((ch, i) => {
+              const letter = tl.get(`letter:${i}`);
               const k = interpolate(
-                t - WORD_AT - i * stagger,
-                [0, 16],
+                t - letter.start,
+                [0, letter.length],
                 [0, 1],
                 {
                   ...CLAMP,

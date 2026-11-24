@@ -14429,12 +14429,21 @@
       "title": "Ripple Mark",
       "description": "Dots ripple across the frame and assemble the Remocn logo.",
       "dependencies": ["remotion", "@remotion/google-fonts", "@remotion/paths"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/ripple-mark/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/ripple-mark.tsx"
+          "target": "components/remocn/ripple-mark/index.tsx"
+        },
+        {
+          "path": "registry/remocn/ripple-mark/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/ripple-mark/timeline.ts"
         }
       ],
       "type": "registry:component"
