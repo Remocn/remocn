@@ -6982,12 +6982,21 @@
       "title": "We Call It",
       "description": "Short lines build to \"We call it a\" and then a big orange \"video registry.\".",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/we-call-it/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/we-call-it.tsx"
+          "target": "components/remocn/we-call-it/index.tsx"
+        },
+        {
+          "path": "registry/remocn/we-call-it/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/we-call-it/timeline.ts"
         }
       ],
       "type": "registry:component"

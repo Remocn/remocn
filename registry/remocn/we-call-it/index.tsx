@@ -12,6 +12,14 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_DESCRIPTIONS,
+  DEFAULT_NAME,
+  splitWords,
+  type WeCallItElementId,
+  weCallItTimeline,
+} from "./timeline";
 
 const bitter = loadFont("normal", {
   weights: ["400", "500"],
@@ -38,6 +46,12 @@ export interface WeCallItProps {
   delay?: number;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches single descriptions, the lead, the rule and
+   * the name, by the ids in `./timeline`. Frames on the scene timeline,
+   * after `delay` and `speed`.
+   */
+  timing?: Timing<WeCallItElementId>;
 }
 
 const THEMES = {
@@ -59,9 +73,6 @@ const NAME_TRACK = -0.04;
 const LH = 1.18;
 const NAME_LH = 1.02;
 const NAME_BOX = 1.24;
-const STEP = 40;
-const HOLD = 26;
-const MOVE = 18;
 const KICK_DIM = 0.62;
 const CAP = 0.7;
 const DESC = 0.24;
@@ -189,10 +200,6 @@ function splits(words: string[], k: number): string[][][] {
   return out;
 }
 
-function splitWords(s: string) {
-  return s.trim().split(/\s+/).filter(Boolean);
-}
-
 /** The foreground at `scale`, around the frame's center; nothing extra at 1. */
 function ScaleLayer({
   scale,
@@ -209,28 +216,26 @@ function ScaleLayer({
   );
 }
 
-export function WeCallIt({
-  descriptions = [
-    "Scenes you install like components.",
-    "Edits that land as commits.",
-    "A film that ships with the release.",
-  ],
-  lead = "We call it a",
-  name = "video registry.",
-  accent,
-  ink,
-  background,
-  fontFamily = bitter.fontFamily,
-  stagger = 3,
-  beat = STEP,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: WeCallItProps) {
+export function WeCallIt(props: WeCallItProps) {
+  const {
+    descriptions = DEFAULT_DESCRIPTIONS,
+    lead = "We call it a",
+    name = DEFAULT_NAME,
+    accent,
+    ink,
+    background,
+    fontFamily = bitter.fontFamily,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H, durationInFrames: T } = useSceneConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  // The schedule paces itself to the clip length without `speed`.
+  const tl = useTimeline(weCallItTimeline, props, durationInFrames, timing);
   const c = THEMES[theme];
   const hi = accent ?? c.accent;
   const stage =
@@ -251,13 +256,9 @@ export function WeCallIt({
   const n = descs.length;
   const nameWords = splitWords(name);
 
-  const leadAt = 6 + n * beat - 2;
-  const ruleAt = leadAt + 4;
-  const nameAt = leadAt + 10;
-  const motionEnd = nameAt + nameWords.length * 4 + 24;
-  const tail = Math.max(30, T * 0.18);
-  const pace = Math.min(1.5, Math.max(0.5, (T - tail) / motionEnd));
-  const t = frame / pace;
+  const leadEl = tl.get("lead");
+  const ruleEl = tl.get("rule");
+  const nameEl = tl.get("name");
 
   const portrait = H > W * 1.1;
   const mx = W * (portrait ? 0.08 : 0.07);
@@ -321,7 +322,7 @@ export function WeCallIt({
     return midY - stageH(i) / 2;
   };
 
-  const ease = (a: number, b: number, e = EASE_OUT, at = t) =>
+  const ease = (a: number, b: number, e = EASE_OUT, at = frame) =>
     interpolate(at, [a, b], [0, 1], { ...CLAMP, easing: e });
 
   const lineStyle = (size: number, lh: number) => ({
@@ -343,9 +344,10 @@ export function WeCallIt({
     >
       <ScaleLayer scale={scale}>
         {descs.map((_, i) => {
-          const a = 6 + i * beat;
-          const m = a + HOLD;
-          const mv = ease(m, m + MOVE, EASE_IO);
+          const d = tl.get(`desc:${i}`);
+          const a = d.start;
+          const m = a + d.beat("hold");
+          const mv = ease(m, m + d.beat("move"), EASE_IO);
           const left = mx;
           // Layout rounds a baseline to whole pixels, so a description eased
           // up by `top` clicks along, and one handed from a translate to
@@ -358,13 +360,12 @@ export function WeCallIt({
           // neighbouring frames, on the px it travels and on the far end of
           // the widest line as it shrinks.
           const foldAt = (tt: number) => {
-            const q = ease(m, m + MOVE, EASE_IO, tt);
+            const q = ease(m, m + d.beat("move"), EASE_IO, tt);
             return [(kickTops[i] - stageTopOf(i)) * q, (s - 1) * q * stageW];
           };
-          const step = speed / pace;
-          const [y0, w0] = foldAt(t - step);
-          const [y1, w1] = foldAt(t);
-          const [y2, w2] = foldAt(t + step);
+          const [y0, w0] = foldAt(frame - speed);
+          const [y1, w1] = foldAt(frame);
+          const [y2, w2] = foldAt(frame + speed);
           const moving =
             Math.abs(y2 - y1) > 1e-3 ||
             Math.abs(y1 - y0) > 1e-3 ||
@@ -391,8 +392,8 @@ export function WeCallIt({
                   {row.map((word, k) => {
                     const order = wi++;
                     const p = ease(
-                      a + order * stagger,
-                      a + order * stagger + 16,
+                      a + order * d.beat("stagger"),
+                      a + order * d.beat("stagger") + d.beat("word"),
                     );
                     return (
                       <span
@@ -423,8 +424,8 @@ export function WeCallIt({
               ...lineStyle(Fk, Fk * LH),
               letterSpacing: `${BODY_TRACK}em`,
               color: hi,
-              opacity: ease(leadAt, leadAt + 14),
-              transform: `translateY(${((1 - ease(leadAt, leadAt + 14)) * Fk * 0.5).toFixed(2)}px)${glide(midway(ease(leadAt, leadAt + 14)))}`,
+              opacity: ease(leadEl.start, leadEl.end),
+              transform: `translateY(${((1 - ease(leadEl.start, leadEl.end)) * Fk * 0.5).toFixed(2)}px)${glide(midway(ease(leadEl.start, leadEl.end)))}`,
             }}
           >
             {lead.trim()}
@@ -439,13 +440,14 @@ export function WeCallIt({
             width: innerW,
             height: Math.max(2, Fk * 0.07),
             background: hi,
-            transform: `scaleX(${ease(ruleAt, ruleAt + 22, EASE_IO).toFixed(4)})`,
+            transform: `scaleX(${ease(ruleEl.start, ruleEl.end, EASE_IO).toFixed(4)})`,
             transformOrigin: "0 50%",
           }}
         />
 
         {nameRows.map((row, li) => {
-          const p = ease(nameAt + li * 5, nameAt + li * 5 + 24);
+          const at = nameEl.start + li * nameEl.beat("row");
+          const p = ease(at, at + nameEl.beat("rise"));
           const boxTop = nameTop + li * NAME_LH * Fn;
           return (
             <div
