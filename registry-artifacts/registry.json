@@ -8105,12 +8105,21 @@
       "title": "Ruby Press",
       "description": "A word is pressed out and swapped from a list: 'Subtitles for every market in one render.'.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/ruby-press/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/ruby-press.tsx"
+          "target": "components/remocn/ruby-press/index.tsx"
+        },
+        {
+          "path": "registry/remocn/ruby-press/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/ruby-press/timeline.ts"
         }
       ],
       "type": "registry:component"
