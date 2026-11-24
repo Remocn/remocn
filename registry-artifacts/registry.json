@@ -10420,12 +10420,17 @@
       "title": "Strobe Words",
       "description": "Big words strobe in at a set rhythm over a dark horizon glow, ending on the logo.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/frame-rate"],
+      "registryDependencies": ["@remocn/frame-rate", "@remocn/timeline"],
       "files": [
         {
           "path": "registry/remocn/strobe-words/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/strobe-words.tsx"
+          "target": "components/remocn/strobe-words/index.tsx"
+        },
+        {
+          "path": "registry/remocn/strobe-words/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/strobe-words/timeline.ts"
         }
       ],
       "type": "registry:component"
