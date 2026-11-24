@@ -11365,13 +11365,19 @@
       "registryDependencies": [
         "@remocn/gsh",
         "@remocn/glide",
-        "@remocn/frame-rate"
+        "@remocn/frame-rate",
+        "@remocn/timeline"
       ],
       "files": [
         {
           "path": "registry/remocn/hook-punch/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/hook-punch.tsx"
+          "target": "components/remocn/hook-punch/index.tsx"
+        },
+        {
+          "path": "registry/remocn/hook-punch/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/hook-punch/timeline.ts"
         }
       ],
       "type": "registry:component"
