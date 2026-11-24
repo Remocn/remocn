@@ -10146,12 +10146,21 @@
       "title": "Introducing",
       "description": "'Introducing' settles then lifts into an eyebrow as the remocn wordmark lands with a tagline.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/introducing/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/introducing.tsx"
+          "target": "components/remocn/introducing/index.tsx"
+        },
+        {
+          "path": "registry/remocn/introducing/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/introducing/timeline.ts"
         }
       ],
       "type": "registry:component"
