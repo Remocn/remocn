@@ -14465,10 +14465,19 @@
         {
           "path": "launch-date/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/launch-date.tsx"
+          "target": "components/remocn/launch-date/index.tsx"
+        },
+        {
+          "path": "launch-date/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/launch-date/timeline.ts"
         }
       ],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"]
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ]
     },
     {
       "name": "light-trail-write",

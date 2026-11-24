@@ -14460,12 +14460,21 @@
       "title": "Launch Date",
       "description": "A calendar month draws itself, days sweep on and the launch date glows in a ring.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/launch-date/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/launch-date.tsx"
+          "target": "components/remocn/launch-date/index.tsx"
+        },
+        {
+          "path": "registry/remocn/launch-date/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/launch-date/timeline.ts"
         }
       ],
       "type": "registry:component"
