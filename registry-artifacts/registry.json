@@ -16010,13 +16010,19 @@
       "registryDependencies": [
         "@remocn/gsh",
         "@remocn/glide",
-        "@remocn/frame-rate"
+        "@remocn/frame-rate",
+        "@remocn/timeline"
       ],
       "files": [
         {
           "path": "registry/remocn/swipe-deck/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/swipe-deck.tsx"
+          "target": "components/remocn/swipe-deck/index.tsx"
+        },
+        {
+          "path": "registry/remocn/swipe-deck/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/swipe-deck/timeline.ts"
         }
       ],
       "type": "registry:component"
