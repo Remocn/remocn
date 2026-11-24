@@ -6,6 +6,12 @@ import { useId, useMemo } from "react";
 import { AbsoluteFill, Easing, interpolate, interpolateColors } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_WORD,
+  type LetterRelayElementId,
+  letterRelayTimeline,
+} from "./timeline";
 
 const { fontFamily: sans } = loadFont("normal", {
   weights: ["500"],
@@ -36,6 +42,12 @@ export interface LetterRelayProps {
   speed?: number;
   /** Set the leading "r" as the remocn R mark. */
   mark?: boolean;
+  /**
+   * Moves, trims or stretches the floor light, single letters' entries and
+   * hops, and the final settle, by the ids in `./timeline`. Frames on the
+   * scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<LetterRelayElementId>;
 }
 
 // Manrope 500 advance widths (1/1000 em) for ASCII 32–126.
@@ -126,7 +138,6 @@ const R_H = 0.76;
 const R_W = (R_H * 124.06) / 134.26;
 const R_GAP = 0.04;
 
-const HOP_AT = 20;
 const LIFT = 0.24;
 
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
@@ -222,25 +233,32 @@ function ScaleLayer({
   );
 }
 
-export function LetterRelay({
-  word = "remocn",
-  hop = 10,
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = sans,
-  lift: liftK = LIFT,
-  floor = true,
-  scale = 1,
-  delay = 0,
-  grain = true,
-  theme = "dark",
-  speed = 1,
-  mark = true,
-}: LetterRelayProps) {
+export function LetterRelay(props: LetterRelayProps) {
+  const {
+    word = DEFAULT_WORD,
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = sans,
+    lift: liftK = LIFT,
+    floor = true,
+    scale = 1,
+    delay = 0,
+    grain = true,
+    theme = "dark",
+    speed = 1,
+    mark = true,
+    timing,
+  } = props;
   const t = Math.max(0, useSceneFrame() - delay) * speed;
   const glide = useGlide();
-  const { width: W, height: H } = useSceneConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    letterRelayTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const c = THEMES[theme];
   const fg = ink ?? c.fg;
 
@@ -267,20 +285,35 @@ export function LetterRelay({
   const F = Math.min(H * 0.34, (W * 0.66) / Math.max(layout.wide, 0.1));
   const baseline = H / 2 + F * 0.3;
 
-  const lastLand = HOP_AT + n * hop;
-  const settle = interpolate(t, [lastLand + 1, lastLand + 19], [0, 1], {
-    ...CLAMP,
-    easing: EASE_IO,
-  });
+  const settleEl = tl.get("settle");
+  const settle = interpolate(
+    t,
+    [
+      settleEl.start + settleEl.beat("close"),
+      settleEl.start + settleEl.beat("closed"),
+    ],
+    [0, 1],
+    {
+      ...CLAMP,
+      easing: EASE_IO,
+    },
+  );
 
   // The beam pool drifts a little toward whichever letter is in the air.
-  const active = Math.min(n - 1, Math.max(0, (t - HOP_AT) / hop));
+  const hops = chars.map((_, i) => tl.get(`hop:${i}`));
+  let airborne = 0;
+  hops.forEach((h, i) => {
+    if (t >= h.start) {
+      airborne = i + (h.length > 0 ? Math.min(1, (t - h.start) / h.length) : 1);
+    }
+  });
+  const active = Math.min(n - 1, airborne);
   const lo = Math.floor(active);
   const hi = Math.min(n - 1, lo + 1);
   const xAt = (i: number) =>
     layout.loose[i] + (layout.tight[i] - layout.loose[i]) * settle;
   const activeX = xAt(lo) + (xAt(hi) - xAt(lo)) * (active - lo);
-  const drift = interpolate(t, [lastLand, lastLand + 30], [1, 0], {
+  const drift = interpolate(t, [settleEl.start, settleEl.end], [1, 0], {
     ...CLAMP,
     easing: EASE_IO,
   });
@@ -292,7 +325,8 @@ export function LetterRelay({
       ? baseline + F * 0.09
       : H / 2 + (baseline + F * 0.09 - H / 2) * scale;
   const mask = `radial-gradient(58% 140% at ${poolX}% 0%, #000 35%, transparent 100%)`;
-  const poolIn = interpolate(t, [0, 24], [0, 1], {
+  const floorEl = tl.get("floor");
+  const poolIn = interpolate(t, [floorEl.start, floorEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
@@ -334,22 +368,34 @@ export function LetterRelay({
         >
           {chars.map((ch, i) => {
             const last = i === n - 1;
-            const start = HOP_AT + i * hop;
-            const land = start + hop;
+            const enterEl = tl.get(`enter:${i}`);
+            const hopEl = hops[i];
+            const start = hopEl.start;
+            const land = hopEl.end;
 
             const lift = F * liftK * (last ? 1.25 : 1);
             const poseAt = (tt: number) => {
-              const enter = interpolate(tt, [i * 2, i * 2 + 14], [0, 1], {
-                ...CLAMP,
-                easing: EASE_OUT,
-              });
+              const enter = interpolate(
+                tt,
+                [enterEl.start, enterEl.end],
+                [0, 1],
+                {
+                  ...CLAMP,
+                  easing: EASE_OUT,
+                },
+              );
               const p = interpolate(tt, [start, land], [0, 1], CLAMP);
               const air = p > 0 && p < 1;
               const arc = air ? 4 * p * (1 - p) : 0;
-              const crouch = interpolate(tt, [start - 3, start], [0, 1], {
-                ...CLAMP,
-                easing: EASE_OUT,
-              });
+              const crouch = interpolate(
+                tt,
+                [start - hopEl.beat("crouch"), start],
+                [0, 1],
+                {
+                  ...CLAMP,
+                  easing: EASE_OUT,
+                },
+              );
               const release = interpolate(p, [0, 0.2], [1, 0], CLAMP);
               const stretch = air ? 0.11 * Math.sin(Math.PI * p) * (1 - p) : 0;
               const hit = squash(tt - land) * 0.085;
@@ -372,16 +418,26 @@ export function LetterRelay({
 
             const rot = air ? 5 * Math.sin(Math.PI * p) * (1 - 0.35 * p) : 0;
 
-            const take = interpolate(t, [start - 2, start + 2], [0, 1], {
-              ...CLAMP,
-              easing: EASE_OUT,
-            });
+            const take = interpolate(
+              t,
+              [start - hopEl.beat("take"), start + hopEl.beat("take")],
+              [0, 1],
+              {
+                ...CLAMP,
+                easing: EASE_OUT,
+              },
+            );
             const give = last
               ? 0
-              : interpolate(t, [land - 1, land + 5], [0, 1], {
-                  ...CLAMP,
-                  easing: EASE_OUT,
-                });
+              : interpolate(
+                  t,
+                  [land - hopEl.beat("give"), land + hopEl.beat("pass")],
+                  [0, 1],
+                  {
+                    ...CLAMP,
+                    easing: EASE_OUT,
+                  },
+                );
             const color = interpolateColors(
               take * (1 - give),
               [0, 1],

@@ -10777,12 +10777,21 @@
       "title": "Letter Relay",
       "description": "Letters hop in sequence, each taking off as the previous one lands, to spell the wordmark.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/letter-relay/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/letter-relay.tsx"
+          "target": "components/remocn/letter-relay/index.tsx"
+        },
+        {
+          "path": "registry/remocn/letter-relay/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/letter-relay/timeline.ts"
         }
       ],
       "type": "registry:component"
