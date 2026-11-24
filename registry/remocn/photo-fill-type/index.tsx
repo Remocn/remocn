@@ -13,6 +13,13 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_TITLE,
+  lettersOf,
+  type PhotoFillTypeElementId,
+  photoFillTypeTimeline,
+} from "./timeline";
 
 const { fontFamily: display } = loadDisplay("normal", {
   weights: ["400", "500"],
@@ -44,6 +51,12 @@ export interface PhotoFillTypeProps {
   grain?: boolean;
   theme?: "dark" | "light";
   speed?: number;
+  /**
+   * Moves, trims or stretches the word opening, each letter's fill, the band
+   * and the caption, by the ids in `./timeline`. Frames on the scene
+   * timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<PhotoFillTypeElementId>;
 }
 
 // Beat sheet (30fps):
@@ -57,8 +70,6 @@ export interface PhotoFillTypeProps {
 //  118–136 caption lands bottom-left
 //  136–165 hold on the full-bleed frame
 export const PHOTO_FILL_TYPE_DURATION = 165;
-const EXPAND = 72;
-const CAPTION = 118;
 
 /** Barlow Condensed 500 advances (em) for caps, figures and a few marks. */
 const ADVANCE: Record<string, number> = {
@@ -603,34 +614,39 @@ function useAdvances(letters: string[], family: string): number[] {
   return letters.map((ch) => ADVANCE[ch] ?? 0.45);
 }
 
-export function PhotoFillType({
-  title = "Dusk",
-  caption = "Not a photograph. Every pixel is code.",
-  src,
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = display,
-  expandAt = EXPAND,
-  stagger = 3,
-  scale = 1,
-  delay = 0,
-  grain = true,
-  theme = "dark",
-  speed = 1,
-}: PhotoFillTypeProps) {
+export function PhotoFillType(props: PhotoFillTypeProps) {
+  const {
+    title = DEFAULT_TITLE,
+    caption = "Not a photograph. Every pixel is code.",
+    src,
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = display,
+    scale = 1,
+    delay = 0,
+    grain = true,
+    theme = "dark",
+    speed = 1,
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay) * speed;
   const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    photoFillTypeTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const u = H / 720;
   const c = THEMES[theme];
   const stage =
     background === "transparent" ? "transparent" : (background ?? c.bg);
-  const captionAt = CAPTION + (expandAt - EXPAND);
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
   const maskId = `pft-mask-${uid}`;
 
-  const letters = title.toUpperCase().split("");
+  const letters = lettersOf(title);
   const n = Math.max(letters.length, 1);
   const adv = useAdvances(letters, fontFamily);
   const sumAdv = adv.reduce((a, b) => a + b, 0) || 0.45;
@@ -645,8 +661,9 @@ export function PhotoFillType({
   const capH = fs * CAP;
 
   // Open.
+  const openEl = tl.get("open");
   const openAt = (f: number) =>
-    interpolate(f, [0, 22], [0.18, 1], {
+    interpolate(f, [openEl.start, openEl.end], [0.18, 1], {
       ...CLAMP,
       easing: SETTLE,
     });
@@ -655,17 +672,20 @@ export function PhotoFillType({
   // Expand: tracking opens while each letter fills with image from the
   // baseline up (center letters first), the gutters between the filled
   // windows close into one band, and the band opens like a letterbox.
+  const trackEl = tl.get("track");
+  const closeEl = tl.get("close");
+  const bandEl = tl.get("band");
   const trackAt = (f: number) =>
-    interpolate(f, [expandAt, expandAt + 20], [0, 1], {
+    interpolate(f, [trackEl.start, trackEl.end], [0, 1], {
       ...CLAMP,
       easing: CAMERA,
     });
   const track = trackAt(frame);
-  const closeP = interpolate(frame, [expandAt + 18, expandAt + 30], [0, 1], {
+  const closeP = interpolate(frame, [closeEl.start, closeEl.end], [0, 1], {
     ...CLAMP,
     easing: CAMERA,
   });
-  const openP = interpolate(frame, [expandAt + 26, expandAt + 52], [0, 1], {
+  const openP = interpolate(frame, [bandEl.start, bandEl.end], [0, 1], {
     ...CLAMP,
     easing: OPEN,
   });
@@ -686,17 +706,14 @@ export function PhotoFillType({
     xs.push(cursor);
     cursor += (adv[i] + trackEm) * fs;
   }
-  const mid = (n - 1) / 2;
   const cellTop = baseline - capH - fs * 0.014;
   const cellBottom = baseline + fs * 0.012;
   const cells = xs.map((x, i) => {
-    const order = Math.floor(Math.abs(i - mid) + 0.01);
-    const fill = interpolate(
-      frame,
-      [expandAt + 3 + order * stagger, expandAt + 17 + order * stagger],
-      [0, 1],
-      { ...CLAMP, easing: CAMERA },
-    );
+    const fillEl = tl.get(`fill:${i}`);
+    const fill = interpolate(frame, [fillEl.start, fillEl.end], [0, 1], {
+      ...CLAMP,
+      easing: CAMERA,
+    });
     const l0 = x + CELL_INSET * fs;
     const r0 = x + (adv[i] - CELL_INSET) * fs;
     // Closing: each window grows to meet its neighbours halfway.
@@ -718,15 +735,15 @@ export function PhotoFillType({
 
   // Camera truck inside the letters; eases out of a slight push as it opens.
   const pan = interpolate(frame, [0, Math.max(durationInFrames, 60)], [-1, 1]);
-  const photoScale = interpolate(
-    frame,
-    [expandAt + 22, expandAt + 64],
-    [1.1, 1.02],
-    { ...CLAMP, easing: CAMERA },
-  );
+  const push = tl.get("push");
+  const photoScale = interpolate(frame, [push.start, push.end], [1.1, 1.02], {
+    ...CLAMP,
+    easing: CAMERA,
+  });
 
   // Caption.
-  const cap = interpolate(frame, [captionAt, captionAt + 18], [0, 1], {
+  const capEl = tl.get("caption");
+  const cap = interpolate(frame, [capEl.start, capEl.end], [0, 1], {
     ...CLAMP,
     easing: SETTLE,
   });

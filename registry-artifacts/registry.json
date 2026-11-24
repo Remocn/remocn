@@ -11323,12 +11323,21 @@
       "title": "Photo Fill Type",
       "description": "A word cut out of the stage reveals a generated mountain landscape and a caption.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/photo-fill-type/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/photo-fill-type.tsx"
+          "target": "components/remocn/photo-fill-type/index.tsx"
+        },
+        {
+          "path": "registry/remocn/photo-fill-type/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/photo-fill-type/timeline.ts"
         }
       ],
       "type": "registry:component"
