@@ -12843,12 +12843,21 @@
       "title": "Dot Sort",
       "description": "Dots sort into rows by group, the logo row largest at 41%.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/dot-sort/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/dot-sort.tsx"
+          "target": "components/remocn/dot-sort/index.tsx"
+        },
+        {
+          "path": "registry/remocn/dot-sort/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/dot-sort/timeline.ts"
         }
       ],
       "type": "registry:component"
