@@ -16,6 +16,12 @@ import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_TIERS,
+  type PromptSwellElementId,
+  promptSwellTimeline,
+} from "./timeline";
 
 const geist = loadGeist("normal", {
   weights: ["300", "400"],
@@ -79,25 +85,6 @@ function RemocnLogo({ fontSize, color }: { fontSize: number; color: string }) {
   );
 }
 
-const B = {
-  card: -10,
-  type: 0,
-  armed: 30,
-  press: 36,
-  swell: 40,
-  chrome: 48,
-  hero: 52,
-  tick1: 66,
-  scroll1: 72,
-  plans: 76,
-  tick2: 90,
-  scroll2: 96,
-  tick3: 104,
-  publish: 114,
-  toast: 120,
-  end: 156,
-};
-
 const ramp = (f: number, start: number, dur: number, easing = ENTER) =>
   interpolate(f, [start, start + dur], [0, 1], {
     extrapolateLeft: "clamp",
@@ -107,8 +94,15 @@ const ramp = (f: number, start: number, dur: number, easing = ENTER) =>
 
 const mix = (a: number, b: number, t: number) => a + (b - a) * t;
 
-const dip = (f: number, at: number, depth: number) =>
-  1 - depth * ramp(f, at, 3, MOVE) + depth * ramp(f, at + 3, 9, ENTER);
+/** A button press: down over the `down` beat, back up over `up`. */
+const dip = (
+  f: number,
+  e: { start: number; beat: (name: string) => number },
+  depth: number,
+) =>
+  1 -
+  depth * ramp(f, e.start, e.beat("down"), MOVE) +
+  depth * ramp(f, e.start + e.beat("down"), e.beat("up"), ENTER);
 
 const line = (color: string, w = 1.5) => ({
   fill: "none",
@@ -163,6 +157,12 @@ export interface PromptSwellProps {
   speed?: number;
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
+  /**
+   * Moves, trims or stretches the prompt, the swell, the page's build steps,
+   * scrolls and plans, and the publish, by the ids in `./timeline`. Frames
+   * on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<PromptSwellElementId>;
 }
 
 const DEFAULT_FEATURES = [
@@ -187,33 +187,51 @@ function ScaleLayer({
   );
 }
 
-export function PromptSwell({
-  theme = "dark",
-  accent = "#ff7a3d",
-  prompt = "Build a launch page for our video kit with a hero, pricing and a waitlist",
-  src = staticFile("studio.png"),
-  url = "preview.remocn.dev",
-  steps = ["Hero with product shot", "Pricing tiers", "Waitlist form"],
-  tiers = [
-    { name: "Free", price: "$0" },
-    { name: "Pro", price: "$19" },
-    { name: "Team", price: "$49" },
-  ],
-  headline = "Launch videos, built from code.",
-  pricingTitle = "Simple pricing",
-  ctaLabel = "Join waitlist",
-  logo,
-  ink: inkProp,
-  background,
-  fontFamily = geist.fontFamily,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  ground,
-  groundParams,
-}: PromptSwellProps) {
+export function PromptSwell(props: PromptSwellProps) {
+  const {
+    theme = "dark",
+    accent = "#ff7a3d",
+    prompt = "Build a launch page for our video kit with a hero, pricing and a waitlist",
+    src = staticFile("studio.png"),
+    url = "preview.remocn.dev",
+    steps = ["Hero with product shot", "Pricing tiers", "Waitlist form"],
+    tiers = DEFAULT_TIERS,
+    headline = "Launch videos, built from code.",
+    pricingTitle = "Simple pricing",
+    ctaLabel = "Join waitlist",
+    logo,
+    ink: inkProp,
+    background,
+    fontFamily = geist.fontFamily,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    ground,
+    groundParams,
+    timing,
+  } = props;
   const frame = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width, height, fps } = useSceneConfig();
+  const { width, height, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    promptSwellTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const cardEl = tl.get("card");
+  const typeEl = tl.get("type");
+  const armedEl = tl.get("armed");
+  const pressEl = tl.get("press");
+  const pullEl = tl.get("pull");
+  const swellEl = tl.get("swell");
+  const chromeEl = tl.get("chrome");
+  const driftEl = tl.get("drift");
+  const heroEl = tl.get("hero");
+  const scroll1 = tl.get("scroll:0");
+  const scroll2 = tl.get("scroll:1");
+  const ticks = [tl.get("tick:0"), tl.get("tick:1"), tl.get("tick:2")];
+  const publishEl = tl.get("publish");
+  const toastEl = tl.get("toast");
   const dark = theme === "dark";
   const portrait = height > width * 1.2;
   const stageW = portrait ? 720 : 1280;
@@ -237,7 +255,7 @@ export function PromptSwell({
   const typeRate = 2.4;
   const typed = prompt.slice(
     0,
-    Math.max(0, Math.floor((frame - B.type) * typeRate)),
+    Math.max(0, Math.floor((frame - typeEl.start) * typeRate)),
   );
   const typing = typed.length < prompt.length;
   const caretOn = typing || Math.floor(frame / 8) % 2 === 0;
@@ -247,32 +265,32 @@ export function PromptSwell({
   const winW = portrait ? 680 : 1196;
   const winH = portrait ? 1180 : 664;
   const sw = spring({
-    frame: frame - B.swell,
+    frame: frame - swellEl.start,
     fps,
     config: HEAVY,
-    durationInFrames: 30,
+    durationInFrames: swellEl.length,
   });
   const swPrev = spring({
-    frame: frame - 1 - B.swell,
+    frame: frame - 1 - swellEl.start,
     fps,
     config: HEAVY,
-    durationInFrames: 30,
+    durationInFrames: swellEl.length,
   });
   const W = mix(cardW, winW, sw);
   const H = mix(cardH, winH, sw);
   const swBlur = Math.min(6, Math.abs(sw - swPrev) * (winH - cardH) * 0.12);
-  const cardIn = spring({ frame: frame - B.card, fps, config: CARD });
-  const promptOut = ramp(frame, B.swell, 9, EXIT);
-  const win = ramp(frame, B.chrome - 4, 14);
+  const cardIn = spring({ frame: frame - cardEl.start, fps, config: CARD });
+  const promptOut = ramp(frame, swellEl.start, swellEl.beat("promptOut"), EXIT);
+  const win = ramp(frame, chromeEl.start, chromeEl.length);
 
-  const sendFill = ramp(frame, B.armed, 6);
-  const sendDip = dip(frame, B.press, 0.14);
+  const sendFill = ramp(frame, armedEl.start, armedEl.length);
+  const sendDip = dip(frame, pressEl, 0.14);
 
-  const camPull = ramp(frame, B.press - 2, 32, CAM);
-  const settle = spring({ frame: frame + 10, fps, config: HEAVY });
+  const camPull = ramp(frame, pullEl.start, pullEl.length, CAM);
+  const settle = spring({ frame: frame - cardEl.start, fps, config: HEAVY });
   const push =
     mix(portrait ? 1.08 : 1.3, 1, camPull) +
-    0.03 * ramp(frame, B.chrome, B.end - B.chrome, Easing.linear);
+    0.03 * ramp(frame, driftEl.start, driftEl.length, Easing.linear);
   const rotX =
     mix(12, 3, settle) + 4 * Math.sin(Math.PI * camPull) - 1.5 * camPull;
   const rotY = mix(-12, -3, settle) + 2 * camPull;
@@ -301,9 +319,13 @@ export function PromptSwell({
   const waitTop = pricingTop + pricingH;
   const waitH = 200;
   const pageEnd = waitTop + waitH;
-  const s1 = spring({ frame: frame - B.scroll1, fps, config: HEAVY });
-  const s1Prev = spring({ frame: frame - 1 - B.scroll1, fps, config: HEAVY });
-  const s2 = spring({ frame: frame - B.scroll2, fps, config: HEAVY });
+  const s1 = spring({ frame: frame - scroll1.start, fps, config: HEAVY });
+  const s1Prev = spring({
+    frame: frame - 1 - scroll1.start,
+    fps,
+    config: HEAVY,
+  });
+  const s2 = spring({ frame: frame - scroll2.start, fps, config: HEAVY });
   const scrollA = pricingTop + 2;
   const scrollB = Math.max(
     scrollA,
@@ -312,15 +334,25 @@ export function PromptSwell({
   const scrollY = s1 * scrollA + s2 * (scrollB - scrollA);
   const scrollBlur = Math.min(5, Math.abs(s1 - s1Prev) * scrollA * 0.06);
 
-  const tick = (i: number) => ramp(frame, [B.tick1, B.tick2, B.tick3][i], 8);
-  const heroIn = ramp(frame, B.hero, 18, RISE);
-  const heroImg = ramp(frame, B.hero + 6, 24, RISE);
+  const tick = (i: number) =>
+    ramp(frame, ticks[i].start, ticks[i].beat("tick"));
+  const heroIn = ramp(frame, heroEl.start, heroEl.length, RISE);
+  const heroImg = ramp(
+    frame,
+    heroEl.start + heroEl.beat("image"),
+    heroEl.beat("imageIn"),
+    RISE,
+  );
   const planIn = (i: number) =>
-    spring({ frame: frame - B.plans - i * 4, fps, config: CARD });
-  const waitIn = ramp(frame, B.scroll2 + 2, 14);
-  const pubDip = dip(frame, B.publish, 0.1);
-  const toast = spring({ frame: frame - B.toast, fps, config: CHIP });
-  const live = frame >= B.toast;
+    spring({ frame: frame - tl.get(`plan:${i}`).start, fps, config: CARD });
+  const waitIn = ramp(
+    frame,
+    scroll2.start + scroll2.beat("wait"),
+    scroll2.beat("waitIn"),
+  );
+  const pubDip = dip(frame, publishEl, 0.1);
+  const toast = spring({ frame: frame - toastEl.start, fps, config: CHIP });
+  const live = frame >= toastEl.start;
 
   const resolvedPreset: GshPresetId | undefined = ground;
   const resolvedParams: Partial<GradientParams> | undefined =
@@ -435,7 +467,8 @@ export function PromptSwell({
           boxSizing: "border-box",
           display: "flex",
           flexDirection: "column",
-          opacity: frame >= B.plans + i * 4 ? Math.min(1, p * 1.6) : 0,
+          opacity:
+            frame >= tl.get(`plan:${i}`).start ? Math.min(1, p * 1.6) : 0,
           transform: `translateY(${mix(40, 0, p)}px) scale(${mix(0.94, 1, p)})`,
         }}
       >
@@ -625,7 +658,11 @@ export function PromptSwell({
             marginTop: 12,
             textAlign: "center",
             maxWidth: PW - 80,
-            opacity: ramp(frame, B.hero + 4, 12),
+            opacity: ramp(
+              frame,
+              heroEl.start + heroEl.beat("sub"),
+              heroEl.beat("subIn"),
+            ),
           }}
         >
           Drop-in Remotion scenes you own and edit.
@@ -675,7 +712,11 @@ export function PromptSwell({
             color: ink,
             letterSpacing: "-0.04em",
             textAlign: "center",
-            opacity: ramp(frame, B.scroll1 + 2, 12),
+            opacity: ramp(
+              frame,
+              scroll1.start + scroll1.beat("title"),
+              scroll1.beat("fade"),
+            ),
           }}
         >
           {pricingTitle}
@@ -686,7 +727,11 @@ export function PromptSwell({
             color: muted,
             textAlign: "center",
             marginTop: 6,
-            opacity: ramp(frame, B.scroll1 + 4, 12),
+            opacity: ramp(
+              frame,
+              scroll1.start + scroll1.beat("sub"),
+              scroll1.beat("fade"),
+            ),
           }}
         >
           Start free. Upgrade when you ship.
@@ -1102,7 +1147,7 @@ export function PromptSwell({
                       <RemocnR height={13} color={page} />
                     </div>
                     <span style={{ fontSize: 16, color: muted }}>
-                      {frame >= B.tick3 + 6
+                      {frame >= ticks[2].start + ticks[2].beat("done")
                         ? "Your page is ready."
                         : "Building your page…"}
                     </span>
@@ -1222,7 +1267,8 @@ export function PromptSwell({
                       whiteSpace: "nowrap",
                       boxShadow:
                         "inset 0 1px 0 rgba(255,255,255,0.1), 0 12px 30px rgba(0,0,0,0.35)",
-                      opacity: frame >= B.toast ? Math.min(1, toast * 2) : 0,
+                      opacity:
+                        frame >= toastEl.start ? Math.min(1, toast * 2) : 0,
                       transform: `translate(-50%, ${mix(70, 0, toast)}px) scale(${mix(0.85, 1, toast)})`,
                     }}
                   >

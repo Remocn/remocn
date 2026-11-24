@@ -6403,12 +6403,21 @@
       "title": "Prompt Swell",
       "description": "A prompt swells into a builder that generates a pricing page with checklist and waitlist form.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/gsh", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/gsh",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "prompt-swell/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/prompt-swell.tsx"
+          "target": "components/remocn/prompt-swell/index.tsx"
+        },
+        {
+          "path": "prompt-swell/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/prompt-swell/timeline.ts"
         }
       ]
     },
