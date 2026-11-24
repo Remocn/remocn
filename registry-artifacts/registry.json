@@ -10124,12 +10124,21 @@
       "title": "Boss Bar",
       "description": "A boss HP bar is drained by hits, then 'DEFEATED' slams in beneath 'The old workflow'.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/boss-bar/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/boss-bar.tsx"
+          "target": "components/remocn/boss-bar/index.tsx"
+        },
+        {
+          "path": "registry/remocn/boss-bar/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/boss-bar/timeline.ts"
         }
       ],
       "type": "registry:component"

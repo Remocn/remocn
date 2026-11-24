@@ -6,6 +6,13 @@ import type React from "react";
 import { AbsoluteFill, Easing, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  type BossBarElementId,
+  bossBarTimeline,
+  DEFAULT_HITS,
+  FIRST_HIT,
+} from "./timeline";
 
 const { fontFamily: chakra } = loadFont("normal", {
   weights: ["500"],
@@ -84,6 +91,12 @@ export interface BossBarProps {
   delay?: number;
   theme?: "dark" | "light";
   speed?: number;
+  /**
+   * Moves, trims or stretches the intro, single hits, the shatter, the
+   * defeat word, the name glide and the logo, by the ids in `./timeline`.
+   * Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<BossBarElementId>;
 }
 
 // Beat sheet (30fps, speed 1):
@@ -96,17 +109,6 @@ export interface BossBarProps {
 //  90–96   "DEFEATED" slams in with the gradient; 96 is the impact frame
 //          (one inverted frame) with a heavy shake; the rise glow lifts
 // 100–112  the boss name glides down to sit over the word; logo at 114; poster
-const INTRO = 20;
-const FIRST_HIT = 30;
-const HIT_GAP = 26;
-const SLAM_LEN = 5;
-const TRAIL_HOLD = 7;
-const TRAIL_DRAIN = 10;
-const FLASH_DELAY = 4;
-const SHATTER_DELAY = 6;
-const DEFEAT_DELAY = 8;
-const DEFEAT_LEN = 6;
-
 const SLAM = Easing.bezier(0.12, 0.9, 0.25, 1);
 const OUT = Easing.bezier(0.22, 1, 0.36, 1);
 const INOUT = Easing.bezier(0.65, 0, 0.25, 1);
@@ -189,29 +191,36 @@ function ScaleLayer({
   );
 }
 
-export function BossBar({
-  boss = "THE OLD WORKFLOW",
-  hits = [
-    { label: "Captions", damage: 820 },
-    { label: "Transitions", damage: 1140 },
-    { label: "Templates", damage: 1040 },
-  ],
-  defeated = "DEFEATED",
-  tag = "BOSS",
-  hitGap = HIT_GAP,
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = chakra,
-  logo,
-  scale = 1,
-  delay = 0,
-  theme = "dark",
-  speed = 1,
-}: BossBarProps) {
+export function BossBar(props: BossBarProps) {
+  const {
+    boss = "THE OLD WORKFLOW",
+    hits = DEFAULT_HITS,
+    defeated = "DEFEATED",
+    tag = "BOSS",
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = chakra,
+    logo,
+    scale = 1,
+    delay = 0,
+    theme = "dark",
+    speed = 1,
+    timing,
+  } = props;
   const tilt = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H } = useSceneConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    bossBarTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const introEl = tl.get("intro");
+  const hitEls = hits.map((_, i) => tl.get(`hit:${i}`));
+  const shatterEl = tl.get("shatter");
+  const defeatEl = tl.get("defeated");
   const c = THEMES[theme];
   const fg = ink ?? c.ink;
   const stage =
@@ -221,14 +230,17 @@ export function BossBar({
   const u = Math.min(W / 1280, H / 720);
 
   const maxHp = hits.reduce((a, h) => a + h.damage, 0) || 1;
-  const hitAt = hits.map((_, i) => FIRST_HIT + i * hitGap);
-  const lastHit = hitAt[hitAt.length - 1] ?? FIRST_HIT;
-  const flashAt = lastHit + FLASH_DELAY;
-  const shatterAt = lastHit + SHATTER_DELAY;
-  const defeatAt = lastHit + DEFEAT_DELAY;
-  const defeatHit = defeatAt + DEFEAT_LEN;
-  const glideAt = defeatHit + 4;
-  const logoAt = defeatHit + 18;
+  // Each hit lands on its element's end, the impact frame.
+  const hitAt = hitEls.map((e) => e.end);
+  const firstHit = hitAt[0] ?? FIRST_HIT;
+  const shatterAt = shatterEl.start;
+  const flashAt = shatterAt + shatterEl.beat("flash");
+  const defeatAt = defeatEl.start;
+  const defeatHit = defeatEl.end;
+  const nameEl = tl.get("name");
+  const logoEl = tl.get("logo");
+  const glideAt = nameEl.start;
+  const logoAt = logoEl.start;
 
   // HP after each hit, and where we are now.
   const hpAfter: number[] = [];
@@ -238,14 +250,18 @@ export function BossBar({
   const landed = hitAt.filter((h) => t >= h).length;
   const hp = landed === 0 ? maxHp : hpAfter[landed - 1];
   const prevHp = landed <= 1 ? maxHp : hpAfter[landed - 2];
+  const lastLanded = landed === 0 ? undefined : hitEls[landed - 1];
   const sinceHit = landed === 0 ? -1 : t - hitAt[landed - 1];
   // White trail: holds at the old HP, then drains to the new one.
   const trailHp =
-    landed === 0
+    lastLanded === undefined
       ? maxHp
       : interpolate(
           sinceHit,
-          [TRAIL_HOLD, TRAIL_HOLD + TRAIL_DRAIN],
+          [
+            lastLanded.beat("hold"),
+            lastLanded.beat("hold") + lastLanded.beat("drain"),
+          ],
           [prevHp, hp],
           { ...CLAMP, easing: INOUT },
         );
@@ -255,24 +271,42 @@ export function BossBar({
   const barW = 0.78 * W;
   const barY = 0.205 * H;
   const barH = 30 * u;
-  const frameIn = OUT(ramp(t, 0, 10));
-  const charge = INOUT(ramp(t, 6, INTRO - 6));
-  const fillFrac = (t < FIRST_HIT ? charge : 1) * (hp / maxHp);
-  const trailFrac = t < FIRST_HIT ? fillFrac : trailHp / maxHp;
-  const barShake = landed > 0 ? shake(t, hitAt[landed - 1], 7, 8 * u) : null;
+  const frameIn = OUT(ramp(t, introEl.start, introEl.beat("frame")));
+  const charge = INOUT(
+    ramp(
+      t,
+      introEl.start + introEl.beat("charge"),
+      introEl.length - introEl.beat("charge"),
+    ),
+  );
+  const fillFrac = (t < firstHit ? charge : 1) * (hp / maxHp);
+  const trailFrac = t < firstHit ? fillFrac : trailHp / maxHp;
+  const barShake = lastLanded
+    ? shake(t, hitAt[landed - 1], lastLanded.beat("shake"), 8 * u)
+    : null;
   const flashing = t >= flashAt && t < shatterAt;
   const broken = t >= shatterAt;
 
   // ── Camera ────────────────────────────────────────────────────────────────
   const camAt = (tt: number) => {
     const camHits = hitAt.map((h, i) =>
-      shake(tt, h, 8, (i === hits.length - 1 ? 9 : 5) * u),
+      shake(
+        tt,
+        h,
+        hitEls[i].beat("camera"),
+        (i === hits.length - 1 ? 9 : 5) * u,
+      ),
     );
-    const camDefeat = shake(tt, defeatHit, 14, 20 * u);
+    const camDefeat = shake(tt, defeatHit, defeatEl.beat("shake"), 20 * u);
     return {
       x: camHits.reduce((a, s) => a + s.x, 0) + camDefeat.x,
       y: camHits.reduce((a, s) => a + s.y, 0) + camDefeat.y,
-      k: interpolate(tt, [defeatHit, defeatHit + 70], [1, 1.03], CLAMP),
+      k: interpolate(
+        tt,
+        [defeatHit, defeatHit + defeatEl.beat("settle")],
+        [1, 1.03],
+        CLAMP,
+      ),
     };
   };
   const cam = camAt(t);
@@ -288,18 +322,20 @@ export function BossBar({
   const inverted = t >= defeatHit && t < defeatHit + speed;
 
   // ── Defeat ────────────────────────────────────────────────────────────────
-  const defeatP = SLAM(ramp(t, defeatAt, DEFEAT_LEN));
+  const defeatP = SLAM(ramp(t, defeatAt, defeatEl.length));
   const defeatFs = 210 * u;
   const defeatY = 0.5 * H;
-  const glideRaw = ramp(t, glideAt, 12);
+  const glideRaw = ramp(t, glideAt, nameEl.length);
   const glide = INOUT(glideRaw);
   const gliding = glideRaw > 0 && glideRaw < 1;
   const settle = cam.k;
-  const glowP = OUT(ramp(t, defeatHit, 18));
-  const logoP = OUT(ramp(t, logoAt, 10));
+  const glowP = OUT(ramp(t, defeatHit, defeatEl.beat("glow")));
+  const logoP = OUT(ramp(t, logoAt, logoEl.length));
 
   // Boss name: above the bar, then glides to sit over the defeat word.
-  const nameIn = OUT(ramp(t, 4, 10));
+  const nameIn = OUT(
+    ramp(t, introEl.start + introEl.beat("name"), introEl.beat("nameIn")),
+  );
   const nameFs = interpolate(glide, [0, 1], [26, 34]) * u;
   const nameX0 = barX;
   const nameY0 = barY - 46 * u;
@@ -334,7 +370,7 @@ export function BossBar({
     y: number;
     r: number;
   }[] = [];
-  if (broken && dt < 40) {
+  if (broken && dt < shatterEl.beat("life")) {
     for (let i = 0; i < COLS; i++) {
       for (let half = 0; half < 2; half++) {
         const k = i * 2 + half;
@@ -385,7 +421,13 @@ export function BossBar({
       }
     }
   }
-  const fragOp = 1 - ramp(dt, 8, 12);
+  const fragOp =
+    1 -
+    ramp(
+      dt,
+      shatterEl.beat("fadeAt"),
+      shatterEl.length - shatterEl.beat("fadeAt"),
+    );
 
   return (
     <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
@@ -485,7 +527,15 @@ export function BossBar({
                 letterSpacing: "0.04em",
                 fontVariantNumeric: "tabular-nums",
                 color: c.dim,
-                opacity: OUT(ramp(t, 8, 8)) * (1 - ramp(t, shatterAt, 4)),
+                opacity:
+                  OUT(
+                    ramp(
+                      t,
+                      introEl.start + introEl.beat("hp"),
+                      introEl.beat("hpIn"),
+                    ),
+                  ) *
+                  (1 - ramp(t, shatterAt, shatterEl.beat("hpOut"))),
               }}
             >
               {/* The count fills the row up to the total, right-aligned where
@@ -493,7 +543,7 @@ export function BossBar({
                   number, which on a box a few digits wide is off enough to
                   lean resting text, and to drop it as the count widens. */}
               <span style={{ color: fg, flex: 1, textAlign: "right" }}>
-                {fmt(t < FIRST_HIT ? charge * maxHp : hp)}
+                {fmt(t < firstHit ? charge * maxHp : hp)}
               </span>
               <span>&nbsp;/ {fmt(maxHp)} HP</span>
             </div>
@@ -538,7 +588,9 @@ export function BossBar({
                     backgroundSize: `${barW}px 100%`,
                     // Flash the fill white for two frames on each hit.
                     filter:
-                      sinceHit >= 0 && sinceHit < 2
+                      lastLanded &&
+                      sinceHit >= 0 &&
+                      sinceHit < lastLanded.beat("flash")
                         ? "brightness(2.4)"
                         : undefined,
                   }}
@@ -583,14 +635,21 @@ export function BossBar({
 
             {/* Damage numbers pop off the cut. */}
             {hits.map((h, i) => {
+              const e = hitEls[i];
               const d = t - hitAt[i];
-              if (d < 0 || d > 26) return null;
+              if (d < 0 || d > e.beat("popLife")) return null;
               const before = i === 0 ? maxHp : hpAfter[i - 1];
               const x = barX + (barW * (before + hpAfter[i])) / 2 / maxHp;
-              const popRaw = ramp(d, 0, 4);
+              const popRaw = ramp(d, 0, e.beat("pop"));
               const pop = SLAM(popRaw);
               const isLast = i === hits.length - 1;
-              const out = isLast ? ramp(t, shatterAt - 2, 5) : ramp(d, 16, 8);
+              const out = isLast
+                ? ramp(
+                    t,
+                    shatterAt + shatterEl.beat("popOut"),
+                    shatterEl.beat("popOutLen"),
+                  )
+                : ramp(d, e.beat("popOut"), e.beat("popOutLen"));
               const moving = (popRaw > 0 && popRaw < 1) || (out > 0 && out < 1);
               const fs = (isLast ? 64 : 54) * u;
               return (
@@ -604,7 +663,7 @@ export function BossBar({
                     display: "flex",
                     justifyContent: "center",
                     transform: `translateY(${(-10 * pop - 22 * out) * u}px) scale(${interpolate(pop, [0, 1], [1.6, 1])})${tilt(moving)}`,
-                    opacity: ramp(d, 0, 2) * (1 - out),
+                    opacity: ramp(d, 0, e.beat("popFade")) * (1 - out),
                     fontFamily: italic,
                     fontStyle: "italic",
                     fontWeight: 500,
@@ -623,22 +682,30 @@ export function BossBar({
 
             {/* Hit words: slam in at the centre, cut by a slash on impact. */}
             {hits.map((h, i) => {
+              const e = hitEls[i];
               const at = hitAt[i];
-              const start = at - SLAM_LEN;
+              const start = e.start;
+              // The word leaves as the next one slams in.
               const end =
-                i < hits.length - 1 ? hitAt[i + 1] - SLAM_LEN : defeatAt - 3;
-              if (t < start || t > end + 4) return null;
-              const p = SLAM(ramp(t, start, SLAM_LEN));
-              const out = ramp(t, end - 1, 4);
+                i < hits.length - 1
+                  ? hitEls[i + 1].start
+                  : defeatAt + defeatEl.beat("clear");
+              if (t < start || t > end + e.beat("out")) return null;
+              const p = SLAM(ramp(t, start, e.length));
+              const out = ramp(t, end + e.beat("outLead"), e.beat("out"));
               const sd = t - at;
-              const slash = sd >= 0 && sd < 7;
-              const reach = OUT(ramp(sd, 0, 3));
-              const fade = ramp(sd, 2, 5);
+              const slash = sd >= 0 && sd < e.beat("slash");
+              const reach = OUT(ramp(sd, 0, e.beat("reach")));
+              const fade = ramp(
+                sd,
+                e.beat("slashFade"),
+                e.beat("slash") - e.beat("slashFade"),
+              );
               const wordY = 0.56 * H;
               return (
                 <div key={`hit-${h.label}`}>
                   {[3, 0].map((lag) => {
-                    const ppRaw = ramp(t - lag, start, SLAM_LEN);
+                    const ppRaw = ramp(t - lag, start, e.length);
                     const pp = SLAM(ppRaw);
                     if (lag > 0 && t > at + lag) return null;
                     const moving =
@@ -657,7 +724,7 @@ export function BossBar({
                           justifyContent: "center",
                           transform: `translateX(${(1 - (lag ? pp : p)) * 120 * u - out * 60 * u}px) scale(${interpolate(lag ? pp : p, [0, 1], [1.6, 1])})${tilt(moving)}`,
                           opacity:
-                            ramp(t - lag, start, 2) *
+                            ramp(t - lag, start, e.beat("fade")) *
                             (1 - out) *
                             (lag ? 0.22 : 1),
                           fontFamily: italic,
@@ -703,7 +770,7 @@ export function BossBar({
             {/* DEFEATED. */}
             {t >= defeatAt
               ? [4, 2, 0].map((lag) => {
-                  const ppRaw = ramp(t - lag, defeatAt, DEFEAT_LEN);
+                  const ppRaw = ramp(t - lag, defeatAt, defeatEl.length);
                   const pp = SLAM(ppRaw);
                   if (lag > 0 && t > defeatHit + lag) return null;
                   const moving = ppRaw > 0 && ppRaw < 1;
@@ -721,7 +788,7 @@ export function BossBar({
                         justifyContent: "center",
                         transform: `scale(${interpolate(lag ? pp : defeatP, [0, 1], [2.4, 1])})${tilt(moving)}`,
                         opacity:
-                          ramp(t - lag, defeatAt, 2) *
+                          ramp(t - lag, defeatAt, defeatEl.beat("fade")) *
                           (lag ? 0.18 / (lag / 2) : 1),
                       }}
                     >
