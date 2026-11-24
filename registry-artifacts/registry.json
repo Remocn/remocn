@@ -11238,13 +11238,19 @@
       "registryDependencies": [
         "@remocn/gsh",
         "@remocn/glide",
-        "@remocn/frame-rate"
+        "@remocn/frame-rate",
+        "@remocn/timeline"
       ],
       "files": [
         {
           "path": "registry/remocn/query-cascade/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/query-cascade.tsx"
+          "target": "components/remocn/query-cascade/index.tsx"
+        },
+        {
+          "path": "registry/remocn/query-cascade/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/query-cascade/timeline.ts"
         }
       ],
       "type": "registry:component"

@@ -16,6 +16,13 @@ import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_HERO,
+  DEFAULT_TERM,
+  type QueryCascadeElementId,
+  queryCascadeTimeline,
+} from "./timeline";
 
 const { fontFamily: grotesk } = loadFont("normal", {
   weights: ["400"],
@@ -53,6 +60,12 @@ export interface QueryCascadeProps {
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
   speed?: number;
+  /**
+   * Moves, trims or stretches the scroll, the hero's growth, the term's
+   * highlight, the key press, the answer and the logo, by the ids in
+   * `./timeline`. Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<QueryCascadeElementId>;
 }
 
 const REMOCN_R_PATH =
@@ -184,13 +197,6 @@ const CLAMP = {
   extrapolateRight: "clamp",
 } as const;
 const CHIP = { mass: 0.5, damping: 12, stiffness: 200 };
-const STOP = 54;
-const GROW = [42, 68] as const;
-const CLEAR = [40, 62] as const;
-const TINT = [72, 88] as const;
-const RULE = [78, 96] as const;
-const RESOLVE = 104;
-const LOGO_IN = 132;
 
 function width(text: string) {
   let x = 0;
@@ -233,29 +239,48 @@ function ScaleLayer({
   );
 }
 
-export function QueryCascade({
-  queries = QUERIES,
-  hero = "how to make a launch video",
-  term = "launch video",
-  answerBefore = "Your",
-  answerAfter = "is ready.",
-  showLogo = true,
-  logo,
-  accent,
-  ink,
-  background,
-  fontFamily = grotesk,
-  motionBlur = 1,
-  scale = 1,
-  delay = 0,
-  theme = "dark",
-  ground,
-  groundParams,
-  speed = 1,
-}: QueryCascadeProps) {
+export function QueryCascade(props: QueryCascadeProps) {
+  const {
+    queries = QUERIES,
+    hero = DEFAULT_HERO,
+    term = DEFAULT_TERM,
+    answerBefore = "Your",
+    answerAfter = "is ready.",
+    showLogo = true,
+    logo,
+    accent,
+    ink,
+    background,
+    fontFamily = grotesk,
+    motionBlur = 1,
+    scale = 1,
+    delay = 0,
+    theme = "dark",
+    ground,
+    groundParams,
+    speed = 1,
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H, fps } = useSceneConfig();
+  const { width: W, height: H, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    queryCascadeTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const scrollEl = tl.get("scroll");
+  const growEl = tl.get("grow");
+  const clearEl = tl.get("clear");
+  const tintEl = tl.get("tint");
+  const ruleEl = tl.get("rule");
+  const heroEl = tl.get("hero");
+  const fieldEl = tl.get("field");
+  const enterEl = tl.get("enter");
+  const resolveEl = tl.get("resolve");
+  const logoEl = tl.get("logo");
+  const stopAt = scrollEl.end;
   const tall = H > W;
   const u = tall ? W / 1000 : H / 720;
   const c = THEMES[theme];
@@ -277,7 +302,7 @@ export function QueryCascade({
   const pitch = 76 * u;
   const s0 = H / 2 / pitch + 0.6;
   const scroll = (x: number) => {
-    const p = Math.min(1, Math.max(0, x / STOP));
+    const p = Math.min(1, Math.max(0, (x - scrollEl.start) / scrollEl.length));
     return s0 + (K - s0) * (1 - (1 - p) ** 3.2);
   };
   const s = scroll(t);
@@ -302,7 +327,7 @@ export function QueryCascade({
   );
 
   const growAt = (tt: number) =>
-    interpolate(tt, [GROW[0], GROW[1]], [0, 1], {
+    interpolate(tt, [growEl.start, growEl.end], [0, 1], {
       ...CLAMP,
       easing: EASE_IO,
     });
@@ -310,28 +335,33 @@ export function QueryCascade({
   const sizeAt = (g: number) => f + (Fh - f) * g;
   const fs = sizeAt(grow);
   const clearAt = (tt: number) =>
-    interpolate(tt, [CLEAR[0], CLEAR[1]], [0, 1], {
+    interpolate(tt, [clearEl.start, clearEl.end], [0, 1], {
       ...CLAMP,
       easing: EASE_IO,
     });
   const clear = clearAt(t);
-  const tint = interpolate(t, [TINT[0], TINT[1]], [0, 1], {
+  const tint = interpolate(t, [tintEl.start, tintEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
-  const rule = interpolate(t, [RULE[0], RULE[1]], [0, 1], {
+  const rule = interpolate(t, [ruleEl.start, ruleEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
-  const move = interpolate(t, [RESOLVE + 2, RESOLVE + 24], [0, 1], {
-    ...CLAMP,
-    easing: EASE_IO,
-  });
-  const leave = interpolate(t, [RESOLVE, RESOLVE + 12], [0, 1], {
-    ...CLAMP,
-    easing: EXIT,
-  });
-  const logoIn = interpolate(t, [LOGO_IN, LOGO_IN + 16], [0, 1], {
+  const moveAt = resolveEl.start + resolveEl.beat("moveAt");
+  const move = interpolate(
+    t,
+    [moveAt, moveAt + resolveEl.beat("move")],
+    [0, 1],
+    { ...CLAMP, easing: EASE_IO },
+  );
+  const leave = interpolate(
+    t,
+    [resolveEl.start, resolveEl.start + resolveEl.beat("leave")],
+    [0, 1],
+    { ...CLAMP, easing: EXIT },
+  );
+  const logoIn = interpolate(t, [logoEl.start, logoEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
@@ -346,7 +376,7 @@ export function QueryCascade({
   // size, and the travel and the growth are a transform all their life: a
   // word handed back to plain layout would jump by the rounding.
   const fsRest = sizeAt(1);
-  const heroRest = heroAt(scroll(STOP), 1);
+  const heroRest = heroAt(scroll(stopAt), 1);
   const heroMoving = [t - speed, t + speed].some(
     (tt) =>
       sizeAt(growAt(tt)) !== fs || heroAt(scroll(tt), growAt(tt)) !== heroY,
@@ -360,21 +390,29 @@ export function QueryCascade({
   const termX = termQ + (termA - termQ) * move;
 
   const dim = theme === "dark" ? 0.42 : 0.5;
-  const heroBright = interpolate(t, [32, 54], [dim, 1], CLAMP);
+  const heroBright = interpolate(
+    t,
+    [heroEl.start, heroEl.end],
+    [dim, 1],
+    CLAMP,
+  );
   const heroEdge = Math.min(
     1,
     Math.max(0, Math.min(heroY, H - heroY) / (H * 0.3)),
   );
 
   const fieldIn = spring({
-    frame: t - (STOP - 10),
+    frame: t - fieldEl.start,
     fps,
     config: { mass: 0.8, damping: 18, stiffness: 160 },
   });
-  const fieldOut = interpolate(t, [RESOLVE - 4, RESOLVE + 6], [0, 1], {
-    ...CLAMP,
-    easing: EXIT,
-  });
+  const fieldOutAt = resolveEl.start + resolveEl.beat("fieldOut");
+  const fieldOut = interpolate(
+    t,
+    [fieldOutAt, fieldOutAt + resolveEl.beat("fieldFade")],
+    [0, 1],
+    { ...CLAMP, easing: EXIT },
+  );
   const fieldVis = Math.min(1, fieldIn * 1.4) * (1 - fieldOut);
   const fieldH = fs * 1.9;
   const iconS = fs * 0.62;
@@ -382,8 +420,12 @@ export function QueryCascade({
   const fieldW = totalQ * fs + fs * 2.0 + iconS + keyS + fs * 0.5;
   const enter = Math.max(
     0,
-    spring({ frame: t - (RESOLVE - 12), fps, config: CHIP }) -
-      spring({ frame: t - (RESOLVE - 5), fps, config: CHIP }),
+    spring({ frame: t - enterEl.start, fps, config: CHIP }) -
+      spring({
+        frame: t - (enterEl.start + enterEl.beat("release")),
+        fps,
+        config: CHIP,
+      }),
   );
   const fieldLeft = cx - (totalQ * fs) / 2 - fs * 0.5 - iconS - fs * 0.8;
 
@@ -427,13 +469,16 @@ export function QueryCascade({
         {text}
       </div>
     ) : null;
+  const arriveAt = resolveEl.start + resolveEl.beat("arriveAt");
   const arrive = (d: number) =>
-    interpolate(t, [RESOLVE + 10 + d, RESOLVE + 26 + d], [0, 1], {
-      ...CLAMP,
-      easing: EASE_OUT,
-    });
+    interpolate(
+      t,
+      [arriveAt + d, arriveAt + resolveEl.beat("arrive") + d],
+      [0, 1],
+      { ...CLAMP, easing: EASE_OUT },
+    );
   const before = arrive(0);
-  const after = arrive(5);
+  const after = arrive(resolveEl.beat("stagger"));
 
   return (
     <AbsoluteFill
@@ -472,7 +517,7 @@ export function QueryCascade({
               // Rows ride the scroll and the spread by transform from where
               // they land, not by `top`: layout rounds a baseline to whole
               // pixels.
-              const yRest = H / 2 + (i - scroll(STOP)) * pitch;
+              const yRest = H / 2 + (i - scroll(stopAt)) * pitch;
               return tapOffsets.map((o) => (
                 <div
                   key={`${i}-${o.toFixed(2)}`}
