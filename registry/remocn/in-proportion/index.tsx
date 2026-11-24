@@ -12,6 +12,13 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_PAIRS,
+  type InProportionElementId,
+  inProportionTimeline,
+  pairsOf,
+} from "./timeline";
 
 const hubot = loadFont("normal", {
   weights: ["400", "500"],
@@ -41,15 +48,12 @@ export interface InProportionProps {
   delay?: number;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches single words, shrinks and leaves, by the ids in
+   * `./timeline`. Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<InProportionElementId>;
 }
-
-const DEFAULT_PAIRS: InProportionPair[] = [
-  { worry: "It’ll look homemade.", answer: "It’ll look like your app." },
-  {
-    worry: "I’ll get lost in keyframes.",
-    answer: "You’ll write a component.",
-  },
-];
 
 const THEMES = {
   dark: { bg: "#1C1C1E", ink: "#FFFFFF", accent: "#FFE14D" },
@@ -58,10 +62,6 @@ const THEMES = {
 
 const TRACK = -0.03;
 const LH = 1.02;
-const WORD = 3;
-const RISE = 13;
-const SHRINK = 24;
-const EXIT = 12;
 const NOTE_DIM = 0.5;
 
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
@@ -209,29 +209,31 @@ function ScaleLayer({
   );
 }
 
-export function InProportion({
-  pairs = DEFAULT_PAIRS,
-  stagger = WORD,
-  shrink = SHRINK,
-  accent,
-  ink,
-  background,
-  fontFamily = hubot.fontFamily,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: InProportionProps) {
+export function InProportion(props: InProportionProps) {
+  const {
+    pairs = DEFAULT_PAIRS,
+    accent,
+    ink,
+    background,
+    fontFamily = hubot.fontFamily,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
   const { width: W, height: H, durationInFrames: T } = useSceneConfig();
+  // The squeeze into the clip is counted on the clip length without `speed`.
+  const tl = useTimeline(inProportionTimeline, props, T, timing);
   const c = THEMES[theme];
   const hi = accent ?? c.accent;
   const fg = ink ?? c.ink;
   const stage =
     background === "transparent" ? "transparent" : (background ?? c.bg);
 
-  const list = pairs.length > 0 ? pairs : DEFAULT_PAIRS;
+  const list = pairsOf(pairs);
   const worries = list.map((p) => p.worry.trim().split(/\s+/));
   const answers = list.map((p) => p.answer.trim().split(/\s+/));
   const specs = Array.from(
@@ -310,21 +312,6 @@ export function InProportion({
     answerLays = answerWs.map((ws) => layout(ws, space, answerMax / Fa));
   }
 
-  const worryStart: number[] = [];
-  const shrinkAt: number[] = [];
-  const answerStart: number[] = [];
-  let clock = 4;
-  list.forEach((_, i) => {
-    worryStart.push(clock);
-    clock += worries[i].length * stagger + RISE + 16;
-    shrinkAt.push(clock);
-    answerStart.push(clock + 10);
-    clock += 10 + answers[i].length * stagger + RISE;
-    clock += i < list.length - 1 ? 24 : 0;
-  });
-  const room = Math.max(1, T - Math.max(30, T * 0.18));
-  const k = clock > room ? room / clock : 1;
-
   return (
     <AbsoluteFill
       style={{
@@ -336,22 +323,22 @@ export function InProportion({
     >
       <ScaleLayer scale={scale}>
         {list.map((_, i) => {
-          if (t < worryStart[i] * k - 1) return null;
+          if (t < tl.get(`worry:${i}:0`).start - 1) return null;
           const big = bigLays[i];
+          const shrinkEl = tl.get(`shrink:${i}`);
           return worries[i].map((word, j) => {
-            const at = (worryStart[i] + j * stagger) * k;
-            const e = interpolate(t, [at, at + RISE], [0, 1], {
+            const el = tl.get(`worry:${i}:${j}`);
+            const e = interpolate(t, [el.start, el.end], [0, 1], {
               ...CLAMP,
               easing: EASE_OUT,
             });
-            const s0 = shrinkAt[i] * k;
             const bp = big.lay.placed[j];
             const bx = mx + bp.x * big.F;
             const by = big.y0 + bp.line * LH * big.F;
             const sx = noteLeft + bp.x * Fs;
             const sy = noteTops[i] + bp.line * LH * Fs;
             const shrinkOf = (f: number) => {
-              const q = interpolate(f, [s0, s0 + shrink * k], [0, 1], {
+              const q = interpolate(f, [shrinkEl.start, shrinkEl.end], [0, 1], {
                 ...CLAMP,
                 easing: EASE_IO,
               });
@@ -402,17 +389,19 @@ export function InProportion({
         })}
         {list.map((_, i) => {
           const last = i === list.length - 1;
-          const leaveAt = last ? 1e9 : worryStart[i + 1] * k - 2;
-          const leave = interpolate(t, [leaveAt, leaveAt + EXIT], [0, 1], {
-            ...CLAMP,
-            easing: EASE_IN,
-          });
-          if (t < answerStart[i] * k - 1 || leave >= 1) return null;
+          const leaveEl = last ? null : tl.get(`leave:${i}`);
+          const leave = leaveEl
+            ? interpolate(t, [leaveEl.start, leaveEl.end], [0, 1], {
+                ...CLAMP,
+                easing: EASE_IN,
+              })
+            : 0;
+          if (t < tl.get(`answer:${i}:0`).start - 1 || leave >= 1) return null;
           const lay = answerLays[i];
           const top = H - my - lay.lines * LH * Fa;
           return answers[i].map((word, j) => {
-            const at = (answerStart[i] + j * stagger) * k;
-            const e = interpolate(t, [at, at + RISE], [0, 1], {
+            const el = tl.get(`answer:${i}:${j}`);
+            const e = interpolate(t, [el.start, el.end], [0, 1], {
               ...CLAMP,
               easing: EASE_OUT,
             });

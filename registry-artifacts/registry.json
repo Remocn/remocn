@@ -6584,12 +6584,21 @@
       "title": "in Proportion",
       "description": "Small objections (\"It'll look homemade\") are answered by a big yellow \"You'll write a component.\".",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/in-proportion/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/in-proportion.tsx"
+          "target": "components/remocn/in-proportion/index.tsx"
+        },
+        {
+          "path": "registry/remocn/in-proportion/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/in-proportion/timeline.ts"
         }
       ],
       "type": "registry:component"
