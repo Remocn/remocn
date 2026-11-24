@@ -9575,12 +9575,21 @@
       "title": "Oval Type",
       "description": "Each word rides inside its own glossy gradient capsule, finishing as a three-capsule poster.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/oval-type/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/oval-type.tsx"
+          "target": "components/remocn/oval-type/index.tsx"
+        },
+        {
+          "path": "registry/remocn/oval-type/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/oval-type/timeline.ts"
         }
       ],
       "type": "registry:component"
