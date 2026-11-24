@@ -3594,12 +3594,17 @@
       "title": "Type Wall",
       "description": "Rows of one word fill the frame, run in alternating directions at different speeds in heavy, narrow and outline faces, with an accent band through the middle.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/frame-rate"],
+      "registryDependencies": ["@remocn/frame-rate", "@remocn/timeline"],
       "files": [
         {
           "path": "type-wall/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/type-wall.tsx"
+          "target": "components/remocn/type-wall/index.tsx"
+        },
+        {
+          "path": "type-wall/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/type-wall/timeline.ts"
         }
       ]
     },
