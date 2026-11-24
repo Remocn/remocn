@@ -15991,13 +15991,19 @@
       "registryDependencies": [
         "@remocn/gsh",
         "@remocn/glide",
-        "@remocn/frame-rate"
+        "@remocn/frame-rate",
+        "@remocn/timeline"
       ],
       "files": [
         {
           "path": "registry/remocn/invoice-paid/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/invoice-paid.tsx"
+          "target": "components/remocn/invoice-paid/index.tsx"
+        },
+        {
+          "path": "registry/remocn/invoice-paid/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/invoice-paid/timeline.ts"
         }
       ],
       "type": "registry:component"

@@ -15,6 +15,12 @@ import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
+import {
+  type ResolvedElement,
+  type Timing,
+  useTimeline,
+} from "@/lib/remocn/timeline";
+import { type InvoicePaidElementId, invoicePaidTimeline } from "./timeline";
 
 const geist = loadFont("normal", {
   weights: ["300", "400"],
@@ -69,6 +75,13 @@ export interface InvoicePaidProps {
   speed?: number;
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
+  /**
+   * Moves, trims or stretches the invoice and panel rising, the send click,
+   * the viewed and paid steps, the stamp and the payout notification, by the
+   * ids in `./timeline`. Frames on the scene timeline, after `delay` and
+   * `speed`.
+   */
+  timing?: Timing<InvoicePaidElementId>;
 }
 
 const DEFAULT_LINES: InvoiceLine[] = [
@@ -98,14 +111,6 @@ const PANEL_H = 540;
 const PAD = 32;
 const TL_Y = 268;
 const STEP = 62;
-
-const T = {
-  send: 40,
-  viewed: 66,
-  paid: 92,
-  stamp: 100,
-  payout: 128,
-};
 
 const HEAVY = { mass: 1, damping: 26, stiffness: 120 };
 const CARD = { mass: 0.8, damping: 18, stiffness: 160 };
@@ -348,6 +353,7 @@ function StatusPill({
   pal,
   accent,
   carried,
+  at,
 }: {
   frame: number;
   fps: number;
@@ -355,9 +361,10 @@ function StatusPill({
   accent: string;
   /** A parent is moving and tilted, which covers the pill. */
   carried: boolean;
+  /** Frames the pill turns Draft, Sent, Viewed and Paid. */
+  at: number[];
 }) {
   const glide = useGlide();
-  const at = [0, T.send + 2, T.viewed, T.paid];
   const step = at.filter((t) => frame >= t).length - 1;
   const colors = [pal.faint, accent, pal.amber, pal.green];
   const range = [at[step], at[step] + 4];
@@ -503,6 +510,8 @@ function InvoiceDoc({
   stampDate,
   fontFamily,
   carried,
+  docEl,
+  stampEl,
 }: {
   frame: number;
   fps: number;
@@ -518,6 +527,9 @@ function InvoiceDoc({
   fontFamily: string;
   /** The page is entering and tilted, which covers its rows. */
   carried: boolean;
+  /** The page's schedule: its rows rise on its beats. */
+  docEl: ResolvedElement<InvoicePaidElementId>;
+  stampEl: ResolvedElement<InvoicePaidElementId>;
 }) {
   const glide = useGlide();
   const total = lines.reduce((s, l) => s + l.qty * l.unit, 0);
@@ -526,16 +538,30 @@ function InvoiceDoc({
   const faint = "#9C9EA4";
   const line = "rgba(20,20,24,0.08)";
   const r = (k: number): React.CSSProperties => {
-    const p = tween(frame, 8 + k * 3, 20 + k * 3, ENTER2);
+    const p = tween(
+      frame,
+      docEl.start + docEl.beat("rowAt") + k * docEl.beat("rowStep"),
+      docEl.start + docEl.beat("rowEnd") + k * docEl.beat("rowStep"),
+      ENTER2,
+    );
     return {
       opacity: p,
       transform: `translateY(${(1 - p) * 10}px)${glide(midway(p) && !carried)}`,
     };
   };
-  const land = spring({ frame: frame - T.stamp, fps, config: CHIP });
+  const stampAt = stampEl.start;
+  const land = spring({ frame: frame - stampAt, fps, config: CHIP });
   const impactAt = (f: number) =>
-    spring({ frame: f - T.stamp - 3, fps, config: CHIP }) -
-    spring({ frame: f - T.stamp - 6, fps, config: CHIP });
+    spring({
+      frame: f - stampAt - stampEl.beat("knockAt"),
+      fps,
+      config: CHIP,
+    }) -
+    spring({
+      frame: f - stampAt - stampEl.beat("knockEnd"),
+      fps,
+      config: CHIP,
+    });
   const impact = impactAt(frame);
   // The stamp's knock shakes the whole page; the test is on its px, the
   // drop plus the shrink over the page's height.
@@ -730,7 +756,7 @@ function InvoiceDoc({
         <span>Page 1 of 1</span>
       </div>
 
-      {frame >= T.stamp ? (
+      {frame >= stampAt ? (
         <div
           style={{
             position: "absolute",
@@ -738,7 +764,12 @@ function InvoiceDoc({
             top: 446,
             transformOrigin: "50% 50%",
             transform: `rotate(${lerp(-20, -9, land)}deg) scale(${lerp(1.6, 1, land)})`,
-            opacity: tween(frame, T.stamp, T.stamp + 3, ENTER2),
+            opacity: tween(
+              frame,
+              stampAt,
+              stampAt + stampEl.beat("fade"),
+              ENTER2,
+            ),
             filter: `drop-shadow(0 ${Math.max(0, 1 - land) * 18}px ${Math.max(0, 1 - land) * 14}px rgba(0,0,0,${0.18 * Math.max(0, 1 - land)}))`,
           }}
         >
@@ -769,37 +800,53 @@ function ScaleLayer({
   );
 }
 
-export function InvoicePaid({
-  sender = "Halcyon Studio",
-  customer = "Kitebase, Inc.",
-  customerEmail = "ap@kitebase.com",
-  customerAddress = "2100 Market St, SF",
-  number = "INV-2041",
-  issued = "Oct 24, 2026",
-  due = "Nov 7, 2026",
-  lines = DEFAULT_LINES,
-  events = DEFAULT_EVENTS,
-  payoutAccount = "Business Checking ••4821",
-  payoutArrival = "Oct 29",
-  payoutFee = 5,
-  currency = "$",
-  theme = "light",
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = geist.fontFamily,
-  sendLabel = "Send invoice",
-  payoutTitle = "Payout on the way",
-  paidNote = "11 days early",
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  ground,
-  groundParams,
-}: InvoicePaidProps) {
+export function InvoicePaid(props: InvoicePaidProps) {
+  const {
+    sender = "Halcyon Studio",
+    customer = "Kitebase, Inc.",
+    customerEmail = "ap@kitebase.com",
+    customerAddress = "2100 Market St, SF",
+    number = "INV-2041",
+    issued = "Oct 24, 2026",
+    due = "Nov 7, 2026",
+    lines = DEFAULT_LINES,
+    events = DEFAULT_EVENTS,
+    payoutAccount = "Business Checking ••4821",
+    payoutArrival = "Oct 29",
+    payoutFee = 5,
+    currency = "$",
+    theme = "light",
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = geist.fontFamily,
+    sendLabel = "Send invoice",
+    payoutTitle = "Payout on the way",
+    paidNote = "11 days early",
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    ground,
+    groundParams,
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width, height, fps } = useSceneConfig();
+  const { width, height, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    invoicePaidTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const docEl = tl.get("doc");
+  const panelEl = tl.get("panel");
+  const cursorEl = tl.get("cursor");
+  const send = tl.get("send");
+  const viewed = tl.get("viewed");
+  const paid = tl.get("paid");
+  const stampEl = tl.get("stamp");
+  const payout = tl.get("payout");
   const tall = height > width;
   const DW = tall ? 720 : 1280;
   const DH = tall ? 1280 : 720;
@@ -821,15 +868,24 @@ export function InvoicePaid({
     ? { x: 60, y: 36, w: 600 }
     : { x: DW - 92 - 420, y: 40, w: 420 };
 
-  const docInAt = (f: number) => spring({ frame: f, fps, config: HEAVY });
-  const panelInAt = (f: number) => spring({ frame: f - 6, fps, config: CARD });
+  const docInAt = (f: number) =>
+    spring({ frame: f - docEl.start, fps, config: HEAVY });
+  const panelInAt = (f: number) =>
+    spring({ frame: f - panelEl.start, fps, config: CARD });
   const docIn = docInAt(frame);
   const panelIn = panelInAt(frame);
   // Neither spring lands exactly, so both are tested on their px.
   const docMoving = moves((f) => docInAt(f) * 60, frame, speed);
   const panelMoving = moves((f) => panelInAt(f) * 40, frame, speed);
+  const panelRow = (k: number) =>
+    tween(
+      frame,
+      panelEl.start + panelEl.beat("rowAt") + k * panelEl.beat("rowStep"),
+      panelEl.start + panelEl.beat("rowEnd") + k * panelEl.beat("rowStep"),
+      ENTER2,
+    );
   const rowIn = (k: number): React.CSSProperties => {
-    const p = tween(frame, 12 + k * 3, 24 + k * 3, ENTER2);
+    const p = panelRow(k);
     return {
       opacity: p,
       transform: `translateY(${(1 - p) * 10}px)${glide(midway(p) && !panelMoving)}`,
@@ -843,14 +899,14 @@ export function InvoicePaid({
   const cur = pathAt(
     [
       {
-        t: 14,
+        t: cursorEl.start,
         x: tall ? DW - 80 : DW - 60,
         y: tall ? panel.y + 420 : DH - 60,
       },
-      { t: T.send - 2, ...sendPt },
-      { t: T.send + 8, ...sendPt },
+      { t: send.start + send.beat("arriveAt"), ...sendPt },
+      { t: send.start + send.beat("leaveAt"), ...sendPt },
       {
-        t: T.send + 30,
+        t: send.start + send.beat("awayAt"),
         x: sendPt.x + 40,
         y: sendPt.y + 140,
       },
@@ -859,18 +915,44 @@ export function InvoicePaid({
   );
   const press = Math.max(
     0,
-    spring({ frame: frame - T.send, fps, config: CHIP }) -
-      spring({ frame: frame - T.send - 4, fps, config: CHIP }),
+    spring({ frame: frame - send.start, fps, config: CHIP }) -
+      spring({
+        frame: frame - send.start - send.beat("release"),
+        fps,
+        config: CHIP,
+      }),
   );
   const cursorOp =
-    tween(frame, 14, 20, ENTER2) *
-    (1 - tween(frame, T.send + 20, T.send + 28, EXIT));
-  const sentSwap = tween(frame, T.send + 2, T.send + 10, MOVE);
+    tween(frame, cursorEl.start, cursorEl.end, ENTER2) *
+    (1 -
+      tween(
+        frame,
+        send.start + send.beat("fadeOutAt"),
+        send.start + send.beat("fadeOutEnd"),
+        EXIT,
+      ));
+  const sentSwap = tween(
+    frame,
+    send.start + send.beat("swapAt"),
+    send.start + send.beat("swapEnd"),
+    MOVE,
+  );
 
-  const reachAt = [0, T.send + 4, T.viewed, T.paid];
-  const paidP = tween(frame, T.paid, T.paid + 8, MOVE);
+  const reachAt = [
+    docEl.start,
+    send.start + send.beat("reachAt"),
+    viewed.start,
+    paid.start,
+  ];
+  const pillAt = [
+    docEl.start,
+    send.start + send.beat("pillAt"),
+    viewed.start,
+    paid.start,
+  ];
+  const paidP = tween(frame, paid.start, paid.end, MOVE);
   const notifInAt = (f: number) =>
-    spring({ frame: f - T.payout, fps, config: CARD });
+    spring({ frame: f - payout.start, fps, config: CARD });
   const notifIn = notifInAt(frame);
   const notifMoving = moves((f) => notifInAt(f) * 70, frame, speed);
 
@@ -922,7 +1004,7 @@ export function InvoicePaid({
               transformOrigin: "0 0",
               borderRadius: 6,
               boxShadow: pal.docShadow,
-              opacity: tween(frame, 0, 10, ENTER2),
+              opacity: tween(frame, docEl.start, docEl.end, ENTER2),
               transform: `translateY(${(1 - docIn) * 60}px) scale(${docScale * (0.97 + 0.03 * docIn)}) rotate(${(1 - docIn) * -2}deg)${glide(docMoving)}`,
             }}
           >
@@ -940,6 +1022,8 @@ export function InvoicePaid({
               stampDate={paidDay.toUpperCase() || "PAID"}
               fontFamily={fontFamily}
               carried={docMoving}
+              docEl={docEl}
+              stampEl={stampEl}
             />
           </div>
 
@@ -981,7 +1065,8 @@ export function InvoicePaid({
                 fps={fps}
                 pal={pal}
                 accent={accent}
-                carried={panelMoving || midway(tween(frame, 12, 24, ENTER2))}
+                carried={panelMoving || midway(panelRow(0))}
+                at={pillAt}
               />
               <div style={{ flex: 1 }} />
               <div
