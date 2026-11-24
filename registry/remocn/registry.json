@@ -15909,12 +15909,17 @@
       "title": "Layout Guides",
       "description": "Dashed column guides drop over a grid, one column fills and gets a label, a gutter is measured and a now line slides across.",
       "dependencies": ["remotion"],
-      "registryDependencies": ["@remocn/audit-core"],
+      "registryDependencies": ["@remocn/audit-core", "@remocn/timeline"],
       "files": [
         {
           "path": "layout-guides/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/layout-guides.tsx"
+          "target": "components/remocn/layout-guides/index.tsx"
+        },
+        {
+          "path": "layout-guides/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/layout-guides/timeline.ts"
         }
       ]
     },
