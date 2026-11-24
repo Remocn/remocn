@@ -15272,12 +15272,21 @@
       "title": "Ink Bloom",
       "description": "Ink blooms across the page and settles into the Remocn logo.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/ink-bloom/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/ink-bloom.tsx"
+          "target": "components/remocn/ink-bloom/index.tsx"
+        },
+        {
+          "path": "registry/remocn/ink-bloom/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/ink-bloom/timeline.ts"
         }
       ],
       "type": "registry:component"
