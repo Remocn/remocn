@@ -5516,13 +5516,19 @@
       "registryDependencies": [
         "@remocn/gsh",
         "@remocn/glide",
-        "@remocn/frame-rate"
+        "@remocn/frame-rate",
+        "@remocn/timeline"
       ],
       "files": [
         {
           "path": "giant-mark-backdrop/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/giant-mark-backdrop.tsx"
+          "target": "components/remocn/giant-mark-backdrop/index.tsx"
+        },
+        {
+          "path": "giant-mark-backdrop/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/giant-mark-backdrop/timeline.ts"
         }
       ]
     },
