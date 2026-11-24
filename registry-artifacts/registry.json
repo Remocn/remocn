@@ -13482,12 +13482,21 @@
       "title": "Radar Compare",
       "description": "A radar polygon for Remocn grows over a competitor outline next to the name and tagline.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/radar-compare/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/radar-compare.tsx"
+          "target": "components/remocn/radar-compare/index.tsx"
+        },
+        {
+          "path": "registry/remocn/radar-compare/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/radar-compare/timeline.ts"
         }
       ],
       "type": "registry:component"

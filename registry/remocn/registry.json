@@ -13487,10 +13487,19 @@
         {
           "path": "radar-compare/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/radar-compare.tsx"
+          "target": "components/remocn/radar-compare/index.tsx"
+        },
+        {
+          "path": "radar-compare/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/radar-compare/timeline.ts"
         }
       ],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"]
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ]
     },
     {
       "name": "concentric-scale",
