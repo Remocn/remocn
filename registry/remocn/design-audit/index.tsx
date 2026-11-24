@@ -28,7 +28,14 @@ import {
   useAuditFrame,
   VersionChip,
 } from "@/lib/remocn/audit-core";
+import { useSceneConfig } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DESIGN_AUDIT_LENGTH,
+  type DesignAuditElementId,
+  designAuditTimeline,
+} from "./timeline";
 
 export type DesignAuditMarks = {
   measures?: Measure[];
@@ -68,6 +75,11 @@ export type DesignAuditProps = {
   scanColor?: string;
   background?: string;
   speed?: number;
+  /**
+   * Moves, trims or stretches the audit's steps, scan and camera moves, by
+   * the ids in `./timeline`. Frames on the scene timeline, after `speed`.
+   */
+  timing?: Timing<DesignAuditElementId>;
 };
 
 export const designAuditDefaults = {
@@ -81,19 +93,7 @@ export const designAuditDefaults = {
   speed: 1,
 };
 
-const T = {
-  redline: 14,
-  audit: 34,
-  scan: 72,
-  scanLength: 64,
-  zoomIn: 156,
-  callouts: 180,
-  tokens: 208,
-  zoomOut: 252,
-  guides: 278,
-};
-
-export const designAuditLength = 332;
+export const designAuditLength = DESIGN_AUDIT_LENGTH;
 
 export function DesignAudit(props: DesignAuditProps) {
   const { speed = 1 } = props;
@@ -104,24 +104,43 @@ export function DesignAudit(props: DesignAuditProps) {
   );
 }
 
-function Scene({
-  before,
-  after,
-  beforeMarks,
-  issues,
-  afterMarks,
-  focus,
-  guides,
-  steps = designAuditDefaults.steps,
-  brand = designAuditDefaults.brand,
-  versions = designAuditDefaults.versions,
-  auditColor = designAuditDefaults.auditColor,
-  fixColor = designAuditDefaults.fixColor,
-  scanColor = designAuditDefaults.scanColor,
-  background = designAuditDefaults.background,
-}: DesignAuditProps) {
+function Scene(props: DesignAuditProps) {
+  const {
+    before,
+    after,
+    beforeMarks,
+    issues,
+    afterMarks,
+    focus,
+    guides,
+    steps = designAuditDefaults.steps,
+    brand = designAuditDefaults.brand,
+    versions = designAuditDefaults.versions,
+    auditColor = designAuditDefaults.auditColor,
+    fixColor = designAuditDefaults.fixColor,
+    scanColor = designAuditDefaults.scanColor,
+    background = designAuditDefaults.background,
+    speed = 1,
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = useAuditFrame();
+  const { durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    designAuditTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const enterEl = tl.get("enter");
+  const redlines = tl.get("redlines");
+  const issuesEl = tl.get("issues");
+  const scan = tl.get("scan");
+  const zoomIn = tl.get("zoom-in");
+  const callouts = tl.get("callouts");
+  const tokens = tl.get("tokens");
+  const zoomOut = tl.get("zoom-out");
+  const guidesEl = tl.get("guides");
   const demo = !before && !after;
   const redBefore = beforeMarks ?? (demo ? DEMO.before : {});
   const blueAfter = afterMarks ?? (demo ? DEMO.after : {});
@@ -130,17 +149,22 @@ function Scene({
   const grid =
     guides === undefined ? (demo ? DEMO.after.guides : null) : guides;
 
-  const y = easeInOut(frame, [T.scan, T.scan + T.scanLength], [-20, 760]);
+  const y = easeInOut(frame, [scan.start, scan.end], [-20, 760]);
   const band = easeInOut(
     frame,
-    [T.scan - 4, T.scan + 2, T.scan + T.scanLength - 8, T.scan + T.scanLength],
+    [
+      scan.start + scan.beat("lead"),
+      scan.start + scan.beat("lit"),
+      scan.end - scan.beat("fade"),
+      scan.end,
+    ],
     [0, 1, 1, 0],
   );
-  const enter = progress(frame, 0, 18);
+  const enter = progress(frame, enterEl.start, enterEl.length);
   const zoom = zoomed
     ? easeInOut(
         frame,
-        [T.zoomIn, T.zoomIn + 22, T.zoomOut, T.zoomOut + 22],
+        [zoomIn.start, zoomIn.end, zoomOut.start, zoomOut.end],
         [0, 1, 1, 0],
       )
     : 0;
@@ -150,12 +174,20 @@ function Scene({
   // within a hair of rest, so "moving" is read off the clock, not off `zoom`.
   const zooming =
     zoomed !== null &&
-    (midway((frame - T.zoomIn) / 22) || midway((frame - T.zoomOut) / 22));
+    (midway((frame - zoomIn.start) / zoomIn.length) ||
+      midway((frame - zoomOut.start) / zoomOut.length));
   const camera = `translate(${(640 - center.x) * zoom}px, ${(360 - center.y) * zoom}px) scale(${1 + zoom * 1.35})${glide(zooming)}`;
-  const fadeOut = (at: number) => easeInOut(frame, [at - 10, at], [1, 0]);
+  const fadeOut = (from: number, to: number) =>
+    easeInOut(frame, [from, to], [1, 0]);
 
   const active =
-    frame < T.scan ? 0 : frame < T.zoomIn ? 1 : frame < T.tokens ? 2 : 3;
+    frame < scan.start
+      ? 0
+      : frame < zoomIn.start
+        ? 1
+        : frame < tokens.start
+          ? 2
+          : 3;
 
   return (
     <AbsoluteFill style={{ background, fontFamily: FONT }}>
@@ -180,12 +212,12 @@ function Scene({
                   measures={redBefore.measures ?? []}
                   radii={redBefore.radii}
                   color={auditColor}
-                  start={T.redline}
+                  start={redlines.start}
                 />
                 <IssueMarks
                   issues={flagged}
                   color={auditColor}
-                  start={T.audit}
+                  start={issuesEl.start}
                 />
               </>
             }
@@ -193,7 +225,14 @@ function Scene({
               <>
                 {after ?? <DemoDashboard v={2} />}
                 <AbsoluteFill
-                  style={{ opacity: zoomed ? fadeOut(T.zoomIn) : 1 }}
+                  style={{
+                    opacity: zoomed
+                      ? fadeOut(
+                          zoomIn.start + zoomIn.beat("clear"),
+                          zoomIn.start,
+                        )
+                      : 1,
+                  }}
                 >
                   <MeasureMarks
                     measures={blueAfter.measures ?? []}
@@ -209,22 +248,32 @@ function Scene({
           {zoomed && (
             <>
               <Spotlight rect={zoomed.rect} color={background} opacity={zoom} />
-              {frame >= T.callouts && (
-                <AbsoluteFill style={{ opacity: fadeOut(T.zoomOut + 6) }}>
+              {frame >= callouts.start && (
+                <AbsoluteFill
+                  style={{
+                    opacity: fadeOut(
+                      zoomOut.start + zoomOut.beat("hide"),
+                      zoomOut.start + zoomOut.beat("gone"),
+                    ),
+                  }}
+                >
                   <MeasureMarks
                     measures={zoomed.measures ?? []}
                     radii={zoomed.radii}
                     color={fixColor}
-                    start={T.callouts}
-                    stagger={4}
+                    start={callouts.start}
+                    stagger={callouts.beat("stagger")}
                   />
-                  <TokenMarks tokens={zoomed.tokens ?? []} start={T.tokens} />
+                  <TokenMarks
+                    tokens={zoomed.tokens ?? []}
+                    start={tokens.start}
+                  />
                 </AbsoluteFill>
               )}
             </>
           )}
           {grid && (
-            <GuideMarks guides={grid} color={fixColor} start={T.guides} />
+            <GuideMarks guides={grid} color={fixColor} start={guidesEl.start} />
           )}
         </AbsoluteFill>
       </AbsoluteFill>
