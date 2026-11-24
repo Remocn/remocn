@@ -9039,10 +9039,19 @@
         {
           "path": "beat-count/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/beat-count.tsx"
+          "target": "components/remocn/beat-count/index.tsx"
+        },
+        {
+          "path": "beat-count/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/beat-count/timeline.ts"
         }
       ],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"]
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ]
     },
     {
       "name": "magnitude-push",
