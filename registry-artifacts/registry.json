@@ -7006,12 +7006,21 @@
       "title": "Verbed",
       "description": "A dictionary entry for \"remocn\" with senses, inflections and an example sentence.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/verbed/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/verbed.tsx"
+          "target": "components/remocn/verbed/index.tsx"
+        },
+        {
+          "path": "registry/remocn/verbed/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/verbed/timeline.ts"
         }
       ],
       "type": "registry:component"
