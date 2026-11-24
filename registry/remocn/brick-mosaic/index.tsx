@@ -3,6 +3,15 @@
 import { useId, useMemo } from "react";
 import { AbsoluteFill, Easing, interpolate, random } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  type BrickMosaicElementId,
+  brickMosaicTimeline,
+  COL_STEP,
+  FALL,
+  HOP,
+  JITTER,
+} from "./timeline";
 
 export type BrickMosaicProps = {
   /**
@@ -21,6 +30,11 @@ export type BrickMosaicProps = {
   /** Frames between rows. */
   rowDelay?: number;
   speed?: number;
+  /**
+   * Moves, trims or stretches the baseplate and each row of bricks, by the
+   * ids in `./timeline`. Frames on the scene timeline, after `speed`.
+   */
+  timing?: Timing<BrickMosaicElementId>;
 };
 
 export const brickMosaicDefaults = {
@@ -36,8 +50,6 @@ export const brickMosaicDefaults = {
   speed: 1,
 };
 
-const FALL = 7;
-const HOP = 5;
 const clamp = {
   extrapolateLeft: "clamp" as const,
   extrapolateRight: "clamp" as const,
@@ -55,21 +67,30 @@ function defaultPattern(cols: number, rows: number): string[] {
 }
 
 export function getBrickMosaicLength(rows: number, cols: number, rowDelay = 3) {
-  return Math.ceil((rows - 1) * rowDelay + cols * 0.12 + 1.5 + FALL + HOP);
+  return Math.ceil(
+    (rows - 1) * rowDelay + cols * COL_STEP + JITTER + FALL + HOP,
+  );
 }
 
-export function BrickMosaic({
-  pattern,
-  cols = brickMosaicDefaults.cols,
-  rows = brickMosaicDefaults.rows,
-  colors = brickMosaicDefaults.colors,
-  background = brickMosaicDefaults.background,
-  rowDelay = brickMosaicDefaults.rowDelay,
-  speed = brickMosaicDefaults.speed,
-}: BrickMosaicProps) {
+export function BrickMosaic(props: BrickMosaicProps) {
+  const {
+    pattern,
+    cols = brickMosaicDefaults.cols,
+    rows = brickMosaicDefaults.rows,
+    colors = brickMosaicDefaults.colors,
+    background = brickMosaicDefaults.background,
+    speed = brickMosaicDefaults.speed,
+    timing,
+  } = props;
   const frame = useSceneFrame();
-  const { width: W, height: H, fps } = useSceneConfig();
+  const { width: W, height: H, fps, durationInFrames } = useSceneConfig();
   const t = (frame / fps) * 30 * speed;
+  const tl = useTimeline(
+    brickMosaicTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const id = useId().replace(/[^a-zA-Z0-9_-]/g, "");
 
   const grid = useMemo(() => {
@@ -93,19 +114,22 @@ export function BrickMosaic({
     row.map((color, col) => {
       if (!color) return null;
       const fromBottom = nRows - 1 - r;
+      const lane = tl.get(`row:${fromBottom}`);
+      const fall = lane.beat("fall");
+      const hop = lane.beat("hop");
       const start =
-        fromBottom * rowDelay + col * 0.12 + random(`brick-${r}-${col}`) * 1.5;
+        lane.start + col * COL_STEP + random(`brick-${r}-${col}`) * JITTER;
       const local = t - start;
       if (local < 0) return null;
       let y = 0;
-      if (local < FALL) {
-        const p = local / FALL;
+      if (local < fall) {
+        const p = local / fall;
         y = -s * 1.8 * (1 - p * p);
-      } else if (local < FALL + HOP) {
-        const p = (local - FALL) / HOP;
+      } else if (local < fall + hop) {
+        const p = (local - fall) / hop;
         y = -s * 0.12 * 4 * p * (1 - p);
       }
-      const opacity = interpolate(local, [0, 2], [0, 1], clamp);
+      const opacity = interpolate(local, [0, lane.beat("fade")], [0, 1], clamp);
       const x0 = ox + col * s + gap / 2;
       const y0 = oy + r * s + gap / 2 + y;
       const b = s - gap;
@@ -140,7 +164,8 @@ export function BrickMosaic({
     }),
   );
 
-  const landed = interpolate(t, [0, 10], [0, 1], {
+  const plate = tl.get("plate");
+  const landed = interpolate(t, [plate.start, plate.end], [0, 1], {
     ...clamp,
     easing: Easing.out(Easing.cubic),
   });

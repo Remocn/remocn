@@ -5227,12 +5227,17 @@
       "title": "Brick Mosaic",
       "description": "Toy bricks drop in row by row from the bottom with a tiny bounce, rebuilding a pixel-art logo on a baseplate.",
       "dependencies": ["remotion"],
-      "registryDependencies": ["@remocn/frame-rate"],
+      "registryDependencies": ["@remocn/frame-rate", "@remocn/timeline"],
       "files": [
         {
           "path": "brick-mosaic/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/brick-mosaic.tsx"
+          "target": "components/remocn/brick-mosaic/index.tsx"
+        },
+        {
+          "path": "brick-mosaic/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/brick-mosaic/timeline.ts"
         }
       ]
     },
