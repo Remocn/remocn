@@ -10672,10 +10672,19 @@
         {
           "path": "deadpan-box/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/deadpan-box.tsx"
+          "target": "components/remocn/deadpan-box/index.tsx"
+        },
+        {
+          "path": "deadpan-box/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/deadpan-box/timeline.ts"
         }
       ],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"]
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ]
     },
     {
       "name": "stripe-mask",

@@ -13,6 +13,12 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_QUOTE,
+  type DeadpanBoxElementId,
+  deadpanBoxTimeline,
+} from "./timeline";
 
 /** Newspaper-ad grotesk for the copy: deadpan, upright, no shouting. */
 const copy = loadSchibsted("normal", {
@@ -87,15 +93,14 @@ export interface DeadpanBoxProps {
   grain?: boolean;
   theme?: "dark" | "light";
   speed?: number;
+  /**
+   * Moves, trims or stretches the box growing, single quote lines, the
+   * punchline flood, the attribution and the sign-off, by the ids in
+   * `./timeline`. Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<DeadpanBoxElementId>;
 }
 
-// Timing, in frames at speed 1.
-const GROW_AT = 12;
-const GROW_LEN = 24;
-const QUOTE_AT = 28;
-const LINE_STAGGER = 5;
-const PUNCH_AT = 92; // after a deadpan beat of a little over a second
-const PUNCH_LEN = 16;
 export const DEADPAN_BOX_DURATION = 150;
 
 const EASE_IO = Easing.bezier(0.65, 0, 0.35, 1);
@@ -288,26 +293,32 @@ function ScaleLayer({
   );
 }
 
-export function DeadpanBox({
-  quote = "Nobody watches launch videos.",
-  attribution = "Founder. Nobody watched the launch.",
-  brand = "remocn",
-  logo,
-  accent = "#3B5BFD",
-  ink: inkProp,
-  background,
-  fontFamily = copy.fontFamily,
-  stagger = LINE_STAGGER,
-  punchAt = PUNCH_AT,
-  scale = 1,
-  delay = 0,
-  grain = true,
-  theme = "dark",
-  speed = 1,
-}: DeadpanBoxProps) {
+export function DeadpanBox(props: DeadpanBoxProps) {
+  const {
+    quote = DEFAULT_QUOTE,
+    attribution = "Founder. Nobody watched the launch.",
+    brand = "remocn",
+    logo,
+    accent = "#3B5BFD",
+    ink: inkProp,
+    background,
+    fontFamily = copy.fontFamily,
+    scale = 1,
+    delay = 0,
+    grain = true,
+    theme = "dark",
+    speed = 1,
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H } = useSceneConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    deadpanBoxTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const c = THEMES[theme];
   const ink = inkProp ?? "#FFFFFF";
   const stage =
@@ -383,15 +394,22 @@ export function DeadpanBox({
     h: mastH,
   };
 
-  const growW = interpolate(t, [GROW_AT, GROW_AT + GROW_LEN], [0, 1], {
-    ...CLAMP,
-    easing: EASE_IO,
-  });
-  const growH = interpolate(t, [GROW_AT + 3, GROW_AT + GROW_LEN + 3], [0, 1], {
-    ...CLAMP,
-    easing: EASE_IO,
-  });
-  const punch = interpolate(t, [punchAt, punchAt + PUNCH_LEN], [0, 1], {
+  const grow = tl.get("grow");
+  const punchEl = tl.get("punch");
+  const growW = interpolate(
+    t,
+    [grow.start, grow.start + grow.beat("width")],
+    [0, 1],
+    { ...CLAMP, easing: EASE_IO },
+  );
+  const heightAt = grow.start + grow.beat("heightAt");
+  const growH = interpolate(
+    t,
+    [heightAt, heightAt + grow.beat("height")],
+    [0, 1],
+    { ...CLAMP, easing: EASE_IO },
+  );
+  const punch = interpolate(t, [punchEl.start, punchEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_SNAP,
   });
@@ -406,7 +424,8 @@ export function DeadpanBox({
     w: lerp(hugW, W + 8, punch),
     h: lerp(hugH, H + 8, punch),
   };
-  const mastOut = interpolate(t, [GROW_AT + 6, GROW_AT + 15], [1, 0], {
+  const mastAt = grow.start + grow.beat("mastAt");
+  const mastOut = interpolate(t, [mastAt, mastAt + grow.beat("mast")], [1, 0], {
     ...CLAMP,
     easing: Easing.bezier(0.4, 0, 1, 1),
   });
@@ -422,18 +441,20 @@ export function DeadpanBox({
     Math.abs(breatheAt(t + speed) - breathe) > 1e-7 ||
     Math.abs(breathe - breatheAt(t - speed)) > 1e-7;
 
-  const lineIn = (i: number) =>
-    interpolate(
-      t,
-      [QUOTE_AT + i * stagger, QUOTE_AT + i * stagger + 22],
-      [0, 1],
-      { ...CLAMP, easing: EASE_OUT },
-    );
-  const rowIn = interpolate(t, [punchAt + 8, punchAt + 26], [0, 1], {
+  const lineIn = (i: number) => {
+    const e = tl.get(`line:${i}`);
+    return interpolate(t, [e.start, e.end], [0, 1], {
+      ...CLAMP,
+      easing: EASE_OUT,
+    });
+  };
+  const row = tl.get("attribution");
+  const signEl = tl.get("sign");
+  const rowIn = interpolate(t, [row.start, row.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
-  const signIn = interpolate(t, [punchAt + 16, punchAt + 34], [0, 1], {
+  const signIn = interpolate(t, [signEl.start, signEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });

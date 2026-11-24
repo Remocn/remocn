@@ -10667,12 +10667,21 @@
       "title": "Deadpan Box",
       "description": "A flat, deadpan quote in a blue box with a small attribution line.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/deadpan-box/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/deadpan-box.tsx"
+          "target": "components/remocn/deadpan-box/index.tsx"
+        },
+        {
+          "path": "registry/remocn/deadpan-box/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/deadpan-box/timeline.ts"
         }
       ],
       "type": "registry:component"
