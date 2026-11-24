@@ -6766,13 +6766,19 @@
       "registryDependencies": [
         "@remocn/gsh",
         "@remocn/glide",
-        "@remocn/frame-rate"
+        "@remocn/frame-rate",
+        "@remocn/timeline"
       ],
       "files": [
         {
           "path": "card-fan/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/card-fan.tsx"
+          "target": "components/remocn/card-fan/index.tsx"
+        },
+        {
+          "path": "card-fan/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/card-fan/timeline.ts"
         }
       ]
     },
