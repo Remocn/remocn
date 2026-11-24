@@ -11009,12 +11009,21 @@
       "title": "Case Flip",
       "description": "A headline flips letter by letter from lower to upper and back to its final casing.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/case-flip/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/case-flip.tsx"
+          "target": "components/remocn/case-flip/index.tsx"
+        },
+        {
+          "path": "registry/remocn/case-flip/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/case-flip/timeline.ts"
         }
       ],
       "type": "registry:component"
