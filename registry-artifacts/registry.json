@@ -12736,12 +12736,21 @@
       "title": "Changelog Scroll",
       "description": "A changelog list scrolls and one row enlarges into a highlighted headline entry.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/changelog-scroll/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/changelog-scroll.tsx"
+          "target": "components/remocn/changelog-scroll/index.tsx"
+        },
+        {
+          "path": "registry/remocn/changelog-scroll/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/changelog-scroll/timeline.ts"
         }
       ],
       "type": "registry:component"
