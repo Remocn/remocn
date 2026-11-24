@@ -4,6 +4,28 @@ import { useMemo } from "react";
 import { Easing } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import {
+  type ResolvedElement,
+  type ResolvedTimeline,
+  type Timing,
+  useTimeline,
+} from "@/lib/remocn/timeline";
+import {
+  chordSizesOf,
+  HOLD,
+  KEYSTROKE_STEPS,
+  type KeystrokeCue,
+  type KeystrokeDraft,
+  type KeystrokeElementId,
+  type KeystrokeModifier,
+  keystrokePlan,
+  keystrokeTimeline,
+  MAX_FRAMES,
+  MODIFIERS,
+  PRESS,
+  planChords,
+  splitChord,
+} from "./timeline";
 
 export type KeystrokePlatform = "mac" | "windows";
 export type KeystrokeTheme = "light" | "dark";
@@ -23,11 +45,7 @@ export type KeystrokeIcon =
   | "left"
   | "right";
 
-export interface KeystrokeStep {
-  at: number;
-  keys: string;
-  hold?: number;
-}
+export type KeystrokeStep = KeystrokeCue;
 
 export interface KeystrokeProps {
   steps?: readonly KeystrokeStep[];
@@ -40,9 +58,15 @@ export interface KeystrokeProps {
   linger?: number;
   speed?: number;
   className?: string;
+  /**
+   * Moves, trims or stretches single steps, by the ids in `./timeline`.
+   * Frames on the scene timeline, after `speed`.
+   */
+  timing?: Timing<KeystrokeElementId>;
 }
 
-export interface KeystrokeOptions extends Omit<KeystrokeProps, "className"> {
+export interface KeystrokeOptions
+  extends Omit<KeystrokeProps, "className" | "timing"> {
   width?: number;
   height?: number;
   fps?: number;
@@ -106,8 +130,8 @@ export interface KeystrokePalette {
   shadow: string;
 }
 
-type Unset = "steps" | "className";
-type Modifier = "fn" | "ctrl" | "alt" | "shift" | "meta";
+type Unset = "steps" | "className" | "timing";
+type Modifier = KeystrokeModifier;
 type Named =
   | "enter"
   | "escape"
@@ -127,10 +151,7 @@ type Named =
 type IconShape = { box: string; paths: readonly string[] };
 type IconSpec = { label: string; icon: KeystrokeIcon; units: number };
 type NamedSpec = IconSpec | { label: string; word: string; units: number };
-type Draft = Omit<
-  KeystrokeGroup,
-  "index" | "label" | "layout" | "pushes" | "exit" | "end"
->;
+type Draft = KeystrokeDraft & { chords: KeystrokeChord[] };
 
 export const keystrokeDefaults: Required<Omit<KeystrokeProps, Unset>> = {
   platform: "mac",
@@ -143,11 +164,7 @@ export const keystrokeDefaults: Required<Omit<KeystrokeProps, Unset>> = {
   speed: 1,
 };
 
-export const keystrokeDefaultSteps: readonly KeystrokeStep[] = [
-  { at: 20, keys: "mod+k" },
-  { at: 78, keys: "g i" },
-  { at: 114, keys: "shift+mod+p" },
-];
+export const keystrokeDefaultSteps: readonly KeystrokeStep[] = KEYSTROKE_STEPS;
 
 export const keystrokePalettes: Record<KeystrokeTheme, KeystrokePalette> = {
   light: {
@@ -168,13 +185,7 @@ export const keystrokePalettes: Record<KeystrokeTheme, KeystrokePalette> = {
   },
 };
 
-const PRESS = 3;
-const PRESS_GAP = 3;
-const RELEASE_GAP = 3;
-const LEAD = 7;
 const STAGGER = 1;
-const BEAT = 2;
-const HOLD = 8;
 const RELEASE = 10;
 const RELEASE_RISE = 3;
 const RELEASE_TAPER = 6;
@@ -191,7 +202,6 @@ const PUSH = 10;
 const BRIEF = 18;
 const EXIT = 8;
 const TAIL = 14;
-const MAX_FRAMES = 600;
 const MIN_SIZE = 8;
 const MAX_SIZE = 400;
 const WALL = 0.16;
@@ -271,21 +281,6 @@ const ICONS: Record<KeystrokeIcon, IconShape> = {
   left: { box: "0 0 24 24", paths: ["m12 19-7-7 7-7", "M19 12H5"] },
   right: { box: "0 0 24 24", paths: ["M5 12h14", "m12 5 7 7-7 7"] },
 };
-
-const MODIFIERS = new Map<string, Modifier>([
-  ["fn", "fn"],
-  ["ctrl", "ctrl"],
-  ["control", "ctrl"],
-  ["alt", "alt"],
-  ["option", "alt"],
-  ["opt", "alt"],
-  ["shift", "shift"],
-  ["cmd", "meta"],
-  ["command", "meta"],
-  ["meta", "meta"],
-  ["win", "meta"],
-  ["super", "meta"],
-]);
 
 const MODIFIER_ORDER: Record<KeystrokePlatform, readonly Modifier[]> = {
   mac: ["fn", "ctrl", "alt", "shift", "meta"],
@@ -538,18 +533,6 @@ function keyOf(part: string, platform: KeystrokePlatform): KeystrokeKey {
   return wordKey(name, text, text, platform, false);
 }
 
-function splitChord(token: string) {
-  const parts = token.split("+");
-  const names: string[] = [];
-  for (const [index, part] of parts.entries()) {
-    if (part !== "") names.push(part);
-    else if (index === parts.length - 1 && parts[index - 1] === "") {
-      names.push("+");
-    }
-  }
-  return names;
-}
-
 function parseChord(token: string, platform: KeystrokePlatform) {
   const held = new Set<Modifier>();
   const keys: KeystrokeKey[] = [];
@@ -599,73 +582,57 @@ export function getKeystrokeLayout(
   return layout;
 }
 
-function schedule(chords: readonly KeystrokeChord[], hold: number) {
-  const timing: KeystrokeChordTiming[] = [];
-  let enter = 0;
-  for (const chord of chords) {
-    const last = chord.length - 1;
-    const fire = enter + LEAD + PRESS_GAP * last + PRESS;
-    const keys = chord.map((_, index) => ({
-      press: fire - PRESS - PRESS_GAP * (last - index),
-      release: fire + hold + RELEASE_GAP * (last - index),
-    }));
-    timing.push({ enter, fire, keys });
-    enter = fire + hold + RELEASE_GAP * last + BEAT;
-  }
-  return timing;
+// A step moved or stretched by `timing`: every frame in it is placed
+// relative to the element. An untouched step is returned as it was.
+function placeDraft(
+  draft: KeystrokeDraft,
+  e: ResolvedElement<KeystrokeElementId>,
+): KeystrokeDraft {
+  const span = draft.lastRelease - draft.enter;
+  if (e.start === draft.enter && e.length === span) return draft;
+  const k = span > 0 ? e.length / span : 1;
+  const place = (v: number) => round(e.start + (v - draft.enter) * k);
+  return {
+    ...draft,
+    timing: draft.timing.map((chord) => ({
+      enter: place(chord.enter),
+      fire: place(chord.fire),
+      keys: chord.keys.map((key) => ({
+        press: place(key.press),
+        release: place(key.release),
+      })),
+    })),
+    at: place(draft.at),
+    hold: round(draft.hold * k),
+    enter: place(draft.enter),
+    lastRelease: place(draft.lastRelease),
+  };
 }
 
 export function getKeystrokeLeadIn(keys: string, hold = HOLD) {
-  const chords = parseKeystrokeKeys(keys);
-  if (chords.length === 0) return 0;
-  const timing = schedule(chords, within(hold, HOLD, 0, MAX_FRAMES));
+  const sizes = chordSizesOf(keys);
+  if (sizes.length === 0) return 0;
+  const timing = planChords(sizes, within(hold, HOLD, 0, MAX_FRAMES));
   return timing[timing.length - 1].fire - timing[0].enter;
 }
 
 export function getKeystrokeTimeline(
   options: Pick<KeystrokeOptions, "steps" | "platform" | "linger" | "fps"> = {},
+  /** The resolved schedule, with `timing` applied; the plan as is without it. */
+  tl?: ResolvedTimeline<KeystrokeElementId>,
 ) {
   const platform = platformOf(options.platform);
-  const scale = 30 / fpsOf(options.fps);
-  const lingerFrames = within(
-    options.linger,
-    keystrokeDefaults.linger,
-    0,
-    MAX_FRAMES,
-  );
-  const linger = lingerFrames * scale;
-  const steps = options.steps ?? keystrokeDefaultSteps;
-  const drafts: Draft[] = [];
-  for (const [step, entry] of steps.entries()) {
-    if (typeof entry.at !== "number" || !Number.isFinite(entry.at)) continue;
-    const chords = parseKeystrokeKeys(entry.keys, platform);
-    if (chords.length === 0) continue;
-    const at = entry.at * scale;
-    const hold = within(entry.hold, HOLD, 0, MAX_FRAMES) * scale;
-    const planned = schedule(chords, hold);
-    const offset = at - planned[planned.length - 1].fire;
-    const timing = planned.map((chord) => ({
-      enter: round(chord.enter + offset),
-      fire: round(chord.fire + offset),
-      keys: chord.keys.map((key) => ({
-        press: round(key.press + offset),
-        release: round(key.release + offset),
-      })),
-    }));
-    const releases = timing.flatMap((chord) =>
-      chord.keys.map((key) => key.release),
-    );
-    drafts.push({
-      step,
-      keys: entry.keys,
-      chords,
-      timing,
-      at: round(at),
-      hold: round(hold),
-      enter: timing[0].enter,
-      lastRelease: Math.max(...releases),
-    });
-  }
+  const plan = keystrokePlan(options);
+  const linger = plan.linger;
+  const placed = tl
+    ? plan.drafts.map((draft) =>
+        placeDraft(draft, tl.get(`step:${draft.step}`)),
+      )
+    : plan.drafts;
+  const drafts: Draft[] = placed.map((draft) => ({
+    ...draft,
+    chords: parseKeystrokeKeys(draft.keys, platform),
+  }));
   drafts.sort((a, b) => a.enter - b.enter || a.at - b.at || a.step - b.step);
   const groups = drafts.map((draft, index): KeystrokeGroup => {
     const pushes: number[] = [];
@@ -919,24 +886,32 @@ function Legend({
   );
 }
 
-export function Keystroke({
-  steps = keystrokeDefaultSteps,
-  platform = keystrokeDefaults.platform,
-  theme = keystrokeDefaults.theme,
-  accent = keystrokeDefaults.accent,
-  x = keystrokeDefaults.x,
-  y = keystrokeDefaults.y,
-  size = keystrokeDefaults.size,
-  linger = keystrokeDefaults.linger,
-  speed = keystrokeDefaults.speed,
-  className,
-}: KeystrokeProps) {
+export function Keystroke(props: KeystrokeProps) {
+  const {
+    steps = keystrokeDefaultSteps,
+    platform = keystrokeDefaults.platform,
+    theme = keystrokeDefaults.theme,
+    accent = keystrokeDefaults.accent,
+    x = keystrokeDefaults.x,
+    y = keystrokeDefaults.y,
+    size = keystrokeDefaults.size,
+    linger = keystrokeDefaults.linger,
+    speed = keystrokeDefaults.speed,
+    className,
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = useSceneFrame();
-  const { width, height, fps } = useSceneConfig();
+  const { width, height, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    keystrokeTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const timeline = useMemo(
-    () => getKeystrokeTimeline({ steps, platform, linger, fps }),
-    [steps, platform, linger, fps],
+    () => getKeystrokeTimeline({ steps, platform, linger, fps }, tl),
+    [steps, platform, linger, fps, tl],
   );
   const state = getKeystrokeState(
     frame,

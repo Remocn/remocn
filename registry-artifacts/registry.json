@@ -3772,12 +3772,21 @@
       "title": "Keystroke",
       "description": "Physical keycaps rise in for each shortcut, press in real order with the modifiers held while the letter taps, spring back with a small capped overshoot, and leave after an idle hold, firing on the same frames as the remocn-ui steps they trigger.",
       "dependencies": ["remotion"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/keystroke/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/keystroke.tsx"
+          "target": "components/remocn/keystroke/index.tsx"
+        },
+        {
+          "path": "registry/remocn/keystroke/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/keystroke/timeline.ts"
         }
       ],
       "type": "registry:component"
