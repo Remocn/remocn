@@ -3,6 +3,8 @@
 import { useMemo } from "react";
 import { AbsoluteFill, Easing, interpolate, random } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import { type TinyPlanetElementId, tinyPlanetTimeline } from "./timeline";
 
 export type TinyPlanetColors = {
   sky: string;
@@ -29,6 +31,11 @@ export type TinyPlanetProps = {
   /** Ground color. Overrides `colors.ground`. */
   groundColor?: string;
   speed?: number;
+  /**
+   * Moves, trims or stretches the bend and the spin-up, by the ids in
+   * `./timeline`. Frames on the scene timeline, after `speed`.
+   */
+  timing?: Timing<TinyPlanetElementId>;
 };
 
 export const tinyPlanetDefaults = {
@@ -45,10 +52,6 @@ export const tinyPlanetDefaults = {
   } satisfies TinyPlanetColors,
   speed: 1,
 };
-
-const BEND_START = 8;
-const BEND_END = 40;
-const SPIN_RAMP = 14;
 
 type Block = { s0: number; s1: number; h: number; row: 0 | 1; spire: number };
 
@@ -79,19 +82,29 @@ function makeCity(length: number, height: number, count: number, seed: number) {
   return blocks;
 }
 
-export function TinyPlanet({
-  buildings = tinyPlanetDefaults.buildings,
-  seed = tinyPlanetDefaults.seed,
-  spin = tinyPlanetDefaults.spin,
-  colors: colorOverrides,
-  skyColor,
-  sunColor,
-  buildingColor,
-  groundColor,
-  speed = tinyPlanetDefaults.speed,
-}: TinyPlanetProps) {
+export function TinyPlanet(props: TinyPlanetProps) {
+  const {
+    buildings = tinyPlanetDefaults.buildings,
+    seed = tinyPlanetDefaults.seed,
+    spin = tinyPlanetDefaults.spin,
+    colors: colorOverrides,
+    skyColor,
+    sunColor,
+    buildingColor,
+    groundColor,
+    speed = tinyPlanetDefaults.speed,
+    timing,
+  } = props;
   const frame = useSceneFrame();
-  const { width, height, fps } = useSceneConfig();
+  const { width, height, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    tinyPlanetTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const bendEl = tl.get("bend");
+  const spinEl = tl.get("spin");
   const baseColors = { ...tinyPlanetDefaults.colors, ...colorOverrides };
   const colors = {
     ...baseColors,
@@ -110,17 +123,17 @@ export function TinyPlanet({
     [length, height, buildings, seed],
   );
 
-  const bend = interpolate(t, [BEND_START, BEND_END], [0, 1], {
+  const bend = interpolate(t, [bendEl.start, bendEl.end], [0, 1], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
     easing: Easing.inOut(Easing.cubic),
   });
   // Spin eases in while the strip closes, then turns at a steady rate.
-  const spinT = Math.max(0, t - (BEND_END - SPIN_RAMP));
+  const spinT = Math.max(0, t - spinEl.start);
   const turn =
-    spinT < SPIN_RAMP
-      ? (spin * spinT * spinT) / (2 * SPIN_RAMP)
-      : spin * (spinT - SPIN_RAMP / 2);
+    spinT < spinEl.length
+      ? (spin * spinT * spinT) / (2 * spinEl.length)
+      : spin * (spinT - spinEl.length / 2);
   const rot = (turn * Math.PI) / 180;
 
   const kappa = Math.max(1e-5, bend / radius);

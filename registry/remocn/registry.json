@@ -5120,12 +5120,17 @@
       "title": "Tiny Planet",
       "description": "A seeded flat skyline bends into a tiny planet through a polar remap, then slowly spins beside a red sun.",
       "dependencies": ["remotion"],
-      "registryDependencies": ["@remocn/frame-rate"],
+      "registryDependencies": ["@remocn/frame-rate", "@remocn/timeline"],
       "files": [
         {
           "path": "tiny-planet/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/tiny-planet.tsx"
+          "target": "components/remocn/tiny-planet/index.tsx"
+        },
+        {
+          "path": "tiny-planet/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/tiny-planet/timeline.ts"
         }
       ]
     },
