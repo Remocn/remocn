@@ -10641,10 +10641,19 @@
         {
           "path": "speed-ramp-word/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/speed-ramp-word.tsx"
+          "target": "components/remocn/speed-ramp-word/index.tsx"
+        },
+        {
+          "path": "speed-ramp-word/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/speed-ramp-word/timeline.ts"
         }
       ],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"]
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ]
     },
     {
       "name": "pass-swap",
