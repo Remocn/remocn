@@ -13251,12 +13251,21 @@
       "title": "Treemap Split",
       "description": "A treemap splits into category tiles, the biggest tile in gradient with a 38% label.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/treemap-split/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/treemap-split.tsx"
+          "target": "components/remocn/treemap-split/index.tsx"
+        },
+        {
+          "path": "registry/remocn/treemap-split/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/treemap-split/timeline.ts"
         }
       ],
       "type": "registry:component"
