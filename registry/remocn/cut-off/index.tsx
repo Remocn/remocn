@@ -12,6 +12,13 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  type CutOffElementId,
+  cutOffTimeline,
+  DEFAULT_LINE,
+  lineWords,
+} from "./timeline";
 
 const syne = loadFont("normal", {
   weights: ["400", "500"],
@@ -38,6 +45,12 @@ export interface CutOffProps {
   delay?: number;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches the line's words, the typed last word, the
+   * dash and the two parts of the reply, by the ids in `./timeline`. Frames
+   * on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<CutOffElementId>;
 }
 
 const THEMES = {
@@ -71,14 +84,6 @@ const CLAMP = {
   extrapolateLeft: "clamp",
   extrapolateRight: "clamp",
 } as const;
-
-const LEAD_IN = 6;
-const WORD_IN = 9;
-const LETTER = 2;
-const DASH_HOLD = 4;
-const HIT = 8;
-const HIT_GAP = 9;
-const MIN_HOLD = 40;
 
 function useEm(textsA: string[], textsB: string[], family: string) {
   const key = `${textsA.join("\u0001")}\u0002${textsB.join("\u0001")}`;
@@ -177,32 +182,34 @@ function ScaleLayer({
   );
 }
 
-export function CutOff({
-  line = "So first I export the clips, redo all the captions, then line up the mus",
-  reply = "Or let the code cut it.",
-  highlight = "the code",
-  accent,
-  ink,
-  background,
-  replyBackground,
-  fontFamily = syne.fontFamily,
-  charFrames = LETTER,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: CutOffProps) {
+export function CutOff(props: CutOffProps) {
+  const {
+    line = DEFAULT_LINE,
+    reply = "Or let the code cut it.",
+    highlight = "the code",
+    accent,
+    ink,
+    background,
+    replyBackground,
+    fontFamily = syne.fontFamily,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
   const { width: W, height: H, durationInFrames } = useSceneConfig();
+  // The word gap fits the line into the clip itself, not into `speed`.
+  const tl = useTimeline(cutOffTimeline, props, durationInFrames, timing);
   const c = THEMES[theme];
   const hi = accent ?? c.accent;
   const fg = ink ?? c.dim;
   const transparent = background === "transparent";
   const stage = transparent ? "transparent" : (background ?? c.bg);
 
-  const cleanLine = line.replace(/[\s—–-]+$/, "");
-  const aWords = cleanLine.split(" ").filter(Boolean);
+  const aWords = lineWords(line);
   const bWords = reply.split(" ").filter(Boolean);
   const fragment = aWords[aWords.length - 1] ?? "";
   const em = useEm(
@@ -243,19 +250,13 @@ export function CutOff({
   const bBottom = H * (portrait ? 0.9 : 0.86);
   const bTop = bBottom - bLines.length * LH_B * fB;
 
-  const fragLetters = Array.from(fragment).length;
-  const fixedTail =
-    fragLetters * charFrames + DASH_HOLD + HIT_GAP + HIT + MIN_HOLD;
-  const gap = Math.max(
-    3,
-    Math.min(
-      7,
-      (durationInFrames - LEAD_IN - fixedTail) / Math.max(1, aWords.length - 1),
-    ),
-  );
-  const fragAt = LEAD_IN + (aWords.length - 1) * gap;
-  const dashAt = fragAt + fragLetters * charFrames;
-  const cutAt = dashAt + DASH_HOLD;
+  const frag = tl.get("fragment");
+  const fragAt = frag.start;
+  const charFrames = frag.beat("char");
+  const dash = tl.get("dash");
+  const dashAt = dash.start;
+  const cutAt = dash.end;
+  const replyEls = [tl.get("reply"), tl.get("payoff")];
 
   const hlTokens = highlight.split(" ").filter(Boolean).map(bare);
   const hlFlags = bWords.map(() => false);
@@ -301,12 +302,15 @@ export function CutOff({
         const before = ln.slice(0, wi).join(" ");
         const x = wi === 0 ? 0 : (em.a[`${before} ${w}`] ?? 0) - (em.a[w] ?? 0);
         const isFrag = i === shown.length - 1;
-        const at = LEAD_IN + i * gap;
         let content = w;
-        let p = interpolate(t, [at, at + WORD_IN], [0, 1], {
-          ...CLAMP,
-          easing: EASE_OUT,
-        });
+        // The typed last word appears whole-letter at a time, below.
+        const word = isFrag ? null : tl.get(`word:${i}`);
+        let p = word
+          ? interpolate(t, [word.start, word.end], [0, 1], {
+              ...CLAMP,
+              easing: EASE_OUT,
+            })
+          : 0;
         if (isFrag) {
           const letters = Array.from(fragment);
           const typed = Math.max(
@@ -347,9 +351,10 @@ export function CutOff({
         const i = bi++;
         const before = ln.slice(0, wi).join(" ");
         const x = wi === 0 ? 0 : (em.b[`${before} ${w}`] ?? 0) - (em.b[w] ?? 0);
-        const at = i < splitAt ? cutAt - 3 : cutAt + HIT_GAP;
+        const part = replyEls[i < splitAt ? 0 : 1];
+        const at = part.start;
         if (t < Math.max(cutAt, at)) return;
-        const p = interpolate(t, [at, at + HIT], [0, 1], {
+        const p = interpolate(t, [at, part.end], [0, 1], {
           ...CLAMP,
           easing: EASE_HIT,
         });
@@ -370,7 +375,7 @@ export function CutOff({
                 top: fB * 0.1,
                 color: hlFlags[i] ? hi : c.replyInk,
                 // The hit overshoots past 1, so the tilt follows its window.
-                transform: `translateY(${(1 - p) * fB * 0.22}px) scale(${(1 + (1 - p) * 0.05).toFixed(4)})${glide(t < at + HIT)}`,
+                transform: `translateY(${(1 - p) * fB * 0.22}px) scale(${(1 + (1 - p) * 0.05).toFixed(4)})${glide(t < part.end)}`,
                 transformOrigin: "0% 100%",
               }}
             >

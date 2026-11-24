@@ -7250,12 +7250,21 @@
       "title": "Cut Off",
       "description": "A line is cut off by a white reply card: \"Or let the code cut it.\".",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/cut-off/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/cut-off.tsx"
+          "target": "components/remocn/cut-off/index.tsx"
+        },
+        {
+          "path": "registry/remocn/cut-off/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/cut-off/timeline.ts"
         }
       ],
       "type": "registry:component"
