@@ -15756,13 +15756,19 @@
       "registryDependencies": [
         "@remocn/gsh",
         "@remocn/glide",
-        "@remocn/frame-rate"
+        "@remocn/frame-rate",
+        "@remocn/timeline"
       ],
       "files": [
         {
           "path": "url-bar-cta/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/url-bar-cta.tsx"
+          "target": "components/remocn/url-bar-cta/index.tsx"
+        },
+        {
+          "path": "url-bar-cta/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/url-bar-cta/timeline.ts"
         }
       ]
     },
