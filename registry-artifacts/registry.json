@@ -10561,13 +10561,19 @@
       "registryDependencies": [
         "@remocn/gsh",
         "@remocn/glide",
-        "@remocn/frame-rate"
+        "@remocn/frame-rate",
+        "@remocn/timeline"
       ],
       "files": [
         {
           "path": "registry/remocn/before-after/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/before-after.tsx"
+          "target": "components/remocn/before-after/index.tsx"
+        },
+        {
+          "path": "registry/remocn/before-after/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/before-after/timeline.ts"
         }
       ],
       "type": "registry:component"
