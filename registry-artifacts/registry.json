@@ -10186,12 +10186,21 @@
       "title": "T Minus",
       "description": "A mission clock ticks T-minus with rolling characters, then slams 'LIFTOFF' over a sunrise glow.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/t-minus/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/t-minus.tsx"
+          "target": "components/remocn/t-minus/index.tsx"
+        },
+        {
+          "path": "registry/remocn/t-minus/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/t-minus/timeline.ts"
         }
       ],
       "type": "registry:component"
