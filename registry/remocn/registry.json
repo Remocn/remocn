@@ -2513,12 +2513,17 @@
       "title": "Chromatic Wave",
       "description": "A soft wave travels down through the type; where it crosses, the letters ripple and split into RGB fringes.",
       "dependencies": ["remotion"],
-      "registryDependencies": ["@remocn/frame-rate"],
+      "registryDependencies": ["@remocn/frame-rate", "@remocn/timeline"],
       "files": [
         {
           "path": "chromatic-wave/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/chromatic-wave.tsx"
+          "target": "components/remocn/chromatic-wave/index.tsx"
+        },
+        {
+          "path": "chromatic-wave/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/chromatic-wave/timeline.ts"
         }
       ]
     },
