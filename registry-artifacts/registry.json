@@ -12846,12 +12846,21 @@
       "title": "Pixel Bars",
       "description": "LED-style pixel bars climb, the last column lighting orange and blue to +64%.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/pixel-bars/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/pixel-bars.tsx"
+          "target": "components/remocn/pixel-bars/index.tsx"
+        },
+        {
+          "path": "registry/remocn/pixel-bars/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/pixel-bars/timeline.ts"
         }
       ],
       "type": "registry:component"

@@ -12851,10 +12851,19 @@
         {
           "path": "pixel-bars/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/pixel-bars.tsx"
+          "target": "components/remocn/pixel-bars/index.tsx"
+        },
+        {
+          "path": "pixel-bars/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/pixel-bars/timeline.ts"
         }
       ],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"]
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ]
     },
     {
       "name": "bracket-focus",
