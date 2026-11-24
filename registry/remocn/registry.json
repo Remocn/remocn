@@ -2025,10 +2025,19 @@
         {
           "path": "rolodex-flip/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/rolodex-flip.tsx"
+          "target": "components/remocn/rolodex-flip/index.tsx"
+        },
+        {
+          "path": "rolodex-flip/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/rolodex-flip/timeline.ts"
         }
       ],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"]
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ]
     },
     {
       "name": "value-swap",

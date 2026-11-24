@@ -2020,12 +2020,21 @@
       "title": "Rolodex Flip",
       "description": "Cycles a word through a list of values with a 3D rolodex card flip while an invisible sizer keeps the line width and baseline stable.",
       "dependencies": ["remotion"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/rolodex-flip/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/rolodex-flip.tsx"
+          "target": "components/remocn/rolodex-flip/index.tsx"
+        },
+        {
+          "path": "registry/remocn/rolodex-flip/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/rolodex-flip/timeline.ts"
         }
       ],
       "type": "registry:component"
