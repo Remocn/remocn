@@ -2304,12 +2304,21 @@
       "title": "Glass Code Block",
       "description": "A premium frosted-glass code editor window with a regex tokenizer and line-by-line stagger reveal.",
       "dependencies": ["remotion"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/glass-code-block/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/glass-code-block.tsx"
+          "target": "components/remocn/glass-code-block/index.tsx"
+        },
+        {
+          "path": "registry/remocn/glass-code-block/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/glass-code-block/timeline.ts"
         }
       ],
       "type": "registry:component"

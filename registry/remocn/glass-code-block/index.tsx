@@ -1,8 +1,18 @@
 "use client";
 
 import { interpolate, Sequence } from "remotion";
-import { useCompositionFrames, useSceneFrame } from "@/lib/remocn/frame-rate";
+import {
+  useCompositionFrames,
+  useSceneConfig,
+  useSceneFrame,
+} from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_CODE,
+  type GlassCodeBlockElementId,
+  glassCodeBlockTimeline,
+} from "./timeline";
 
 export interface GlassCodeBlockProps {
   code?: string;
@@ -16,19 +26,15 @@ export interface GlassCodeBlockProps {
   aura?: boolean;
   speed?: number;
   className?: string;
+  /**
+   * Moves, trims or stretches single lines, by the ids in `./timeline`.
+   * Frames on the scene timeline, after `speed`.
+   */
+  timing?: Timing<GlassCodeBlockElementId>;
 }
 
 const FONT_MONO =
   "var(--font-geist-mono), ui-monospace, SFMono-Regular, monospace";
-
-const DEFAULT_CODE = `import { motion } from "remotion";
-
-// Generate a hero scene
-export function Hero() {
-  const frame = useCurrentFrame();
-  const opacity = frame / 30;
-  return <h1 style={{ opacity }}>Hello</h1>;
-}`;
 
 // Minimal regex tokenizer. NOT a real syntax highlighter — just enough to
 // give the eye color anchors. Order matters: comments → strings → keywords.
@@ -96,22 +102,30 @@ const TOKEN_COLORS: Record<Token["kind"], string> = {
   number: "#fcd34d",
 };
 
-export function GlassCodeBlock({
-  code = DEFAULT_CODE,
-  title = "hero.tsx",
-  width = 760,
-  height = 460,
-  fontSize = 16,
-  glassColor = "rgba(10, 10, 10, 0.6)",
-  staggerFrames = 4,
-  showTrafficLights = true,
-  aura = false,
-  speed = 1,
-  className,
-}: GlassCodeBlockProps) {
+export function GlassCodeBlock(props: GlassCodeBlockProps) {
+  const {
+    code = DEFAULT_CODE,
+    title = "hero.tsx",
+    width = 760,
+    height = 460,
+    fontSize = 16,
+    glassColor = "rgba(10, 10, 10, 0.6)",
+    showTrafficLights = true,
+    aura = false,
+    speed = 1,
+    className,
+    timing,
+  } = props;
   const lines = code.split("\n");
   // A `<Sequence>` starts on one of the composition's own frames.
   const toFrames = useCompositionFrames();
+  const { durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    glassCodeBlockTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
 
   return (
     <div
@@ -200,7 +214,7 @@ export function GlassCodeBlock({
             {lines.map((line, i) => (
               <Sequence
                 key={i}
-                from={toFrames((i * staggerFrames) / speed)}
+                from={toFrames(tl.get(`line:${i}`).start / speed)}
                 layout="none"
               >
                 <CodeLine line={line} index={i} fontSize={fontSize} />
