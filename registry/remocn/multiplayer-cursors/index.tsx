@@ -8,6 +8,12 @@ import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  CURSOR_TRACKS,
+  type MultiplayerCursorsElementId,
+  multiplayerCursorsTimeline,
+} from "./timeline";
 
 const figtree = loadFigtree("normal", {
   weights: ["300", "400"],
@@ -46,6 +52,12 @@ export interface MultiplayerCursorsProps {
   speed?: number;
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
+  /**
+   * Moves, trims or stretches the window, each collaborator's cursor track,
+   * the typing and the camera, by the ids in `./timeline`. Frames on the
+   * scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<MultiplayerCursorsElementId>;
 }
 
 const DEFAULT_COLLABORATORS: Collaborator[] = [
@@ -114,6 +126,11 @@ interface Actor {
   presses: [number, number][];
   seed: number;
 }
+/** A cursor's path in the layout; its frames come from the timeline. */
+interface Path {
+  keys: { x: number; y: number }[];
+  seed: number;
+}
 interface Box {
   x: number;
   y: number;
@@ -162,60 +179,53 @@ function layout(tall: boolean) {
       actors: [
         {
           keys: [
-            { f: 6, x: -60, y: 520 },
-            { f: 30, x: 0, y: 860 },
-            { f: 38, x: 0, y: 860 },
-            { f: 62, x: 120, y: 270 },
-            { f: 70, x: 120, y: 270 },
-            { f: 88, x: 168, y: 330 },
-            { f: 188, x: 168, y: 330 },
-            { f: 212, x: 130, y: 300 },
-          ],
-          presses: [
-            [32, 35],
-            [64, 67],
+            { x: -60, y: 520 },
+            { x: 0, y: 860 },
+            { x: 0, y: 860 },
+            { x: 120, y: 270 },
+            { x: 120, y: 270 },
+            { x: 168, y: 330 },
+            { x: 168, y: 330 },
+            { x: 130, y: 300 },
           ],
           seed: 1,
         },
         {
           keys: [
-            { f: 20, x: 300, y: -50 },
-            { f: 48, x: 276, y: 128 },
-            { f: 52, x: 276, y: 128 },
-            { f: 80, x: 528, y: 248 },
-            { f: 112, x: 528, y: 248 },
-            { f: 136, x: 470, y: 196 },
-            { f: 192, x: 470, y: 196 },
-            { f: 216, x: 430, y: 300 },
+            { x: 300, y: -50 },
+            { x: 276, y: 128 },
+            { x: 276, y: 128 },
+            { x: 528, y: 248 },
+            { x: 528, y: 248 },
+            { x: 470, y: 196 },
+            { x: 470, y: 196 },
+            { x: 430, y: 300 },
           ],
-          presses: [[52, 80]],
           seed: 2,
         },
         {
           keys: [
-            { f: 44, x: 640, y: 780 },
-            { f: 72, x: 186, y: 700 },
-            { f: 78, x: 186, y: 700 },
-            { f: 110, x: 420, y: 600 },
-            { f: 150, x: 420, y: 600 },
-            { f: 176, x: 460, y: 640 },
+            { x: 640, y: 780 },
+            { x: 186, y: 700 },
+            { x: 186, y: 700 },
+            { x: 420, y: 600 },
+            { x: 420, y: 600 },
+            { x: 460, y: 640 },
           ],
-          presses: [[78, 110]],
           seed: 3,
         },
         {
           keys: [
-            { f: 78, x: 320, y: 980 },
-            { f: 106, x: 236, y: 722 },
-            { f: 160, x: 236, y: 722 },
-            { f: 184, x: 190, y: 770 },
-            { f: 210, x: 210, y: 780 },
-            { f: 232, x: 262, y: 740 },
+            { x: 320, y: 980 },
+            { x: 236, y: 722 },
+            { x: 236, y: 722 },
+            { x: 190, y: 770 },
+            { x: 210, y: 780 },
+            { x: 262, y: 740 },
           ],
-          presses: [[109, 112]],
           seed: 4,
         },
-      ] as Actor[],
+      ] as Path[],
     };
   }
   const colX = (i: number) => 60 + i * 222;
@@ -240,60 +250,53 @@ function layout(tall: boolean) {
     actors: [
       {
         keys: [
-          { f: 6, x: -70, y: 420 },
-          { f: 30, x: 0, y: 540 },
-          { f: 38, x: 0, y: 540 },
-          { f: 62, x: 148, y: 270 },
-          { f: 70, x: 148, y: 270 },
-          { f: 88, x: 196, y: 330 },
-          { f: 188, x: 196, y: 330 },
-          { f: 212, x: 150, y: 300 },
-        ],
-        presses: [
-          [32, 35],
-          [64, 67],
+          { x: -70, y: 420 },
+          { x: 0, y: 540 },
+          { x: 0, y: 540 },
+          { x: 148, y: 270 },
+          { x: 148, y: 270 },
+          { x: 196, y: 330 },
+          { x: 196, y: 330 },
+          { x: 150, y: 300 },
         ],
         seed: 1,
       },
       {
         keys: [
-          { f: 20, x: 440, y: -50 },
-          { f: 48, x: 268, y: 128 },
-          { f: 52, x: 268, y: 128 },
-          { f: 80, x: 496, y: 248 },
-          { f: 112, x: 496, y: 248 },
-          { f: 136, x: 440, y: 196 },
-          { f: 192, x: 440, y: 196 },
-          { f: 216, x: 400, y: 300 },
+          { x: 440, y: -50 },
+          { x: 268, y: 128 },
+          { x: 268, y: 128 },
+          { x: 496, y: 248 },
+          { x: 496, y: 248 },
+          { x: 440, y: 196 },
+          { x: 440, y: 196 },
+          { x: 400, y: 300 },
         ],
-        presses: [[52, 80]],
         seed: 2,
       },
       {
         keys: [
-          { f: 44, x: 1080, y: 480 },
-          { f: 72, x: 486, y: 406 },
-          { f: 78, x: 486, y: 406 },
-          { f: 110, x: 842, y: 310 },
-          { f: 150, x: 842, y: 310 },
-          { f: 176, x: 886, y: 350 },
+          { x: 1080, y: 480 },
+          { x: 486, y: 406 },
+          { x: 486, y: 406 },
+          { x: 842, y: 310 },
+          { x: 842, y: 310 },
+          { x: 886, y: 350 },
         ],
-        presses: [[78, 110]],
         seed: 3,
       },
       {
         keys: [
-          { f: 78, x: 700, y: 660 },
-          { f: 106, x: 628, y: 432 },
-          { f: 160, x: 628, y: 432 },
-          { f: 184, x: 560, y: 480 },
-          { f: 210, x: 548, y: 486 },
-          { f: 232, x: 600, y: 440 },
+          { x: 700, y: 660 },
+          { x: 628, y: 432 },
+          { x: 628, y: 432 },
+          { x: 560, y: 480 },
+          { x: 548, y: 486 },
+          { x: 600, y: 440 },
         ],
-        presses: [[109, 112]],
         seed: 4,
       },
-    ] as Actor[],
+    ] as Path[],
   };
 }
 
@@ -597,28 +600,47 @@ function ScaleLayer({
   );
 }
 
-export function MultiplayerCursors({
-  collaborators = DEFAULT_COLLABORATORS,
-  boardTitle = "Launch plan",
-  headline = "Plan the launch together",
-  stickyText = "Record the hero demo by Friday",
-  commentText = "Love this. Ship it Friday.",
-  shareLabel = "Share",
-  shapeLabel = "Launch day",
-  theme = "light",
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = figtree.fontFamily,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  ground,
-  groundParams,
-}: MultiplayerCursorsProps) {
+export function MultiplayerCursors(props: MultiplayerCursorsProps) {
+  const {
+    collaborators = DEFAULT_COLLABORATORS,
+    boardTitle = "Launch plan",
+    headline = "Plan the launch together",
+    stickyText = "Record the hero demo by Friday",
+    commentText = "Love this. Ship it Friday.",
+    shareLabel = "Share",
+    shapeLabel = "Launch day",
+    theme = "light",
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = figtree.fontFamily,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    ground,
+    groundParams,
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width, height, fps } = useSceneConfig();
+  const { width, height, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    multiplayerCursorsTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const app = tl.get("app");
+  const header = tl.get("header");
+  const camera = tl.get("camera");
+  const sticky = tl.get("sticky");
+  const select = tl.get("select");
+  const drag = tl.get("drag");
+  const comment = tl.get("comment");
+  const typeEl = tl.get("type");
+  const tracks = CURSOR_TRACKS.map((id) => tl.get(id));
+  const at = (e: (typeof tracks)[number], beat: string) =>
+    e.start + e.beat(beat);
   const tall = height > width;
   const L = layout(tall);
   const u = Math.min(width / L.stage.w, height / L.stage.h);
@@ -641,27 +663,38 @@ export function MultiplayerCursors({
   const tbX = (WIN.w - TOOLBAR_W) / 2;
   const tbY = WIN.h - 16 - TOOLBAR_H;
   const stickySlot = { x: tbX + 141 + 20, y: tbY + 28 };
-  const actors = L.actors.map((a, i) =>
-    i === 0
-      ? {
-          ...a,
-          keys: a.keys.map((k, j) =>
-            j === 1 || j === 2 ? { ...k, ...stickySlot } : k,
-          ),
-        }
-      : a,
-  );
+  const actors: Actor[] = L.actors.map((a, i) => {
+    const e = tracks[i];
+    const presses: [number, number][] = [];
+    for (let n = 0; e.beats[`down${n}`] !== undefined; n++) {
+      presses.push([at(e, `down${n}`), at(e, `up${n}`)]);
+    }
+    return {
+      seed: a.seed,
+      presses,
+      keys: a.keys.map((k, j) => ({
+        f: at(e, `k${j}`),
+        ...(i === 0 && (j === 1 || j === 2) ? { ...k, ...stickySlot } : k),
+      })),
+    };
+  });
   const cur = actors.map((a) => cursorAt(a, frame, fps));
 
-  const winAt = (f: number) => spring({ frame: f, fps, config: HEAVY });
+  const winAt = (f: number) =>
+    spring({ frame: f - app.start, fps, config: HEAVY });
   const win = winAt(frame);
   const winMoving = moves(winAt);
-  const winFade = interpolate(frame, [0, 12], [0, 1], { ...CL, easing: ENTER });
-  const cam = interpolate(frame, [20, 260], [1, 1.04], {
+  const winFade = interpolate(frame, [app.start, app.end], [0, 1], {
+    ...CL,
+    easing: ENTER,
+  });
+  const cam = interpolate(frame, [camera.start, camera.end], [1, 1.04], {
     ...CL,
     easing: CAMERA,
   });
-  const camMoving = midway(interpolate(frame, [20, 260], [0, 1], CL));
+  const camMoving = midway(
+    interpolate(frame, [camera.start, camera.end], [0, 1], CL),
+  );
   const camO = { x: WIN.w / 2, y: WIN.h * 0.45 };
   const toScreen = (p: { x: number; y: number }) => ({
     x: camO.x + (p.x - camO.x) * cam,
@@ -675,19 +708,24 @@ export function MultiplayerCursors({
   }));
   const SELECTED = cards[1];
 
-  const stickyIn = sp(65, CARD);
-  const ghost = frame >= 36 && frame < 65;
+  const landAt = at(sticky, "land");
+  const stickyIn = sp(landAt, CARD);
+  const ghost = frame >= at(sticky, "ghost") && frame < landAt;
   const stickyChars = Array.from(stickyText);
   const commentChars = Array.from(commentText);
   const typed = Math.floor(
-    interpolate(frame, [80, 124], [0, stickyChars.length], CL),
+    interpolate(frame, [typeEl.start, typeEl.end], [0, stickyChars.length], CL),
   );
-  const caretOn = frame >= 72 && frame < 136 && Math.floor(frame / 8) % 2 === 0;
+  const caretOn =
+    frame >= at(typeEl, "caret") &&
+    frame < at(typeEl, "caretOff") &&
+    Math.floor(frame / 8) % 2 === 0;
 
   const leo = along(actors[1].keys, frame, fps);
-  const marquee = frame >= 52 && frame < 82;
-  const snap = sp(80, MORPH);
-  const selOn = frame >= 80;
+  const marquee =
+    frame >= at(select, "down0") && frame < at(select, "marqueeEnd");
+  const snap = sp(at(select, "up0"), MORPH);
+  const selOn = frame >= at(select, "up0");
   const loose = {
     ...L.loose,
     w: actors[1].keys[3].x - L.loose.x,
@@ -701,14 +739,16 @@ export function MultiplayerCursors({
   };
 
   const pri = actors[2];
-  const grab = along(pri.keys, 78, fps);
-  const held = along(pri.keys, clamp(frame, 78, 110), fps);
-  const dragging = frame >= 78 && frame <= 112;
-  const drop = sp(110, CHIP);
+  const grabAt = at(drag, "down0");
+  const dropAt = at(drag, "up0");
+  const grab = along(pri.keys, grabAt, fps);
+  const held = along(pri.keys, clamp(frame, grabAt, dropAt), fps);
+  const dragging = frame >= grabAt && frame <= at(drag, "lift");
+  const drop = sp(dropAt, CHIP);
   const SH = L.shape;
   const shapeX = SH.x + held.x - grab.x;
   const shapeY = SH.y + held.y - grab.y;
-  const dropped = along(pri.keys, 110, fps);
+  const dropped = along(pri.keys, dropAt, fps);
   const shapeRest = {
     x: SH.x + dropped.x - grab.x,
     y: SH.y + dropped.y - grab.y,
@@ -716,18 +756,42 @@ export function MultiplayerCursors({
   const lift = dragging ? 1 : 1 - drop;
   const shapeScale = 1 + 0.05 * lift;
 
-  const pinIn = sp(111, CHIP);
-  const bubbleIn = sp(118, CARD);
-  const bubbleFade = interpolate(frame, [118, 126], [0, 1], {
+  const pinAt = at(comment, "pin");
+  const pinIn = sp(pinAt, CHIP);
+  const bubbleIn = sp(at(comment, "bubble"), CARD);
+  const bubbleFade = interpolate(
+    frame,
+    [at(comment, "bubble"), at(comment, "bubbleIn")],
+    [0, 1],
+    {
+      ...CL,
+      easing: ENTER,
+    },
+  );
+  const commentTyped = Math.floor(
+    interpolate(
+      frame,
+      [at(comment, "typeAt"), at(comment, "typeEnd")],
+      [0, commentChars.length],
+      CL,
+    ),
+  );
+  const joinAt = tracks.map((e) => at(e, "join"));
+  const headIn = interpolate(frame, [header.start, header.end], [0, 1], {
     ...CL,
     easing: ENTER,
   });
-  const commentTyped = Math.floor(
-    interpolate(frame, [124, 152], [0, commentChars.length], CL),
+  const stickyTool = interpolate(
+    frame,
+    [
+      at(sticky, "tool"),
+      at(sticky, "toolOn"),
+      at(sticky, "toolOff"),
+      at(sticky, "toolGone"),
+    ],
+    [0, 1, 1, 0],
+    CL,
   );
-  const joinAt = actors.map((a) => a.keys[0].f + 10);
-  const headIn = interpolate(frame, [4, 20], [0, 1], { ...CL, easing: ENTER });
-  const stickyTool = interpolate(frame, [31, 34, 60, 66], [0, 1, 1, 0], CL);
 
   const chrome: React.CSSProperties = {
     position: "absolute",
@@ -956,7 +1020,7 @@ export function MultiplayerCursors({
                 >
                   {shapeLabel}
                 </div>
-                {ghost || frame >= 65 ? (
+                {ghost || frame >= landAt ? (
                   <div
                     style={{
                       position: "absolute",
@@ -1012,7 +1076,7 @@ export function MultiplayerCursors({
                     </div>
                   </div>
                 ) : null}
-                {frame >= 111 ? (
+                {frame >= pinAt ? (
                   <>
                     <div
                       style={{
@@ -1156,15 +1220,22 @@ export function MultiplayerCursors({
               />
             </div>
             {cur.map((c, i) => {
-              const a = actors[i];
               const vis = interpolate(
                 frame,
-                [a.keys[0].f, a.keys[0].f + 6],
+                [tracks[i].start, at(tracks[i], "fadeIn")],
                 [0, 1],
                 CL,
               );
               const s = toScreen(c);
-              const k = i === 0 ? interpolate(frame, [38, 62], [0, 1], CL) : 1;
+              const k =
+                i === 0
+                  ? interpolate(
+                      frame,
+                      [at(sticky, "k2"), at(sticky, "k3")],
+                      [0, 1],
+                      CL,
+                    )
+                  : 1;
               return (
                 <div
                   key={people[i].name}

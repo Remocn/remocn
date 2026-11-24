@@ -15304,13 +15304,19 @@
       "registryDependencies": [
         "@remocn/gsh",
         "@remocn/glide",
-        "@remocn/frame-rate"
+        "@remocn/frame-rate",
+        "@remocn/timeline"
       ],
       "files": [
         {
           "path": "registry/remocn/multiplayer-cursors/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/multiplayer-cursors.tsx"
+          "target": "components/remocn/multiplayer-cursors/index.tsx"
+        },
+        {
+          "path": "registry/remocn/multiplayer-cursors/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/multiplayer-cursors/timeline.ts"
         }
       ],
       "type": "registry:component"
