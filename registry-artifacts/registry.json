@@ -6506,12 +6506,21 @@
       "title": "Coy Denial",
       "description": "A huge \"Don't check the site at nine.\" with a sheepish \"(Do.)\" tucked into the corner.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/coy-denial/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/coy-denial.tsx"
+          "target": "components/remocn/coy-denial/index.tsx"
+        },
+        {
+          "path": "registry/remocn/coy-denial/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/coy-denial/timeline.ts"
         }
       ],
       "type": "registry:component"
