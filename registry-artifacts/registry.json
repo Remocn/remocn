@@ -9908,12 +9908,21 @@
       "title": "Drop Timer",
       "description": "A countdown to a drop ends in a huge gradient 'LIVE NOW' with a URL and logo.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/drop-timer/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/drop-timer.tsx"
+          "target": "components/remocn/drop-timer/index.tsx"
+        },
+        {
+          "path": "registry/remocn/drop-timer/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/drop-timer/timeline.ts"
         }
       ],
       "type": "registry:component"
