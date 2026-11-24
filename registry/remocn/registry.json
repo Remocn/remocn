@@ -8550,10 +8550,19 @@
         {
           "path": "serif-rise/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/serif-rise.tsx"
+          "target": "components/remocn/serif-rise/index.tsx"
+        },
+        {
+          "path": "serif-rise/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/serif-rise/timeline.ts"
         }
       ],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"]
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ]
     },
     {
       "name": "module-count",
