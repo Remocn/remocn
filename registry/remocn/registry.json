@@ -14637,10 +14637,19 @@
         {
           "path": "number-mosaic/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/number-mosaic.tsx"
+          "target": "components/remocn/number-mosaic/index.tsx"
+        },
+        {
+          "path": "number-mosaic/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/number-mosaic/timeline.ts"
         }
       ],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"]
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ]
     },
     {
       "name": "growth-line",

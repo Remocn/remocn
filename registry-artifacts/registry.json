@@ -14632,12 +14632,21 @@
       "title": "Number Mosaic",
       "description": "A field of square pixels organizes into the number 10,000 with a caption below.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/number-mosaic/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/number-mosaic.tsx"
+          "target": "components/remocn/number-mosaic/index.tsx"
+        },
+        {
+          "path": "registry/remocn/number-mosaic/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/number-mosaic/timeline.ts"
         }
       ],
       "type": "registry:component"
