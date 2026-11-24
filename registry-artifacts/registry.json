@@ -13757,12 +13757,21 @@
       "title": "Rank Climb",
       "description": "A rank list reorders until the product reaches #1 on Product Hunt.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/rank-climb/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/rank-climb.tsx"
+          "target": "components/remocn/rank-climb/index.tsx"
+        },
+        {
+          "path": "registry/remocn/rank-climb/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/rank-climb/timeline.ts"
         }
       ],
       "type": "registry:component"

@@ -13762,10 +13762,19 @@
         {
           "path": "rank-climb/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/rank-climb.tsx"
+          "target": "components/remocn/rank-climb/index.tsx"
+        },
+        {
+          "path": "rank-climb/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/rank-climb/timeline.ts"
         }
       ],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"]
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ]
     },
     {
       "name": "time-breakdown",
