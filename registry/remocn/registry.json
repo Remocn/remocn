@@ -6435,13 +6435,19 @@
       "registryDependencies": [
         "@remocn/gsh",
         "@remocn/glide",
-        "@remocn/frame-rate"
+        "@remocn/frame-rate",
+        "@remocn/timeline"
       ],
       "files": [
         {
           "path": "cover-ring/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/cover-ring.tsx"
+          "target": "components/remocn/cover-ring/index.tsx"
+        },
+        {
+          "path": "cover-ring/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/cover-ring/timeline.ts"
         }
       ]
     },

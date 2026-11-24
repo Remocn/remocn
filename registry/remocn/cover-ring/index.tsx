@@ -17,6 +17,15 @@ import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  balance,
+  type CoverRingElementId,
+  coverRingTimeline,
+  DEFAULT_CAPTION,
+  DEFAULT_LINE,
+  tileCount,
+} from "./timeline";
 
 const geist = loadFont("normal", {
   weights: ["300", "400"],
@@ -49,6 +58,12 @@ export interface CoverRingProps {
   /** Frames to hold the first frame before anything moves. */
   delay?: number;
   speed?: number;
+  /**
+   * Moves, trims or stretches the line's rows, the push, single tiles, the
+   * collapse, the bars, the caption and the pulse, by the ids in
+   * `./timeline`. Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<CoverRingElementId>;
 }
 
 const THEMES = {
@@ -95,20 +110,6 @@ const DEFAULT_IMAGES = [
   "reel/reel-6.jpg",
 ];
 
-const BEATS = [
-  { id: "lineIn", at: -6 },
-  { id: "tilesIn", at: 0 },
-  { id: "lineOut", at: 78 },
-  { id: "collapse", at: 78 },
-  { id: "bars", at: 96 },
-  { id: "caption", at: 100 },
-  { id: "pulse", at: 114 },
-  { id: "end", at: 150 },
-] as const;
-const beat = (id: (typeof BEATS)[number]["id"]) =>
-  BEATS.find((b) => b.id === id)?.at ?? 0;
-const COLLAPSE_LEN = 18;
-
 const EASE_ENTER = Easing.bezier(0.32, 0.72, 0, 1);
 const EASE_EXIT = Easing.bezier(0.55, 0, 1, 0.45);
 const EASE_MOVE = Easing.bezier(0.83, 0, 0.17, 1);
@@ -124,38 +125,12 @@ function mix(color: string, pct: number) {
   return `color-mix(in oklab, ${color} ${pct}%, transparent)`;
 }
 
-function enterTime(i: number) {
-  let t = beat("tilesIn");
-  let step = 5;
-  for (let k = 0; k < i; k++) {
-    t += step;
-    step = Math.max(1.6, step * 0.8);
-  }
-  return Math.round(t);
-}
-
-function balance(text: string) {
-  const words = text.split(" ");
-  if (text.length < 22 || words.length < 3) return [text];
-  let best = 1;
-  let bestCost = Number.POSITIVE_INFINITY;
-  for (let k = 1; k < words.length; k++) {
-    const a = words.slice(0, k).join(" ").length;
-    const b = words.slice(k).join(" ").length;
-    const cost = Math.max(a, b);
-    if (cost < bestCost) {
-      bestCost = cost;
-      best = k;
-    }
-  }
-  return [words.slice(0, best).join(" "), words.slice(best).join(" ")];
-}
-
 function RevealWords({
   text,
   start,
   frame,
   stagger,
+  rise,
   accentFrom,
   carried = false,
 }: {
@@ -163,6 +138,8 @@ function RevealWords({
   start: number;
   frame: number;
   stagger: number;
+  /** Frames each word takes to rise. */
+  rise: number;
   accentFrom?: number;
   /** An ancestor already tilts this frame; one tilt in the chain is enough. */
   carried?: boolean;
@@ -181,7 +158,7 @@ function RevealWords({
       {words.map((word, i) => {
         const p = interpolate(
           frame,
-          [start + i * stagger, start + i * stagger + 12],
+          [start + i * stagger, start + i * stagger + rise],
           [0, 1],
           { ...CLAMP, easing: EASE_ENTER },
         );
@@ -233,27 +210,41 @@ function ScaleLayer({
   );
 }
 
-export function CoverRing({
-  images,
-  line = "Launch videos aren't edited anymore",
-  caption = "They're composed.",
-  theme = "dark",
-  background,
-  ink,
-  accent,
-  fog,
-  ground,
-  groundParams,
-  fontFamily = geist.fontFamily,
-  fontWeight = 300,
-  stagger = 2,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-}: CoverRingProps) {
+export function CoverRing(props: CoverRingProps) {
+  const {
+    images,
+    line = DEFAULT_LINE,
+    caption = DEFAULT_CAPTION,
+    theme = "dark",
+    background,
+    ink,
+    accent,
+    fog,
+    ground,
+    groundParams,
+    fontFamily = geist.fontFamily,
+    fontWeight = 300,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H, fps } = useSceneConfig();
+  const { width: W, height: H, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    coverRingTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const pushEl = tl.get("push");
+  const lineOutEl = tl.get("lineOut");
+  const collapse = tl.get("collapse");
+  const bars = tl.get("bars");
+  const captionEl = tl.get("caption");
+  const pulseEl = tl.get("pulse");
+  const enterTime = (i: number) => tl.get(`tile:${i}`).start;
   const t = THEMES[theme];
   const light = theme === "light";
   const bg = background ?? t.background;
@@ -266,7 +257,7 @@ export function CoverRing({
   const srcs =
     images && images.length > 0 ? images : DEFAULT_IMAGES.map(staticFile);
   const portrait = H > W;
-  const n = Math.max(6, Math.min(12, srcs.length));
+  const n = tileCount(srcs.length);
 
   const cx = W / 2;
   const cy = H * (portrait ? 0.46 : 0.5);
@@ -282,28 +273,19 @@ export function CoverRing({
   const capGap = portrait ? H * 0.035 : H * 0.06;
   const barMax = portrait ? H * 0.09 : H * 0.17;
   const liftAt = (f: number) =>
-    interpolate(
-      f,
-      [beat("bars"), beat("bars") + 14],
-      [0, (capSize * 1.1 + capGap) / 2],
-      { ...CLAMP, easing: Easing.bezier(0.65, 0, 0.35, 1) },
-    );
+    interpolate(f, [bars.start, bars.end], [0, (capSize * 1.1 + capGap) / 2], {
+      ...CLAMP,
+      easing: Easing.bezier(0.65, 0, 0.35, 1),
+    });
 
   const collapseAt = (f: number) =>
-    interpolate(
-      f,
-      [beat("collapse"), beat("collapse") + COLLAPSE_LEN],
-      [0, 1],
-      { ...CLAMP, easing: EASE_MOVE },
-    );
+    interpolate(f, [collapse.start, collapse.end], [0, 1], {
+      ...CLAMP,
+      easing: EASE_MOVE,
+    });
 
   const rotAt = (f: number) => {
-    const c = interpolate(
-      f,
-      [beat("collapse"), beat("collapse") + COLLAPSE_LEN],
-      [0, 1],
-      CLAMP,
-    );
+    const c = interpolate(f, [collapse.start, collapse.end], [0, 1], CLAMP);
     return -0.4 + f * 0.0095 + c * c * 1.8;
   };
 
@@ -330,27 +312,25 @@ export function CoverRing({
   };
 
   const barP = spring({
-    frame: frame - beat("bars"),
+    frame: frame - bars.start,
     fps,
     config: SPRING_CHIP,
   });
   const pulse = interpolate(
     frame,
-    [beat("pulse"), beat("pulse") + 5, beat("pulse") + 18],
+    [pulseEl.start, pulseEl.start + pulseEl.beat("peak"), pulseEl.end],
     [0, 1, 0],
     { ...CLAMP, easing: Easing.bezier(0.65, 0, 0.35, 1) },
   );
   const barHeights = [0.5, 0.82, 0.6, 1, 0.7];
   const pulseHeights = [0.9, 0.46, 1, 0.58, 0.95];
 
-  const lineOut = interpolate(
-    frame,
-    [beat("lineOut"), beat("lineOut") + 8],
-    [0, 1],
-    { ...CLAMP, easing: EASE_EXIT },
-  );
+  const lineOut = interpolate(frame, [lineOutEl.start, lineOutEl.end], [0, 1], {
+    ...CLAMP,
+    easing: EASE_EXIT,
+  });
   const pushAt = (f: number) =>
-    interpolate(f, [0, beat("end")], [1, 1.05], {
+    interpolate(f, [pushEl.start, pushEl.end], [1, 1.05], {
       ...CLAMP,
       easing: EASE_CAMERA,
     });
@@ -365,7 +345,7 @@ export function CoverRing({
     Math.abs(push - pushAt(frame - speed)) * reach > 1e-3;
   // The caption is laid out where the lift leaves it; the ride there is a
   // transform, since layout rounds a baseline to whole pixels.
-  const liftEnd = liftAt(beat("bars") + 14);
+  const liftEnd = liftAt(bars.end);
   const captionDy = liftEnd - liftAt(frame);
   const lifting =
     Math.abs(liftAt(frame + speed) - liftAt(frame)) > 1e-3 ||
@@ -452,16 +432,20 @@ export function CoverRing({
             }}
           >
             <div style={{ display: "flex", flexDirection: "column" }}>
-              {balance(line).map((row, r) => (
-                <RevealWords
-                  key={row}
-                  text={row}
-                  start={beat("lineIn") + r * stagger * row.split(" ").length}
-                  frame={frame}
-                  stagger={stagger}
-                  carried={pushing}
-                />
-              ))}
+              {balance(line).map((row, r) => {
+                const rowEl = tl.get(`row:${r}`);
+                return (
+                  <RevealWords
+                    key={row}
+                    text={row}
+                    start={rowEl.start}
+                    frame={frame}
+                    stagger={rowEl.beat("stagger")}
+                    rise={rowEl.beat("rise")}
+                    carried={pushing}
+                  />
+                );
+              })}
             </div>
           </div>
           {order.map((i, z) => {
@@ -486,7 +470,7 @@ export function CoverRing({
             const fadeExtra = extra
               ? interpolate(s.q, [0.72, 0.98], [1, 0], CLAMP)
               : 1;
-            const barShape = !extra && frame >= beat("bars");
+            const barShape = !extra && frame >= bars.start;
             const k = i % dots;
             const hBar =
               dot +
@@ -590,9 +574,10 @@ export function CoverRing({
           >
             <RevealWords
               text={caption}
-              start={beat("caption")}
+              start={captionEl.start}
               frame={frame}
-              stagger={3}
+              stagger={captionEl.beat("stagger")}
+              rise={captionEl.beat("rise")}
               accentFrom={Math.max(1, captionWords.length - 1)}
               carried={pushing || lifting}
             />
