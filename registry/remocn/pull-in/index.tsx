@@ -12,6 +12,15 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  BRAKE,
+  DEFAULT_PLACES,
+  type PullInElementId,
+  placesOf,
+  pullInTimeline,
+  SETTLE,
+} from "./timeline";
 
 const jakarta = loadJakarta("normal", {
   weights: ["400", "500"],
@@ -38,6 +47,11 @@ export interface PullInProps {
   delay?: number;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches the lead and single places, by the ids in
+   * `./timeline`. Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<PullInElementId>;
 }
 
 const THEMES = {
@@ -61,16 +75,9 @@ const TRACK = -0.028;
 const WORD = 0.14;
 const FONT_PX = 200;
 
-const HEADWAY = 1.25;
-const BRAKE = 20;
 const NOSE = 0.045;
-const SETTLE = 12;
 const BUNCH = 0.93;
 const FOLLOW = 1.3;
-const ARRIVE = BRAKE + SETTLE;
-const DEPART_GAP = 9;
-const LEAD_AT = 0;
-const FIRST_AT = 4;
 
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
 const CLAMP = {
@@ -200,31 +207,33 @@ function ScaleLayer({
   );
 }
 
-export function PullIn({
-  lead = "Now in",
-  places = ["vertical.", "4K.", "your codebase."],
-  hold = 24,
-  stagger = HEADWAY,
-  brake = BRAKE,
-  accent,
-  ink,
-  background,
-  fontFamily = jakarta.fontFamily,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: PullInProps) {
+export function PullIn(props: PullInProps) {
+  const {
+    lead = "Now in",
+    places = DEFAULT_PLACES,
+    accent,
+    ink,
+    background,
+    fontFamily = jakarta.fontFamily,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H } = useSceneConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    pullInTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const c = THEMES[theme];
   const hi = accent ?? c.teal;
   const fg = ink ?? c.ink;
-  const list = useMemo(
-    () => (places.length > 0 ? places : ["your codebase."]),
-    [places],
-  );
+  const list = useMemo(() => placesOf(places), [places]);
   const m = useMetrics(list, lead, fontFamily);
 
   const transparent = background === "transparent";
@@ -253,9 +262,6 @@ export function PullIn({
   const placeBase = blockTop + blockH;
   const leadBase = blockTop + leadCap;
 
-  const STEP = ARRIVE + (brake - BRAKE) + Math.max(8, hold) + DEPART_GAP;
-  const arriveAt = (k: number) => FIRST_AT + k * STEP;
-  const departAt = (k: number) => arriveAt(k + 1) - DEPART_GAP;
   const x0 = W - marginX + F * 0.6;
 
   interface Glyph {
@@ -267,8 +273,11 @@ export function PullIn({
   const glyphs: Glyph[] = [];
   list.forEach((word, k) => {
     const chars = Array.from(word);
-    const start = arriveAt(k);
-    const leave = k === list.length - 1 ? null : departAt(k);
+    const e = tl.get(`place:${k}`);
+    const start = e.start;
+    const stagger = e.beat("stagger");
+    const brake = e.beat("brake");
+    const leave = k === list.length - 1 ? null : e.end - e.beat("gap");
     if (t < start - chars.length * stagger - 30) return;
     if (leave !== null && t > leave + 40 + chars.length * stagger) return;
     chars.forEach((ch, i) => {
@@ -314,7 +323,8 @@ export function PullIn({
     );
   }
 
-  const leadP = interpolate(t, [LEAD_AT, LEAD_AT + 16], [0, 1], {
+  const leadEl = tl.get("lead");
+  const leadP = interpolate(t, [leadEl.start, leadEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });

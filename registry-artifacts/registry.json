@@ -7995,12 +7995,21 @@
       "title": "Pull in",
       "description": "'Now in' stays put while spaced-out place words pull into view, such as vertical, 4K, your codebase.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/pull-in/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/pull-in.tsx"
+          "target": "components/remocn/pull-in/index.tsx"
+        },
+        {
+          "path": "registry/remocn/pull-in/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/pull-in/timeline.ts"
         }
       ],
       "type": "registry:component"
