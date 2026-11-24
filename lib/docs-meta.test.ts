@@ -438,10 +438,12 @@ describe("components with a timeline read it through useTimeline", () => {
       const imports = [
         ...source.matchAll(/^import\b[^;]*?\bfrom\s*"([^"]+)"/gm),
       ].map((match) => match[1]);
+      // Comments may name these; only code counts.
+      const code = source.replace(/\/\*[\s\S]*?\*\/|\/\/.*$/gm, "");
       return (
         imports.some((module) => module !== "@/lib/remocn/timeline") ||
         /\b(Math\.random|Date\.now|new Date|performance|document|window|globalThis)\b/.test(
-          source,
+          code,
         )
       );
     });
