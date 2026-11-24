@@ -17,6 +17,12 @@ import { useGlide } from "@/lib/remocn/glide";
 import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
+import {
+  type ResolvedElement,
+  type Timing,
+  useTimeline,
+} from "@/lib/remocn/timeline";
+import { type DeviceMorphElementId, deviceMorphTimeline } from "./timeline";
 
 const { fontFamily: sans } = loadFont("normal", {
   weights: ["300", "400"],
@@ -71,6 +77,12 @@ export interface DeviceMorphProps {
   /** gradients.sh preset for the ground. Defaults to "europa" (dark) or "paper-crease" (light). */
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
+  /**
+   * Moves, trims or stretches the device's entry, the cursor's approach and
+   * the two clicks that morph the device, by the ids in `./timeline`. Frames
+   * on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<DeviceMorphElementId>;
 }
 
 const DEFAULT_STOPS: DeviceStop[] = [
@@ -83,9 +95,6 @@ const LAYOUT = {
   wide: { dw: 1280, dh: 720, maxW: 820, maxH: 500, cy: 322, segY: 618 },
   tall: { dw: 720, dh: 1280, maxW: 640, maxH: 700, cy: 700, segY: 1140 },
 };
-const CLICK_A = 50;
-const CLICK_B = 124;
-const MORPH = 44;
 
 const inOut = Easing.bezier(0.65, 0, 0.35, 1);
 const MORPH_SPRING = { damping: 200 };
@@ -1194,30 +1203,42 @@ function ScaleLayer({
   );
 }
 
-export function DeviceMorph({
-  children,
-  src,
-  stops = DEFAULT_STOPS,
-  reverse = false,
-  brand = "remocn",
-  greeting = "Good morning, Maya",
-  ctaLabel = "New video",
-  logo,
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = sans,
-  scale = 1,
-  delay = 0,
-  speed = 1,
-  theme = "light",
-  images = DEFAULT_IMAGES,
-  ground,
-  groundParams,
-}: DeviceMorphProps) {
+export function DeviceMorph(props: DeviceMorphProps) {
+  const {
+    children,
+    src,
+    stops = DEFAULT_STOPS,
+    reverse = false,
+    brand = "remocn",
+    greeting = "Good morning, Maya",
+    ctaLabel = "New video",
+    logo,
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = sans,
+    scale = 1,
+    delay = 0,
+    speed = 1,
+    theme = "light",
+    images = DEFAULT_IMAGES,
+    ground,
+    groundParams,
+    timing,
+  } = props;
   const glide = useGlide();
   const frame = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H, fps } = useSceneConfig();
+  const { width: W, height: H, fps, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    deviceMorphTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const enterEl = tl.get("enter");
+  const approach = tl.get("approach");
+  const clickA = tl.get("click:0");
+  const clickB = tl.get("click:1");
   const tall = H > W * 1.2;
   const L = tall ? LAYOUT.tall : LAYOUT.wide;
   const k = W / L.dw;
@@ -1230,21 +1251,27 @@ export function DeviceMorph({
     stops[2] ?? DEFAULT_STOPS[2],
   ];
 
-  const morphAt = (f: number, at: number) =>
+  const morphAt = (f: number, click: ResolvedElement) =>
     spring({
-      frame: f - at - 2,
+      frame: f - click.start - click.beat("morphDelay"),
       fps,
       config: MORPH_SPRING,
-      durationInFrames: MORPH,
+      durationInFrames: click.beat("morph"),
     });
   const tAt = (f: number) => {
-    const ab = morphAt(f, CLICK_A) + morphAt(f, CLICK_B);
+    const ab = morphAt(f, clickA) + morphAt(f, clickB);
     return reverse ? 2 - ab : ab;
   };
-  const enterAt = (f: number) => spring({ frame: f, fps, config: HEAVY });
-  const chromeAt = (f: number) => spring({ frame: f - 6, fps, config: CARD });
-  const stepA = morphAt(frame, CLICK_A);
-  const stepB = morphAt(frame, CLICK_B);
+  const enterAt = (f: number) =>
+    spring({ frame: f - enterEl.start, fps, config: HEAVY });
+  const chromeAt = (f: number) =>
+    spring({
+      frame: f - (enterEl.start + enterEl.beat("chrome")),
+      fps,
+      config: CARD,
+    });
+  const stepA = morphAt(frame, clickA);
+  const stepB = morphAt(frame, clickB);
   const t = reverse ? 2 - stepA - stepB : stepA + stepB;
   const shifts = (at: (f: number) => number, eps: number) =>
     Math.abs(at(frame + speed) - at(frame)) > eps ||
@@ -1315,14 +1342,14 @@ export function DeviceMorph({
   const a = chipCenter(firstTarget);
   const b = chipCenter(secondTarget);
   const keys = [
-    { f: 20, x: L.dw * 0.74, y: segY - 80 },
-    { f: CLICK_A - 3, x: a.x + 8, y: a.y + 4 },
-    { f: CLICK_A + 14, x: a.x + 8, y: a.y + 4 },
-    { f: CLICK_A + 34, x: a.x + 30, y: a.y - 40 },
-    { f: CLICK_B - 24, x: a.x + 30, y: a.y - 40 },
-    { f: CLICK_B - 3, x: b.x + 8, y: b.y + 4 },
-    { f: CLICK_B + 14, x: b.x + 8, y: b.y + 4 },
-    { f: CLICK_B + 40, x: b.x + 120, y: b.y - 30 },
+    { f: approach.start, x: L.dw * 0.74, y: segY - 80 },
+    { f: clickA.start + clickA.beat("arrive"), x: a.x + 8, y: a.y + 4 },
+    { f: clickA.start + clickA.beat("hold"), x: a.x + 8, y: a.y + 4 },
+    { f: clickA.start + clickA.beat("away"), x: a.x + 30, y: a.y - 40 },
+    { f: clickB.start + clickB.beat("leave"), x: a.x + 30, y: a.y - 40 },
+    { f: clickB.start + clickB.beat("arrive"), x: b.x + 8, y: b.y + 4 },
+    { f: clickB.start + clickB.beat("hold"), x: b.x + 8, y: b.y + 4 },
+    { f: clickB.start + clickB.beat("away"), x: b.x + 120, y: b.y - 30 },
   ];
   const last = keys[keys.length - 1];
   let cur = last;
@@ -1337,14 +1364,32 @@ export function DeviceMorph({
       break;
     }
   }
-  const pressAt = (at: number) =>
-    spring({ frame: frame - (at - 2), fps, config: CHIP }) -
-    spring({ frame: frame - (at + 2), fps, config: CHIP });
-  const pressA = pressAt(CLICK_A);
-  const pressB = pressAt(CLICK_B);
+  const pressAt = (click: ResolvedElement) =>
+    spring({
+      frame: frame - (click.start + click.beat("pressIn")),
+      fps,
+      config: CHIP,
+    }) -
+    spring({
+      frame: frame - (click.start + click.beat("pressOut")),
+      fps,
+      config: CHIP,
+    });
+  const pressA = pressAt(clickA);
+  const pressB = pressAt(clickB);
   const press = pressA + pressB;
   const curOpacity =
-    range(frame, 18, 24) * (1 - range(frame, CLICK_B + 30, CLICK_B + 40));
+    range(
+      frame,
+      approach.start + approach.beat("fade"),
+      approach.start + approach.beat("fade") + approach.beat("fadeLen"),
+    ) *
+    (1 -
+      range(
+        frame,
+        clickB.start + clickB.beat("fadeOut"),
+        clickB.start + clickB.beat("away"),
+      ));
   const deviceBg = interpolateColors(
     t,
     [0, 0.35, 0.7],

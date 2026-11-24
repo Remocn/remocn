@@ -16389,13 +16389,19 @@
       "registryDependencies": [
         "@remocn/gsh",
         "@remocn/glide",
-        "@remocn/frame-rate"
+        "@remocn/frame-rate",
+        "@remocn/timeline"
       ],
       "files": [
         {
           "path": "registry/remocn/device-morph/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/device-morph.tsx"
+          "target": "components/remocn/device-morph/index.tsx"
+        },
+        {
+          "path": "registry/remocn/device-morph/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/device-morph/timeline.ts"
         }
       ],
       "type": "registry:component"
