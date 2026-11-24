@@ -7,6 +7,13 @@ import { useId } from "react";
 import { AbsoluteFill, Easing, interpolate } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  BLOCKS,
+  type ShapePackElementId,
+  SLOT,
+  shapePackTimeline,
+} from "./timeline";
 
 const { fontFamily: sans } = loadFont("normal", {
   weights: ["300", "400", "500"],
@@ -76,35 +83,16 @@ export interface ShapePackProps {
   delay?: number;
   theme?: "dark" | "light";
   speed?: number;
-}
-
-interface Block {
-  key: string;
-  c: number;
-  r: number;
-  w: number;
-  h: number;
-  tone: number;
-  at: number;
+  /**
+   * Moves, trims or stretches the guides, each block's fall, the accent
+   * block, the lock, the push and the stat, by the ids in `./timeline`.
+   * Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<ShapePackElementId>;
 }
 
 const COLS = 12;
 const ROWS = 8;
-const FALL = 14;
-const ACCENT_FALL = 11;
-
-const BLOCKS: Block[] = [
-  { key: "b1", c: 0, r: 5, w: 4, h: 3, tone: 1, at: 8 },
-  { key: "b2", c: 4, r: 5, w: 3, h: 3, tone: 2, at: 13 },
-  { key: "g", c: 9, r: 4, w: 3, h: 4, tone: 3, at: 18 },
-  { key: "h", c: 7, r: 5, w: 2, h: 3, tone: 4, at: 23 },
-  { key: "a", c: 0, r: 0, w: 4, h: 5, tone: 0, at: 29 },
-  { key: "e", c: 4, r: 3, w: 3, h: 2, tone: 5, at: 35 },
-  { key: "d", c: 9, r: 0, w: 3, h: 4, tone: 6, at: 41 },
-  { key: "f", c: 7, r: 3, w: 2, h: 2, tone: 1, at: 47 },
-];
-const SLOT = { c: 4, r: 0, w: 5, h: 3, at: 62 };
-const LOCK = SLOT.at + ACCENT_FALL;
 
 const EASE_IO = Easing.bezier(0.65, 0, 0.35, 1);
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
@@ -202,27 +190,41 @@ function ScaleLayer({
   );
 }
 
-export function ShapePack({
-  value = 3.2,
-  decimals = 1,
-  suffix = "×",
-  label = "faster renders",
-  logo,
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = sans,
-  fall = FALL,
-  radius = 2,
-  grain = true,
-  scale = 1,
-  delay = 0,
-  theme = "dark",
-  speed = 1,
-}: ShapePackProps) {
+export function ShapePack(props: ShapePackProps) {
+  const {
+    value = 3.2,
+    decimals = 1,
+    suffix = "×",
+    label = "faster renders",
+    logo,
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = sans,
+    radius = 2,
+    grain = true,
+    scale = 1,
+    delay = 0,
+    theme = "dark",
+    speed = 1,
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H } = useSceneConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    shapePackTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
+  const guidesEl = tl.get("guides");
+  const slotEl = tl.get("slot");
+  const lockEl = tl.get("lock");
+  const pushEl = tl.get("push");
+  const statEl = tl.get("stat");
+  const countEl = tl.get("count");
+  const labelEl = tl.get("label");
   const u = H / 720;
   const c = THEMES[theme];
   const fg = ink ?? "#FFF4EC";
@@ -239,17 +241,21 @@ export function ShapePack({
   const Y = (row: number) => py + row * (cell + g);
   const span = (n: number) => n * cell + (n - 1) * g;
 
-  const guideIn = interpolate(t, [0, 14], [0, 1], {
+  const guideIn = interpolate(t, [guidesEl.start, guidesEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
-  const guideOut = interpolate(t, [LOCK, LOCK + 18], [1, 0], {
+  const guideOut = interpolate(t, [lockEl.start, lockEl.end], [1, 0], {
     ...CLAMP,
     easing: EASE_IO,
   });
   const guideFlash = interpolate(
     t,
-    [LOCK, LOCK + 2, LOCK + 10],
+    [
+      lockEl.start,
+      lockEl.start + lockEl.beat("flashPeak"),
+      lockEl.start + lockEl.beat("flash"),
+    ],
     [0, 1, 0],
     CLAMP,
   );
@@ -258,7 +264,7 @@ export function ShapePack({
     s < 0 ? 0 : amp * Math.sin((Math.PI * s) / 5) * Math.exp(-s / 3.2);
 
   const accentDropAt = (tt: number) =>
-    drop(tt, SLOT.at, ACCENT_FALL, -span(SLOT.h) - 40 * u, Y(SLOT.r));
+    drop(tt, slotEl.start, slotEl.length, -span(SLOT.h) - 40 * u, Y(SLOT.r));
   const accentDrop = accentDropAt(t);
   const shakeAt = (tt: number) => {
     const d = accentDropAt(tt);
@@ -277,22 +283,22 @@ export function ShapePack({
   };
   const flash = accentDrop.landed ? Math.exp(-accentDrop.since / 4) : 0;
 
-  const count = interpolate(t, [LOCK + 4, LOCK + 30], [0, 1], {
+  const count = interpolate(t, [countEl.start, countEl.end], [0, 1], {
     ...CLAMP,
     easing: Easing.bezier(0.22, 1, 0.36, 1),
   });
   const statInAt = (tt: number) =>
-    interpolate(tt, [LOCK + 2, LOCK + 16], [0, 1], {
+    interpolate(tt, [statEl.start, statEl.end], [0, 1], {
       ...CLAMP,
       easing: EASE_OUT,
     });
   const labelInAt = (tt: number) =>
-    interpolate(tt, [LOCK + 10, LOCK + 26], [0, 1], {
+    interpolate(tt, [labelEl.start, labelEl.end], [0, 1], {
       ...CLAMP,
       easing: EASE_OUT,
     });
   const pushAt = (tt: number) =>
-    interpolate(tt, [LOCK, LOCK + 70], [1, 1.018], {
+    interpolate(tt, [pushEl.start, pushEl.end], [1, 1.018], {
       ...CLAMP,
       easing: EASE_IO,
     });
@@ -363,13 +369,20 @@ export function ShapePack({
             })}
           </div>
 
-          {BLOCKS.map((b) => {
+          {BLOCKS.map((b, i) => {
+            const blockEl = tl.get(`block:${i}`);
             const h = span(b.h);
             // Laid out where the block lands; the fall and the hop are a
             // transform, since layout rounds a box and the logo's baseline to
             // whole pixels and a block eased by `top` clicks down.
             const lift = (tt: number) => {
-              const d = drop(tt, b.at, fall, -h - 40 * u, Y(b.r));
+              const d = drop(
+                tt,
+                blockEl.start,
+                blockEl.length,
+                -h - 40 * u,
+                Y(b.r),
+              );
               return d.landed ? -impact(d.since, 2.5 * u) : d.y - Y(b.r);
             };
             const dy = lift(t);

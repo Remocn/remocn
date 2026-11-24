@@ -12537,12 +12537,21 @@
       "title": "Shape Pack",
       "description": "Tiles pack together into a poster grid, one block locking a 3.2x stat.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/shape-pack/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/shape-pack.tsx"
+          "target": "components/remocn/shape-pack/index.tsx"
+        },
+        {
+          "path": "registry/remocn/shape-pack/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/shape-pack/timeline.ts"
         }
       ],
       "type": "registry:component"
