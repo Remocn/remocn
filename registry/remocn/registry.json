@@ -11510,13 +11510,19 @@
       "registryDependencies": [
         "@remocn/gsh",
         "@remocn/glide",
-        "@remocn/frame-rate"
+        "@remocn/frame-rate",
+        "@remocn/timeline"
       ],
       "files": [
         {
           "path": "speedrun-timer/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/speedrun-timer.tsx"
+          "target": "components/remocn/speedrun-timer/index.tsx"
+        },
+        {
+          "path": "speedrun-timer/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/speedrun-timer/timeline.ts"
         }
       ]
     },
