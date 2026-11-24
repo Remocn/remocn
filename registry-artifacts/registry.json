@@ -3800,12 +3800,17 @@
       "title": "Bauhaus Build",
       "description": "Flat Bauhaus circles, arcs, squares and bars tumble corner over corner on a hidden grid into an asymmetric frieze, then rebuild into two friezes around an open band for the title.",
       "dependencies": ["remotion"],
-      "registryDependencies": ["@remocn/frame-rate"],
+      "registryDependencies": ["@remocn/frame-rate", "@remocn/timeline"],
       "files": [
         {
           "path": "registry/remocn/bauhaus-build/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/bauhaus-build.tsx"
+          "target": "components/remocn/bauhaus-build/index.tsx"
+        },
+        {
+          "path": "registry/remocn/bauhaus-build/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/bauhaus-build/timeline.ts"
         }
       ],
       "type": "registry:component"
