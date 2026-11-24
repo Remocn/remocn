@@ -8738,12 +8738,21 @@
       "title": "Single Stroke",
       "description": "A giant 27 drawn in single strokes sits beside a coral 'Mar' panel and a demo-day line.",
       "dependencies": ["remotion", "@remotion/google-fonts", "@remotion/paths"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/single-stroke/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/single-stroke.tsx"
+          "target": "components/remocn/single-stroke/index.tsx"
+        },
+        {
+          "path": "registry/remocn/single-stroke/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/single-stroke/timeline.ts"
         }
       ],
       "type": "registry:component"
