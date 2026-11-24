@@ -9301,12 +9301,21 @@
       "title": "Res Climb",
       "description": "A glowing number climbs in resolution-like steps to 200+ with a small caption.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/res-climb/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/res-climb.tsx"
+          "target": "components/remocn/res-climb/index.tsx"
+        },
+        {
+          "path": "registry/remocn/res-climb/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/res-climb/timeline.ts"
         }
       ],
       "type": "registry:component"

@@ -13,6 +13,13 @@ import {
 } from "remotion";
 import { useSceneConfig, useSceneFrame } from "@/lib/remocn/frame-rate";
 import { useGlide } from "@/lib/remocn/glide";
+import { type Timing, useTimeline } from "@/lib/remocn/timeline";
+import {
+  DEFAULT_STEPS,
+  type ResClimbElementId,
+  resClimbTimeline,
+  stepsOf,
+} from "./timeline";
 
 const onest = loadOnest("normal", {
   weights: ["400", "500"],
@@ -46,6 +53,12 @@ export interface ResClimbProps {
   delay?: number;
   speed?: number;
   theme?: "dark" | "light";
+  /**
+   * Moves, trims or stretches the eyebrow, the build, the push, each
+   * sharpening step and the label, by the ids in `./timeline`.
+   * Frames on the scene timeline, after `delay` and `speed`.
+   */
+  timing?: Timing<ResClimbElementId>;
 }
 
 const THEMES = {
@@ -69,9 +82,6 @@ const THEMES = {
 
 const TRACK = -0.04;
 const SAMPLE = 400;
-const BUILD = 12;
-const FIRST_SNAP = 28;
-const SNAP_GAPS = [10, 8, 6, 5];
 
 const EASE_OUT = Easing.bezier(0.22, 1, 0.36, 1);
 const midway = (q: number) => q > 5e-4 && q < 1 - 5e-4;
@@ -231,8 +241,6 @@ function rampAt(ramp: [number, number, number][], u: number) {
   return `rgb(${Math.round(a[0] + (b[0] - a[0]) * f)},${Math.round(a[1] + (b[1] - a[1]) * f)},${Math.round(a[2] + (b[2] - a[2]) * f)})`;
 }
 
-const DEFAULT_STEPS = [7, 14, 28];
-
 /** The foreground at `scale`, around the frame's center; nothing extra at 1. */
 function ScaleLayer({
   scale,
@@ -249,34 +257,37 @@ function ScaleLayer({
   );
 }
 
-export function ResClimb({
-  value = "200+",
-  label = "components, ready to drop in",
-  eyebrow = "remocn registry",
-  steps = DEFAULT_STEPS,
-  accent = "#3B5BFD",
-  ink,
-  background,
-  fontFamily = onest.fontFamily,
-  snapAt = FIRST_SNAP,
-  build = BUILD,
-  grain = true,
-  scale: size = 1,
-  delay = 0,
-  speed = 1,
-  theme = "dark",
-}: ResClimbProps) {
+export function ResClimb(props: ResClimbProps) {
+  const {
+    value = "200+",
+    label = "components, ready to drop in",
+    eyebrow = "remocn registry",
+    steps = DEFAULT_STEPS,
+    accent = "#3B5BFD",
+    ink,
+    background,
+    fontFamily = onest.fontFamily,
+    grain = true,
+    scale: size = 1,
+    delay = 0,
+    speed = 1,
+    theme = "dark",
+    timing,
+  } = props;
   const glide = useGlide();
   const t = Math.max(0, useSceneFrame() - delay) * speed;
-  const { width: W, height: H } = useSceneConfig();
+  const { width: W, height: H, durationInFrames } = useSceneConfig();
+  const tl = useTimeline(
+    resClimbTimeline,
+    props,
+    durationInFrames * speed,
+    timing,
+  );
   const c = THEMES[theme];
   const fg = ink ?? c.ink;
   const stage = background ?? c.bg;
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
-  const stepList = useMemo(
-    () => (steps.length ? steps.slice(0, 4) : DEFAULT_STEPS),
-    [steps],
-  );
+  const stepList = useMemo(() => stepsOf(steps), [steps]);
   const m = useMetrics(value, stepList, label, eyebrow, fontFamily);
   const ramp = useMemo(
     () =>
@@ -312,17 +323,19 @@ export function ResClimb({
   const top = (H - blockH) / 2 + (eyebrow ? eyebrowSize + eyebrowGap : 0);
   const left = (W - inkW) / 2;
 
-  const snaps: number[] = [];
-  for (let i = 0; i < m.levels.length; i++)
-    snaps.push(i === 0 ? snapAt : snaps[i - 1] + SNAP_GAPS[i - 1]);
-  const crispAt = snaps[snaps.length - 1];
-  const labelAt = crispAt + 3;
+  const snaps = m.levels.map((_, i) => tl.get(`snap:${i}`).start);
+  const crispEl = tl.get(`snap:${m.levels.length - 1}`);
+  const crispAt = crispEl.start;
+  const buildEl = tl.get("build");
+  const pushEl = tl.get("push");
+  const labelEl = tl.get("label");
+  const eyebrowEl = tl.get("eyebrow");
   let level = 0;
   for (let i = 0; i < m.levels.length - 1; i++)
     if (t >= snaps[i]) level = i + 1;
   const crisp = t >= crispAt;
 
-  const push = interpolate(t, [0, crispAt + 30], [0.93, 1], {
+  const push = interpolate(t, [pushEl.start, pushEl.end], [0.93, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
@@ -346,7 +359,8 @@ export function ResClimb({
       const col = lv.lit[k];
       const row = lv.lit[k + 1];
       if (level === 0) {
-        const at = (col / Math.max(1, lv.cols - 1)) * build - build * 0.33;
+        const at =
+          buildEl.start + (col / Math.max(1, lv.cols - 1)) * buildEl.length;
         if (t < at) continue;
       }
       const x = left + col * cellPx;
@@ -364,15 +378,20 @@ export function ResClimb({
     }
   }
 
-  const labelP = interpolate(t, [labelAt, labelAt + 20], [0, 1], {
+  const labelP = interpolate(t, [labelEl.start, labelEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
-  const eyebrowP = interpolate(t, [-6, 12], [0, 1], {
+  const eyebrowP = interpolate(t, [eyebrowEl.start, eyebrowEl.end], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
-  const haze = interpolate(t, [crispAt - 4, crispAt + 24], [0.35, 1], CLAMP);
+  const haze = interpolate(
+    t,
+    [crispAt + crispEl.beat("hazeFrom"), crispEl.end],
+    [0.35, 1],
+    CLAMP,
+  );
 
   const cx = W / 2;
   const cy = top + inkH / 2;
