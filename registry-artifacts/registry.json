@@ -15725,13 +15725,19 @@
       "registryDependencies": [
         "@remocn/gsh",
         "@remocn/glide",
-        "@remocn/frame-rate"
+        "@remocn/frame-rate",
+        "@remocn/timeline"
       ],
       "files": [
         {
           "path": "registry/remocn/card-create/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/card-create.tsx"
+          "target": "components/remocn/card-create/index.tsx"
+        },
+        {
+          "path": "registry/remocn/card-create/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/card-create/timeline.ts"
         }
       ],
       "type": "registry:component"
