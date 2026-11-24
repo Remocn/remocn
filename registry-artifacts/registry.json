@@ -7230,12 +7230,21 @@
       "title": "Embargo Lift",
       "description": "\"remocn is free, open source and out today\" in condensed type with a green accent.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/embargo-lift/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/embargo-lift.tsx"
+          "target": "components/remocn/embargo-lift/index.tsx"
+        },
+        {
+          "path": "registry/remocn/embargo-lift/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/embargo-lift/timeline.ts"
         }
       ],
       "type": "registry:component"
