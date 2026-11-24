@@ -8904,12 +8904,21 @@
       "title": "Block Swap",
       "description": "A block overwrites each line with the next, ending 'Render the launch.' on a gradient pill.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/glide", "@remocn/frame-rate"],
+      "registryDependencies": [
+        "@remocn/glide",
+        "@remocn/frame-rate",
+        "@remocn/timeline"
+      ],
       "files": [
         {
           "path": "registry/remocn/block-swap/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/block-swap.tsx"
+          "target": "components/remocn/block-swap/index.tsx"
+        },
+        {
+          "path": "registry/remocn/block-swap/timeline.ts",
+          "type": "registry:component",
+          "target": "components/remocn/block-swap/timeline.ts"
         }
       ],
       "type": "registry:component"
