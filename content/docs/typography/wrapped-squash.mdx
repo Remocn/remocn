@@ -19,11 +19,21 @@ askedAs:
   - "Spotify wrapped style typographic poster"
   - "year-in-review title card made of stacked colorful slabs"
   - "loud full-frame typographic layout with squishing text"
+  - "year in review poster with caps lines filling color blocks"
+  - "text squashed to fill its block, stacked full frame"
 ---
+
+In Remotion, Wrapped Squash builds a year-in-review style poster: two or three short caps lines each squash to fill their own colored block, and the blocks stack to fill the frame. Use it for a recap beat.
 
 <ComponentPreview name="wrapped-squash" />
 
 <InstallBlock name="wrapped-squash" />
+
+## Good to know
+
+- Length: 93 frames of motion at 30 fps (186 at 60 fps) with the default props. That is the minimum for its `Sequence`; add your own hold on top. The Usage example below is a 60 fps composition, so the numbers it hands to Remotion (`durationInFrames`, `Sequence` lengths) are doubled. The component's own props counted in frames stay in 30 fps frames at any frame rate, see [Frame rate](/docs/getting-started/installation#frame-rate).
+- Installs: `remotion`, `@remotion/google-fonts` from npm, plus the remocn helpers `glide`, `frame-rate`, `timeline`. The shadcn CLI copies the source into your project.
+- Font: loads Bricolage Grotesque itself through `@remotion/google-fonts`. Pass `fontFamily` to use your own face, and load that font in your project.
 
 ## Usage
 

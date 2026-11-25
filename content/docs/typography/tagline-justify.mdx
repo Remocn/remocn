@@ -18,11 +18,21 @@ askedAs:
   - "closing line that locks up neatly with one serif italic word in gradient"
   - "one-sentence slogan finishing as a tidy lockup"
   - "viewer sees the final message settle into a balanced poster"
+  - "closing tagline springs in word by word into a justified block"
+  - "end card tagline with one gradient serif italic word and logo"
 ---
+
+In Remotion, Tagline Justify springs a closing tagline in word by word and sets it as a tidy justified block, with one word in a gradient serif italic and a logo below. Use it for the last line of a launch video, locked up like a poster.
 
 <ComponentPreview name="tagline-justify" />
 
 <InstallBlock name="tagline-justify" />
+
+## Good to know
+
+- Length: 112 frames of motion at 30 fps (224 at 60 fps) with the default props. That is the minimum for its `Sequence`; add your own hold on top. The Usage example below is a 60 fps composition, so the numbers it hands to Remotion (`durationInFrames`, `Sequence` lengths) are doubled. The component's own props counted in frames stay in 30 fps frames at any frame rate, see [Frame rate](/docs/getting-started/installation#frame-rate).
+- Installs: `remotion`, `@remotion/google-fonts` from npm, plus the remocn helpers `glide`, `frame-rate`, `timeline`. The shadcn CLI copies the source into your project.
+- Font: loads Instrument Serif, Inter Tight and Manrope itself through `@remotion/google-fonts`. Pass `fontFamily` to use your own face, and load that font in your project.
 
 ## Usage
 

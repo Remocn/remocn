@@ -19,11 +19,22 @@ askedAs:
   - "energetic launch or celebration text entrance"
   - "fun call to action that bounces into place"
   - "viewer feels excitement as words overshoot and settle"
+  - "make words pop in with bouncy overshoot scale per word"
+  - "springy scale in text animation for a launch or CTA"
 ---
+
+In Remotion, Spring Scale In makes the words of a headline pop in one after another with a bouncy overshoot: each word scales up past full size and settles back, like a spring. Use it for a product launch title, a celebration moment or a fun call to action.
 
 <ComponentPreview name="spring-scale-in" />
 
 <InstallBlock name="spring-scale-in" />
+
+## Good to know
+
+- Length: 60 frames of motion at 30 fps (120 at 60 fps) with the default props. That is the minimum for its `Sequence`; add your own hold on top. The Usage example below is a 60 fps composition, so the numbers it hands to Remotion (`durationInFrames`, `Sequence` lengths) are doubled. The component's own props counted in frames stay in 30 fps frames at any frame rate, see [Frame rate](/docs/getting-started/installation#frame-rate).
+- Installs: `remotion` from npm, plus the remocn helpers `glide`, `frame-rate`, `timeline`. The shadcn CLI copies the source into your project.
+- Font: Geist Sans through the `--font-geist-sans` CSS variable, with a system sans fallback. The font is set inline, so change it in the copied file; a `className` font does not override an inline style.
+- The overshoot comes from a back-out easing curve (`Easing.bezier(0.34, 1.56, 0.64, 1)`), not `spring()`, so each word lands on an exact frame. Tune it with `scaleFrom` and `staggerDelay`, or edit that curve in the copied file for more or less bounce.
 
 ## Usage
 

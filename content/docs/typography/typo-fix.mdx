@@ -19,11 +19,21 @@ askedAs:
   - "quick edit demo showing copy fix is easy"
   - "a humanizing joke about a mistake caught before shipping"
   - "viewer smiles as a wrong word is fixed on screen"
+  - "misspelled word gets corrected in place"
+  - "typo correction text animation"
 ---
+
+In Remotion, Typo Fix shows a misspelled word in a short sentence being noticed and corrected in place. Use it for a quick copy-edit demo that shows how easy a fix is.
 
 <ComponentPreview name="typo-fix" />
 
 <InstallBlock name="typo-fix" />
+
+## Good to know
+
+- Length: 80 frames of motion at 30 fps (160 at 60 fps) with the default props. That is the minimum for its `Sequence`; add your own hold on top. The Usage example below is a 60 fps composition, so the numbers it hands to Remotion (`durationInFrames`, `Sequence` lengths) are doubled. The component's own props counted in frames stay in 30 fps frames at any frame rate, see [Frame rate](/docs/getting-started/installation#frame-rate).
+- Installs: `remotion`, `@remotion/google-fonts` from npm, plus the remocn helpers `glide`, `frame-rate`, `timeline`. The shadcn CLI copies the source into your project.
+- Font: loads Onest itself through `@remotion/google-fonts`. Pass `fontFamily` to use your own face, and load that font in your project.
 
 ## Usage
 

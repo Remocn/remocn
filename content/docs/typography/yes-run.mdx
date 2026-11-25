@@ -19,11 +19,21 @@ askedAs:
   - "rapid-fire does it do X yes feature checklist"
   - "showing a product can do everything people ask, with repeated confirmation"
   - "punchy beat where a stream of short questions all get a yes badge"
+  - "series of questions each answered with a bold yes"
+  - "faq beat where every question gets yes"
 ---
+
+In Remotion, Yes Run animates a series of short customer questions, each answered with the same bold Yes tag on a bright orange background. Use it for an objections-handling beat.
 
 <ComponentPreview name="yes-run" />
 
 <InstallBlock name="yes-run" />
+
+## Good to know
+
+- Length: 130 frames of motion at 30 fps (260 at 60 fps) with the default props. That is the minimum for its `Sequence`; add your own hold on top. The Usage example below is a 60 fps composition, so the numbers it hands to Remotion (`durationInFrames`, `Sequence` lengths) are doubled. The component's own props counted in frames stay in 30 fps frames at any frame rate, see [Frame rate](/docs/getting-started/installation#frame-rate).
+- Installs: `remotion`, `@remotion/google-fonts` from npm, plus the remocn helpers `glide`, `frame-rate`, `timeline`. The shadcn CLI copies the source into your project.
+- Font: loads Unbounded itself through `@remotion/google-fonts`. Pass `fontFamily` to use your own face, and load that font in your project.
 
 ## Usage
 

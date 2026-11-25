@@ -3,7 +3,7 @@ title: Strobe Words
 description: "Big words strobe in on flashing fields at a tightening rhythm, then land on a poster with the logo."
 component: strobe-words
 vibe: premium
-length: 68
+length: 128
 useWhen:
   - "A fast opener that cuts through a list of verbs, such as Plan, Write, Render, Ship."
   - "A hype beat where words flash on accent, dark and light fields before the final word holds."
@@ -19,11 +19,22 @@ askedAs:
   - "hype opener cutting through plan, write, render, ship"
   - "rhythmic verb montage that lands on the brand logo"
   - "viewer feels an adrenaline build from flickering keywords"
+  - "fast opener with big verbs flashing on color fields"
+  - "strobe word montage that speeds up and ends on the logo"
 ---
+
+In Remotion, Strobe Words is a fast opener: big verbs such as Plan, Write, Render, Ship flash one after another on strobing color fields at a tightening, accelerating rhythm, then land on a poster with your logo. Use it as a hype intro for a launch video.
 
 <ComponentPreview name="strobe-words" />
 
 <InstallBlock name="strobe-words" />
+
+## Good to know
+
+- Length: 128 frames of motion at 30 fps (256 at 60 fps) with the default props: 68 frames of strobe cuts, then the poster with the last word and the logo, whose glow rises for 60 more frames. That is the minimum for its `Sequence`; add your own hold on top. The Usage example below is a 60 fps composition, so the numbers it hands to Remotion (`durationInFrames`, `Sequence` lengths) are doubled. The component's own props counted in frames stay in 30 fps frames at any frame rate, see [Frame rate](/docs/getting-started/installation#frame-rate).
+- Installs: `remotion`, `@remotion/google-fonts` from npm, plus the remocn helpers `frame-rate`, `timeline`. The shadcn CLI copies the source into your project.
+- Font: loads Manrope and Sora itself through `@remotion/google-fonts`. Pass `fontFamily` to use your own face, and load that font in your project.
+- `logo` takes any React node, so a real asset works: `logo={<Img src={staticFile("logo.svg")} style={{ height: 64 }} />}`.
 
 ## Usage
 

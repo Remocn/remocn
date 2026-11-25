@@ -19,11 +19,22 @@ askedAs:
   - "body copy entrance with a flowing sequential wave"
   - "headline that feels too long for a plain fade, so each word follows the last"
   - "viewer reads naturally as words arrive in a smooth cascade"
+  - "animate a long headline word by word, slide up and fade in"
+  - "staggered word reveal text animation"
 ---
+
+In Remotion, Staggered Fade Up animates a headline word by word: each word slides up a few pixels and fades in after the one before it, so the line arrives in a wave. It is the neutral default for a long headline or a sentence of body copy.
 
 <ComponentPreview name="staggered-fade-up" />
 
 <InstallBlock name="staggered-fade-up" />
+
+## Good to know
+
+- Length: 90 frames of motion at 30 fps (180 at 60 fps) with the default props. That is the minimum for its `Sequence`; add your own hold on top. The Usage example below is a 60 fps composition, so the numbers it hands to Remotion (`durationInFrames`, `Sequence` lengths) are doubled. The component's own props counted in frames stay in 30 fps frames at any frame rate, see [Frame rate](/docs/getting-started/installation#frame-rate).
+- Installs: `remotion` from npm, plus the remocn helpers `glide`, `frame-rate`, `timeline`. The shadcn CLI copies the source into your project.
+- Font: Geist Sans through the `--font-geist-sans` CSS variable, with a system sans fallback. The font is set inline, so change it in the copied file; a `className` font does not override an inline style.
+- Each word moves on its own frames from the stagger, so a longer sentence takes longer: add `staggerDelay` frames per extra word to the natural length below.
 
 ## Usage
 

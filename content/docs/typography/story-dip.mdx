@@ -18,11 +18,21 @@ askedAs:
   - "anecdote with times on each part showing a bump in the road and recovery"
   - "customer story where trouble sinks and the resolution rises"
   - "viewer feels the dip and the comeback across three beats"
+  - "three beat story with timestamps, middle line dips and dims"
+  - "problem then solution anecdote text scene with times"
 ---
+
+In Remotion, Story Dip lays out a three-beat anecdote with a timestamp on each beat: the setup enters, the snag drops low and dims, then the fix climbs and lights up. Use it for a customer or founder story told as setup, problem and resolution.
 
 <ComponentPreview name="story-dip" />
 
 <InstallBlock name="story-dip" />
+
+## Good to know
+
+- Length: 132 frames of motion at 30 fps (264 at 60 fps) with the default props. That is the minimum for its `Sequence`; add your own hold on top. The Usage example below is a 60 fps composition, so the numbers it hands to Remotion (`durationInFrames`, `Sequence` lengths) are doubled. The component's own props counted in frames stay in 30 fps frames at any frame rate, see [Frame rate](/docs/getting-started/installation#frame-rate).
+- Installs: `remotion`, `@remotion/google-fonts` from npm, plus the remocn helpers `glide`, `frame-rate`, `timeline`. The shadcn CLI copies the source into your project.
+- Font: loads Afacad itself through `@remotion/google-fonts`. Pass `fontFamily` to use your own face, and load that font in your project.
 
 ## Usage
 

@@ -19,11 +19,21 @@ askedAs:
   - "hero line where a small letter detail makes it memorable"
   - "light background launch title with a playful finishing touch"
   - "viewer smiles at a tiny detail landing after the sentence"
+  - "dots on the i and j drop in last on a headline"
+  - "headline where the period and letter dots fall into place"
 ---
+
+In Remotion, Tittle Drop sets a headline such as Ship it in minutes. and lets the dots of the i and j, and the closing period, drop in last on a light background. Use it for a launch hero line where a small, witty typographic detail makes it memorable.
 
 <ComponentPreview name="tittle-drop" />
 
 <InstallBlock name="tittle-drop" />
+
+## Good to know
+
+- Length: 175 frames of motion at 30 fps (350 at 60 fps) with the default props. That is the minimum for its `Sequence`; add your own hold on top. The Usage example below is a 60 fps composition, so the numbers it hands to Remotion (`durationInFrames`, `Sequence` lengths) are doubled. The component's own props counted in frames stay in 30 fps frames at any frame rate, see [Frame rate](/docs/getting-started/installation#frame-rate).
+- Installs: `remotion`, `@remotion/google-fonts` from npm, plus the remocn helpers `glide`, `frame-rate`, `timeline`. The shadcn CLI copies the source into your project.
+- Font: loads DM Sans itself through `@remotion/google-fonts`. Pass `fontFamily` to use your own face, and load that font in your project.
 
 ## Usage
 

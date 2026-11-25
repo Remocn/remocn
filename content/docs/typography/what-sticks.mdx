@@ -19,11 +19,21 @@ askedAs:
   - "highlight the single takeaway among a column of statements"
   - "show that most ideas fade but one message stays in memory"
   - "focus moment narrowing a pile of points down to the winning line"
+  - "stack of claims dims one by one until one stays lit"
+  - "highlight the one message that sticks"
 ---
+
+In Remotion, What Sticks stacks a column of marketing claims and dims them one at a time until only one line stays bright and highlighted. Use it for a message-discipline beat that shows only one claim survives the viewer's memory.
 
 <ComponentPreview name="what-sticks" />
 
 <InstallBlock name="what-sticks" />
+
+## Good to know
+
+- Length: 170 frames of motion at 30 fps (340 at 60 fps) with the default props. That is the minimum for its `Sequence`; add your own hold on top. The Usage example below is a 60 fps composition, so the numbers it hands to Remotion (`durationInFrames`, `Sequence` lengths) are doubled. The component's own props counted in frames stay in 30 fps frames at any frame rate, see [Frame rate](/docs/getting-started/installation#frame-rate).
+- Installs: `remotion`, `@remotion/google-fonts` from npm, plus the remocn helpers `glide`, `frame-rate`, `timeline`. The shadcn CLI copies the source into your project.
+- Font: loads Rubik itself through `@remotion/google-fonts`. Pass `fontFamily` to use your own face, and load that font in your project.
 
 ## Usage
 

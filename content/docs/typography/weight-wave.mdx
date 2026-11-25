@@ -19,11 +19,22 @@ askedAs:
   - "a variable font ripple that lands on the key word"
   - "playful emphasis where boldness travels through the sentence"
   - "typographic intro that feels alive, with thickness flowing through the headline"
+  - "wave of font weight change travels across a line"
+  - "variable font weight animation ending on one word"
 ---
+
+In Remotion, Weight Wave sends a wave of font-weight change across a line of text with a variable font, then settles on one highlighted word. Use it for a tagline about motion or flexibility where the type itself should feel alive.
 
 <ComponentPreview name="weight-wave" />
 
 <InstallBlock name="weight-wave" />
+
+## Good to know
+
+- Length: 132 frames of motion at 30 fps (264 at 60 fps) with the default props. That is the minimum for its `Sequence`; add your own hold on top. The Usage example below is a 60 fps composition, so the numbers it hands to Remotion (`durationInFrames`, `Sequence` lengths) are doubled. The component's own props counted in frames stay in 30 fps frames at any frame rate, see [Frame rate](/docs/getting-started/installation#frame-rate).
+- Installs: `remotion`, `@remotion/google-fonts` from npm, plus the remocn helpers `glide`, `frame-rate`, `timeline`. The shadcn CLI copies the source into your project.
+- Font: loads Geist itself through `@remotion/google-fonts`. Pass `fontFamily` to use your own face, and load that font in your project.
+- Weights run from `from` (100) to `peak` (500). The default Geist is loaded as a variable font; a custom `fontFamily` needs a variable weight axis too.
 
 ## Usage
 

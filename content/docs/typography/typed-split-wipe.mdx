@@ -19,11 +19,22 @@ askedAs:
   - "feature intro that builds cleanly then breaks apart directionally"
   - "controlled text exit where halves wipe away"
   - "viewer sees tidy typing followed by a sharp divided exit"
+  - "text types itself without a cursor then splits apart"
+  - "cursorless typing with opposing wipe exit"
 ---
+
+In Remotion, Typed Split Wipe types a line in place with no visible cursor, then exits by splitting it: the start wipes away in one direction and the end in the other while the layout stays fixed. Use it for a product or feature intro that types cleanly and leaves with a directional exit.
 
 <ComponentPreview name="typed-split-wipe" />
 
 <InstallBlock name="typed-split-wipe" />
+
+## Good to know
+
+- Length: 75 frames of motion at 30 fps (150 at 60 fps) with the default props. That is the minimum for its `Sequence`; add your own hold on top. The Usage example below is a 60 fps composition, so the numbers it hands to Remotion (`durationInFrames`, `Sequence` lengths) are doubled. The component's own props counted in frames stay in 30 fps frames at any frame rate, see [Frame rate](/docs/getting-started/installation#frame-rate).
+- Installs: `remotion` from npm, plus the remocn helpers `frame-rate`, `timeline`. The shadcn CLI copies the source into your project.
+- Font: Geist Sans through the `--font-geist-sans` CSS variable, with a system sans fallback. The font is set inline, so change it in the copied file; a `className` font does not override an inline style.
+- The line is passed in three parts, `prefix`, `anchor` and `suffix`: the anchor is the word that moves and closes last.
 
 ## Usage
 

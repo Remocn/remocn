@@ -19,11 +19,22 @@ askedAs:
   - "fast physical entrance for a heavy display word"
   - "letterforms deform with speed like rubber before locking"
   - "viewer feels velocity from stretched type slamming in"
+  - "heavy word flies in with letters smearing horizontally"
+  - "glyph outline smear deformation, not a scale, for a display word"
 ---
+
+In Remotion, Stretch In flies a heavy display word in from off-screen and smears its letters horizontally on the way: horizontal bars stretch long while vertical stems keep their exact width, then everything snaps back. It deforms the real glyph outlines, so it is not a plain scale or motion blur.
 
 <ComponentPreview name="stretch-in" />
 
 <InstallBlock name="stretch-in" />
+
+## Good to know
+
+- Length: 48 frames of motion at 30 fps (96 at 60 fps) with the default props. That is the minimum for its `Sequence`; add your own hold on top. The Usage example below is a 60 fps composition, so the numbers it hands to Remotion (`durationInFrames`, `Sequence` lengths) are doubled. The component's own props counted in frames stay in 30 fps frames at any frame rate, see [Frame rate](/docs/getting-started/installation#frame-rate).
+- Installs: `remotion`, `opentype.js` from npm, plus the remocn helpers `frame-rate`, `timeline`. The shadcn CLI copies the source into your project.
+- The letters are drawn from the font's outlines with `opentype.js`, loaded from `fontUrl` (Anton from Google Fonts' CDN by default). For offline or locked-down renders, put the `.ttf` in `public/` and pass `fontUrl={staticFile("Anton.ttf")}`.
+- The word enters from the right.
 
 ## Usage
 

@@ -17,11 +17,22 @@ askedAs:
   - "start on one huge word then reveal the whole statement"
   - "cinematic opener where the big word turns out to be part of a slogan"
   - "pull-out reveal that gives context to a single word"
+  - "start on one giant word and zoom out to the sentence"
+  - "camera pulls back from a huge word to reveal the line"
 ---
+
+In Remotion, Word Pullback opens on one giant word and pulls the camera back to reveal the full sentence, such as The cinematic toolkit for every launch. Use it as an opener that starts close and zooms out.
 
 <ComponentPreview name="word-pullback" />
 
 <InstallBlock name="word-pullback" />
+
+## Good to know
+
+- Length: 96 frames of motion at 30 fps (192 at 60 fps) with the default props. That is the minimum for its `Sequence`; add your own hold on top. The Usage example below is a 60 fps composition, so the numbers it hands to Remotion (`durationInFrames`, `Sequence` lengths) are doubled. The component's own props counted in frames stay in 30 fps frames at any frame rate, see [Frame rate](/docs/getting-started/installation#frame-rate).
+- Installs: `remotion`, `@remotion/google-fonts` from npm, plus the remocn helpers `gsh`, `glide`, `frame-rate`, `timeline`. The shadcn CLI copies the source into your project.
+- Font: loads Instrument Serif, Inter Tight and Manrope itself through `@remotion/google-fonts`. Pass `fontFamily` to use your own face, and load that font in your project.
+- Set `background` to a solid color to replace the shader ground.
 
 ## Usage
 
