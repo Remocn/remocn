@@ -19,11 +19,21 @@ askedAs:
   - "developer product beat where three promises get enabled like code"
   - "feature list shown as commented-out code coming alive"
   - "viewer sees dormant code turn live as each line is activated"
+  - "code comment lines lose their slashes and light up"
+  - "uncommenting lines of code as a text animation"
 ---
+
+In Remotion, Uncomment Line shows lines of code comments losing their // markers one by one and lighting up as live copy. Use it in a developer-focused video where promises should read like code being switched on.
 
 <ComponentPreview name="uncomment-line" />
 
 <InstallBlock name="uncomment-line" />
+
+## Good to know
+
+- Length: 74 frames of motion at 30 fps (148 at 60 fps) with the default props. That is the minimum for its `Sequence`; add your own hold on top. The Usage example below is a 60 fps composition, so the numbers it hands to Remotion (`durationInFrames`, `Sequence` lengths) are doubled. The component's own props counted in frames stay in 30 fps frames at any frame rate, see [Frame rate](/docs/getting-started/installation#frame-rate).
+- Installs: `remotion`, `@remotion/google-fonts` from npm, plus the remocn helpers `glide`, `frame-rate`, `timeline`. The shadcn CLI copies the source into your project.
+- Font: loads Geist and Geist Mono itself through `@remotion/google-fonts`. Pass `fontFamily` to use your own face, and load that font in your project.
 
 ## Usage
 

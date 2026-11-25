@@ -20,11 +20,22 @@ askedAs:
   - "text that follows a spoken script across multiple sentences"
   - "explainer segment where lines flow along as the narrator talks"
   - "continuous text stream moving sideways with cuts between phrases"
+  - "phrases build word by word at speaking pace"
+  - "voiceover paced text that drifts left as it builds"
 ---
+
+In Remotion, Word Stream builds voiceover-paced intro text: each phrase builds word by word at speaking pace while the line slowly drifts left, then cuts to the next phrase. Use it for an intro or narration that follows a voiceover.
 
 <ComponentPreview name="word-stream" />
 
 <InstallBlock name="word-stream" />
+
+## Good to know
+
+- Length: 63 frames of motion at 30 fps (126 at 60 fps) with the default props. That is the minimum for its `Sequence`; add your own hold on top. The Usage example below is a 60 fps composition, so the numbers it hands to Remotion (`durationInFrames`, `Sequence` lengths) are doubled. The component's own props counted in frames stay in 30 fps frames at any frame rate, see [Frame rate](/docs/getting-started/installation#frame-rate).
+- Installs: `remotion` from npm, plus the remocn helpers `frame-rate`, `timeline`. The shadcn CLI copies the source into your project.
+- Font: Geist Sans through the `--font-geist-sans` CSS variable, with a system sans fallback. The font is set inline, so change it in the copied file; a `className` font does not override an inline style.
+- Phrases go in one `text` string separated by `|`. Timing comes from `wordGap` and `hold`, not from a transcript; for subtitles timed to speech, use the [Captions](/docs/captions/getting-started/introduction) components.
 
 ## Usage
 

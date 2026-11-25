@@ -19,11 +19,21 @@ askedAs:
   - "kinetic typography where the motion matches each word then a poster word holds"
   - "playful short sentence where words play charades before a final big word"
   - "fun brand beat that ends on one held statement word"
+  - "each word acts out its meaning like stretch or split"
+  - "kinetic feature list where words do what they say"
 ---
+
+In Remotion, Word Acts is a feature list where each word acts out its meaning: stretch stretches, split splits, heavy drops, fast zips, and the last word holds as a poster. Use it for a feature-list beat that demonstrates itself.
 
 <ComponentPreview name="word-acts" />
 
 <InstallBlock name="word-acts" />
+
+## Good to know
+
+- Length: 139 frames of motion at 30 fps (278 at 60 fps) with the default props. That is the minimum for its `Sequence`; add your own hold on top. The Usage example below is a 60 fps composition, so the numbers it hands to Remotion (`durationInFrames`, `Sequence` lengths) are doubled. The component's own props counted in frames stay in 30 fps frames at any frame rate, see [Frame rate](/docs/getting-started/installation#frame-rate).
+- Installs: `remotion`, `@remotion/google-fonts` from npm, plus the remocn helpers `glide`, `frame-rate`, `timeline`. The shadcn CLI copies the source into your project.
+- Font: loads Geist itself through `@remotion/google-fonts`. Pass `fontFamily` to use your own face, and load that font in your project.
 
 ## Usage
 

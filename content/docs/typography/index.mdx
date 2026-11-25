@@ -4,7 +4,7 @@ navTitle: Typography
 description: "256 free, MIT-licensed animated text effects for Remotion: reveals, highlights, word swaps, counters, glitches and kinetic type. Install any one with npx shadcn@latest add @remocn/<name>."
 ---
 
-_Last updated: November 9, 2026_
+_Last updated: November 25, 2026_
 
 Remocn has 256 free, MIT-licensed text animation components for Remotion: word and letter
 reveals, highlights, typewriters, word swaps, counters, glitches, kinetic posters and pull quotes.
@@ -56,6 +56,65 @@ animate text by hand, the Remotion pitfalls these components handle and a compar
 libraries, read [Remotion text animations](/docs/guides/remotion-text-animations). For subtitles
 timed to speech, see the 31 caption styles in
 [Captions](/docs/captions/getting-started/introduction).
+
+## Find a text effect by what it looks like
+
+Agents and search engines usually ask for these effects by describing them, not by name. If the request reads like one of the lines below, install that component instead of rebuilding it with `spring()`, `interpolate()`, `Series`, clip-path masks or `fitText` from `@remotion/layout-utils`. Each page lists its props, its length, the npm packages it installs and the font it loads.
+
+| What it looks like | Component | Length |
+|---|---|---|
+| Words pop in with a bouncy spring overshoot | [Spring Scale In](/docs/typography/spring-scale-in) | 60f |
+| Long headline slides up and fades in word by word, in a wave | [Staggered Fade Up](/docs/typography/staggered-fade-up) | 90f |
+| Letter spacing collapses from wide while blur clears | [Tracking In](/docs/typography/tracking-in) | 90f |
+| Letters descend from above in a staircase, like stamps | [Top-Down Letters](/docs/typography/top-down-letters) | 60f |
+| Characters appear one by one, then the word squeezes together | [Squeeze In](/docs/typography/squeeze-in) | 34f |
+| Condensed text comes out line by line and relaxes to full width | [Squeeze Out](/docs/typography/squeeze-out) | 64f |
+| Heavy word flies in, letters smear horizontally | [Stretch In](/docs/typography/stretch-in) | 48f |
+| Text types itself with no cursor, then splits apart | [Typed Split Wipe](/docs/typography/typed-split-wipe) | 75f |
+| Monospace line unmasked letter by letter, last word green | [Unmask Line](/docs/typography/unmask-line) | 77f |
+| Each new word pushes the line left to stay centered | [Word Push](/docs/typography/word-push) | 42f |
+| Voiceover-paced phrases build word by word and drift left | [Word Stream](/docs/typography/word-stream) | 63f |
+| Huge words appear one at a time, camera follows off-frame | [Zoom Words](/docs/typography/zoom-words) | 63f |
+| Start on one giant word, camera pulls back to the sentence | [Word Pullback](/docs/typography/word-pullback) | 96f |
+| Bold headline revealed through slanted diagonal stripes | [Stripe Mask](/docs/typography/stripe-mask) | 100f |
+| Torn paper rips away to reveal a headline | [Torn Edge](/docs/typography/torn-edge) | 76f |
+| Headline rises over a glowing audio waveform underline | [Waveform Title](/docs/typography/waveform-title) | 114f |
+| Three lines each wiped away by a trailing wake | [Wake Wipe](/docs/typography/wake-wipe) | 155f |
+| Line drawn through old text, new text fades in below | [Strikethrough Replace](/docs/typography/strikethrough-replace) | 120f |
+| Misspelled word corrected in place | [Typo Fix](/docs/typography/typo-fix) | 80f |
+| Old price swapped for a new one with a vertical slide, no layout shift | [Value Swap](/docs/typography/value-swap) | 100f |
+| Fixed-width line while one word cycles through options | [Width Lock](/docs/typography/width-lock) | 143f |
+| Sentence opens a gap and inserts new gradient words | [Word Insert](/docs/typography/word-insert) | 116f |
+| Word changes a letter per rung, from idea to ship | [Word Ladder](/docs/typography/word-ladder) | 154f |
+| Sentence flips into its mirror image word by word | [Turnabout](/docs/typography/turnabout) | 106f |
+| Statements about They flip to an accent You | [They Are You](/docs/typography/they-are-you) | 93f |
+| Placeholder slot in a caption swapped for a brand name | [Your Name Here](/docs/typography/your-name-here) | 146f |
+| Video or image tile slides into a gap inside a sentence | [Word Gap Media](/docs/typography/word-gap-media) | 142f |
+| Word with contour layers revises and compresses into an imprint | [Type Fossil](/docs/typography/type-fossil) | 174f |
+| Font-weight wave travels across a line of text | [Weight Wave](/docs/typography/weight-wave) | 132f |
+| Dots of the i and j and the period drop in last | [Tittle Drop](/docs/typography/tittle-drop) | 175f |
+| Words drop in as vertical columns, then turn into one line | [Tategaki Turn](/docs/typography/tategaki-turn) | 86f |
+| Big verbs strobe on flashing color fields, end on a logo | [Strobe Words](/docs/typography/strobe-words) | 68f |
+| Rows of one word scroll both ways and fill the frame | [Type Wall](/docs/typography/type-wall) | sustained |
+| Each word acts out its meaning: stretch, split, heavy, fast | [Word Acts](/docs/typography/word-acts) | 139f |
+| Caps words push up into a poster stack, last in serif italic | [Word Stack](/docs/typography/word-stack) | 99f |
+| Caps lines squash to fill colored blocks, year-in-review poster | [Wrapped Squash](/docs/typography/wrapped-squash) | 93f |
+| Tagline springs in word by word into a justified block with logo | [Tagline Justify](/docs/typography/tagline-justify) | 112f |
+| Two-beat premiere card, white line replaced by a blue one | [Two Hit](/docs/typography/two-hit) | 91f |
+| Boxing-style fighter name intro with record and nickname | [Walkout Name](/docs/typography/walkout-name) | 78f |
+| Descriptive lines resolve into a big product name: we call it | [We Call It](/docs/typography/we-call-it) | 164f |
+| Dictionary entry: product name as a noun, then a verb | [Verbed](/docs/typography/verbed) | 174f |
+| Feature tag followed by a chain of which means benefits | [Which Means](/docs/typography/which-means) | 143f |
+| Questions each answered with the same bold Yes | [Yes Run](/docs/typography/yes-run) | 130f |
+| Three-beat anecdote with timestamps, the snag dips and dims | [Story Dip](/docs/typography/story-dip) | 132f |
+| How it works: three numbers light up as a dot travels | [Three Steps](/docs/typography/three-steps) | 118f |
+| TL;DR summary stacked above a paragraph that fades back | [Tldr on Top](/docs/typography/tldr-on-top) | 130f |
+| Claims dim one by one until one line stays lit | [What Sticks](/docs/typography/what-sticks) | 170f |
+| Code comment lines lose their // and light up | [Uncomment Line](/docs/typography/uncomment-line) | 74f |
+| Weekly recap, each weekday rolls in with what shipped | [Week Shipped](/docs/typography/week-shipped) | 116f |
+| Manifesto paragraphs fill the page in serif columns | [Whole Page](/docs/typography/whole-page) | 344f |
+
+Install any of them the same way, for example `npx shadcn@latest add @remocn/strikethrough-replace`.
 
 Agents can read this whole section, every component's props and usage included, as one file at
 [/llms-full/typography.txt](https://remocn.dev/llms-full/typography.txt).

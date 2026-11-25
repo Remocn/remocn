@@ -17,11 +17,22 @@ askedAs:
   - "podcast or music launch title card with a sound wave underneath"
   - "intro for a voice product where the title feels tied to audio"
   - "headline that rises while a colorful aurora wave line calms into a rule"
+  - "headline rises over a glowing audio waveform"
+  - "waveform line that flattens into an underline"
 ---
+
+In Remotion, Waveform Title raises a headline over a glowing aurora-colored audio waveform that flattens into an underline beneath the title. Use it for a product beat about voice, audio or captions.
 
 <ComponentPreview name="waveform-title" />
 
 <InstallBlock name="waveform-title" />
+
+## Good to know
+
+- Length: 114 frames of motion at 30 fps (228 at 60 fps) with the default props. That is the minimum for its `Sequence`; add your own hold on top. The Usage example below is a 60 fps composition, so the numbers it hands to Remotion (`durationInFrames`, `Sequence` lengths) are doubled. The component's own props counted in frames stay in 30 fps frames at any frame rate, see [Frame rate](/docs/getting-started/installation#frame-rate).
+- Installs: `remotion`, `@remotion/google-fonts` from npm, plus the remocn helpers `glide`, `frame-rate`, `timeline`. The shadcn CLI copies the source into your project.
+- Font: loads Instrument Sans and Instrument Serif itself through `@remotion/google-fonts`. Pass `fontFamily` to use your own face, and load that font in your project.
+- The waveform is drawn by the component; it does not read an audio file.
 
 ## Usage
 

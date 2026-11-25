@@ -17,11 +17,21 @@ askedAs:
   - "status or token change at a specific story beat"
   - "hex color or version updating inside a fixed sentence"
   - "viewer sees a value change cleanly while everything around stays still"
+  - "swap an old price for a new one with a vertical slide"
+  - "change a number or word in place without layout shift"
 ---
+
+In Remotion, Value Swap replaces a value in place, such as an old price with a new one, with a vertical slide, and holds the width of the longest value so nothing around it shifts. Use it inline inside your own text when a value changes at a specific story beat.
 
 <ComponentPreview name="value-swap" />
 
 <InstallBlock name="value-swap" />
+
+## Good to know
+
+- Timing: each swap starts on a frame you list in `at` and slides for `duration` frames (10 by default), counted in 30 fps frames at any composition frame rate, see [Frame rate](/docs/getting-started/installation#frame-rate).
+- Installs: `remotion` from npm, plus the remocn helpers `glide`, `frame-rate`, `timeline`. The shadcn CLI copies the source into your project.
+- It renders an inline `span` that inherits your typography, so it needs no font of its own. `direction` sets whether values roll `up` or `down`.
 
 ## Usage
 

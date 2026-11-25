@@ -19,11 +19,22 @@ askedAs:
   - "title entrance like a camera pulling focus"
   - "wide-spaced letters pulling together to form the word"
   - "viewer feels the word sharpen and settle"
+  - "letter spacing collapses from wide while blur clears"
+  - "title tracking in animation with blur and spring"
 ---
+
+In Remotion, Tracking In collapses the letter spacing of a title from wide to normal while the blur clears, with a springy feel, and moves all the letters together as one unit. Use it for a title or brand name that should feel like it is focusing into place.
 
 <ComponentPreview name="tracking-in" />
 
 <InstallBlock name="tracking-in" />
+
+## Good to know
+
+- Length: 90 frames of motion at 30 fps (180 at 60 fps) with the default props. That is the minimum for its `Sequence`; add your own hold on top. The Usage example below is a 60 fps composition, so the numbers it hands to Remotion (`durationInFrames`, `Sequence` lengths) are doubled. The component's own props counted in frames stay in 30 fps frames at any frame rate, see [Frame rate](/docs/getting-started/installation#frame-rate).
+- Installs: `remotion` from npm, plus the remocn helpers `frame-rate`, `timeline`. The shadcn CLI copies the source into your project.
+- Font: Geist Sans through the `--font-geist-sans` CSS variable, with a system sans fallback. The font is set inline, so change it in the copied file; a `className` font does not override an inline style.
+- The motion runs on Remotion's `spring()`; `startTracking` (in em) and `startBlur` (in px) set where it starts.
 
 ## Usage
 

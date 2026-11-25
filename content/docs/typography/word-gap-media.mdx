@@ -17,11 +17,22 @@ askedAs:
   - "text with a moving image tile slotted into the line"
   - "hero statement where visuals become part of the sentence"
   - "show product footage embedded mid-phrase in a bold tagline"
+  - "media tile slides into a gap in the middle of a sentence"
+  - "image card inside a headline between two words"
 ---
+
+In Remotion, Word Gap Media opens a gap in the middle of a headline, for example between Launch all and of this, and slides a media tile into it that cycles through images with captions. Use it to show the screens behind a claim inside the sentence.
 
 <ComponentPreview name="word-gap-media" />
 
 <InstallBlock name="word-gap-media" />
+
+## Good to know
+
+- Length: 142 frames of motion at 30 fps (284 at 60 fps) with the default props. That is the minimum for its `Sequence`; add your own hold on top. The Usage example below is a 60 fps composition, so the numbers it hands to Remotion (`durationInFrames`, `Sequence` lengths) are doubled. The component's own props counted in frames stay in 30 fps frames at any frame rate, see [Frame rate](/docs/getting-started/installation#frame-rate).
+- Installs: `remotion`, `@remotion/google-fonts` from npm, plus the remocn helpers `gsh`, `glide`, `frame-rate`, `timeline`. The shadcn CLI copies the source into your project.
+- Font: loads Instrument Sans itself through `@remotion/google-fonts`. Pass `fontFamily` to use your own face, and load that font in your project.
+- The tile cycles still images from `images`; it does not play video. Set `background` to a solid color to drop the shader ground.
 
 ## Usage
 

@@ -19,11 +19,22 @@ askedAs:
   - "loud manifesto word or section transition card"
   - "a poster-like background of repeated text with an accent band in the middle"
   - "viewer is hit with sheer volume of one word"
+  - "fill the frame with rows of one word scrolling both ways"
+  - "full screen marquee wall of text with outline rows"
 ---
+
+In Remotion, Type Wall fills the whole frame with rows of one word that scroll in alternating directions at different speeds, in heavy, narrow and outline styles, with an accent band across the middle. Use it for a loud full-screen section title or manifesto word.
 
 <ComponentPreview name="type-wall" />
 
 <InstallBlock name="type-wall" />
+
+## Good to know
+
+- Length: sustained. It plays for as long as its `Sequence` runs.
+- Installs: `remotion`, `@remotion/google-fonts` from npm, plus the remocn helpers `frame-rate`, `timeline`. The shadcn CLI copies the source into your project.
+- Font: loads Anton and Inter itself through `@remotion/google-fonts`. Pass `fontFamily` to use your own face, and load that font in your project.
+- It loops for as long as its `Sequence` runs and has no exit of its own; cut to the next scene.
 
 ## Usage
 

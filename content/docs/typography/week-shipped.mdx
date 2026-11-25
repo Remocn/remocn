@@ -19,11 +19,21 @@ askedAs:
   - "build-in-public weekly update in heavy bold type"
   - "end-of-week summary video that rolls through each day's release"
   - "show a sprint of daily launches stacked in a rolling list"
+  - "weekly recap where each weekday rolls in with what shipped"
+  - "monday to friday shipped list in bold type"
 ---
+
+In Remotion, Week Shipped rolls a weekly recap day by day: each weekday arrives in heavy bold type, followed by what shipped that day. Use it for a weekly changelog video.
 
 <ComponentPreview name="week-shipped" />
 
 <InstallBlock name="week-shipped" />
+
+## Good to know
+
+- Length: 116 frames of motion at 30 fps (232 at 60 fps) with the default props. That is the minimum for its `Sequence`; add your own hold on top. The Usage example below is a 60 fps composition, so the numbers it hands to Remotion (`durationInFrames`, `Sequence` lengths) are doubled. The component's own props counted in frames stay in 30 fps frames at any frame rate, see [Frame rate](/docs/getting-started/installation#frame-rate).
+- Installs: `remotion`, `@remotion/google-fonts` from npm, plus the remocn helpers `glide`, `frame-rate`, `timeline`. The shadcn CLI copies the source into your project.
+- Font: loads Unbounded itself through `@remotion/google-fonts`. Pass `fontFamily` to use your own face, and load that font in your project.
 
 ## Usage
 

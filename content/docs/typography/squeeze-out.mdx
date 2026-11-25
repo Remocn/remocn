@@ -19,11 +19,21 @@ askedAs:
   - "headline that feels like fresh print coming out of a press"
   - "short statement settling after being compressed"
   - "viewer sees tight type breathing out into place"
+  - "condensed headline that relaxes to full width line by line"
+  - "text squeezed narrow then expands horizontally"
 ---
+
+In Remotion, Squeeze Out sets a headline in narrow, condensed type that comes out line by line and then relaxes to its full width, like a fresh print pressed out of a machine. Use it for a headline that should feel pressed, then settled.
 
 <ComponentPreview name="squeeze-out" />
 
 <InstallBlock name="squeeze-out" />
+
+## Good to know
+
+- Length: 64 frames of motion at 30 fps (128 at 60 fps) with the default props. That is the minimum for its `Sequence`; add your own hold on top. The Usage example below is a 60 fps composition, so the numbers it hands to Remotion (`durationInFrames`, `Sequence` lengths) are doubled. The component's own props counted in frames stay in 30 fps frames at any frame rate, see [Frame rate](/docs/getting-started/installation#frame-rate).
+- Installs: `remotion`, `@remotion/google-fonts` from npm, plus the remocn helpers `frame-rate`. The shadcn CLI copies the source into your project.
+- Font: loads Anton itself through `@remotion/google-fonts`. Pass `fontFamily` to use your own face, and load that font in your project.
 
 ## Usage
 
