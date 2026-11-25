@@ -31,7 +31,7 @@ In Remotion, Strobe Words is a fast opener: big verbs such as Plan, Write, Rende
 
 ## Good to know
 
-- Length: 68 frames of motion at 30 fps (136 at 60 fps) with the default props. That is the minimum for its `Sequence`; add your own hold on top. The Usage example below is a 60 fps composition, so the numbers it hands to Remotion (`durationInFrames`, `Sequence` lengths) are doubled. The component's own props counted in frames stay in 30 fps frames at any frame rate, see [Frame rate](/docs/getting-started/installation#frame-rate).
+- Length: the strobe cuts take 68 frames at 30 fps with the default props; then the poster with the last word and the logo appears and its glow rises for 60 more frames. Give its `Sequence` at least 128 frames (256 at 60 fps) so the ending shows, and add your own hold on top. The Usage example below is a 60 fps composition, so the numbers it hands to Remotion (`durationInFrames`, `Sequence` lengths) are doubled. The component's own props counted in frames stay in 30 fps frames at any frame rate, see [Frame rate](/docs/getting-started/installation#frame-rate).
 - Installs: `remotion`, `@remotion/google-fonts` from npm, plus the remocn helpers `frame-rate`, `timeline`. The shadcn CLI copies the source into your project.
 - Font: loads Manrope and Sora itself through `@remotion/google-fonts`. Pass `fontFamily` to use your own face, and load that font in your project.
 - `logo` takes any React node, so a real asset works: `logo={<Img src={staticFile("logo.svg")} style={{ height: 64 }} />}`.
