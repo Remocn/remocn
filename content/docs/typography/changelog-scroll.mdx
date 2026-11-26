@@ -1,6 +1,6 @@
 ---
 title: Changelog Scroll
-description: "A changelog list scrolls and one row enlarges into a highlighted headline entry"
+description: "Long list of release notes scrolls fast, eases to a stop and one row enlarges into a highlighted headline entry for the newest release. For what's-new and changelog videos."
 component: changelog-scroll
 vibe: tech
 length: 108
@@ -19,11 +19,33 @@ askedAs:
   - "zoom into the latest release from a long history"
   - "release notes video featuring one key update"
   - "viewer sees many past releases then focus lands on the new one"
+  - "long list of release notes scrolls by, one row enlarges into a headline"
 ---
+
+In Remotion, Changelog Scroll shows a long list of release notes scrolling by, then eases to a stop and enlarges one row into a highlighted headline entry for the newest release. Use it for a what's-new beat in a changelog or release video, where a history of updates leads to the one that matters.
 
 <ComponentPreview name="changelog-scroll" />
 
 <InstallBlock name="changelog-scroll" />
+
+## How to build this in Remotion
+
+No need to scroll a list with `translateY` and add `@remotion/motion-blur`. Install the component and pass your entries:
+
+```bash
+npx shadcn@latest add @remocn/changelog-scroll
+```
+
+One scene with a schedule in `timeline.ts`: the list scrolls fast and eases to a stop with `interpolate()` over an `Easing` curve, then the focused row grows into a panel while the title and URL chrome fade in. Fonts come from `@remotion/google-fonts`; there is no motion-blur package.
+
+## Good to know
+
+- Length: 108 frames of motion at 30 fps (216 at 60 fps) with the default props. The demo composition plays 140 frames, which adds a hold. The Usage example below is a 60 fps composition, so the numbers it hands to Remotion are doubled, see [Frame rate](/docs/getting-started/installation#frame-rate).
+- Installs: `remotion`, `@remotion/google-fonts` from npm, plus the remocn helpers `glide`, `frame-rate`, `timeline`. The shadcn CLI copies the source into your project.
+- Font: loads Onest (entries), JetBrains Mono, Manrope and Newsreader itself through `@remotion/google-fonts`. Pass `fontFamily` to use your own face for the entries, and load that font in your project.
+- Each entry is `{ date, text, version? }`. When `version` is set (for example "v3.24"), it shows on the row and on the enlarged entry; `focus` is the index of the row that enlarges.
+- `logo` takes any React node and replaces the default remocn mark; `title` and `url` set the chrome text.
+- The site preview plays it at 30 fps because the scene is heavy to paint live; your render is unaffected.
 
 ## Usage
 
@@ -145,3 +167,24 @@ A tall changelog list scrolls fast then eases to a stop on one row, which enlarg
     },
   ]}
 />
+
+## Common questions
+
+### How do I show a long list of release notes scrolling by, then enlarge the newest one?
+
+Install Changelog Scroll with `npx shadcn@latest add @remocn/changelog-scroll`, pass `entries` (date, text, optional version) and set `focus` to the row to enlarge.
+
+### How do I mark the latest release?
+
+Give that entry a `version` and point `focus` at it. The version label shows on the enlarged entry.
+
+### Can I use my own logo?
+
+Yes, pass any React node as `logo`.
+
+## Related effects
+
+- [Terminal Simulator](/docs/ui-blocks/terminal-simulator): a live terminal-style log instead of a list.
+- [Week Shipped](/docs/typography/week-shipped): a weekly recap, one weekday at a time.
+- [Index List](/docs/typography/index-list): a numbered feature list with a highlight band.
+- [Kill Feed](/docs/typography/kill-feed): shipped wins as a game-style kill feed.

@@ -1,6 +1,6 @@
 ---
 title: Case Flip
-description: "A headline flips glyph by glyph from lowercase to uppercase and back to its final casing"
+description: "Headline flips letter by letter from lowercase to uppercase, then settles into its final casing with one word in a gradient. A quiet word suddenly getting LOUD."
 component: case-flip
 vibe: clean
 length: 120
@@ -19,11 +19,33 @@ askedAs:
   - "casing joke like a quiet word turning loud"
   - "title with a fun letter flipping landing on final case"
   - "letters flip one at a time between lower and upper case"
+  - "headline flips letter by letter from lowercase to uppercase and settles"
+  - "quiet word suddenly gets loud in all caps"
 ---
+
+In Remotion, Case Flip makes a headline flip letter by letter from lowercase to uppercase and then settle into its final casing, like a quiet word suddenly getting loud. Use it for a title or tagline where the casing is the joke, with one word landing in a gradient accent over baseline and x-height guides.
 
 <ComponentPreview name="case-flip" />
 
 <InstallBlock name="case-flip" />
+
+## How to build this in Remotion
+
+No need to write a per-letter flip with `spring()` or a typewriter loop. Install the component and pass the headline:
+
+```bash
+npx shadcn@latest add @remocn/case-flip
+```
+
+Every glyph is its own element in the schedule in `timeline.ts`: a first wave flips each character to its other case, a second wave flips it to the casing you wrote, and each flip is an `interpolate()` with an `Easing` curve. Glyph widths are measured before the first frame (held with `delayRender`), so letters don't jump when their width changes. It doesn't use `@remotion/layout-utils`.
+
+## Good to know
+
+- Length: 120 frames of motion at 30 fps (240 at 60 fps) with the default props. The demo composition plays 150 frames, which adds a hold. Longer text takes longer: each wave runs (characters − 1) × `stagger` + `flip` frames. The Usage example below is a 60 fps composition, so the numbers it hands to Remotion are doubled, see [Frame rate](/docs/getting-started/installation#frame-rate).
+- Installs: `remotion`, `@remotion/google-fonts` from npm, plus the remocn helpers `glide`, `frame-rate`, `timeline`. The shadcn CLI copies the source into your project.
+- Font: loads Bricolage Grotesque (weight 500) itself through `@remotion/google-fonts`. Pass `fontFamily` to use your own face, and load that font in your project.
+- The accent word takes a warm-to-blue gradient (`#ffb36b`, `#e2457a`, `#3d4dff` in dark). Pass `accentWord=""` to turn the gradient off; the word must appear in `text` exactly as written.
+- The final casing is whatever you type in `text`: "Launch it LOUD" ends with LOUD in capitals and the rest as written.
 
 ## Usage
 
@@ -136,3 +158,24 @@ Every glyph starts lowercase, then a wave flips them to uppercase one by one wit
     },
   ]}
 />
+
+## Common questions
+
+### How do I make a headline flip from lowercase to uppercase letter by letter?
+
+Install Case Flip with `npx shadcn@latest add @remocn/case-flip` and pass `text` in its final casing. Each letter flips to the other case in a wave, then back to how you wrote it.
+
+### Can I turn off the gradient word?
+
+Yes. Pass an empty `accentWord`, or one that is not in `text`, and every letter stays the ink color.
+
+### Do I need to load the font?
+
+No, it loads Bricolage Grotesque itself. Load your own font only if you pass `fontFamily`.
+
+## Related effects
+
+- [Matrix Decode](/docs/typography/matrix-decode): letters decode from random characters.
+- [Staggered Fade Up](/docs/typography/staggered-fade-up): words fade up with no casing gag.
+- [Kinetic Morph Text](/docs/typography/kinetic-morph-text): one smooth morph between two phrases.
+- [Weight Wave](/docs/typography/weight-wave): a weight wave across a line.

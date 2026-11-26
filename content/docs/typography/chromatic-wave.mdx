@@ -1,6 +1,6 @@
 ---
 title: Chromatic Wave
-description: A soft wave travels down through the type; where it crosses, the letters ripple and split into RGB fringes, then settle back to white
+description: "Slow ambient wave travels down a title, letters ripple and split into red, green and blue chromatic-aberration fringes, then return to white. For poster holds and album covers."
 component: chromatic-wave
 vibe: tech
 length: 150
@@ -19,11 +19,34 @@ askedAs:
   - "ambient looping poster style type distortion"
   - "album cover title that gently ripples and returns to white"
   - "letters split into red green blue as a wave travels down"
+  - "slow wave ripples down a title and splits letters into RGB fringes"
 ---
+
+In Remotion, Chromatic Wave sends a slow ambient wave down a title: where it passes, the letters ripple and split into red, green and blue fringes, and behind it they settle back to white. Use it for a held title such as an album cover, a poster hold or a music-video loop, where the text should stay alive rather than make a one-shot entrance.
 
 <ComponentPreview name="chromatic-wave" />
 
 <InstallBlock name="chromatic-wave" />
+
+## How to build this in Remotion
+
+You don't have to wire `@remotion/noise` and SVG filters together yourself. Install the component and pass your text:
+
+```bash
+npx shadcn@latest add @remocn/chromatic-wave
+```
+
+It is a single SVG filter chain driven by the current frame: `feTurbulence` and `feGaussianBlur` shape a moving depth map, `feDisplacementMap` warps three copies of the text, and `feColorMatrix` splits them into red, green and blue channels that recombine with `screen` blending. The band's travel is one `interpolate()` over `mapTravelFrames`. No font loading and no `@remotion/noise` are involved.
+
+## Good to know
+
+- Length: 150 frames of motion at 30 fps (300 at 60 fps) with the default props. The demo composition plays 100 frames, which adds a hold. The wave crosses in `mapTravelFrames` (150 at 30 fps); the demo cuts at 100. A composition longer than the travel holds the settled white title. The Usage example below is a 60 fps composition, so the numbers it hands to Remotion are doubled, see [Frame rate](/docs/getting-started/installation#frame-rate).
+- Installs: `remotion` from npm, plus the remocn helpers `frame-rate`, `timeline`. The shadcn CLI copies the source into your project.
+- Font: a Helvetica / Arial system stack for both lines, set through `headlineFontFamily` and `kickerFontFamily`. Nothing is loaded.
+- It paints its own `background` (default `#000000`), because the red, green and blue copies only add back up to white over black.
+- The kicker lines are always drawn; pass `kicker=""` to leave them empty.
+- Positions are in absolute pixels for a 1920×1080 frame (`width`, `height`, `textCenterX`, baselines). At another size, set those props to match.
+- The filter chain is heavy to paint: expect slower renders than a plain text animation.
 
 ## Usage
 
@@ -180,3 +203,24 @@ exact over black.
 />
 
 Inspired by [5 Clean Text Animations](https://www.youtube.com/watch?v=Nmi7cE2wT54) by Mapal.
+
+## Common questions
+
+### How do I get a slow wave to ripple down a title and split the letters into RGB fringes?
+
+Install Chromatic Wave with `npx shadcn@latest add @remocn/chromatic-wave` and pass `headline` and `kicker`. The wave crosses over `mapTravelFrames` and leaves the title white.
+
+### Can I hide the small kicker lines?
+
+Yes, pass an empty `kicker`.
+
+### Can it sit over a photo or transparent background?
+
+Not cleanly. The color split only recombines to white over black, so it paints a black background by default.
+
+## Related effects
+
+- [RGB Glitch Text](/docs/typography/rgb-glitch-text): a quick RGB glitch accent instead of a slow wave.
+- [Weight Wave](/docs/typography/weight-wave): a weight wave across a line.
+- [Kinetic Warp](/docs/typography/kinetic-warp): a heavy word bends and snaps with a mesh warp.
+- [Infinite Marquee](/docs/typography/infinite-marquee): a looping text band for ambient motion.

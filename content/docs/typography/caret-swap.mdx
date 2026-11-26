@@ -1,6 +1,6 @@
 ---
 title: Caret Swap
-description: A gradient caret expands into a block that consumes the first text, then types the second
+description: "Gradient text cursor swells into a block that eats the current phrase, shrinks back and types a new one. A typewriter replace effect for editor and AI-tool videos."
 component: caret-swap
 vibe: tech
 length: 67
@@ -19,11 +19,32 @@ askedAs:
   - "swap one phrase for another with a typing gesture"
   - "editing effect like selecting text and writing over it"
   - "gradient block grows over the first text and the second types in"
+  - "text cursor swells into a block, eats the phrase and types a different one"
 ---
+
+In Remotion, Caret Swap animates a gradient text cursor that swells into a block, eats the existing phrase, shrinks back to a caret and then types a different phrase. Use it to replace one line with another mid-scene in editor, dev-tool or AI-product videos, without cutting to an empty frame.
 
 <ComponentPreview name="caret-swap" />
 
 <InstallBlock name="caret-swap" />
+
+## How to build this in Remotion
+
+You don't need a string-slicing typewriter plus a separate cursor. Install the component and pass both phrases:
+
+```bash
+npx shadcn@latest add @remocn/caret-swap
+```
+
+It is one component driven by the schedule in `timeline.ts`: the caret stretches and collapses with `interpolate()` over `Easing` curves, then the new phrase types out with a slightly accelerating rhythm. No `@remotion/layout-utils` or `TransitionSeries` is involved.
+
+## Good to know
+
+- Length: 67 frames of motion at 30 fps (134 at 60 fps) with the default props. The demo composition plays 100 frames, which adds a hold. The typing part depends on the length of `toText`: each next character comes a little sooner than the last. The Usage example below is a 60 fps composition, so the numbers it hands to Remotion are doubled, see [Frame rate](/docs/getting-started/installation#frame-rate).
+- Installs: `remotion` from npm, plus the remocn helpers `frame-rate`, `timeline`. The shadcn CLI copies the source into your project.
+- Timings are counted on a 30 fps scene clock through the remocn `frame-rate` helper, so the swap takes the same number of seconds at 30 or 60 fps. `swapAt` and `typeSpeed` are in 30 fps frames.
+- Font: Geist Sans through the `--font-geist-sans` CSS variable with a system sans fallback, set inline. There is no `fontFamily` prop: change the font in the copied file (a `className` font does not override an inline style).
+- Colors are props: `color` (default `#171717`) for the text, and `caretColor` (`#FF4DAA`) to `caretColorEnd` (`#8A5CF6`) for the caret gradient. On a dark background, pass a light `color`.
 
 ## Usage
 
@@ -150,3 +171,24 @@ The exported `caretSwapLength(toText, swapAt, typeSpeed)` helper returns the fra
     },
   ]}
 />
+
+## Common questions
+
+### How do I animate a gradient cursor that eats a phrase and types a new one?
+
+Install Caret Swap with `npx shadcn@latest add @remocn/caret-swap` and pass `fromText` and `toText`. The caret grows over the first phrase at `swapAt`, collapses and types the second.
+
+### Does the timing change with the frame rate?
+
+No. The component counts on a 30 fps clock, so at 60 fps it lasts the same time; double only the numbers you hand to Remotion, such as `durationInFrames`.
+
+### Can I change the font?
+
+Not through a prop. The font is set inline in the copied file, so edit it there.
+
+## Related effects
+
+- [Typewriter](/docs/typography/typewriter): types one phrase from empty.
+- [Word Stream](/docs/typography/word-stream): phrases build word by word.
+- [Value Swap](/docs/typography/value-swap): swaps a value with a vertical slide.
+- [Caret Wipe](/docs/transitions/caret-wipe): a caret-driven full-frame transition.

@@ -1,6 +1,6 @@
 ---
 title: Changed Mind
-description: "A big serif pull quote, \"The only tool I use now.\", with a solo-founder attribution"
+description: "Big serif pull-quote testimonial edited in place: only the changed words swap as a customer's opinion evolves, with a time label and a solo-founder credit."
 component: changed-mind
 vibe: premium
 length: 140
@@ -19,11 +19,32 @@ askedAs:
   - "before and after opinion shown in a single big serif quote"
   - "customer story where the quote gets rewritten to the final praise"
   - "viewer sees a review evolve into the only tool I use now"
+  - "serif pull quote testimonial that gets edited to show the opinion changing"
 ---
+
+In Remotion, Changed Mind is a big serif pull-quote testimonial that gets edited in place to show a customer's opinion changing: "Another tool I won't use." becomes "Another tool I might use." and then "The only tool I use now.", with a solo-founder credit underneath. Use it in a launch or case-study video when the story is how someone came around.
 
 <ComponentPreview name="changed-mind" />
 
 <InstallBlock name="changed-mind" />
+
+## How to build this in Remotion
+
+You don't need a typewriter delete-and-retype loop. Install the component and pass the versions of the quote:
+
+```bash
+npx shadcn@latest add @remocn/changed-mind
+```
+
+It is one scene with a schedule in `timeline.ts`. The first quote rises in word by word; at each step only the words that differ swap out and in, the shared words glide to their new places, and a small time label ("on day one", "in week two"…) changes with them. The motion is `interpolate()` and `interpolateColors()` over `Easing` curves; word widths are measured before the first frame with `delayRender`. No `@remotion/layout-utils` is needed.
+
+## Good to know
+
+- Length: 140 frames of motion at 30 fps (280 at 60 fps) with the default props. The demo composition plays 170 frames, which adds a hold. The steps spread across the whole composition, so a longer `durationInFrames` gives each version more time instead of freezing. The Usage example below is a 60 fps composition, so the numbers it hands to Remotion are doubled, see [Frame rate](/docs/getting-started/installation#frame-rate).
+- Installs: `remotion`, `@remotion/google-fonts` from npm, plus the remocn helpers `glide`, `frame-rate`, `timeline`. The shadcn CLI copies the source into your project.
+- Font: loads Young Serif itself through `@remotion/google-fonts`. Pass `fontFamily` to use your own face, and load that font in your project.
+- `steps` is an array of `{ quote, when }`. The first item is the opening quote and the last is the one that stays; the defaults are "Another tool I won't use." (on day one), "Another tool I might use." (in week two) and "The only tool I use now." (two months in).
+- `name` is the attribution line under the quote, "Ines Vargas, solo founder" by default.
 
 ## Usage
 
@@ -115,3 +136,24 @@ A big serif quote types in word by word, then twice rewrites itself: shared word
     },
   ]}
 />
+
+## Common questions
+
+### How do I make a serif pull quote that gets edited in place as the customer's opinion changes?
+
+Install Changed Mind with `npx shadcn@latest add @remocn/changed-mind` and pass `steps` (each with a `quote` and a `when` label) and a `name`. Only the changed words swap between versions.
+
+### Which version shows first?
+
+The first item in `steps`. The last item is the one that holds at the end.
+
+### Do I need to load Young Serif?
+
+No, the component loads it. Load your own font only if you pass `fontFamily`.
+
+## Related effects
+
+- [Quote Hero](/docs/typography/quote-hero): several testimonials from different people.
+- [Said Who](/docs/typography/said-who): a short quote revealed piece by piece with its attribution.
+- [Strikethrough Replace](/docs/typography/strikethrough-replace): one claim struck out and replaced.
+- [Deadpan Box](/docs/typography/deadpan-box): a quote whose attribution is the punchline.

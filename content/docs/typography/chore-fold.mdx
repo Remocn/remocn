@@ -1,6 +1,6 @@
 ---
 title: Chore Fold
-description: "A teal \"Captions does all of that.\" folds the chore away, \"You just talk.\" beneath"
+description: "Before-and-after list animation: tedious chores appear line by line, fold away, and one product line replaces them, such as Captions does all of that, with a payoff below."
 component: chore-fold
 vibe: clean
 length: 146
@@ -19,11 +19,32 @@ askedAs:
   - "pain point montage ending on the easy way"
   - "before and after where the product takes care of everything"
   - "teal text shows all that work disappears and you only speak"
+  - "list of tedious chores folds away and one line replaces it"
 ---
+
+In Remotion, Chore Fold animates a list of tedious chores folding away and being replaced by one product line, such as "Captions does all of that." with "You just talk." underneath. Use it for a before-and-after or pain-point beat in a product demo or launch video, where the product takes over all the manual work.
 
 <ComponentPreview name="chore-fold" />
 
 <InstallBlock name="chore-fold" />
+
+## How to build this in Remotion
+
+No need to chain `TransitionSeries` scenes or measure lines with `fitText`. Install the component and pass your chores:
+
+```bash
+npx shadcn@latest add @remocn/chore-fold
+```
+
+It is one scene. The schedule in `timeline.ts` brings the steps in word by word, folds them from the outside in, then swaps in the hero sentence and the payoff; each move is an `interpolate()` over an `Easing` curve. Line breaks are measured before the first frame (held with `delayRender`), so nothing reflows while it plays.
+
+## Good to know
+
+- Length: 146 frames of motion at 30 fps (292 at 60 fps) with the default props. The demo composition plays 180 frames, which adds a hold. It fits the read time to the composition, so a longer `durationInFrames` slows the list instead of freezing at the end. The Usage example below is a 60 fps composition, so the numbers it hands to Remotion are doubled, see [Frame rate](/docs/getting-started/installation#frame-rate).
+- Installs: `remotion`, `@remotion/google-fonts` from npm, plus the remocn helpers `glide`, `frame-rate`, `timeline`. The shadcn CLI copies the source into your project.
+- Font: loads Geologica itself through `@remotion/google-fonts`. Pass `fontFamily` to use your own face, and load that font in your project.
+- Only the `name` words ("Captions") take the accent; `result` and `payoff` stay in the ink color. The default accent is teal: `#4FE3D0` on the dark theme's `#0E3B43` ground, `#0F8C7E` in light. Pass `accent` for your brand color.
+- `steps` is your own list of chores; the defaults are five caption chores such as "Export the audio." and "Fix every timestamp by hand."
 
 ## Usage
 
@@ -139,3 +160,24 @@ A list of tedious manual steps appears line by line, then folds away from the ou
     },
   ]}
 />
+
+## Common questions
+
+### How do I animate a list of chores being folded away and replaced by one line?
+
+Install Chore Fold with `npx shadcn@latest add @remocn/chore-fold`, pass `steps` (the chores), `name` and `result` (the line that replaces them) and `payoff` (the line underneath).
+
+### Is the whole sentence teal?
+
+No. Only `name` is highlighted in the accent; the rest of the sentence is ink.
+
+### Can I change the teal?
+
+Yes, pass `accent`. The default is `#4FE3D0` in dark and `#0F8C7E` in light.
+
+## Related effects
+
+- [What Sticks](/docs/typography/what-sticks): claims dim one by one until one line stays lit.
+- [Loop Break](/docs/typography/loop-break): a repeating workflow broken by a one-step fix.
+- [Run on](/docs/typography/run-on): a tedious workflow as one breathless sentence.
+- [Strikethrough Replace](/docs/typography/strikethrough-replace): one claim struck out and replaced.

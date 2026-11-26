@@ -1,6 +1,6 @@
 ---
 title: Caret Letter
-description: "A blinking caret types a word, then slides in and morphs into the missing letter"
+description: "Blinking text cursor types a brand name with one letter missing, slides into the gap and turns into that letter. A typewriter-caret logo reveal for intros."
 component: caret-letter
 vibe: paper
 length: 180
@@ -19,11 +19,34 @@ askedAs:
   - "brand name reveal where the cursor is part of the name"
   - "clean intro with typing leading into the logo wordmark"
   - "caret slides in and transforms into one letter of the product name"
+  - "blinking cursor types a brand name then becomes the missing letter"
+  - "typewriter caret that turns into a letter of the wordmark"
 ---
+
+In Remotion, Caret Letter animates a blinking text cursor that types out a brand name with one letter missing, then slides into the gap and turns into that missing letter. Use it for a product-name or wordmark reveal at the start of a launch video, with a short descriptive line fading in underneath.
 
 <ComponentPreview name="caret-letter" />
 
 <InstallBlock name="caret-letter" />
+
+## How to build this in Remotion
+
+No need to build a typewriter, measure the word with `measureText` and morph the caret by hand. Install the component and pass the word:
+
+```bash
+npx shadcn@latest add @remocn/caret-letter
+```
+
+The schedule in `timeline.ts` gives the caret, the typing, the slide, the letters parting and the morph fixed start frames; each step is an `interpolate()` with an `Easing` curve, clamped. Letter positions are measured from the loaded font on a canvas before the first frame (held with `delayRender` / `continueRender`), so the gap opens exactly where the missing letter belongs. `@remotion/layout-utils` is not needed.
+
+## Good to know
+
+- Length: 180 frames of motion at 30 fps (360 at 60 fps) with the default props. The demo composition plays 225 frames, which adds a hold. Timing is fixed: a longer composition holds the final frame. The Usage example below is a 60 fps composition, so the numbers it hands to Remotion are doubled, see [Frame rate](/docs/getting-started/installation#frame-rate).
+- Installs: `remotion`, `@remotion/google-fonts` from npm, plus the remocn helpers `glide`, `frame-rate`, `timeline`. The shadcn CLI copies the source into your project.
+- Font: loads Inter Tight itself through `@remotion/google-fonts`. Pass `fontFamily` to use your own face, and load that font in your project.
+- The caret becomes a solid accent-colored bar sized to the ink box of the letter at `stemIndex`. That reads as the letter only for straight stems such as l, I, i without its dot or 1; a round letter like o would end as a rectangle.
+- The subline always renders under the word; pass `subline=""` to leave it empty.
+- Default accent is `#3B5BFD`, and the scene defaults to the light theme.
 
 ## Usage
 
@@ -134,3 +157,24 @@ A caret blinks in and types the word except for one letter, slides over to that 
     },
   ]}
 />
+
+## Common questions
+
+### How do I animate a blinking cursor that types a brand name and turns into the missing letter?
+
+Install Caret Letter with `npx shadcn@latest add @remocn/caret-letter`, pass the name as `word` and the index of the missing letter as `stemIndex`. The caret types the rest, slides over and becomes that letter.
+
+### Does the morph work for rounded letters?
+
+Not well. The caret morphs into a rectangle the size of the letter's ink box, so pick a straight stem: l, I, i or 1.
+
+### Can I hide the line under the word?
+
+Yes, pass an empty `subline`.
+
+## Related effects
+
+- [Typewriter](/docs/typography/typewriter): a typed line with no morph.
+- [Caret Swap](/docs/typography/caret-swap): the caret eats one phrase and types another.
+- [Caret Wipe](/docs/transitions/caret-wipe): a caret that wipes content on or off.
+- [Letter Relay](/docs/typography/letter-relay): a wordmark where letters hop in one after another.

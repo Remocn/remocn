@@ -1,6 +1,6 @@
 ---
 title: Chunk Stack
-description: "\"learn motion by making it\" stacks one word per line with a yellow highlighter on \"making\""
+description: "Slogan stacked one word per line, rising into place, with a yellow highlighter swipe opening behind one key word. A bold social-style statement."
 component: chunk-stack
 vibe: playful
 length: 94
@@ -17,11 +17,32 @@ askedAs:
   - "bold readable statement like learn motion by making it"
   - "short claim where a single word is marked in yellow"
   - "words stack down the screen and a highlighter swipes across the key word"
+  - "slogan stacked one word per line with a yellow highlighter on one word"
 ---
+
+In Remotion, Chunk Stack stacks a slogan such as "learn motion by making it" one word per line and swipes a yellow highlighter behind one key word, here "making". Use it for a bold, readable statement in a social cut or a short promo.
 
 <ComponentPreview name="chunk-stack" />
 
 <InstallBlock name="chunk-stack" />
+
+## How to build this in Remotion
+
+No need to animate a `scaleX` highlight bar or bring in GSAP. Install the component and pass the slogan:
+
+```bash
+npx shadcn@latest add @remocn/chunk-stack
+```
+
+Words rise into the stack one after another on a schedule from `timeline.ts`, then the highlighter bar opens behind the chosen word; each move is an `interpolate()` over an `Easing` curve. Word widths are measured before the first frame (held with `delayRender`) so the bar fits the word exactly.
+
+## Good to know
+
+- Length: 94 frames of motion at 30 fps (188 at 60 fps) with the default props. The demo composition plays 130 frames, which adds a hold. Timing is fixed: a longer composition holds the finished stack. The Usage example below is a 60 fps composition, so the numbers it hands to Remotion are doubled, see [Frame rate](/docs/getting-started/installation#frame-rate).
+- Installs: `remotion`, `@remotion/google-fonts` from npm, plus the remocn helpers `glide`, `frame-rate`, `timeline`. The shadcn CLI copies the source into your project.
+- Font: loads Nunito itself through `@remotion/google-fonts`. Pass `fontFamily` to use your own face, and load that font in your project.
+- The highlighter is yellow by default: `#FFD23F` on the dark theme's green `#133A24` ground. The light theme flips it to a white bar on a yellow ground. Pass `accent` for another color.
+- `highlight` should be one of the words in `text`.
 
 ## Usage
 
@@ -121,3 +142,24 @@ The phrase rises into a stack, one word per line, then a highlighter bar opens b
     },
   ]}
 />
+
+## Common questions
+
+### How do I stack a slogan one word per line with a yellow highlighter on one word?
+
+Install Chunk Stack with `npx shadcn@latest add @remocn/chunk-stack` and pass `text` and `highlight`. The words stack one per line and the highlighter opens behind the highlighted word.
+
+### Is the highlighter yellow by default?
+
+Yes, `#FFD23F` in the default dark theme. Pass `accent` to change it.
+
+### Do I need to load Nunito?
+
+No, the component loads it. Load your own font only if you pass `fontFamily`.
+
+## Related effects
+
+- [Edge Fit](/docs/typography/edge-fit): one giant word filling the frame.
+- [Marker Highlight](/docs/typography/marker-highlight): a marker block behind a phrase inside a sentence.
+- [Word Stack](/docs/typography/word-stack): caps words push up into a poster stack.
+- [Full Bleed Type](/docs/typography/full-bleed-type): huge condensed caps words slam in one at a time.
