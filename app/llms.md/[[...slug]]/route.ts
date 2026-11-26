@@ -1,4 +1,5 @@
 import { markdownNotFound } from "@/lib/agent-docs";
+import { STATIC_AGENT_SOURCE, tagAgentLinks } from "@/lib/agent-links";
 import { getLLMText } from "@/lib/get-llm-text";
 import { source } from "@/source";
 
@@ -16,13 +17,16 @@ export async function GET(
   // An agent asked for Markdown, so the 404 is Markdown too.
   if (!page) return markdownNotFound(`/docs/${(slug ?? []).join("/")}`);
 
-  return new Response(await getLLMText(page), {
-    headers: {
-      "Content-Type": "text/markdown; charset=utf-8",
-      // A copy of the HTML page for agents; search should index the HTML.
-      "X-Robots-Tag": "noindex",
+  return new Response(
+    tagAgentLinks(await getLLMText(page), STATIC_AGENT_SOURCE),
+    {
+      headers: {
+        "Content-Type": "text/markdown; charset=utf-8",
+        // A copy of the HTML page for agents; search should index the HTML.
+        "X-Robots-Tag": "noindex",
+      },
     },
-  });
+  );
 }
 
 // No paths at build time: each page's Markdown is rendered on its first

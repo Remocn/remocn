@@ -1,3 +1,4 @@
+import { STATIC_AGENT_SOURCE, tagAgentLinks } from "@/lib/agent-links";
 import { SITE_URL } from "@/lib/get-llm-text";
 
 /**
@@ -477,7 +478,7 @@ export function buildLlmsTxt(pages: IndexPage[], facts?: CatalogFacts): string {
 
   lines.push(`\n${ABOUT_LINKS.join("\n")}`);
 
-  return lines.join("\n");
+  return tagAgentLinks(lines.join("\n"), STATIC_AGENT_SOURCE);
 }
 
 /** Body for a 404 an agent asked to get as Markdown. */
