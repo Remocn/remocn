@@ -1,6 +1,6 @@
 ---
 title: Indent Steps
-description: "Up to five lines rise in, each tabbing one step further right like indented code, then one word lights up."
+description: "Code-editor style text animation for Remotion: up to five lines rise in, each indented one step further right like code, then one word lights up in a gradient."
 component: indent-steps
 vibe: tech
 length: 80
@@ -18,11 +18,32 @@ askedAs:
   - "developer tagline with the last word lit"
   - "staircase text"
   - "code style indent lines"
+  - "lines rise in, each indented further right like code in an editor"
+  - "write render ship steps that tab in and end on a lit word"
 ---
+
+In Remotion, Indent Steps makes up to five lines rise in, each indented one step further right like code in an editor, and then one word lights up in a gradient. Use it for a write, render, ship sequence or a short developer-facing tagline.
 
 <ComponentPreview name="indent-steps" />
 
 <InstallBlock name="indent-steps" />
+
+## How to build this in Remotion
+
+You don't need a `Sequence` per line or a staggered `spring()` for this. Install the component and pass your lines:
+
+```bash
+npx shadcn@latest add @remocn/indent-steps
+```
+
+One scene reads every line's start frame from `timeline.ts`; each line rises from a mask and tabs right with `interpolate()` over `Easing` curves, and the highlight word fills with a gradient after the last line lands.
+
+## Good to know
+
+- Length: 80 frames of motion at 30 fps (160 at 60 fps) with the default props; the demo plays 120 frames, which adds a hold. With the default `stagger` of 20, long lists tighten the gap so every line lands inside the composition. The Usage example below is a 60 fps composition, so the numbers it hands to Remotion are doubled, see [Frame rate](/docs/getting-started/installation#frame-rate).
+- Installs: `remotion`, `@remotion/google-fonts` from npm, plus the remocn helpers `glide`, `frame-rate`, `timeline`. The shadcn CLI copies the source into your project.
+- Font: loads Hanken Grotesk for the lines and Geist Mono for the line-number gutter itself, through `@remotion/google-fonts`. Pass `fontFamily` to use your own face for the lines, and load that font in your project.
+- `highlight` is matched case-insensitively inside the lines; the accent (`#3B5BFD` by default) colors the guide line that flashes after each tab.
 
 ## Usage
 
@@ -103,7 +124,7 @@ Each line rises from a mask and tabs one step further right with a small snap an
       name: "fontFamily",
       type: "string",
       default: "\"Hanken Grotesk\"",
-      description: "Typeface for the copy. Load the font in your project first.",
+      description: "Typeface for the lines. Hanken Grotesk loads itself; load any other face in your project first.",
     },
     {
       name: "scale",
@@ -137,3 +158,20 @@ Each line rises from a mask and tabs one step further right with a small snap an
     },
   ]}
 />
+
+## Common questions
+
+### How do I make lines rise in Remotion, each indented further right like code?
+
+Install Indent Steps with `npx shadcn@latest add @remocn/indent-steps`, pass up to five `lines` and the `highlight` word that lights up at the end.
+
+### Can the lines leave at the end?
+
+Yes. Set `exit` and the lines outdent and slide out over the final 18 frames.
+
+## Related effects
+
+- [Typewriter](/docs/typography/typewriter): lines typed character by character.
+- [Uncomment Line](/docs/typography/uncomment-line): code comment lines lose their // and light up.
+- [Index List](/docs/typography/index-list): a numbered feature list with a moving highlight row.
+- [Three Steps](/docs/typography/three-steps): a how-it-works scene with three numbered steps.

@@ -1,6 +1,6 @@
 ---
 title: Italic Speed
-description: "A slanted caps word rides in on speed strips, with a serif italic subtitle under an underline."
+description: "Speed text animation for Remotion: a big slanted all-caps word like FASTER rides in on streaky speed lines that fold into an underline, with a serif italic subtitle."
 component: italic-speed
 vibe: premium
 length: 43
@@ -18,11 +18,33 @@ askedAs:
   - "punchy title with a serif italic subtitle under an underline"
   - "speed strips headline"
   - "fast moving italic title"
+  - "slanted all caps word slides in on speed lines"
+  - "FASTER title with streaks, underline and serif subtitle"
 ---
+
+In Remotion, Italic Speed slides a big slanted all-caps word like FASTER in on streaky horizontal speed lines; the strips then retract into an accent underline and a small serif italic subtitle rises below. Use it for a speed or performance claim.
 
 <ComponentPreview name="italic-speed" />
 
 <InstallBlock name="italic-speed" />
+
+## How to build this in Remotion
+
+You don't need `@remotion/motion-blur` or a font loader of your own. Install the component and pass the word:
+
+```bash
+npx shadcn@latest add @remocn/italic-speed
+```
+
+The letters, the strips retracting and the subtitle are elements in `timeline.ts`. The strips and the ride-in use `interpolate()` over `Easing.bezier` curves, and each letter's skew settles with a Remotion `spring()`, leaning back a hair before it rests.
+
+## Good to know
+
+- Length: 43 frames of motion at 30 fps (86 at 60 fps) with the default props; the demo plays 84 frames, which adds a hold. Strips shoot in over frames 0–12, the word rides in 3–19, the strips fold into the underline 18–33 and the subtitle rises 32–43; the rest is a poster hold. The Usage example below is a 60 fps composition, so the numbers it hands to Remotion are doubled, see [Frame rate](/docs/getting-started/installation#frame-rate).
+- Installs: `remotion`, `@remotion/google-fonts` from npm, plus the remocn helpers `glide`, `frame-rate`, `timeline`. The shadcn CLI copies the source into your project.
+- Fonts: loads Archivo italic for the word and Instrument Serif italic for the subtitle itself, through `@remotion/google-fonts`. `fontFamily` changes only the big word; the subtitle stays in Instrument Serif unless you edit the copied file.
+- Type `title` in caps yourself: the component does not uppercase it.
+- Strips: nine strips enter from the left edge, one of them in the accent color (`#3B5BFD` by default). Count, direction and the other strip colors are not props; they live in `STRIPS` and the theme in the copied file.
 
 ## Usage
 
@@ -97,7 +119,7 @@ The word leans in from the side on speed strips, locks upright with an underline
       name: "fontFamily",
       type: "string",
       default: "\"Archivo\"",
-      description: "Typeface for the copy. Load the font in your project first.",
+      description: "Typeface for the big word. Archivo loads itself; load any other face in your project first.",
     },
     {
       name: "scale",
@@ -125,3 +147,20 @@ The word leans in from the side on speed strips, locks upright with an underline
     },
   ]}
 />
+
+## Common questions
+
+### How do I animate a big slanted word like FASTER on speed lines in Remotion?
+
+Install Italic Speed with `npx shadcn@latest add @remocn/italic-speed` and pass `title` and `subtitle`.
+
+### Which font does the subtitle use?
+
+Instrument Serif italic, loaded by the component. `fontFamily` only changes the big word.
+
+## Related effects
+
+- [Soft Blur In](/docs/typography/soft-blur-in): a calm entrance for long or lowercase words.
+- [Lights Out](/docs/typography/lights-out): five lights go out, then a heavy italic name slams in.
+- [Stretch In](/docs/typography/stretch-in): a heavy word flies in with smeared letters.
+- [Speed Ramp Word](/docs/typography/speed-ramp-word): a line rushes by, then slows on one key word.

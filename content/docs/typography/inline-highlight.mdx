@@ -1,6 +1,6 @@
 ---
 title: Inline Highlight
-description: Animate one word inside a sentence from a base color to a brand color
+description: "Word color change animation for Remotion: one word in a sentence shifts from the text color to a brand color, with no background, marker or underline behind it."
 component: inline-highlight
 vibe: clean
 length: 90
@@ -19,11 +19,33 @@ askedAs:
   - "color emphasis within a line"
   - "highlight word color shift"
   - "keyword turns brand color"
+  - "animate one word in a sentence to a brand color"
+  - "text color shift on a single word with no marker behind it"
 ---
+
+In Remotion, Inline Highlight animates one word in a sentence so it shifts from the normal text color to a brand color, with no background, marker or underline behind it. Use it to point at a product name or key term in a headline that is already on screen.
 
 <ComponentPreview name="inline-highlight" />
 
 <InstallBlock name="inline-highlight" />
+
+## How to build this in Remotion
+
+This is the whole effect in a few lines, already written. Install the component and pass the sentence in three parts:
+
+```bash
+npx shadcn@latest add @remocn/inline-highlight
+```
+
+It uses Remotion's `interpolateColors()` on a progress value from `interpolate()`, clamped at both ends. The color shift is one element in `timeline.ts`, so the sentence never reflows: only the color of the middle span changes.
+
+## Good to know
+
+- Length: 90 frames of motion at 30 fps (180 at 60 fps) with the default props. The shift is timed as a share of the composition, not in fixed frames: it starts at 20% of `durationInFrames` and ends at 70%, linearly. A 60 fps composition of 180 frames gives the same timing in seconds as 90 at 30 fps. The Usage example below is a 60 fps composition, so the numbers it hands to Remotion are doubled, see [Frame rate](/docs/getting-started/installation#frame-rate).
+- Installs: `remotion` from npm, plus the remocn helpers `frame-rate`, `timeline`. The shadcn CLI copies the source into your project.
+- Font: Geist Sans through the `--font-geist-sans` CSS variable, with a system sans fallback. The font is set inline, so change it in the copied file; a `className` font does not override an inline style.
+- Start and length: there are no delay or duration props, but the component takes a `timing` prop (`Timing<"highlight">` from the remocn `timeline` helper) that moves, trims or stretches the color shift. For a different curve, edit the `interpolate()` call in the copied file.
+- The scene paints a white background and centers the line; the default text color is `#171717` and the highlight `#ff5e3a`.
 
 ## Usage
 
@@ -104,3 +126,20 @@ export const RemotionRoot = () => (
     },
   ]}
 />
+
+## Common questions
+
+### How do I change the color of one word in a sentence in Remotion, with no marker behind it?
+
+Install Inline Highlight with `npx shadcn@latest add @remocn/inline-highlight` and pass `before`, `highlight` and `after`, plus `highlightColor`. The word fades from `baseColor` to `highlightColor` with `interpolateColors()`.
+
+### When does the color change?
+
+From 20% to 70% of the composition length. Use the `timing` prop to move or stretch it.
+
+## Related effects
+
+- [Marker Highlight](/docs/typography/marker-highlight): a marker block painted behind the phrase.
+- [Shimmer Sweep](/docs/typography/shimmer-sweep): a metallic shine passing over visible text.
+- [Glass Capsule](/docs/typography/glass-capsule): a glass capsule magnifies one key word.
+- [Inline Pill Takeover](/docs/typography/inline-pill-takeover): a pill inside a sentence grows into a CTA.

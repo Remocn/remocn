@@ -1,6 +1,6 @@
 ---
 title: Kerning Snap
-description: "Loose letters snap one by one into correct kerning, forming a gradient serif word"
+description: "Kerning animation for Remotion: loose scattered letters snap one by one into tight kerning and form a gradient serif word, for typography, design-craft or polish beats."
 component: kerning-snap
 vibe: premium
 length: 80
@@ -19,11 +19,32 @@ askedAs:
   - "premium word assembling precisely in gradient serif"
   - "letter spacing animation"
   - "kerning tightening reveal"
+  - "scattered letters snap into proper kerning one by one"
+  - "loose letters lock into a gradient serif word"
 ---
+
+In Remotion, Kerning Snap animates loose, scattered letters that snap one by one into proper kerning and form a gradient serif word. Use it for a beat about typesetting, design craft or polish.
 
 <ComponentPreview name="kerning-snap" />
 
 <InstallBlock name="kerning-snap" />
+
+## How to build this in Remotion
+
+You don't need `measureText()` or a staggered `spring()` of your own. Install the component and pass your word:
+
+```bash
+npx shadcn@latest add @remocn/kerning-snap
+```
+
+Each letter's snap is an element in `timeline.ts`; the snap itself is a Remotion `spring()`, and the drift and flash ticks use `interpolate()` over `Easing` curves. The gradient is one continuous fill across the word, so it only reads whole once every letter is set.
+
+## Good to know
+
+- Length: 80 frames of motion at 30 fps (160 at 60 fps) with the default props; the demo plays 120 frames, which adds a hold. The first letter snaps at `firstSnap` (30) and the rest follow every `interval` (7) frames, so the word is set at about `firstSnap + interval × (letters − 1)`. The Usage example below is a 60 fps composition, so the numbers it hands to Remotion are doubled, see [Frame rate](/docs/getting-started/installation#frame-rate).
+- Installs: `remotion`, `@remotion/google-fonts` from npm, plus the remocn helpers `glide`, `frame-rate`, `timeline`. The shadcn CLI copies the source into your project.
+- Font: loads Fraunces itself through `@remotion/google-fonts`. The layout uses Fraunces metrics, so another `fontFamily` may set looser or tighter; load any other face in your project.
+- Gradient: dark is `#FFF4EC` → `#FFB36B` → `#E2457A` → `#8F6BFF`, light is `#F07A2A` → `#E2457A` → `#3D4DFF`. There is no prop for the stops: `ink` swaps the gradient for one solid color, and other stops mean editing `THEMES` in the copied file. `accent` only colors the flash ticks.
 
 ## Usage
 
@@ -90,7 +111,7 @@ Letters start scattered and loose across the frame; from the center outward, eac
       name: "fontFamily",
       type: "string",
       default: "\"Fraunces\"",
-      description: "Typeface for the copy. Load the font in your project first.",
+      description: "Typeface for the word. Fraunces loads itself; load any other face in your project first.",
     },
     {
       name: "scale",
@@ -124,3 +145,20 @@ Letters start scattered and loose across the frame; from the center outward, eac
     },
   ]}
 />
+
+## Common questions
+
+### How do I animate scattered letters snapping into kerning in Remotion?
+
+Install Kerning Snap with `npx shadcn@latest add @remocn/kerning-snap` and pass `word`. Letters drift loose, then snap into place one by one with a spring.
+
+### Can I change the gradient colors?
+
+Not through props. Pass `ink` for a solid color, or edit the gradient in `THEMES` in the copied file.
+
+## Related effects
+
+- [Tracking In](/docs/typography/tracking-in): letter spacing collapses from wide while blur clears.
+- [Squeeze In](/docs/typography/squeeze-in): characters appear, then squeeze together.
+- [Stretch In](/docs/typography/stretch-in): a heavy word flies in with smeared letters.
+- [Ruler Align](/docs/typography/ruler-align): a ruler straightens messy letters onto its edge.

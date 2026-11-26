@@ -1,6 +1,6 @@
 ---
 title: Keep Words
-description: "Serif belief statements build word by word; each keyword turns red and drops into a closing column of mottos."
+description: "Manifesto ending for Remotion: serif belief statements build word by word, the key word of each turns red and drops into a closing column of one-word mottos."
 component: keep-words
 vibe: premium
 length: 285
@@ -18,11 +18,33 @@ askedAs:
   - "principles beat with serif text building word by word"
   - "red keyword drops into column"
   - "values statement"
+  - "manifesto beliefs build word by word, key words drop into a list"
+  - "serif belief lines with one red word each that stacks into mottos"
 ---
+
+In Remotion, Keep Words builds a manifesto ending: serif belief statements build word by word, the key word of each turns red and drops into a column of one-word mottos. Use it as the closing beat of a brand film or launch video with two or three beliefs.
 
 <ComponentPreview name="keep-words" />
 
 <InstallBlock name="keep-words" />
+
+## How to build this in Remotion
+
+You don't need `TransitionSeries`, `fitText` or a font loader of your own. Install the component and pass your beliefs:
+
+```bash
+npx shadcn@latest add @remocn/keep-words
+```
+
+Each belief and each motto is an element in `timeline.ts`. Words rise with `interpolate()` over `Easing` curves, the key word changes color with `interpolateColors()`, and line widths are measured on a canvas while `delayRender` holds the frame until Gloock has loaded.
+
+## Good to know
+
+- Length: 285 frames of motion at 30 fps (570 at 60 fps) with the default props; the demo plays 330 frames, which adds a hold. The beliefs stretch to fill the composition: each one gets an equal share of `durationInFrames`, after 6 frames in, 24 for the stack move and `hold` (34) at the end, and never less than 48 frames. The Usage example below is a 60 fps composition, so the numbers it hands to Remotion are doubled, see [Frame rate](/docs/getting-started/installation#frame-rate).
+- Installs: `remotion`, `@remotion/google-fonts` from npm, plus the remocn helpers `glide`, `frame-rate`, `timeline`. The shadcn CLI copies the source into your project.
+- Font: loads Gloock itself through `@remotion/google-fonts`. Pass `fontFamily` to use your own face, and load that font in your project.
+- Accent: the key words turn `#FF4436` in dark and `#D92B1E` in light; `accent` overrides it.
+- Any number of beliefs works, since the timing divides the clip between them; with more than three, give the composition more frames so each belief keeps at least 48.
 
 ## Usage
 
@@ -88,7 +110,7 @@ Each belief builds word by word in a large serif; its keyword turns the accent c
       name: "fontFamily",
       type: "string",
       default: "\"Gloock\"",
-      description: "Typeface for the copy. Load the font in your project first.",
+      description: "Typeface for the copy. Gloock loads itself; load any other face in your project first.",
     },
     {
       name: "scale",
@@ -116,3 +138,20 @@ Each belief builds word by word in a large serif; its keyword turns the accent c
     },
   ]}
 />
+
+## Common questions
+
+### How do I make a manifesto ending in Remotion where key words drop into a column of mottos?
+
+Install Keep Words with `npx shadcn@latest add @remocn/keep-words` and pass `beliefs` as `{ text, keep }` objects. `keep` is the word that turns red and joins the closing column.
+
+### Does it work with four or five beliefs?
+
+Yes. The clip is split evenly between them, at least 48 frames each, so raise `durationInFrames` with the count.
+
+## Related effects
+
+- [Whole Page](/docs/typography/whole-page): manifesto paragraphs fill the page in serif columns.
+- [Changed Mind](/docs/typography/changed-mind): one quote edited in place.
+- [Plain License](/docs/typography/plain-license): legal clauses replaced by plain phrases.
+- [What Sticks](/docs/typography/what-sticks): claims dim one by one until one line stays lit.
