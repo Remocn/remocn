@@ -1,6 +1,6 @@
 ---
 title: Inline Pill Takeover
-description: A clipped pill expands inside a sentence, pushes the words apart, and takes over the frame
+description: "Inline pill to CTA animation for Remotion: a pill inside a sentence expands, pushes the words apart and takes over the whole frame as a call to action, with no cut."
 component: inline-pill-takeover
 vibe: premium
 length: 30
@@ -19,11 +19,33 @@ askedAs:
   - "a pill that pushes words apart and fills the screen"
   - "expanding button in text"
   - "inline chip takeover"
+  - "pill inside a sentence expands and takes over the frame as a CTA"
+  - "words push apart as an inline pill grows full screen"
 ---
+
+In Remotion, Inline Pill Takeover makes a pill shape inside a sentence expand, push the surrounding words apart and then take over the whole frame as a call to action, without cutting to a new title card. Use it to turn a line of copy into a CTA or an end card in one continuous move.
 
 <ComponentPreview name="inline-pill-takeover" />
 
 <InstallBlock name="inline-pill-takeover" />
+
+## How to build this in Remotion
+
+You don't need `measureText()`, `@remotion/shapes` or a transition for this. Install the component and pass the sentence in three parts:
+
+```bash
+npx shadcn@latest add @remocn/inline-pill-takeover
+```
+
+The pill opening, the words fading, the pill growing and the camera push are elements in `timeline.ts`, each driven by `interpolate()` over `Easing` curves. The words sit in a flex row on either side of the pill, so they move apart as it widens.
+
+## Good to know
+
+- Length: 30 frames of motion at 30 fps (60 at 60 fps) with the default props; the demo plays 45 frames, which adds a hold. The takeover settles at frame 30: the pill opens over 12 frames, grows from frame 12, and the camera pushes and settles by 30. The demo holds the end for 15 more. The Usage example below is a 60 fps composition, so the numbers it hands to Remotion are doubled, see [Frame rate](/docs/getting-started/installation#frame-rate).
+- Installs: `remotion` from npm, plus the remocn helpers `glide`, `frame-rate`, `timeline`. The shadcn CLI copies the source into your project.
+- Font: Geist Sans through the `--font-geist-sans` CSS variable, with a system sans fallback, set inline; change it in the copied file.
+- Pill width does not fit the `insert` text: it opens to `pillWidth` (260 px by default). Tune `pillWidth` to your insert text.
+- The background is transparent; put your own scene behind it.
 
 ## Usage
 
@@ -220,3 +242,20 @@ export const RemotionRoot = () => (
     },
   ]}
 />
+
+## Common questions
+
+### How do I make a pill inside a sentence expand and take over the frame in Remotion?
+
+Install Inline Pill Takeover with `npx shadcn@latest add @remocn/inline-pill-takeover` and pass `before`, `insert` and `after`. The pill opens, the words move apart and fade, and the pill fills the frame.
+
+### Does the pill size itself to the text?
+
+No. Set `pillWidth` so the insert text fits.
+
+## Related effects
+
+- [Inline Highlight](/docs/typography/inline-highlight): only one phrase changes color, with no layout change.
+- [Caret Swap](/docs/typography/caret-swap): a caret swells into a block and types a new phrase.
+- [Zoom Words](/docs/typography/zoom-words): huge words appear one at a time as the camera follows.
+- [Phrase List Bridge](/docs/typography/phrase-list-bridge): a phrase splits open around a floating list.

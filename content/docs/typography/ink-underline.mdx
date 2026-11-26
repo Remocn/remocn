@@ -1,6 +1,6 @@
 ---
 title: Ink Underline
-description: A hand-dragged ink stroke that draws itself across in a few stop-motion poses
+description: "Hand-drawn ink underline for Remotion: a brush stroke drags itself under a handwritten headline, URL or stat in a few stop-motion steps, timed after the writing."
 component: ink-underline
 vibe: paper
 length: 120
@@ -17,11 +17,33 @@ askedAs:
   - "stop motion pen stroke beneath text"
   - "scribble underline"
   - "ink stroke under word"
+  - "hand dragged ink underline drawn in stop motion steps"
+  - "underline that starts after the handwriting finishes"
 ---
+
+In Remotion, Ink Underline adds a hand-dragged ink stroke that draws itself under a handwritten headline in a few stop-motion steps. Set its `delay` from `handwriteDuration()` and it starts right after the writing finishes; use it under a URL, a stat or a title in a paper or scrapbook scene.
 
 <ComponentPreview name="ink-underline" />
 
 <InstallBlock name="ink-underline" />
+
+## How to build this in Remotion
+
+You don't need `@remotion/paths`, `evolvePath()` or an SVG filter for this. Install the component:
+
+```bash
+npx shadcn@latest add @remocn/ink-underline
+```
+
+The stroke is an SVG brush ribbon sampled from a seeded curve, revealed on the remocn `stop-motion` clock in discrete poses, so it moves in the same choppy steps as `handwrite`. Its single schedule entry lives in `timeline.ts`: the drag starts at `delay` and lasts `durationSteps × step` frames.
+
+## Good to know
+
+- Length: 120 frames of motion at 30 fps (240 at 60 fps) with the default props. The stroke itself only takes `durationSteps × step` frames (15 with the defaults) after `delay`; the rest of the 120 is hold. The Usage example below is a 60 fps composition, so the numbers it hands to Remotion are doubled, see [Frame rate](/docs/getting-started/installation#frame-rate).
+- Installs: `remotion` from npm, plus the remocn helpers `stop-motion`, `brush`, `frame-rate`, `timeline`. The shadcn CLI copies the source into your project.
+- No font: the stroke is drawn, not typed.
+- `delay`, `step` and `handwriteDuration()` all count 30 fps frames on the scene clock, so passing `handwriteDuration(text)` as `delay` lines up at any composition frame rate.
+- Width: the stroke is `width` pixels long and does not measure the text above it. Give the underline the same width as the box the headline sits in, as the Usage example does.
 
 ## Usage
 
@@ -139,3 +161,19 @@ stop-motion poses the drag takes, so the real length in frames is
     },
   ]}
 />
+
+## Common questions
+
+### How do I add a hand-drawn ink underline under a handwritten headline in Remotion?
+
+Install Ink Underline with `npx shadcn@latest add @remocn/ink-underline`, place it under the text in a flex column and set `delay={handwriteDuration(text)}` so the drag starts when the writing ends.
+
+### Is `handwriteDuration` in frames?
+
+Yes, in 30 fps frames on the scene clock, the same unit `delay` uses, so it fits any composition frame rate.
+
+## Related effects
+
+- [Marker Highlight](/docs/typography/marker-highlight): a marker block painted behind a phrase inside a sentence.
+- [Handwrite](/docs/typography/handwrite): pen-written text on the same stop-motion clock.
+- [Hand Count](/docs/typography/hand-count): a number rewritten by hand at each step.

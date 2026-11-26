@@ -1,6 +1,6 @@
 ---
 title: Cool Down
-description: "A short statement, 'Runs cool.', settles in large over a faint grid with a mono caption"
+description: "Calm performance claim like Runs cool. settles in large type over a faint grid, cooling from a green glow to ink, with a small monospace caption. For speed and efficiency beats."
 component: cool-down
 vibe: tech
 length: 92
@@ -19,11 +19,32 @@ askedAs:
   - "show that the product stays cool and unbothered under load"
   - "performance beat that should feel relaxed rather than loud"
   - "large settled phrase technical grid"
+  - "calm claim settles in large over a faint grid with a small mono caption"
 ---
+
+In Remotion, Cool Down settles a calm performance claim such as "Runs cool." in large type over a faint grid, with a small monospace caption underneath. The title rises in glowing in the accent color and cools to the text color while the grid and a heat shimmer calm down; use it for a speed, efficiency or low-power claim in a product video.
 
 <ComponentPreview name="cool-down" />
 
 <InstallBlock name="cool-down" />
+
+## How to build this in Remotion
+
+No need to tune a no-bounce `spring()` or draw a CSS-gradient grid. Install the component and pass the claim and caption:
+
+```bash
+npx shadcn@latest add @remocn/cool-down
+```
+
+The rise, the color cooling and the haze fading out are `interpolate()` calls over `Easing` curves on a schedule from `timeline.ts`, so nothing overshoots. The title is measured before the first frame (held with `delayRender`), and the grid is plain lines drawn to the frame size.
+
+## Good to know
+
+- Length: 92 frames of motion at 30 fps (184 at 60 fps) with the default props. The demo composition plays 125 frames, which adds a hold. Timing is fixed: a longer composition holds the still final frame. The Usage example below is a 60 fps composition, so the numbers it hands to Remotion are doubled, see [Frame rate](/docs/getting-started/installation#frame-rate).
+- Installs: `remotion`, `@remotion/google-fonts` from npm, plus the remocn helpers `glide`, `frame-rate`, `timeline`. The shadcn CLI copies the source into your project.
+- Font: loads Saira itself through `@remotion/google-fonts`. Pass `fontFamily` to use your own face, and load that font in your project.
+- The caption is `label` ("a full launch film rendered, fans silent" by default); write your own.
+- The default glow is green: `#76B900` on black in dark, `#4C7A00` in light. `cooldown` sets the frames the title takes to cool from that accent to the ink (70 at 30 fps).
 
 ## Usage
 
@@ -81,7 +102,7 @@ A short statement rises into place in large type, glowing in the accent color an
       name: "fontFamily",
       type: "string",
       default: "\"Saira\"",
-      description: "Typeface for the copy. Load the font in your project first.",
+      description: "Typeface for the copy. Saira loads by default; load any other face in your project first.",
     },
     {
       name: "cooldown",
@@ -121,3 +142,24 @@ A short statement rises into place in large type, glowing in the accent color an
     },
   ]}
 />
+
+## Common questions
+
+### How do I make a calm claim like Runs cool. settle in large over a faint grid?
+
+Install Cool Down with `npx shadcn@latest add @remocn/cool-down` and pass `title` and `label` (the small caption). It rises with no bounce and cools from the accent to ink.
+
+### Does it bounce?
+
+No. It uses eased `interpolate()` curves, not a spring, so it settles without overshoot.
+
+### Can I change the glow color?
+
+Yes, pass `accent`. Use `cooldown` to make the cooling faster or slower.
+
+## Related effects
+
+- [Rolling Number](/docs/typography/rolling-number): a number counting up instead of a claim.
+- [Hot Stage](/docs/typography/hot-stage): a staged build, render, ship log that pushes lines away.
+- [Soft Blur In](/docs/typography/soft-blur-in): a quiet letter-by-letter entrance.
+- [Scale Down Fade](/docs/typography/scale-down-fade): a minimal headline that settles with a subtle scale.

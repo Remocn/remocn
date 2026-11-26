@@ -1,6 +1,6 @@
 ---
 title: Blur Out Up
-description: Words arrive clean and depart upward with increasing blur for airy exits
+description: "Blur exit for Remotion: a title appears cleanly word by word, holds, then drifts upward with the words getting more blurred, an airy exit before the next scene."
 component: blur-out-up
 vibe: premium
 length: 90
@@ -19,11 +19,33 @@ askedAs:
   - "tagline needs a graceful exit before next scene"
   - "light editorial tone where text drifts away"
   - "text rises and fades into blur"
+  - "title leaves by drifting upward while the words blur"
+  - "airy blur exit before the next scene cuts in"
 ---
+
+In Remotion, Blur Out Up makes a title appear cleanly word by word, hold, and then leave by drifting upward with the words getting more blurred. Use it as an airy exit for a title or tagline before the next scene cuts in.
 
 <ComponentPreview name="blur-out-up" />
 
 <InstallBlock name="blur-out-up" />
+
+## How to build this in Remotion
+
+You don't need `@remotion/transitions` for the exit. Install the component and pass your text:
+
+```bash
+npx shadcn@latest add @remocn/blur-out-up
+```
+
+Each word fades and moves with `interpolate()` on `Easing.bezier` curves, and the exit adds a CSS `filter: blur()`. The schedule in `timeline.ts` places the exit at the end of the composition, so no `premountFor` or `Sequence` juggling is needed.
+
+## Good to know
+
+- Length: 90 frames of motion at 30 fps (180 at 60 fps) with the default props. The exit is timed to end with the composition, so a longer composition holds the title longer before it leaves. The Usage example below is a 60 fps composition, so the numbers it hands to Remotion are doubled, see [Frame rate](/docs/getting-started/installation#frame-rate).
+- Installs: `remotion` from npm, plus the remocn helpers `glide`, `frame-rate`, `timeline`. The shadcn CLI copies the source into your project.
+- There is no prop for the exit start or duration: it begins 14 frames (30 fps) plus the word stagger before the composition ends. Change the length of its `Sequence` to move it, or the `EXIT` constant in `timeline.ts` to change its duration.
+- Font: Geist Sans through the `--font-geist-sans` CSS variable, with a system sans fallback. The font is set inline, so change it in the copied file; a `className` font does not override an inline style.
+- Recolor with the `color` prop.
 
 ## Usage
 
@@ -118,3 +140,20 @@ export const RemotionRoot = () => (
     },
   ]}
 />
+
+## Common questions
+
+### How can I make a title in Remotion appear cleanly and leave by drifting upward with the words blurring?
+
+Install Blur Out Up with `npx shadcn@latest add @remocn/blur-out-up` and pass `text`. The exit is timed to the end of the composition.
+
+### How do I control when the exit starts?
+
+Set the length of the `Sequence` that holds it: the exit ends with that `Sequence`.
+
+## Related effects
+
+- [Focus Blur Resolve](/docs/typography/focus-blur-resolve): a blurred entrance that resolves to crisp.
+- [Scale Down Fade](/docs/typography/scale-down-fade): a calm scale-down entrance and fade.
+- [Shadow Sweep Text](/docs/typography/shadow-sweep-text): a line that emerges from and returns to shadow.
+- [Fade Through](/docs/typography/fade-through): one label swapping into another in place.

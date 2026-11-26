@@ -1,6 +1,6 @@
 ---
 title: Bottom-Up Letters
-description: Letters rise from below in a pronounced staircase, one symbol at a time
+description: "Letter-by-letter rise for Remotion: each letter of a short word or acronym rises from below in a clear staircase, one character after another."
 component: bottom-up-letters
 vibe: clean
 length: 60
@@ -19,11 +19,33 @@ askedAs:
   - "short punchy word with clear per letter energy"
   - "acronym landing letter by letter from the bottom"
   - "text builds with every symbol climbing up in sequence"
+  - "each letter rises from below in a staircase one after another"
+  - "short word or acronym letters slide up one by one"
 ---
+
+In Remotion, Bottom-Up Letters animates a short word, such as a product acronym, so each letter rises up from below in a clear staircase, one character after another. Use it when a short punchy word should land with visible per-character energy.
 
 <ComponentPreview name="bottom-up-letters" />
 
 <InstallBlock name="bottom-up-letters" />
+
+## How to build this in Remotion
+
+You don't have to hand-write per-character `spring()` offsets. Install the component and pass your word:
+
+```bash
+npx shadcn@latest add @remocn/bottom-up-letters
+```
+
+Each character fades and rises with `interpolate()` on an `Easing.bezier` curve, starting `staggerDelay` frames after the previous one; `distance` sets how far it travels. The schedule lives in `timeline.ts`.
+
+## Good to know
+
+- Length: 60 frames of motion at 30 fps (120 at 60 fps) with the default props. The Usage example below is a 60 fps composition, so the numbers it hands to Remotion are doubled, see [Frame rate](/docs/getting-started/installation#frame-rate).
+- Installs: `remotion` from npm, plus the remocn helpers `glide`, `frame-rate`, `timeline`. The shadcn CLI copies the source into your project.
+- Duration: the last letter starts at (letters − 1) × `staggerDelay` and takes 12 frames, all at 30 fps. A 5-letter word with the default stagger of 3 finishes at frame 24.
+- Easing is a fixed `Easing.bezier` curve; there are no easing or spring props.
+- Font: Geist Sans through the `--font-geist-sans` CSS variable, with a system sans fallback. The font is set inline, so change it in the copied file; a `className` font does not override an inline style.
 
 ## Usage
 
@@ -122,3 +144,20 @@ export const RemotionRoot = () => (
     },
   ]}
 />
+
+## Common questions
+
+### How do I animate a short word in Remotion so each letter rises from below in a staircase?
+
+Install Bottom-Up Letters with `npx shadcn@latest add @remocn/bottom-up-letters`, pass `text` and set `staggerDelay` for the gap between letters.
+
+### How long does it take?
+
+(letters − 1) × `staggerDelay` + 12 frames at 30 fps.
+
+## Related effects
+
+- [Per Character Rise](/docs/typography/per-character-rise): a faster, more even letter rise for longer phrases.
+- [Mask Reveal Up](/docs/typography/mask-reveal-up): a line-level reveal from a mask.
+- [Top-Down Letters](/docs/typography/top-down-letters): letters that descend from above.
+- [Letter Relay](/docs/typography/letter-relay): letters that hop one after another.

@@ -1,6 +1,6 @@
 ---
 title: Centered Word Build
-description: Words appear sharply from below while the centered phrase pushes closer on every beat
+description: "Short statement builds one word at a time: words pop in sharply from below, the phrase stays centered and pushes closer on every beat, then wipes out."
 component: centered-word-build
 vibe: clean
 length: 63
@@ -19,11 +19,33 @@ askedAs:
   - "short statement assembled word by word and always centered"
   - "slow reveal where the camera keeps pushing in on the sentence"
   - "each new word pops in and the whole phrase zooms in a bit"
+  - "words pop in from below one at a time while the phrase stays centered"
 ---
+
+In Remotion, Centered Word Build assembles a short statement one word at a time: each word pops in sharply from below, the visible phrase stays centered, and the whole line pushes a little closer with every new word. Use it for a beat-synced tagline or hook line, ending with a soft left-to-right wipe.
 
 <ComponentPreview name="centered-word-build" />
 
 <InstallBlock name="centered-word-build" />
+
+## How to build this in Remotion
+
+No need for a `spring()` per word plus `measureText` to keep the line centered. Install the component and pass the text:
+
+```bash
+npx shadcn@latest add @remocn/centered-word-build
+```
+
+Each word is an element in the schedule in `timeline.ts`, with gaps that shrink by `accel` so the build speeds up. The rise, the zoom step and the exit wipe are `interpolate()` calls over an `Easing` curve. Centering is done by the browser layout, so no `@remotion/layout-utils` is needed.
+
+## Good to know
+
+- Length: 63 frames of motion at 30 fps (126 at 60 fps) with the default props. The demo composition plays 75 frames, which adds a hold. The motion lasts until the later of the last word settling and `exitAt + exitFrames`. The Usage example below is a 60 fps composition, so the numbers it hands to Remotion are doubled, see [Frame rate](/docs/getting-started/installation#frame-rate).
+- Installs: `remotion` from npm, plus the remocn helpers `glide`, `frame-rate`, `timeline`. The shadcn CLI copies the source into your project.
+- Font: Geist Sans through the `--font-geist-sans` CSS variable with a system sans fallback, set inline. There is no `fontFamily` prop: change it in the copied file.
+- The background is transparent and the default text color is cream (`#fff3df`), so place it over a dark layer or pass a dark `color` on a light one.
+- The exit wipe starts at `exitAt` (frame 51 at 30 fps). To keep the line on screen, set `exitAt` past the end of your composition.
+- Keep it short: every word stays on one centered line.
 
 ## Usage
 
@@ -168,3 +190,24 @@ With the defaults, a four-word phrase reveals on frames 0, 11, 22, and 30, reach
     },
   ]}
 />
+
+## Common questions
+
+### How do I build a statement word by word that stays centered and pushes closer?
+
+Install Centered Word Build with `npx shadcn@latest add @remocn/centered-word-build` and pass `text`. Words rise in one by one, the line stays centered and zooms by `zoomStep` per word.
+
+### Can I turn off the exit wipe?
+
+Set `exitAt` to a frame after your composition ends and the line simply holds.
+
+### Why can't I see the text?
+
+The background is transparent and the default color is cream. Put it over a dark background or pass `color`.
+
+## Related effects
+
+- [Word Push](/docs/typography/word-push): each new word pushes the line aside.
+- [Per-Word Crossfade](/docs/typography/per-word-crossfade): words replace each other in one slot.
+- [Typewriter](/docs/typography/typewriter): character-by-character typing with a caret.
+- [Kinetic Center Build](/docs/typography/kinetic-center-build): words slide in from the right and lock centered.

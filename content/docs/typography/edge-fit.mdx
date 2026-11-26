@@ -1,6 +1,6 @@
 ---
 title: Edge Fit
-description: "A single huge cream word, 'recaps', fills the frame edge to edge with a caption and logo"
+description: "Edge-to-edge word montage for Remotion: each single word is scaled to fill the frame width, letters rising in, with a small caption and logo, in cream on navy."
 component: edge-fit
 vibe: playful
 length: 112
@@ -17,11 +17,33 @@ askedAs:
   - "closing beat naming kinds of outputs with a caption and logo"
   - "full width single word"
   - "giant cream word frame filling"
+  - "each word scaled up to fill the frame edge to edge"
 ---
+
+In Remotion, Edge Fit is a word montage where each single word, like "recaps", is scaled to fill the frame edge to edge in cream on navy, its letters rising in one after another, with a small caption and logo beneath. Use it for a fast list of video types or features in a brand or launch video.
 
 <ComponentPreview name="edge-fit" />
 
 <InstallBlock name="edge-fit" />
+
+## How to build this in Remotion
+
+You don't need `fitText` from `@remotion/layout-utils`: the component measures each word and fits it for you. Install it:
+
+```bash
+npx shadcn@latest add @remocn/edge-fit
+```
+
+Each word is measured on a canvas (`measureText`) before the first frame, held with `delayRender`, and sized to `fit` of the frame width. Letters rise with `spring()` and `interpolate()` on a schedule from `timeline.ts`.
+
+## Good to know
+
+- Length: 112 frames of motion at 30 fps (224 at 60 fps) with the default props. That is the minimum for its `Sequence`; add your own hold on top (the demo plays 150 frames). The Usage example below is a 60 fps composition, so the numbers it hands to Remotion are doubled, see [Frame rate](/docs/getting-started/installation#frame-rate).
+- Cream: the dark theme sets `#F3E9D2` on `#1B2A6B` navy; the light theme swaps them. Pass `ink` for another color.
+- `fit={1}` fills the full width; the default 0.9 leaves a margin.
+- `logo` defaults to the remocn logo; pass your own node, or `null` to hide it.
+- Installs: `remotion`, `@remotion/google-fonts` from npm, plus the remocn helpers `glide`, `frame-rate`, `timeline`. The shadcn CLI copies the source into your project.
+- Font: loads Anton and Manrope itself through `@remotion/google-fonts`. Pass `fontFamily` to use your own face, and load that font in your project.
 
 ## Usage
 
@@ -104,7 +126,7 @@ Each word is fitted to the full frame width and its letters rise in, one word af
       name: "fontFamily",
       type: "string",
       default: "\"Anton\"",
-      description: "Typeface for the copy. Load the font in your project first.",
+      description: "Typeface for the copy. The default is loaded for you; load any other font in your project first.",
     },
     {
       name: "scale",
@@ -132,3 +154,19 @@ Each word is fitted to the full frame width and its letters rise in, one word af
     },
   ]}
 />
+
+## Common questions
+
+### How do I make each word fill the frame edge to edge in Remotion?
+
+Install Edge Fit with `npx shadcn@latest add @remocn/edge-fit` and pass `words`, `caption` and your `logo`. Set `fit={1}` for true edge to edge.
+
+### What is the default cream?
+
+`#F3E9D2`, on `#1B2A6B` in the dark theme.
+
+## Related effects
+
+- [Chunk Stack](/docs/typography/chunk-stack): slogan stacked one word per line, rising into place, with a yellow highlighter swipe opening behind one key word. A bold social-style statement.
+- [Full Bleed Type](/docs/typography/full-bleed-type): huge condensed caps words slam in one at a time, the last lit by a sunrise gradient.
+- [Type Wall](/docs/typography/type-wall): rows of one word fill the frame, run in alternating directions at different speeds in heavy, narrow and outline faces, with an accent band through the middle.

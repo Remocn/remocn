@@ -1,6 +1,6 @@
 ---
 title: Answer First
-description: "The question \"Who made this video?\" is answered by a big \"A pull request.\""
+description: "Q&A gag for Remotion: the big answer lands first, then slides up as the question that explains it appears below, like A pull request. then Who made this video?"
 component: answer-first
 vibe: playful
 length: 72
@@ -19,11 +19,33 @@ askedAs:
   - "punchy Q and A where the reply lands before the question"
   - "founder style claim like a pull request made it"
   - "show the surprising answer then reveal what was asked"
+  - "big answer lands first then the question shows up to explain it"
+  - "answer before the question gag for a launch video hook"
 ---
+
+In Remotion, Answer First is a Q&A gag where the big answer, such as "A pull request.", lands first, then slides up and shrinks as the question that explains it, "Who made this video?", shows up below. Use it as a punchy hook near the start of a launch video.
 
 <ComponentPreview name="answer-first" />
 
 <InstallBlock name="answer-first" />
+
+## How to build this in Remotion
+
+You don't need `@remotion/transitions` or `fitText` for this. Install the component and pass the two lines:
+
+```bash
+npx shadcn@latest add @remocn/answer-first
+```
+
+It is one scene: the answer rises word by word and moves up with `interpolate()` on `Easing.bezier` curves, then the question rises in. Text is measured on a canvas before the first frame (held with `delayRender`), so both lines fit the frame width.
+
+## Good to know
+
+- Length: 72 frames of motion at 30 fps (144 at 60 fps) with the default props; the demo plays 120 frames, which adds a hold. If the composition is too short, it shrinks every start and length to fit (down to 55%); a longer one holds the final frame. The Usage example below is a 60 fps composition, so the numbers it hands to Remotion are doubled, see [Frame rate](/docs/getting-started/installation#frame-rate).
+- Installs: `remotion`, `@remotion/google-fonts` from npm, plus the remocn helpers `glide`, `frame-rate`, `timeline`. The shadcn CLI copies the source into your project.
+- Font: loads Outfit itself through `@remotion/google-fonts`. Pass `fontFamily` to use your own face, and load that font in your project.
+- `moveAt` is in 30 fps frames at any composition frame rate, like every frame count in remocn props. It defaults to 34.
+- Default colors, dark theme: blue ground `#2445E5`, white text, pink accent `#FF8FB1`.
 
 ## Usage
 
@@ -81,7 +103,7 @@ A big answer rises word by word first, then slides up and shrinks as the questio
       name: "fontFamily",
       type: "string",
       default: "\"Outfit\"",
-      description: "Typeface for the copy. Load the font in your project first.",
+      description: "Typeface for the copy. Outfit loads by default; load any other face in your project first.",
     },
     {
       name: "moveAt",
@@ -121,3 +143,20 @@ A big answer rises word by word first, then slides up and shrinks as the questio
     },
   ]}
 />
+
+## Common questions
+
+### How do I do a Q&A gag in Remotion where the answer lands first and the question shows up to explain it?
+
+Install Answer First with `npx shadcn@latest add @remocn/answer-first` and pass `answer="A pull request."` and `question="Who made this video?"`.
+
+### Is moveAt counted at the composition fps?
+
+No. It is counted in 30 fps frames, so the move happens at the same moment in seconds at 30 or 60 fps.
+
+## Related effects
+
+- [Overheard](/docs/typography/overheard): a back-and-forth between two speakers.
+- [Coy Denial](/docs/typography/coy-denial): a big line undone by a sheepish aside.
+- [Exactly](/docs/typography/exactly): objections answered one after another.
+- [Double Take](/docs/typography/double-take): a surprising claim that asks for a second look.

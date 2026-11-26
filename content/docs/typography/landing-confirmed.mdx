@@ -1,6 +1,6 @@
 ---
 title: Landing Confirmed
-description: "An altitude readout counts down to a hard stop, then a slammed confirmation gives way to a gradient title."
+description: "Ship-day landing intro for Remotion: an altitude readout counts down to zero, a touchdown confirmed message slams in, then a big gradient title resolves."
 component: landing-confirmed
 vibe: premium
 length: 114
@@ -18,11 +18,32 @@ askedAs:
   - "closing card with impact then a gradient title"
   - "touchdown confirmed"
   - "landing countdown text"
+  - "altitude counts down to zero, then a landing message slams in"
+  - "ship day intro like a landing with a big gradient title"
 ---
+
+In Remotion, Landing Confirmed treats a release like a landing: an altitude readout counts down to zero, a "Touchdown confirmed" message slams in with a flash, then a big gradient title such as "Shipped." appears with a subtitle. Use it for a ship-day intro or a launch announcement.
 
 <ComponentPreview name="landing-confirmed" />
 
 <InstallBlock name="landing-confirmed" />
+
+## How to build this in Remotion
+
+You don't need `spring()`, `Sequence` or a font loader of your own. Install the component and set the copy:
+
+```bash
+npx shadcn@latest add @remocn/landing-confirmed
+```
+
+The descent, flash, slam, resolve and title are elements in `timeline.ts`; the readout and every phase run on `interpolate()` over `Easing` curves inside one scene.
+
+## Good to know
+
+- Length: 114 frames of motion at 30 fps (228 at 60 fps) with the default props; the demo plays 160 frames, which adds a hold. With the default `descent` of 50: the readout falls over frames 0–50, the flash fires at 56, the confirm message slams from 58 to 88, the resolve runs 88–102, the title rises from 93, the subtitle from 97 and the logo from 102. A longer `descent` shifts everything after it. The Usage example below is a 60 fps composition, so the numbers it hands to Remotion are doubled, see [Frame rate](/docs/getting-started/installation#frame-rate).
+- Installs: `remotion`, `@remotion/google-fonts` from npm, plus the remocn helpers `glide`, `frame-rate`, `timeline`. The shadcn CLI copies the source into your project.
+- Fonts: loads Space Grotesk, Instrument Serif and Manrope itself through `@remotion/google-fonts`. Pass `fontFamily` to use your own face for the copy, and load that font in your project.
+- Title gradient: the aurora fill (`#EFFFF7` → `#A0F0C8` → `#3FB5A3` → `#9C93F0` in dark) is part of the theme, not a prop; `accent` only colors small marks. Change `THEMES` in the copied file for other stops.
 
 ## Usage
 
@@ -117,7 +138,7 @@ A giant altitude number counts down from `from` metres beside a gauge and a velo
       name: "fontFamily",
       type: "string",
       default: "\"Space Grotesk\"",
-      description: "Typeface for the copy. Load the font in your project first.",
+      description: "Typeface for the copy. Space Grotesk loads itself; load any other face in your project first.",
     },
     {
       name: "scale",
@@ -151,3 +172,20 @@ A giant altitude number counts down from `from` metres beside a gauge and a velo
     },
   ]}
 />
+
+## Common questions
+
+### How do I build a ship-day intro in Remotion where altitude counts down to zero and a big title appears?
+
+Install Landing Confirmed with `npx shadcn@latest add @remocn/landing-confirmed` and set `from`, `confirm`, `title` and `subtitle`.
+
+### When does each phase happen?
+
+Descent 0–50, flash at 56, slam 58–88, then the title from 93, at 30 fps with the defaults. Change `descent` to move the rest.
+
+## Related effects
+
+- [Drop Timer](/docs/typography/drop-timer): a countdown that ends on a live URL.
+- [Full Bleed Type](/docs/typography/full-bleed-type): huge condensed words slam in one at a time.
+- [Ko Count](/docs/typography/ko-count): a quick count to ten before a verdict word.
+- [Lights Out](/docs/typography/lights-out): five lights go out, then the name slams in.

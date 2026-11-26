@@ -1,6 +1,6 @@
 ---
 title: Extrude Pop
-description: A flat word pops up out of the plane on a solid colored 3D body, no camera involved
+description: "3D extruded text pop for Remotion: one short word like a score or verdict rises off the page on a solid colored extruded body, flat 2D with no camera or three.js."
 component: extrude-pop
 vibe: playful
 length: 48
@@ -19,11 +19,33 @@ askedAs:
   - "a punchy extruded block letter pop with no camera movement"
   - "3D extruded text"
   - "stamp rising off the page"
+  - "short score or verdict pops up with a solid 3D extruded body, no camera move"
+  - "faux 3D block text rising off the page without three.js"
 ---
+
+In Remotion, Extrude Pop makes a single short word, like a score or a verdict, pop up off the page on a solid colored 3D extruded body, without a camera move. It is a flat 2D effect for a poster-style CTA, verdict or score beat.
 
 <ComponentPreview name="extrude-pop" />
 
 <InstallBlock name="extrude-pop" />
+
+## How to build this in Remotion
+
+You don't need `@remotion/three`, react-three-fiber, `TextGeometry` or `Text3D`. Install the component and pass your word:
+
+```bash
+npx shadcn@latest add @remocn/extrude-pop
+```
+
+The body is a stack of SVG `text` copies offset along a fixed angle, so it renders the same in every browser and every Remotion render. One `interpolate()` with an `Easing.bezier` ease-out grows the extrusion depth; the word is fitted to `maxTextWidth` with a canvas text measurement.
+
+## Good to know
+
+- Length: 48 frames of motion at 30 fps (96 at 60 fps) with the default props. The Usage example below is a 60 fps composition, so the numbers it hands to Remotion are doubled, see [Frame rate](/docs/getting-started/installation#frame-rate).
+- Installs: `remotion` from npm, plus the remocn helpers `glide`, `frame-rate`, `timeline`. The shadcn CLI copies the source into your project.
+- Font: a system stack, `'Helvetica Neue', Helvetica, Arial, sans-serif`, so there is nothing to load. Pass `fontFamily` for your own face and load it in your project.
+- Colors: `bodyColor` defaults to `#e8192b` and `faceColor` to `#ffffff`. The extrusion angle is `extrudeAngleDeg` (default −58.6) and the smoothness is `extrudeSteps` (default 200 layers).
+- The timing is `extrudeStartFrame` and `extrudeEndFrame` (0 and 48 by default); after that the word holds.
 
 ## Usage
 
@@ -142,3 +164,24 @@ makes the word read as lifting off a plane rather than growing a shadow.
 />
 
 Inspired by [5 Clean Text Animations](https://www.youtube.com/watch?v=Nmi7cE2wT54) by Mapal.
+
+## Common questions
+
+### How do I make a short word pop off the page with a solid 3D extruded body in Remotion, without a camera move?
+
+Install Extrude Pop with `npx shadcn@latest add @remocn/extrude-pop` and pass the word as `letter`. A solid colored body grows behind the face over 48 frames; no three.js is involved.
+
+### Can it handle a whole sentence?
+
+Keep it to one short word. The extruded body doubles the ink and long or small text turns to mush.
+
+### Can I change the color and angle?
+
+Yes: `bodyColor`, `faceColor`, `extrudeAngleDeg` and `extrudeSteps` are props.
+
+## Related effects
+
+- [Spring Scale In](/docs/typography/spring-scale-in): a softer pop with a springy overshoot.
+- [Full Bleed Type](/docs/typography/full-bleed-type): huge condensed caps words slam in.
+- [Edge Fit](/docs/typography/edge-fit): one word fitted edge to edge.
+- [Stretch In](/docs/typography/stretch-in): a heavy word flies in with smeared letters.

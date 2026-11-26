@@ -1,6 +1,6 @@
 ---
 title: Acronym Expand
-description: "An acronym expands letter by letter into its full name, with an eyebrow above and a subhead below."
+description: "Acronym expand for Remotion: a short acronym like MCP or SDK unfolds letter by letter into its full name, with a small eyebrow label above and a subhead below."
 component: acronym-expand
 vibe: tech
 length: 86
@@ -18,11 +18,31 @@ askedAs:
   - "explain what an abbreviation stands for with a label above and text below"
   - "feature naming moment where short initials are explained"
   - "viewer sees initials grow into the full words"
+  - "acronym like MCP expands letter by letter into its full name"
+  - "spelled out abbreviation with eyebrow label and subhead"
 ---
+
+In Remotion, Acronym Expand shows an acronym like MCP that expands letter by letter into its full name, with a small eyebrow label above and a subhead below. Use it for a feature-naming beat in a launch or developer-tool video, when initials need to be spelled out for the viewer.
 
 <ComponentPreview name="acronym-expand" />
 
 <InstallBlock name="acronym-expand" />
+
+## How to build this in Remotion
+
+You don't have to build it from `spring()`, `Sequence` and `@remotion/transitions`. Install the component and pass the short and full forms:
+
+```bash
+npx shadcn@latest add @remocn/acronym-expand
+```
+
+It is a single scene with no `Sequence` or `TransitionSeries`: the letters spread and unfold with `interpolate()` on `Easing.bezier` curves, and the eyebrow and subhead fade in after. Word widths are measured on a canvas before the first frame (held with `delayRender`), so the full name lands centered without a layout jump. Move the expansion with `expandAt` and `expandLength`, in 30 fps frames.
+
+## Good to know
+
+- Length: 86 frames of motion at 30 fps (172 at 60 fps) with the default props; the demo plays 120 frames, which adds a hold. The timing is fixed: a longer composition only holds the last frame longer. The Usage example below is a 60 fps composition, so the numbers it hands to Remotion are doubled, see [Frame rate](/docs/getting-started/installation#frame-rate).
+- Installs: `remotion`, `@remotion/google-fonts` from npm, plus the remocn helpers `glide`, `frame-rate`, `timeline`. The shadcn CLI copies the source into your project.
+- Font: loads Sora and JetBrains Mono itself through `@remotion/google-fonts`; you don't need to set up Sora. Pass `fontFamily` to use your own face, and load that font in your project.
 
 ## Usage
 
@@ -100,7 +120,7 @@ The short form appears first, its letters spread apart and unfold into the full 
       name: "fontFamily",
       type: "string",
       default: "\"Sora\"",
-      description: "Typeface for the copy. Load the font in your project first.",
+      description: "Typeface for the copy. Sora loads by default; load any other face in your project first.",
     },
     {
       name: "expandAt",
@@ -140,3 +160,20 @@ The short form appears first, its letters spread apart and unfold into the full 
     },
   ]}
 />
+
+## Common questions
+
+### How would I build a Remotion scene where an acronym like MCP expands letter by letter into its full name?
+
+Install Acronym Expand with `npx shadcn@latest add @remocn/acronym-expand` and pass `short="MCP"`, `full="Model Context Protocol"`, plus `eyebrow` and `subhead`.
+
+### Which packages does it pull in?
+
+`remotion` and `@remotion/google-fonts` from npm, and the remocn helpers `glide`, `frame-rate` and `timeline`. No `@remotion/transitions` or `@remotion/layout-utils`.
+
+## Related effects
+
+- [Tracking In](/docs/typography/tracking-in): a plain headline with nothing to expand.
+- [Typewriter](/docs/typography/typewriter): text typed on with a caret.
+- [Line-by-Line Slide](/docs/typography/line-by-line-slide): a long name that would shrink too small.
+- [Name Gloss](/docs/typography/name-gloss): a two-part product name unpacked word by word.

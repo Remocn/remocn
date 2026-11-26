@@ -1,6 +1,6 @@
 ---
 title: Grid Cell
-description: "A grid cell lights up in a graph-paper field and a headline is typed into it with a mono label."
+description: "Design-tool intro for Remotion: one cell lights up on a graph-paper grid and a version name is typed inside it with a caret and a small monospace label."
 component: grid-cell
 vibe: tech
 length: 130
@@ -18,11 +18,32 @@ askedAs:
   - "technical announcement on a blueprint grid"
   - "typed in a grid box"
   - "graph paper title"
+  - "graph paper grid where one cell lights up and a version name types in"
+  - "design tool frame intro with a typed title and a mono corner label"
 ---
+
+In Remotion, Grid Cell lights up one cell on a graph-paper grid, merges cells into a frame around the headline and types a version name inside it with a caret, with a small monospace label in the corner. Use it as a design-tool style intro for a version, release or product name.
 
 <ComponentPreview name="grid-cell" />
 
 <InstallBlock name="grid-cell" />
+
+## How to build this in Remotion
+
+You don't need a typewriter helper and a hand-drawn grid. Install the component:
+
+```bash
+npx shadcn@latest add @remocn/grid-cell
+```
+
+The grid fades in from the center and the cells merge with `interpolate()` and `Easing`; the title is typed by slicing the string on the scene frame, with a blinking caret. The title's width is measured on a canvas while `delayRender()` holds the first frame, so the cell is sized to the text before it types.
+
+## Good to know
+
+- Length: 130 frames of motion at 30 fps (260 at 60 fps) with the default props. The demo plays 170 frames, which adds a hold: frames past the end of the motion hold the final frame. The Usage example below is a 60 fps composition, so the numbers it hands to Remotion are doubled, see [Frame rate](/docs/getting-started/installation#frame-rate).
+- Installs: `remotion`, `@remotion/google-fonts` from npm, plus the remocn helpers `glide`, `frame-rate`, `timeline`. The shadcn CLI copies the source into your project.
+- Fonts: loads Geist (the title) and Geist Mono (the label) itself through `@remotion/google-fonts`. `fontFamily` changes the title only; the label stays Geist Mono.
+- The label sits in the corner of the lit cell; there is no prop to move it. `cellSize` (default 80) sets the grid pitch.
 
 ## Usage
 
@@ -98,7 +119,7 @@ A grid fades in from the center, cells merge into one that frames the headline, 
       name: "fontFamily",
       type: "string",
       default: "\"Geist\"",
-      description: "Typeface for the copy. Load the font in your project first.",
+      description: "Typeface for the copy. Geist loads by default; load any other face in your project first.",
     },
     {
       name: "scale",
@@ -127,3 +148,23 @@ A grid fades in from the center, cells merge into one that frames the headline, 
     },
   ]}
 />
+
+## Common questions
+
+### How can I make an intro where one cell lights up on a graph-paper grid and a version name types inside it?
+
+Install Grid Cell with `npx shadcn@latest add @remocn/grid-cell` and pass `title` and `label`, for example `title="Introducing v2.0"`.
+
+### Which font does the label use?
+
+Geist Mono, loaded by the component. `fontFamily` only changes the title.
+
+### How long is it?
+
+130 frames at 30 fps (260 at 60 fps); the demo plays 170 to hold the typed title.
+
+## Related effects
+
+- [Typewriter](/docs/typography/typewriter): a plain typed line without the grid.
+- [Focus Blur Resolve](/docs/typography/focus-blur-resolve): the title just comes into focus.
+- [Cursor Frame](/docs/typography/cursor-frame): a selection box with handles is dragged around a headline.

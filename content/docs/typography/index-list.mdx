@@ -1,6 +1,6 @@
 ---
 title: Index List
-description: "A numbered feature index draws in row by row, then a gradient band travels down to one highlighted row."
+description: "Numbered feature list for Remotion: rows draw in one by one, then a gradient band sweeps down and parks on the most important row. For what's-inside beats."
 component: index-list
 vibe: clean
 length: 126
@@ -18,11 +18,33 @@ askedAs:
   - "table of contents style list with a moving highlight band"
   - "numbered rows highlight"
   - "feature index list"
+  - "numbered feature list draws in row by row then a band highlights one row"
+  - "what's inside list where a gradient bar sweeps to the key feature"
 ---
+
+In Remotion, Index List draws a numbered feature list in row by row under a title, then a gradient band sweeps down and parks on the most important row while the others dim. Use it for a what's-inside beat in a release or launch video.
 
 <ComponentPreview name="index-list" />
 
 <InstallBlock name="index-list" />
+
+## How to build this in Remotion
+
+You don't need a `spring()` stagger and a hand-built highlight bar. Install the component:
+
+```bash
+npx shadcn@latest add @remocn/index-list
+```
+
+Hairline rules draw and rows rise with `interpolate()` and `Easing` on the schedule in `timeline.ts`; the band is a CSS `linear-gradient` from `accent` that travels down to the `highlight` row and parks there with an arrow.
+
+## Good to know
+
+- Length: 126 frames of motion at 30 fps (252 at 60 fps) with the default props. The demo plays 130 frames, which adds a hold: frames past the end of the motion hold the final frame. The Usage example below is a 60 fps composition, so the numbers it hands to Remotion are doubled, see [Frame rate](/docs/getting-started/installation#frame-rate).
+- Installs: `remotion`, `@remotion/google-fonts` from npm, plus the remocn helpers `glide`, `frame-rate`, `timeline`. The shadcn CLI copies the source into your project.
+- Fonts: loads Hanken Grotesk and Manrope itself through `@remotion/google-fonts`. Pass `fontFamily` to use your own face, and load that font in your project.
+- Logo: the default is the remocn wordmark, drawn in the file (an R mark plus "emocn" in Manrope), with no image asset. Pass your own `logo` node to replace it.
+- `highlight` is a zero-based row index (default 3). The band travels further for a lower row, so it parks later; the 126-frame length covers the default list.
 
 ## Usage
 
@@ -110,7 +132,7 @@ Hairline rules draw across and a numbered list rises row by row under a logo and
       name: "fontFamily",
       type: "string",
       default: "\"Hanken Grotesk\"",
-      description: "Typeface for the copy. Load the font in your project first.",
+      description: "Typeface for the copy. Hanken Grotesk loads by default; load any other face in your project first.",
     },
     {
       name: "scale",
@@ -144,3 +166,24 @@ Hairline rules draw across and a numbered list rises row by row under a logo and
     },
   ]}
 />
+
+## Common questions
+
+### How can I animate a numbered feature list that draws in row by row, then a gradient band sweeps down to highlight one row?
+
+Install Index List with `npx shadcn@latest add @remocn/index-list` and pass `items`, `title` and the zero-based `highlight` index.
+
+### Can I use my own logo?
+
+Yes, pass any React node as `logo`.
+
+### How long is it?
+
+126 frames at 30 fps (252 at 60 fps) with the defaults.
+
+## Related effects
+
+- [Indent Steps](/docs/typography/indent-steps): lines step in like indented code instead of a ruled index.
+- [Three Steps](/docs/typography/three-steps): a how-it-works scene with three numbered steps.
+- [Feature Chips Flow](/docs/typography/feature-chips-flow): feature pills stream and cluster around a logo.
+- [A to Z](/docs/typography/a-to-z): a feature list framed as an alphabet.

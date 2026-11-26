@@ -1,6 +1,6 @@
 ---
 title: In Proportion
-description: "Each worry builds word by word, shrinks to a dim note, and a bigger accent reply answers it."
+description: "Objection-handling text animation for Remotion: each worry builds word by word, shrinks to a dim corner note, and a bigger accent-colored reply answers it."
 component: in-proportion
 vibe: playful
 length: 180
@@ -18,11 +18,33 @@ askedAs:
   - "FAQ style copy that feels reassuring"
   - "small worry big reply"
   - "doubt then confident answer"
+  - "handle objections on screen with a dim worry and a big reply"
+  - "each concern builds word by word then a brighter answer replies"
 ---
+
+In Remotion, In Proportion handles objections on screen: each worry builds word by word in large type, shrinks into a dim note in the corner, and a bigger accent-colored reply rises to answer it. Use it for an FAQ or objection-handling beat in a launch or product video, with two or three worry and answer pairs.
 
 <ComponentPreview name="in-proportion" />
 
 <InstallBlock name="in-proportion" />
+
+## How to build this in Remotion
+
+You don't need `TransitionSeries`, a `Series` per line or `fitText` for this. Install the component and pass your pairs:
+
+```bash
+npx shadcn@latest add @remocn/in-proportion
+```
+
+It is one scene driven by a schedule in `timeline.ts`: every word, shrink and answer has a start frame, and the motion is `interpolate()` over `Easing` curves. Word widths are measured on a canvas while `delayRender` holds the first frame until Hubot Sans has loaded, so lines break the same way in preview and render.
+
+## Good to know
+
+- Length: 180 frames of motion at 30 fps (360 at 60 fps) with the default props; the demo plays 200 frames, which adds a hold. Each pair costs about 4 + (worry words + answer words) × `stagger` + 52 frames, plus 24 between pairs. If that does not fit, the whole schedule compresses to fit the composition and keeps at least 18% (and no less than 30 frames) as a final hold; it never stretches. The Usage example below is a 60 fps composition, so the numbers it hands to Remotion are doubled, see [Frame rate](/docs/getting-started/installation#frame-rate).
+- Installs: `remotion`, `@remotion/google-fonts` from npm, plus the remocn helpers `glide`, `frame-rate`, `timeline`. The shadcn CLI copies the source into your project.
+- Font: loads Hubot Sans itself through `@remotion/google-fonts`. Pass `fontFamily` to use your own face, and load that font in your project.
+- Colors: the answer uses one accent for every pair, `#FFE14D` in dark and `#9A7A00` in light; `accent` overrides it for all pairs at once. There is no per-pair color or timing prop.
+- More than three pairs work, but each one adds words to the same clip, so the schedule compresses; give the composition more frames rather than letting it squeeze.
 
 ## Usage
 
@@ -93,7 +115,7 @@ A worry builds word by word in large white type, then shrinks into a dimmed note
       name: "fontFamily",
       type: "string",
       default: "\"Hubot Sans\"",
-      description: "Typeface for the copy. Load the font in your project first.",
+      description: "Typeface for the copy. Hubot Sans loads itself; load any other face in your project first.",
     },
     {
       name: "scale",
@@ -121,3 +143,20 @@ A worry builds word by word in large white type, then shrinks into a dimmed note
     },
   ]}
 />
+
+## Common questions
+
+### How do I put objections on screen in Remotion, a dim worry and a bigger reply?
+
+Install In Proportion with `npx shadcn@latest add @remocn/in-proportion` and pass `pairs` as `{ worry, answer }` objects. Each worry builds word by word, shrinks into a dim corner note, and the answer rises in the accent color.
+
+### How many pairs can I use?
+
+Two or three read best. More pairs play, but the timing compresses to fit the composition, so raise `durationInFrames`.
+
+## Related effects
+
+- [Answer First](/docs/typography/answer-first): one question with one punchy answer.
+- [No Buts](/docs/typography/no-buts): each hesitation gets a short, confident reply.
+- [Overheard](/docs/typography/overheard): a two-person question-and-answer exchange.
+- [What Sticks](/docs/typography/what-sticks): claims dim one by one until one line stays lit.

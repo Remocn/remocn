@@ -1,6 +1,6 @@
 ---
 title: Kill Feed
-description: "A kill-feed of eliminations builds to a big gradient 'PENTA SHIP' banner"
+description: "Game kill feed animation for Remotion: shipped features land as kills in a game-style feed with streak callouts, ending on a big gradient PENTA SHIP banner."
 component: kill-feed
 vibe: playful
 length: 69
@@ -17,11 +17,33 @@ askedAs:
   - "feature roundup ending in a multikill style PENTA banner"
   - "gaming eliminated feed"
   - "esports banner recap"
+  - "recap where shipped features show up like a game kill feed"
+  - "kill feed with streak callouts ending on a multi kill banner"
 ---
+
+In Remotion, Kill Feed turns a recap into a game-style kill feed: each shipped feature lands as a kill line with a streak callout, the gaps tighten, and a big gradient PENTA SHIP banner slams across the middle. Use it for a playful release recap or a week-in-review.
 
 <ComponentPreview name="kill-feed" />
 
 <InstallBlock name="kill-feed" />
+
+## How to build this in Remotion
+
+You don't need `TransitionSeries`, `Sequence` or `spring()` for this. Install the component and pass your kills:
+
+```bash
+npx shadcn@latest add @remocn/kill-feed
+```
+
+Every kill, the banner and the caption are elements in `timeline.ts`; lines, callouts and the banner slam with `interpolate()` over `Easing` curves inside one scene.
+
+## Good to know
+
+- Length: 69 frames of motion at 30 fps (138 at 60 fps) with the default props; the demo plays 105 frames, which adds a hold. Kills arrive 14, 12, 10, then 8 frames apart, and the banner slams in 4 frames after the last one; more than five kills keep the 8-frame gap. The Usage example below is a 60 fps composition, so the numbers it hands to Remotion are doubled, see [Frame rate](/docs/getting-started/installation#frame-rate).
+- Installs: `remotion`, `@remotion/google-fonts` from npm, plus the remocn helpers `glide`, `frame-rate`, `timeline`. The shadcn CLI copies the source into your project.
+- Fonts: loads Chakra Petch and Manrope itself through `@remotion/google-fonts`. Pass `fontFamily` to use your own face, and load that font in your project.
+- Callouts: callout `i` shows under kill `i` and rolls out when the next kill lands, and the last kill fires the banner instead. So `callouts` should have one fewer item than `kills`; extra callouts are ignored and missing ones leave a kill without a callout.
+- The banner gradient is fixed in the copied file (`BAND`); `accent` does not recolor it.
 
 ## Usage
 
@@ -109,7 +131,7 @@ Elimination lines drop into a game-style feed one by one with streak callouts, a
       name: "fontFamily",
       type: "string",
       default: "\"Chakra Petch\"",
-      description: "Typeface for the copy. Load the font in your project first.",
+      description: "Typeface for the copy. Chakra Petch loads itself; load any other face in your project first.",
     },
     {
       name: "scale",
@@ -137,3 +159,20 @@ Elimination lines drop into a game-style feed one by one with streak callouts, a
     },
   ]}
 />
+
+## Common questions
+
+### How do I make a Remotion recap where features show up like a game kill feed?
+
+Install Kill Feed with `npx shadcn@latest add @remocn/kill-feed` and pass `kills`, `callouts` and `banner`.
+
+### Does it work with more or fewer than five kills?
+
+Yes. Kill lines follow each other with a tightening gap and the banner follows the last one; give `callouts` one item fewer than `kills`.
+
+## Related effects
+
+- [Boss Bar](/docs/typography/boss-bar): a boss health bar drained by named hits.
+- [Index List](/docs/typography/index-list): a numbered feature list with a highlight band.
+- [Round Slam](/docs/typography/round-slam): ROUND 1 slams in, then a one-word finisher.
+- [Week Shipped](/docs/typography/week-shipped): a weekly recap, each weekday rolling in.

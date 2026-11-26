@@ -1,6 +1,6 @@
 ---
 title: Edit Ripple
-description: "\"Change your mind, render it again.\" with the second line indented and ripple-coloured"
+description: "Cause-and-effect text ripple for Remotion: a line like Change your mind is followed by render it again, whose words recolor in a ripple, one edit changing everything."
 component: edit-ripple
 vibe: clean
 length: 196
@@ -19,11 +19,33 @@ askedAs:
   - "if this then that statements about editing a video"
   - "ripple effect text"
   - "show that a tweak updates the whole render"
+  - "second line recolors in a ripple after the first line"
 ---
+
+In Remotion, Edit Ripple shows one edit changing everything: a cause line such as "Change your mind," appears, the effect line "render it again." follows, and its words recolor in a ripple from left to right. Pairs play one after another, so it suits a cause-and-effect beat in a product video.
 
 <ComponentPreview name="edit-ripple" />
 
 <InstallBlock name="edit-ripple" />
+
+## How to build this in Remotion
+
+You don't need per-character `spring()` calls or `@remotion/noise`. Install the component:
+
+```bash
+npx shadcn@latest add @remocn/edit-ripple
+```
+
+One scene with a schedule in `timeline.ts` that spaces the pairs across the composition. Each effect word recolors with `interpolateColors`; motion uses `interpolate()` and `Easing` curves, and the copy is measured before the first frame, held with `delayRender`.
+
+## Good to know
+
+- Length: 196 frames of motion at 30 fps (392 at 60 fps) with the default props. That is the minimum for its `Sequence`; add your own hold on top (the demo plays 230 frames). The Usage example below is a 60 fps composition, so the numbers it hands to Remotion are doubled, see [Frame rate](/docs/getting-started/installation#frame-rate).
+- Default pairs: Change one word, / every scene follows. Swap the color, / every shot repaints. Change your mind, / render it again. To show only the last one, pass `pairs={[{ cause: "Change your mind,", effect: "render it again." }]}`.
+- Length stretch: pairs are spaced to fill `durationInFrames`.
+- Ripple color: `#5CF2B5` in the dark theme and `#12A06B` in the light theme; `accent` overrides it.
+- Installs: `remotion`, `@remotion/google-fonts` from npm, plus the remocn helpers `glide`, `frame-rate`, `timeline`. The shadcn CLI copies the source into your project.
+- Font: loads Epilogue itself through `@remotion/google-fonts`. Pass `fontFamily` to use your own face, and load that font in your project.
 
 ## Usage
 
@@ -75,7 +97,7 @@ Each pair appears as a cause line followed by an effect line, and the effect wor
       name: "fontFamily",
       type: "string",
       default: "\"Epilogue\"",
-      description: "Typeface for the copy. Load the font in your project first.",
+      description: "Typeface for the copy. The default is loaded for you; load any other font in your project first.",
     },
     {
       name: "fontWeight",
@@ -115,3 +137,19 @@ Each pair appears as a cause line followed by an effect line, and the effect wor
     },
   ]}
 />
+
+## Common questions
+
+### How do I animate 'Change your mind, render it again.' so the second line ripples?
+
+Install Edit Ripple with `npx shadcn@latest add @remocn/edit-ripple` and pass `pairs` with `cause` and `effect` strings.
+
+### Can it show one pair only?
+
+Yes. Pass a single entry in `pairs`; the scene spaces it to the composition length.
+
+## Related effects
+
+- [Exactly](/docs/typography/exactly): a yellow "Exactly." lands first, then "It's just code." completes the answer.
+- [Indent Steps](/docs/typography/indent-steps): up to five lines rise in, each tabbing one step further right like indented code, then one word lights up.
+- [Which Means](/docs/typography/which-means): a feature tag leads into a chain of consequences, each introduced by a hinge phrase.

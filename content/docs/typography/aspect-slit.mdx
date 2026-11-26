@@ -1,6 +1,6 @@
 ---
 title: Aspect Slit
-description: "A film-title card opens through a slit, with a serif hero line and a small caption"
+description: "Cinematic title card for Remotion: letterbox bars close to a slit, a serif hero line rises into it and the screen opens to full frame with a small caption. For launch and release films."
 component: aspect-slit
 vibe: premium
 length: 150
@@ -19,11 +19,32 @@ askedAs:
   - "frame my launch like a feature film"
   - "opening beat that opens through a slit with credits like text"
   - "viewer feels they are watching a movie trailer title"
+  - "cinematic title card where the screen opens through a slit"
+  - "letterbox bars open on a serif hero title for a release"
 ---
+
+In Remotion, Aspect Slit makes a cinematic title card: letterbox bars close to a thin slit, a serif hero line rises into it, then the screen opens through the slit to full frame while a small caption settles underneath. Use it as the opening title of a release announcement or product launch video.
 
 <ComponentPreview name="aspect-slit" />
 
 <InstallBlock name="aspect-slit" />
+
+## How to build this in Remotion
+
+You don't have to animate `clip-path` insets and load a serif by hand. Install the component and pass your title:
+
+```bash
+npx shadcn@latest add @remocn/aspect-slit
+```
+
+It is a single scene: the bars and the slit move with `interpolate()` on `Easing.bezier` curves, and the title is measured on a canvas before the first frame (held with `delayRender`) so it grows to hero size centered. It doesn't use `Sequence` or `TransitionSeries`; put it in your own `Sequence` and cut to the next scene.
+
+## Good to know
+
+- Length: 150 frames of motion at 30 fps (300 at 60 fps) with the default props; the demo plays 180 frames, which adds a hold. The timing is fixed: a longer composition only holds the last frame longer. The Usage example below is a 60 fps composition, so the numbers it hands to Remotion are doubled, see [Frame rate](/docs/getting-started/installation#frame-rate).
+- Installs: `remotion`, `@remotion/google-fonts` from npm, plus the remocn helpers `glide`, `frame-rate`, `timeline`. The shadcn CLI copies the source into your project.
+- Font: loads Instrument Serif and Instrument Sans itself through `@remotion/google-fonts`, so there is no font setup. Pass `fontFamily` to use your own face, and load that font in your project.
+- Default dark theme: black bars `#0A0A0B` over a blue `#2E45B7` ground with white type and a light film grain (`grain`).
 
 ## Usage
 
@@ -94,7 +115,7 @@ Letterbox bars close to a thin slit, a serif title rises into it, then the bars 
       name: "fontFamily",
       type: "string",
       default: "\"Instrument Serif\"",
-      description: "Typeface for the title. Load the font in your project first.",
+      description: "Typeface for the copy. Instrument Serif loads by default; load any other face in your project first.",
     },
     {
       name: "grain",
@@ -128,3 +149,20 @@ Letterbox bars close to a thin slit, a serif title rises into it, then the bars 
     },
   ]}
 />
+
+## Common questions
+
+### How can I make a cinematic title card in Remotion where the screen opens through a slit?
+
+Install Aspect Slit with `npx shadcn@latest add @remocn/aspect-slit` and pass `title` and `caption`. `slit` sets how narrow the gap gets, as a share of the frame height.
+
+### How long should the composition be?
+
+At least 150 frames at 30 fps, 300 at 60 fps. The Usage example's 360 frames at 60 fps adds a hold on the finished card.
+
+## Related effects
+
+- [Soft Blur In](/docs/typography/soft-blur-in): a clean text reveal without letterbox bars.
+- [Macro Pan](/docs/typography/macro-pan): a title with a camera move across the letters.
+- [Slit Scan](/docs/typography/slit-scan): a title that appears through a fluted scan.
+- [Bokeh Title](/docs/typography/bokeh-title): a premium serif title out of blurred lights.

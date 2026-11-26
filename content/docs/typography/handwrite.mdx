@@ -1,6 +1,6 @@
 ---
 title: Handwrite
-description: Handwritten text laid down letter by letter on a quantized stop-motion clock
+description: "Pen-written text for Remotion: captions and labels appear letter by letter in a handwriting font on a choppy stop-motion beat, like writing on paper."
 component: handwrite
 vibe: paper
 length: 120
@@ -19,11 +19,33 @@ askedAs:
   - "headline that writes itself in a hand made scene"
   - "stop motion handwriting"
   - "pen written letters"
+  - "captions that look pen-written on paper, one letter at a time"
+  - "choppy stop motion handwriting text for a scrapbook video"
 ---
+
+In Remotion, Handwrite makes captions, labels and headlines look pen-written on paper: letters appear one at a time in a handwriting font on a choppy stop-motion beat. Use it as the text voice of a stop-motion or scrapbook scene.
 
 <ComponentPreview name="handwrite" />
 
 <InstallBlock name="handwrite" />
+
+## How to build this in Remotion
+
+You don't need opentype.js stroke paths or `evolvePath()` from `@remotion/paths`. Install the component:
+
+```bash
+npx shadcn@latest add @remocn/handwrite
+```
+
+Letters arrive on the quantized clock from `@remocn/stop-motion`: one pose every `step` frames, each letter with a small seeded jitter, so every render matches the preview. `handwriteDuration(text)` returns how many frames the string needs, so a `Sequence` can be sized to the writing.
+
+## Good to know
+
+- Length: 120 frames of motion at 30 fps (240 at 60 fps) with the default props. The real length depends on the text; use `handwriteDuration()`. The Usage example below is a 60 fps composition, so the numbers it hands to Remotion are doubled, see [Frame rate](/docs/getting-started/installation#frame-rate).
+- Installs: `remotion`, `@remotion/google-fonts` from npm, plus the remocn helpers `stop-motion`, `frame-rate`, `timeline`. The shadcn CLI copies the source into your project.
+- Font: loads Caveat itself through `@remotion/google-fonts`, with a cursive fallback. Pass `fontFamily` to use another hand, and load it in your project.
+- `step` and `handwriteDuration()` count in 30 fps frames at any composition frame rate: `step={3}` is ten poses a second. In a 60 fps composition, double the `handwriteDuration()` value you hand to a `Sequence`.
+- The component is transparent; put the paper color on the layer behind it. It is not timed to speech; for subtitles from a transcript use the [Captions](/docs/captions/getting-started/introduction) components.
 
 ## Usage
 
@@ -136,3 +158,24 @@ deliberate hand. The component holds still between poses — wrap it in
     },
   ]}
 />
+
+## Common questions
+
+### How do I make captions look pen-written on paper in Remotion, one letter at a time on a stop-motion beat?
+
+Install Handwrite with `npx shadcn@latest add @remocn/handwrite` and pass `text`. Raise `step` for a slower hand.
+
+### Does the step clock depend on the composition fps?
+
+No. It counts in 30 fps frames, so the pace in seconds is the same at 30 or 60 fps.
+
+### How do I underline the text after it is written?
+
+Add Ink Underline and set its `delay` from `handwriteDuration()`.
+
+## Related effects
+
+- [Typewriter](/docs/typography/typewriter): a terminal or input being typed into.
+- [Soft Blur In](/docs/typography/soft-blur-in): a soft letter-by-letter reveal, no hand.
+- [Per Character Rise](/docs/typography/per-character-rise): letters slide up crisply.
+- [Ink Underline](/docs/typography/ink-underline): a hand-dragged underline that follows the writing.

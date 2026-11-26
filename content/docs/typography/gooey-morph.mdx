@@ -1,6 +1,6 @@
 ---
 title: Gooey Morph
-description: Bars fly in Tetris-style, land as a row, and melt into a word through a gooey blur-and-threshold morph
+description: "Gooey morph text for Remotion: bars fly in Tetris-style, land in a row and melt into a title word through a liquid blur-and-threshold SVG filter."
 component: gooey-morph
 vibe: playful
 length: 76
@@ -20,11 +20,34 @@ askedAs:
   - "metaball goo transition into a headline"
   - "gooey text reveal"
   - "tetris blocks become word"
+  - "bars fly in Tetris style, land in a row, then melt into a title word"
+  - "gooey liquid blur and threshold effect turning shapes into text"
 ---
+
+In Remotion, Gooey Morph has bars fly in Tetris-style, land in a row, then melt into a title word with a gooey blur-and-threshold effect. Use it for a liquid, organic title reveal in a brand intro or launch video.
 
 <ComponentPreview name="gooey-morph" />
 
 <InstallBlock name="gooey-morph" />
+
+## How to build this in Remotion
+
+You don't need `@remotion/paths`, flubber or a hand-tuned SVG filter. Install the component and pass your word:
+
+```bash
+npx shadcn@latest add @remocn/gooey-morph
+```
+
+Everything that fuses sits in one SVG group under one filter: `feGaussianBlur` and `feColorMatrix` make the goo, and `feTurbulence` with `feDisplacementMap` wobbles it. Bar travel and the morph are `interpolate()` with `Easing`, placed by `timeline.ts`.
+
+## Good to know
+
+- Length: 76 frames of motion at 30 fps (152 at 60 fps) with the default props. The Usage example below is a 60 fps composition, so the numbers it hands to Remotion are doubled, see [Frame rate](/docs/getting-started/installation#frame-rate).
+- Installs: `remotion` from npm, plus the remocn helpers `frame-rate`, `timeline`. The shadcn CLI copies the source into your project.
+- Font: `sans-serif` at weight 900 by default, so nothing to load. Pass `fontFamily` for your own face and load it in your project.
+- Rendering: the filter is plain SVG and every value is a function of the frame; the turbulence uses a fixed `seed` (7). There is no `Math.random`, so frames match across Remotion's parallel render tabs.
+- The four bars are not mapped to letters: they land at `barRestPositions` and fade as the word fills in. For a longer word, set `barRestPositions` (and `barStartPositions`, `barEntryFrames`) to span it, and `fontSize` to fit.
+- Positions and sizes are in composition pixels for 1920×1080 (`width`/`height` props); retune them for other sizes.
 
 ## Usage
 
@@ -186,3 +209,24 @@ elements outside it never join the goo.
 />
 
 Inspired by [5 Clean Text Animations](https://www.youtube.com/watch?v=Nmi7cE2wT54) by Mapal.
+
+## Common questions
+
+### How can I have bars fly in Tetris-style and melt into a title word with a gooey effect in Remotion?
+
+Install Gooey Morph with `npx shadcn@latest add @remocn/gooey-morph` and pass `word`. Four bars fly in, land in a row and fuse into the word through the blur-and-threshold filter.
+
+### Is the SVG filter safe to render with Remotion concurrency?
+
+Yes. It has no randomness beyond a fixed turbulence seed, so every frame depends only on the frame number.
+
+### Does it work for a longer word?
+
+Yes, but widen `barRestPositions` and set `fontSize` so the row and the word line up.
+
+## Related effects
+
+- [Soft Blur In](/docs/typography/soft-blur-in): a plain text entrance without the shape build-up.
+- [Mask Reveal Up](/docs/typography/mask-reveal-up): lines rise from a mask.
+- [Kinetic Center Build](/docs/typography/kinetic-center-build): a word-by-word build that stays centered.
+- [Liquid Word](/docs/typography/liquid-word): one word melts into a puddle and a new one rises.

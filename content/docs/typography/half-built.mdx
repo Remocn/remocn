@@ -1,6 +1,6 @@
 ---
 title: Half Built
-description: "A sentence of unfinished verbs shows each one as an outline that fills in as it ships."
+description: "Roadmap text for Remotion: a sentence of verbs starts as hollow outlines and each fills in as it ships, with Summer or Later tags on what's still coming."
 component: half-built
 vibe: clean
 length: 116
@@ -19,11 +19,33 @@ askedAs:
   - "honest status scene with some capabilities still in progress"
   - "outline to solid text"
   - "work in progress roadmap"
+  - "roadmap sentence where outlined verbs fill in as they ship"
+  - "show what is live and what is coming with outline text filling in"
 ---
+
+In Remotion, Half Built shows a roadmap as one sentence of verbs: each verb starts as a hollow outline and fills in as it ships, while tags such as Summer or Later mark what's still coming. Use it for a roadmap beat that shows what the product does now and what is next.
 
 <ComponentPreview name="half-built" />
 
 <InstallBlock name="half-built" />
+
+## How to build this in Remotion
+
+You don't need opentype.js paths or `-webkit-text-stroke` experiments. Install the component:
+
+```bash
+npx shadcn@latest add @remocn/half-built
+```
+
+Each word is drawn twice: an outline with `WebkitTextStroke` and a filled copy revealed by a `clip-path` wipe that runs on `interpolate()` and `Easing`. Text is laid out while `delayRender()` holds the first frame.
+
+## Good to know
+
+- Length: 116 frames of motion at 30 fps (232 at 60 fps) with the default props. The demo plays 150 frames, which adds a hold. If the composition is shorter than the natural schedule plus a 30-frame hold, the whole schedule is compressed to fit. The Usage example below is a 60 fps composition, so the numbers it hands to Remotion are doubled, see [Frame rate](/docs/getting-started/installation#frame-rate).
+- Installs: `remotion`, `@remotion/google-fonts` from npm, plus the remocn helpers `glide`, `frame-rate`, `timeline`. The shadcn CLI copies the source into your project.
+- The fill animates over time: the words fill one after another, up to `progress` (default 1.6). `progress` counts planned words, so a fraction partly fills the next one and the rest stay hollow.
+- `when` is any short string on a part, such as `"Summer"` or `"Later"`; a part without `when` is already shipped.
+- Font: loads Golos Text itself through `@remotion/google-fonts`. Pass `fontFamily` to use your own face, and load that font in your project.
 
 ## Usage
 
@@ -83,7 +105,7 @@ Each part of the sentence starts hollow and fills in as `progress` advances, wit
       name: "fontFamily",
       type: "string",
       default: "\"Golos Text\"",
-      description: "Typeface for the copy. Load the font in your project first.",
+      description: "Typeface for the copy. Golos Text loads by default; load any other face in your project first.",
     },
     {
       name: "fontWeight",
@@ -123,3 +145,24 @@ Each part of the sentence starts hollow and fills in as `progress` advances, wit
     },
   ]}
 />
+
+## Common questions
+
+### How do I show a roadmap in Remotion where outlined verbs fill in as they ship?
+
+Install Half Built with `npx shadcn@latest add @remocn/half-built`, pass `parts` (each `{ text, when? }`) and set `progress` to how far the roadmap has filled.
+
+### Does the fill animate, or is progress static?
+
+It animates: each planned word fills in turn until `progress` is reached.
+
+### What can `when` be?
+
+Any label you like; it is shown as the tag on that part.
+
+## Related effects
+
+- [Week Shipped](/docs/typography/week-shipped): everything is shipped and you want a weekly recap.
+- [Feature Chips Flow](/docs/typography/feature-chips-flow): feature pills stream past and cluster around a logo.
+- [Word Insert](/docs/typography/word-insert): new words open a gap in a sentence.
+- [Moves Up](/docs/typography/moves-up): a Now, Next, Later queue where shipped items exit.

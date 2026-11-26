@@ -1,6 +1,6 @@
 ---
 title: Focus Front Swap
-description: "A headline pulls focus from line to line, blurring one out as the next comes forward, then ends on a logo."
+description: "Three-line pitch with a focus pull for Remotion: each line sharpens forward while the last one blurs back, ending on a logo and a ship-it call, over a shader ground."
 component: focus-front-swap
 vibe: premium
 length: 122
@@ -19,11 +19,32 @@ askedAs:
   - "cinematic headline sequence over a soft gradient"
   - "depth of field text swap"
   - "lines blurring in turn"
+  - "focus shifts line to line, old line blurs while the next comes forward"
+  - "three line pitch ending on a logo and a ship it call"
 ---
+
+In Remotion, Focus Front Swap makes a three-line pitch where focus shifts from line to line: the old line blurs back while the next one comes forward, finishing on a logo and a ship-it call. Use it for a rhythmic pitch beat at the end of a launch or product video.
 
 <ComponentPreview name="focus-front-swap" />
 
 <InstallBlock name="focus-front-swap" />
+
+## How to build this in Remotion
+
+You don't need `@remotion/transitions` or a blur `filter` per `Sequence`. Install the component and pass your lines:
+
+```bash
+npx shadcn@latest add @remocn/focus-front-swap
+```
+
+It is one scene: the lines' fronts, the push and the logo are placed by `timeline.ts`, the depth moves are `interpolate()` with `Easing`, the logo lands with `spring()`, and the focus is a CSS `blur()` filter. Line widths are measured before the first frame, held with `delayRender`. The ground is a live gradients.sh shader (`GshGround`).
+
+## Good to know
+
+- Length: 122 frames of motion at 30 fps (244 at 60 fps) with the default props. The demo plays 150 frames, which adds a hold. The Usage example below is a 60 fps composition, so the numbers it hands to Remotion are doubled, see [Frame rate](/docs/getting-started/installation#frame-rate).
+- Installs: `remotion`, `@remotion/google-fonts` from npm, plus the remocn helpers `gsh`, `glide`, `frame-rate`, `timeline`. The shadcn CLI copies the source into your project.
+- Font: loads Geist and Manrope itself through `@remotion/google-fonts`. Pass `fontFamily` to use your own face, and load that font in your project.
+- The logo is a separate element under the final line, not one of the lines: the last line is the ship-it call (default `Ship it {tonight}.`, with the braces marking the accent word). `logo` is a boolean that shows or hides the built-in Remocn mark; to show your own logo, replace the `RemocnLogo` element in the copied file.
 
 ## Usage
 
@@ -118,7 +139,7 @@ The ground is a live gradients.sh shader (`GshGround`), installed with the compo
       name: "fontFamily",
       type: "string",
       default: "\"Geist\"",
-      description: "Typeface for the copy. Load the font in your project first.",
+      description: "Typeface for the copy. Geist loads by default; load any other face in your project first.",
     },
     {
       name: "scale",
@@ -140,3 +161,24 @@ The ground is a live gradients.sh shader (`GshGround`), installed with the compo
     },
   ]}
 />
+
+## Common questions
+
+### How can I make a three-line pitch in Remotion where focus shifts from line to line?
+
+Install Focus Front Swap with `npx shadcn@latest add @remocn/focus-front-swap` and pass three `lines`. Each new line sharpens forward while the last one blurs back, then a mark lands under the final line.
+
+### Can I use my own logo?
+
+Not through a prop: `logo` only toggles the built-in mark. Swap the `RemocnLogo` element in the copied file for your SVG or `Img`, or set `logo={false}`.
+
+### How do I accent one word?
+
+Wrap it in braces inside the line, such as `Ship it {tonight}.`
+
+## Related effects
+
+- [Layout Swap](/docs/typography/layout-swap): lines swap by shifting layout rather than depth.
+- [Pass Swap](/docs/typography/pass-swap): a moving object swaps the lines.
+- [Pinned Word](/docs/typography/pinned-word): one keyword stays fixed while the words around it change.
+- [Focus Pan Text](/docs/typography/focus-pan-text): focus pans down through status lines.

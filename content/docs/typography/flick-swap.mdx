@@ -1,6 +1,6 @@
 ---
 title: Flick Swap
-description: "A headline flicks up on a scrolling rail to swap between items, each with a label and a highlighted phrase."
+description: "Cycling claims on a scrolling rail for Remotion: one-line headlines flick up to the next, each with a small label and a highlighted phrase, for a feature rundown."
 component: flick-swap
 vibe: premium
 length: 122
@@ -18,11 +18,32 @@ askedAs:
   - "categories listed one by one each with a highlighted phrase"
   - "flick through taglines"
   - "slot style line changing"
+  - "several one line claims cycle on a scrolling rail, each flicking up to the next"
+  - "feature rundown where headlines flick up with a label and highlight"
 ---
+
+In Remotion, Flick Swap cycles several one-line claims on a scrolling rail: each headline flicks up to the next, with a small label and a highlighted phrase for each. Use it for a feature rundown where three or more claims share one scene.
 
 <ComponentPreview name="flick-swap" />
 
 <InstallBlock name="flick-swap" />
+
+## How to build this in Remotion
+
+You don't need `TransitionSeries`, a slide presentation or `fitText`. Install the component and pass your items:
+
+```bash
+npx shadcn@latest add @remocn/flick-swap
+```
+
+Each item gets a period in `timeline.ts`: a short drag back, a flick and a settle, then a `dwell` hold. The scroll is plain `interpolate()` on the scene frame, and the rail fades in at the start.
+
+## Good to know
+
+- Length: 122 frames of motion at 30 fps (244 at 60 fps) with the default props. Each item takes 22 frames to settle plus `dwell` (28 by default), so N items need (N − 1) × (22 + `dwell`) + 22 frames to land on the last one, plus whatever hold you want after. The demo plays 150 frames. The Usage example below is a 60 fps composition, so the numbers it hands to Remotion are doubled, see [Frame rate](/docs/getting-started/installation#frame-rate).
+- Installs: `remotion`, `@remotion/google-fonts` from npm, plus the remocn helpers `glide`, `frame-rate`, `timeline`. The shadcn CLI copies the source into your project.
+- Font: loads Bricolage Grotesque and JetBrains Mono (for the labels) itself through `@remotion/google-fonts`. Pass `fontFamily` to use your own face, and load that font in your project.
+- An empty `items` list falls back to the three default items.
 
 ## Usage
 
@@ -101,7 +122,7 @@ A rail on the side marks position while headlines scroll upward with a quick fli
       name: "fontFamily",
       type: "string",
       default: "\"Bricolage Grotesque\"",
-      description: "Typeface for the copy. Load the font in your project first.",
+      description: "Typeface for the copy. Bricolage Grotesque loads by default; load any other face in your project first.",
     },
     {
       name: "scale",
@@ -129,3 +150,24 @@ A rail on the side marks position while headlines scroll upward with a quick fli
     },
   ]}
 />
+
+## Common questions
+
+### How do I cycle several one-line claims on a scrolling rail in Remotion?
+
+Install Flick Swap with `npx shadcn@latest add @remocn/flick-swap` and pass `items` as `{ label, headline, highlight }` objects. Each headline flicks up to the next and holds for `dwell` frames.
+
+### How long should the scene be for N items?
+
+(N − 1) × (22 + `dwell`) + 22 frames at 30 fps, then your hold. For three items at the default dwell that is 122 frames (244 at 60 fps).
+
+### Does it work at 60 fps?
+
+Yes. Its frame counts stay on a 30 fps scale at any frame rate; double the composition length you hand Remotion at 60 fps.
+
+## Related effects
+
+- [Feature Headline](/docs/typography/feature-headline): a single headline with a tag.
+- [Per-Word Crossfade](/docs/typography/per-word-crossfade): swap two phrases word by word.
+- [Slot Machine Roll](/docs/typography/slot-machine-roll): a value rolls through a reel.
+- [Inline Word Roll](/docs/typography/inline-word-roll): only the last word of a sentence rolls.

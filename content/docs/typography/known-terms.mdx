@@ -1,6 +1,6 @@
 ---
 title: Known Terms
-description: "Term and definition pairs push each other into place, building to an accent-colored final line."
+description: "Concept mapping text animation for Remotion: pairs like a scene is a component build line by line, each pushing the last up, ending on an accent-colored line."
 component: known-terms
 vibe: clean
 length: 159
@@ -18,11 +18,34 @@ askedAs:
   - "pairs pushing each other into place ending in accent"
   - "glossary style lines"
   - "a is b mapping text"
+  - "pairs like a scene is a component, each pushing the last up"
+  - "map familiar terms to my product line by line"
 ---
+
+In Remotion, Known Terms animates pairs like "a scene is a component": each familiar term rises, slides aside as its definition pushes in with a joiner word, and the block moves up for the next pair until the last line lands in the accent color. Use it to map familiar concepts to your product.
 
 <ComponentPreview name="known-terms" />
 
 <InstallBlock name="known-terms" />
+
+## How to build this in Remotion
+
+You don't need `TransitionSeries`, `Sequence` or `fitText` for this. Install the component and pass your pairs:
+
+```bash
+npx shadcn@latest add @remocn/known-terms
+```
+
+Every pair is an element in `timeline.ts`; terms rise and slide with `interpolate()` over `Easing` curves, the color settles with `interpolateColors()`, and widths are measured on a canvas while `delayRender` waits for Epilogue to load.
+
+## Good to know
+
+- Length: 159 frames of motion at 30 fps (318 at 60 fps) with the default props; the demo plays 180 frames, which adds a hold. The pairs spread to fill the clip: they start 24 to 40 frames apart, leaving `hold` (33) at the end. The Usage example below is a 60 fps composition, so the numbers it hands to Remotion are doubled, see [Frame rate](/docs/getting-started/installation#frame-rate).
+- Installs: `remotion`, `@remotion/google-fonts` from npm, plus the remocn helpers `glide`, `frame-rate`, `timeline`. The shadcn CLI copies the source into your project.
+- Font: loads Epilogue itself through `@remotion/google-fonts`. Pass `fontFamily` to use your own face, and load that font in your project.
+- Accent: `#5CF2B5` in dark and `#12A06B` in light; `accent` overrides it.
+- `joiner` (default "is", or per pair) can be an empty string: no connector word is drawn and the gap between the two columns stays.
+- The `video` and `dev` field names are only labels for the left and right term; any pair of words works.
 
 ## Usage
 
@@ -94,7 +117,7 @@ A term appears alone in the center, then slides left as its counterpart pushes i
       name: "fontFamily",
       type: "string",
       default: "\"Epilogue\"",
-      description: "Typeface for the copy. Load the font in your project first.",
+      description: "Typeface for the copy. Epilogue loads itself; load any other face in your project first.",
     },
     {
       name: "scale",
@@ -122,3 +145,20 @@ A term appears alone in the center, then slides left as its counterpart pushes i
     },
   ]}
 />
+
+## Common questions
+
+### How do I animate pairs like a scene is a component in Remotion?
+
+Install Known Terms with `npx shadcn@latest add @remocn/known-terms` and pass `pairs` as `{ video, dev }` objects.
+
+### Can I drop the connector word?
+
+Yes. Set `joiner=""` for all pairs, or per pair.
+
+## Related effects
+
+- [Verbed](/docs/typography/verbed): a dictionary-style definition of one term.
+- [In Proportion](/docs/typography/in-proportion): worries answered by bigger replies.
+- [Indent Steps](/docs/typography/indent-steps): lines stepping right like code.
+- [Name Gloss](/docs/typography/name-gloss): a two-part name unpacked word by word.

@@ -1,6 +1,6 @@
 ---
 title: Beam Split
-description: "A light beam cuts a bold headline in two and a serif italic phrase appears in the gap."
+description: "Beam split headline for Remotion: a beam of light slices a bold title in two, pushes the halves apart and reveals a serif italic punchline phrase in the gap."
 component: beam-split
 vibe: premium
 length: 116
@@ -18,11 +18,32 @@ askedAs:
   - "headline setup with punchline revealed inside the split"
   - "premium reveal pairing sans bold with serif italic"
   - "title slices apart and a second phrase appears between the halves"
+  - "beam of light slices a headline in two and reveals a phrase in the gap"
+  - "split a bold title open for a serif italic punchline"
 ---
+
+In Remotion, Beam Split has a beam of light slice a bold headline in two, push the halves apart and reveal a serif italic phrase in the gap, then close again. Use it for a headline that sets up a punchline, such as a launch or feature reveal.
 
 <ComponentPreview name="beam-split" />
 
 <InstallBlock name="beam-split" />
+
+## How to build this in Remotion
+
+You don't have to animate `clip-path` halves and load a serif by hand. Install the component and pass the two texts:
+
+```bash
+npx shadcn@latest add @remocn/beam-split
+```
+
+The halves are `clip-path` crops moved with `interpolate()` on `Easing.bezier` curves; the beam is an SVG with a CSS mask. The schedule lives in `timeline.ts`.
+
+## Good to know
+
+- Length: 116 frames of motion at 30 fps (232 at 60 fps) with the default props; the demo plays 150 frames, which adds a hold. The timing is fixed: a longer composition only holds the last frame longer. The Usage example below is a 60 fps composition, so the numbers it hands to Remotion are doubled, see [Frame rate](/docs/getting-started/installation#frame-rate).
+- Installs: `remotion`, `@remotion/google-fonts` from npm, plus the remocn helpers `glide`, `frame-rate`, `timeline`. The shadcn CLI copies the source into your project.
+- Fonts: loads Bricolage Grotesque for the title and Instrument Serif italic for the inner phrase itself through `@remotion/google-fonts`. Pass `fontFamily` to use your own face for the title, and load it in your project.
+- At 60 fps, give Remotion 232 frames or more; the Usage example's 300 frames at 60 fps adds a hold.
 
 ## Usage
 
@@ -89,7 +110,7 @@ A bold title rises, a thin beam draws across its middle and pushes the halves ap
       name: "fontFamily",
       type: "string",
       default: "\"Bricolage Grotesque\"",
-      description: "Typeface for the title. Load the font in your project first.",
+      description: "Typeface for the copy. Bricolage Grotesque loads by default; load any other face in your project first.",
     },
     {
       name: "hold",
@@ -129,3 +150,20 @@ A bold title rises, a thin beam draws across its middle and pushes the halves ap
     },
   ]}
 />
+
+## Common questions
+
+### How can a beam of light slice a headline in two in Remotion and reveal a phrase in the gap?
+
+Install Beam Split with `npx shadcn@latest add @remocn/beam-split` and pass `title` and `inner`. The inner phrase is set in Instrument Serif italic, loaded by the component.
+
+### Which serif is used?
+
+Instrument Serif italic, loaded through `@remotion/google-fonts`.
+
+## Related effects
+
+- [Blur Out Up](/docs/typography/blur-out-up): a title with no second phrase that exits upward.
+- [Split Word](/docs/typography/split-word): a status word sliding into a sliced headline.
+- [Glass Capsule](/docs/typography/glass-capsule): a glass capsule magnifying one word.
+- [Hidden Word](/docs/typography/hidden-word): a word found inside a sentence and lifted out.

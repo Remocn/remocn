@@ -1,6 +1,6 @@
 ---
 title: Cooling Type
-description: "A sentence types out glowing hot and cools to ink, ending on an italic serif word and a caret."
+description: "Typewriter hook line that types out glowing hot and cools down to ink, ending on an italic serif emphasized word and a caret, over a soft shader gradient."
 component: cooling-type
 vibe: premium
 length: 110
@@ -18,11 +18,32 @@ askedAs:
   - "cinematic title where letters start glowing orange and settle"
   - "typing line with caret ending in an emphasized word"
   - "glowing typewriter cooling"
+  - "hook line types out glowing hot and cools to ink color"
 ---
+
+In Remotion, Cooling Type types out a hook line glowing hot and lets each letter cool down to the ink color, ending on an italic serif emphasized word and a blinking caret. Use it for a question or hook at the start of a launch video, over a soft gradient ground.
 
 <ComponentPreview name="cooling-type" />
 
 <InstallBlock name="cooling-type" />
+
+## How to build this in Remotion
+
+No need to build a string-slicing typewriter plus `interpolateColors()`. Install the component and pass your line:
+
+```bash
+npx shadcn@latest add @remocn/cooling-type
+```
+
+Characters type in on a schedule from `timeline.ts` (`charFrames` apart), and each one cools from the hot color to ink over `coolFrames` with `interpolate()` over an `Easing` curve. Glyph widths are measured before the first frame (held with `delayRender`). The ground is a live gradients.sh shader from the remocn `gsh` helper.
+
+## Good to know
+
+- Length: 110 frames of motion at 30 fps (220 at 60 fps) with the default props. The demo composition plays 150 frames, which adds a hold. Longer text types for longer: about `charFrames` per character. The Usage example below is a 60 fps composition, so the numbers it hands to Remotion are doubled, see [Frame rate](/docs/getting-started/installation#frame-rate).
+- Installs: `remotion`, `@remotion/google-fonts` from npm, plus the remocn helpers `gsh`, `glide`, `frame-rate`, `timeline`. The shadcn CLI copies the source into your project.
+- Font: loads Inter Tight and Instrument Serif italic itself through `@remotion/google-fonts`. The `accentWord` is set in Instrument Serif italic; `fontFamily` changes only the rest of the line, and the serif face is fixed in the copied file.
+- Colors in dark: text `#eef3f1`, hot `#7dffd9`, accent `#7de8c8`; in light: text `#141618`, hot and accent `#2f5bff`. Each is a prop.
+- The shader ground: pass `background` with a solid color, or `"transparent"`, to draw no shader. The `gsh` helper is still installed with the component.
 
 ## Usage
 
@@ -93,7 +114,7 @@ The ground is a live gradients.sh shader (`GshGround`), installed with the compo
       name: "fontFamily",
       type: "string",
       default: "\"Inter Tight\"",
-      description: "Typeface for the copy. Load the font in your project first.",
+      description: "Typeface for the copy. Inter Tight loads by default; load any other face in your project first.",
     },
     {
       name: "fontWeight",
@@ -167,3 +188,24 @@ The ground is a live gradients.sh shader (`GshGround`), installed with the compo
     },
   ]}
 />
+
+## Common questions
+
+### How do I make a hook line that types out glowing hot and cools to ink?
+
+Install Cooling Type with `npx shadcn@latest add @remocn/cooling-type`, pass `text` and the `accentWord` to set in italic serif. Each letter types in hot and cools to ink.
+
+### Which font does the emphasized word use?
+
+Instrument Serif italic, loaded by the component. Change it in the copied file if you need another serif.
+
+### Can I drop the shader background?
+
+Yes, pass `background` with a solid color or `"transparent"`.
+
+## Related effects
+
+- [Typewriter](/docs/typography/typewriter): a plain typed line with a blinking caret.
+- [Photo Caret](/docs/typography/photo-caret): a line written live with photos orbiting the text.
+- [Caret Swap](/docs/typography/caret-swap): a caret eats one phrase and types another.
+- [Headline to Line](/docs/typography/headline-to-line): a headline collapses into a line that keeps typing.

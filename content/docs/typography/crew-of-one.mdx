@@ -1,6 +1,6 @@
 ---
 title: Crew of One
-description: "A credits roll, Written by / Directed by / Shipped by, all pointing at a big \"you\""
+description: "Mock movie credits roll for Remotion: Written by, Directed by, Shipped by roll up and all point at one big name, a solo-builder credits joke ending on you."
 component: crew-of-one
 vibe: playful
 length: 138
@@ -19,11 +19,31 @@ askedAs:
   - "show that one person did everything, ending on you"
   - "closing credits gag for an indie maker video"
   - "one man crew credits"
+  - "mock credits roll where every role ends on one big you"
 ---
+
+In Remotion, Crew of One is a mock credits roll: lines like Written by, Directed by and Shipped by roll upward one after another, then gather under one big name, "you" by default, as the joke. Use it as a closing credits beat or a solo-builder message in a launch or demo video.
 
 <ComponentPreview name="crew-of-one" />
 
 <InstallBlock name="crew-of-one" />
+
+## How to build this in Remotion
+
+You don't have to build the roll by hand with `useCurrentFrame()`, `interpolate()` and `measureText`. Install the component and pass your roles:
+
+```bash
+npx shadcn@latest add @remocn/crew-of-one
+```
+
+The roll is one scene with a schedule in `timeline.ts` that spaces the roles across the composition; the motion runs on `interpolate()` with `Easing` curves, and the copy is measured before the first frame (held with `delayRender`) so the roles line up under the name.
+
+## Good to know
+
+- Length: 138 frames of motion at 30 fps (276 at 60 fps) with the default props. That is the minimum for its `Sequence`; add your own hold on top (the demo plays 170 frames). The Usage example below is a 60 fps composition, so the numbers it hands to Remotion are doubled, see [Frame rate](/docs/getting-started/installation#frame-rate).
+- Length stretch: the schedule spreads the roles over the whole `durationInFrames` (at least 90 frames at 30 fps), so a longer composition rolls slower instead of freezing.
+- Installs: `remotion`, `@remotion/google-fonts` from npm, plus the remocn helpers `glide`, `frame-rate`, `timeline`. The shadcn CLI copies the source into your project.
+- Font: loads Gabarito itself through `@remotion/google-fonts`. Pass `fontFamily` to use your own face, and load that font in your project.
 
 ## Usage
 
@@ -80,7 +100,7 @@ Credit-style role lines roll upward in turn, then gather into place under a larg
       name: "fontFamily",
       type: "string",
       default: "\"Gabarito\"",
-      description: "Typeface for the copy. Load the font in your project first.",
+      description: "Typeface for the copy. The default is loaded for you; load any other font in your project first.",
     },
     {
       name: "fontWeight",
@@ -120,3 +140,19 @@ Credit-style role lines roll upward in turn, then gather into place under a larg
     },
   ]}
 />
+
+## Common questions
+
+### How do I build a mock credits roll in Remotion that all points at one big 'you'?
+
+Install Crew of One with `npx shadcn@latest add @remocn/crew-of-one`, pass `roles` such as Written by, Directed by, Shipped by, and keep `name="you"` or pass a real name.
+
+### Do I need to load the Gabarito font?
+
+No. The component loads Gabarito itself. Load a font yourself only when you pass a different `fontFamily`.
+
+## Related effects
+
+- [Feature Trio](/docs/typography/feature-trio): three feature words, 'Fast. Composable. Open source.', rise from masks with progress ticks and notes.
+- [And You](/docs/typography/and-you): a list of audiences ("For the founder who...") ends on a big "and you."
+- [They Are You](/docs/typography/they-are-you): short statements about someone rise one by one, then the leading They flips to an accent You in each.

@@ -1,6 +1,6 @@
 ---
 title: Focus Pan Text
-description: "Earlier lines stack up blurred as focus pans down line by line to a final sentence and a small toolbar."
+description: "Status lines with a focus pan for Remotion: earlier lines stack up blurred as focus moves down to a final ready message with a small toolbar, like checks passing."
 component: focus-pan-text
 vibe: premium
 length: 113
@@ -18,11 +18,32 @@ askedAs:
   - "checks passing story that finishes on a ready message"
   - "focus pan down text"
   - "earlier lines blurred final line sharp"
+  - "earlier status lines stack up blurred as focus pans down to a ready message"
+  - "checks passing then a final sentence with a small toolbar"
 ---
+
+In Remotion, Focus Pan Text stacks status lines that blur as focus pans down to a final sentence with a small toolbar, like checks passing and then a ready message. Use it for a step-by-step status sequence in a deploy, CI or onboarding video.
 
 <ComponentPreview name="focus-pan-text" />
 
 <InstallBlock name="focus-pan-text" />
+
+## How to build this in Remotion
+
+You don't need `TransitionSeries`, `Series` or `remotion-bits` for this. Install the component and pass your lines:
+
+```bash
+npx shadcn@latest add @remocn/focus-pan-text
+```
+
+The pan, each line's focus and the toolbar run on the schedule in `timeline.ts`: moves are `interpolate()` with `Easing` and the toolbar rises with `spring()`. Out-of-focus lines are a CSS `blur()`. Line widths are measured on a canvas before the first frame, held with `delayRender`. The ground is a live gradients.sh shader (`GshGround`).
+
+## Good to know
+
+- Length: 113 frames of motion at 30 fps (226 at 60 fps) with the default props. The demo plays 169 frames. The component exports `focusPanTextLength(lines, firstHold)`, which returns the length in 30 fps frames for your lines; double it at 60 fps. The Usage example below is a 60 fps composition, so the numbers it hands to Remotion are doubled, see [Frame rate](/docs/getting-started/installation#frame-rate).
+- Installs: `remotion`, `@remotion/google-fonts` from npm, plus the remocn helpers `gsh`, `frame-rate`, `timeline`. The shadcn CLI copies the source into your project.
+- Font: loads Inter Tight itself through `@remotion/google-fonts`. Pass `fontFamily` to use your own face, and load that font in your project.
+- The lines are plain text with no check-mark icon. The toolbar shows the `meta` text (default "Just now") followed by copy, thumbs-up and more icons drawn as inline SVG; those icons are not props, so edit them in the copied file.
 
 ## Usage
 
@@ -126,7 +147,7 @@ The ground is a live gradients.sh shader (`GshGround`), installed with the compo
       name: "fontFamily",
       type: "string",
       default: "\"Inter Tight\"",
-      description: "Typeface for the copy. Load the font in your project first.",
+      description: "Typeface for the copy. Inter Tight loads by default; load any other face in your project first.",
     },
     {
       name: "scale",
@@ -148,3 +169,24 @@ The ground is a live gradients.sh shader (`GshGround`), installed with the compo
     },
   ]}
 />
+
+## Common questions
+
+### How do I stack status lines in Remotion that blur as focus pans down to a final ready message?
+
+Install Focus Pan Text with `npx shadcn@latest add @remocn/focus-pan-text` and pass `lines`, `accentWord` and `meta`. Each line is read in turn, then focus lands on the last line and a toolbar appears.
+
+### How long should the composition be?
+
+Use the exported `focusPanTextLength(lines)` for the 30 fps length; at 60 fps hand Remotion twice that.
+
+### Can I add check marks to each line?
+
+Not through props. The lines are text only; add an icon in the copied file.
+
+## Related effects
+
+- [Focus Blur Resolve](/docs/typography/focus-blur-resolve): a single sentence pulling into focus.
+- [Typewriter](/docs/typography/typewriter): lines typed character by character.
+- [Per-Word Crossfade](/docs/typography/per-word-crossfade): swap one phrase for another.
+- [Focus Front Swap](/docs/typography/focus-front-swap): a three-line pitch with a focus pull.

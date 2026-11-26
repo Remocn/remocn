@@ -1,6 +1,6 @@
 ---
 title: Inline Word Roll
-description: Switch words beside a fixed prefix with an accelerating vertical roll
+description: "Rotating word animation for Remotion: the start of a headline stays put while the last word rolls vertically like a slot machine, speeding up through audiences or outcomes."
 component: inline-word-roll
 vibe: clean
 length: 75
@@ -17,11 +17,32 @@ askedAs:
   - "vertical roll word swap keeping the opening phrase"
   - "rotating word headline"
   - "built for designers developers"
+  - "headline where the last word rolls vertically and speeds up"
+  - "rotating word after a fixed phrase, cycling through audiences"
 ---
+
+In Remotion, Inline Word Roll keeps the start of a headline in place while the last word rolls vertically, slot-machine style, through a list such as teams, founders and creators, speeding up as it goes. Use it for a who-it's-for or benefits line in a landing or launch video.
 
 <ComponentPreview name="inline-word-roll" />
 
 <InstallBlock name="inline-word-roll" />
+
+## How to build this in Remotion
+
+You don't need `measureText()`, `@remotion/layout-utils` or a motion-blur trail for this. Install the component and pass the prefix and words:
+
+```bash
+npx shadcn@latest add @remocn/inline-word-roll
+```
+
+Each roll is an element in `timeline.ts`; the wait before each roll shrinks by `acceleration`. The outgoing word slides up and the next one comes from below with `Easing.bezier(0.22, 0.75, 0.25, 1)`, and the words are measured with the real font after `useDelayRender()` waits for it, so the prefix shifts smoothly as the total width changes.
+
+## Good to know
+
+- Length: 75 frames of motion at 30 fps (150 at 60 fps) with the default props; the demo plays 105 frames, which adds a hold. The Usage example below is a 60 fps composition, so the numbers it hands to Remotion are doubled, see [Frame rate](/docs/getting-started/installation#frame-rate).
+- Installs: `remotion` from npm, plus the remocn helpers `glide`, `frame-rate`, `timeline`. The shadcn CLI copies the source into your project.
+- Font: Arial by default (`fontFamily` prop). Load any webfont you pass in your project; the render waits for it before measuring.
+- Direction: the roll always goes upward; there is no direction prop. The curve is the bezier above; edit it in the copied file for a different feel.
 
 ## Usage
 
@@ -79,3 +100,20 @@ when the text or font changes, preserving layout inside resized Players.
 The same scale is used for every word, preventing font-size jumps. All movement
 comes from Remotion frames; seeking directly to a switch reproduces the same
 layout. No CSS animation clock or WebGL context is required.
+
+## Common questions
+
+### How do I build a headline in Remotion where the last word rolls through options and speeds up?
+
+Install Inline Word Roll with `npx shadcn@latest add @remocn/inline-word-roll`, set `prefix` and pass the words in `text`, separated by `|`. `acceleration` below 1 makes each roll come sooner.
+
+### Can it roll at a steady pace?
+
+Yes. Set `acceleration={1}`.
+
+## Related effects
+
+- [Word Push](/docs/typography/word-push): each new word stays in the sentence and pushes it aside.
+- [Kinetic Morph Text](/docs/typography/kinetic-morph-text): letters morph from one word to the next.
+- [Slot Machine Roll](/docs/typography/slot-machine-roll): a reel of values rolls in one slot.
+- [Width Lock](/docs/typography/width-lock): a fixed-width line while one word cycles.

@@ -1,6 +1,6 @@
 ---
 title: Column Reflow
-description: "A justified paragraph reflows its column width, redistributing lines with even word spacing"
+description: "Justified paragraph whose column width animates while the lines reflow with even word spacing. A responsive, editorial typography demo for layout and publishing tools."
 component: column-reflow
 vibe: paper
 length: 90
@@ -19,11 +19,32 @@ askedAs:
   - "text column getting wider and narrower with even spacing"
   - "editorial typography demo for a layout or publishing tool"
   - "a beat where the paragraph itself adapts to the screen size"
+  - "justified paragraph reflows as its column width changes"
 ---
+
+In Remotion, Column Reflow animates a justified paragraph as its column width changes: words glide to their new lines and the word spacing is redistributed evenly, ending with one accent word in italic. Use it to illustrate responsive layout, editorial typography or a publishing tool.
 
 <ComponentPreview name="column-reflow" />
 
 <InstallBlock name="column-reflow" />
+
+## How to build this in Remotion
+
+No need for a Knuth-Plass library, `text-wrap: pretty` or `fitText`. Install the component and pass your paragraph:
+
+```bash
+npx shadcn@latest add @remocn/column-reflow
+```
+
+The line breaking is done in `timeline.ts` with a built-in optimal-fit breaker and Newsreader glyph metrics, so both the narrow and the wide column are fully justified. Rows then slide sideways and close up vertically with `interpolate()` over an `Easing` curve, so no word crosses another. Nothing is measured in the browser, so it doesn't use `delayRender` or `@remotion/layout-utils`.
+
+## Good to know
+
+- Length: 90 frames of motion at 30 fps (180 at 60 fps) with the default props. The demo composition plays 120 frames, which adds a hold. Longer text adds rows and takes a little longer to settle. The Usage example below is a 60 fps composition, so the numbers it hands to Remotion are doubled, see [Frame rate](/docs/getting-started/installation#frame-rate).
+- Installs: `remotion`, `@remotion/google-fonts` from npm, plus the remocn helpers `glide`, `frame-rate`, `timeline`. The shadcn CLI copies the source into your project.
+- Font: loads Newsreader (roman and italic) itself through `@remotion/google-fonts`. The line breaks use built-in Newsreader metrics, so another `fontFamily` can leave justified lines slightly off.
+- Width: `measure` sets the narrow column in ems (9.6 by default). The wide column is about two narrow lines side by side; `direction` picks `"widen"` (narrow to wide) or `"narrow"`. There is no separate prop for the wide width.
+- There is no duration or easing prop; use `speed` and `delay`.
 
 ## Usage
 
@@ -84,7 +105,7 @@ A justified serif paragraph sits in a column, then the column widens (or narrows
       name: "fontFamily",
       type: "string",
       default: "\"Newsreader\"",
-      description: "Typeface for the copy. Load the font in your project first.",
+      description: "Typeface for the copy. Newsreader loads by default; load any other face in your project first.",
     },
     {
       name: "scale",
@@ -127,3 +148,24 @@ A justified serif paragraph sits in a column, then the column widens (or narrows
     },
   ]}
 />
+
+## Common questions
+
+### How do I animate a justified paragraph so the column width changes and the lines reflow?
+
+Install Column Reflow with `npx shadcn@latest add @remocn/column-reflow`, pass `text` and choose `direction`. The paragraph reflows between a narrow and a wide justified column.
+
+### Can I set the start and end widths?
+
+Only the narrow one, through `measure` in ems. The wide column is derived from it.
+
+### Do I need a justification library?
+
+No. The component breaks the lines itself and installs only `remotion` and `@remotion/google-fonts`.
+
+## Related effects
+
+- [Soft Blur In](/docs/typography/soft-blur-in): a short punchy headline instead of a paragraph.
+- [Tagline Justify](/docs/typography/tagline-justify): a tagline springs into a justified block.
+- [Whole Page](/docs/typography/whole-page): manifesto paragraphs fill a page in columns.
+- [Cursor Frame](/docs/typography/cursor-frame): a selection box resizes a headline and it rewraps.

@@ -1,6 +1,6 @@
 ---
 title: Comet Headline
-description: "A headline and subhead arrive while a comet streaks arcs behind each word, with one phrase highlighted."
+description: "Headline and subhead where a comet streaks in an arc behind each word as it arrives, with one phrase highlighted. A shooting-star title for feature announcements."
 component: comet-headline
 vibe: premium
 length: 81
@@ -18,11 +18,32 @@ askedAs:
   - "hero line with comet tails behind the words and one highlighted phrase"
   - "a bright, energetic moment announcing something new and fast"
   - "shooting star text intro"
+  - "comet streaks in an arc behind each word of a headline as it arrives"
 ---
+
+In Remotion, Comet Headline delivers a headline word by word while a comet streaks in an arc behind each word as it arrives, then a subhead follows and one phrase stays highlighted. Use it for a feature announcement or hero beat with an eyebrow, a headline and a short subhead.
 
 <ComponentPreview name="comet-headline" />
 
 <InstallBlock name="comet-headline" />
+
+## How to build this in Remotion
+
+You don't need `@remotion/paths` or `@remotion/motion-blur` for the trails. Install the component and pass your copy:
+
+```bash
+npx shadcn@latest add @remocn/comet-headline
+```
+
+Each comet is an SVG quadratic curve drawn per word, and the head and tail travel along it with `interpolate()` over an `Easing` curve, on a schedule from `timeline.ts`. Words fly in, cool from the comet color into ink and settle; the highlight phrase then takes the accent.
+
+## Good to know
+
+- Length: 81 frames of motion at 30 fps (162 at 60 fps) with the default props. The demo composition plays 120 frames, which adds a hold. The Usage example below is a 60 fps composition, so the numbers it hands to Remotion are doubled, see [Frame rate](/docs/getting-started/installation#frame-rate).
+- Installs: `remotion`, `@remotion/google-fonts` from npm, plus the remocn helpers `glide`, `frame-rate`, `timeline`. The shadcn CLI copies the source into your project.
+- Font: loads Sora (headline and subhead) and Geist Mono (eyebrow) itself through `@remotion/google-fonts`. Pass `fontFamily` to use your own face, and load that font in your project.
+- `highlight` is matched inside `headline` without regard to case; pass an empty string for no highlight. The default accent is `#3B5BFD`.
+- `flight` sets the frames each word takes to fly in on its arc (26 at 30 fps).
 
 ## Usage
 
@@ -100,7 +121,7 @@ An eyebrow fades in, then the headline words fly in one after another on comet a
       name: "fontFamily",
       type: "string",
       default: "\"Sora\"",
-      description: "Typeface for the copy. Load the font in your project first.",
+      description: "Typeface for the copy. Sora loads by default; load any other face in your project first.",
     },
     {
       name: "fontWeight",
@@ -146,3 +167,24 @@ An eyebrow fades in, then the headline words fly in one after another on comet a
     },
   ]}
 />
+
+## Common questions
+
+### How do I make a comet streak in an arc behind each word of a headline?
+
+Install Comet Headline with `npx shadcn@latest add @remocn/comet-headline` and pass `eyebrow`, `headline`, `highlight` and `subhead`. Each word arrives on its own comet arc.
+
+### Does it need @remotion/paths or motion blur?
+
+No. The arcs are plain SVG curves computed in the component; it installs only `remotion` and `@remotion/google-fonts`.
+
+### Can I drop the highlight?
+
+Yes, pass `highlight=""`.
+
+## Related effects
+
+- [Spring Scale In](/docs/typography/spring-scale-in): one short word that pops in.
+- [Feature Headline](/docs/typography/feature-headline): a New tag, a one-line headline and a subhead without trails.
+- [Italic Speed](/docs/typography/italic-speed): a slanted speed word on streak lines.
+- [Staggered Fade Up](/docs/typography/staggered-fade-up): a calm word-by-word fade up.

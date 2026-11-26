@@ -1,6 +1,6 @@
 ---
 title: Kinetic Center Build
-description: Words enter from the right and push the line until the full phrase locks centered
+description: "Word-by-word centered headline for Remotion: each word slides in from the right and pushes the previous words left, so the short phrase ends up centered on screen."
 component: kinetic-center-build
 vibe: premium
 length: 60
@@ -19,11 +19,34 @@ askedAs:
   - "reveal that locks centered at the end"
   - "word by word build"
   - "sliding words lock in the middle"
+  - "each word slides in from the right and pushes the others left"
+  - "short headline builds word by word and stays centered"
 ---
+
+In Remotion, Kinetic Center Build makes each word of a headline slide in from the right and push the previous words left, so the short phrase ends up centered on screen. Use it for a punchy title of two to six words in a launch or promo video.
 
 <ComponentPreview name="kinetic-center-build" />
 
 <InstallBlock name="kinetic-center-build" />
+
+## How to build this in Remotion
+
+You don't need `fitText`, `@remotion/layout-utils` or a per-word `spring()` for this. Install the component and pass the text:
+
+```bash
+npx shadcn@latest add @remocn/kinetic-center-build
+```
+
+Word widths are measured once on a canvas with `measureText()`, the centered position of every prefix is precomputed, and each word's slide is an element in `timeline.ts` eased with `interpolate()` over an `Easing.bezier` curve. Everything moves through `transform`, so the line never reflows.
+
+## Good to know
+
+- Length: 60 frames of motion at 30 fps (120 at 60 fps) with the default props. The first word lands over 10 frames and each later word starts 13 frames after the one before, so a four-word line finishes around frame 49. The Usage example below is a 60 fps composition, so the numbers it hands to Remotion are doubled, see [Frame rate](/docs/getting-started/installation#frame-rate).
+- Installs: `remotion` from npm, plus the remocn helpers `glide`, `frame-rate`, `timeline`. The shadcn CLI copies the source into your project.
+- Font: Geist Sans through the `--font-geist-sans` CSS variable, set inline; change it in the copied file. Widths are measured with a system sans stack, so a very different face may sit slightly off center.
+- Stagger: there is no stagger prop, but the component takes a `timing` prop (from the remocn `timeline` helper) that moves or stretches each word.
+- Keep it to six words or fewer: on longer lines the re-centering on every word becomes distracting.
+- The background is transparent; put your own scene behind it.
 
 ## Usage
 
@@ -120,3 +143,20 @@ export const RemotionRoot = () => (
     },
   ]}
 />
+
+## Common questions
+
+### How do I make each word slide in from the right and push the others left, ending centered?
+
+Install Kinetic Center Build with `npx shadcn@latest add @remocn/kinetic-center-build` and pass `text`.
+
+### Can I change the timing per word?
+
+Yes, through the `timing` prop, which moves, trims or stretches each word's slide.
+
+## Related effects
+
+- [Line-by-Line Slide](/docs/typography/line-by-line-slide): multi-line text sliding in line by line.
+- [Word Push](/docs/typography/word-push): each new word drives the existing line aside.
+- [Centered Word Build](/docs/typography/centered-word-build): words pop in from below and the phrase pushes closer.
+- [Mask Reveal Up](/docs/typography/mask-reveal-up): lines rising from a mask.

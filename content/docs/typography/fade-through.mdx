@@ -1,6 +1,6 @@
 ---
 title: Fade Through
-description: Old text fades out as new fades in with a soft delay, Material-style
+description: "Fade-through text swap for Remotion: one label, stat or short phrase fades out and the new one fades in after a tiny delay in the same spot, Material-style."
 component: fade-through
 vibe: clean
 length: 90
@@ -19,11 +19,34 @@ askedAs:
   - "stat or short phrase changing without drama"
   - "crossfade text change"
   - "soft text swap material design"
+  - "old label fades out, new one fades in a beat later in the same spot"
+  - "swap a stat in place with a short gap between out and in"
 ---
+
+In Remotion, Fade Through is the cleanest way to swap one label or stat for another in the same spot: the old text fades out, and the new one fades in after a slight delay with a soft lift and a touch of blur. Use it for a changing label, a number update or a short phrase swap in a product demo, following Material's fade-through pattern.
 
 <ComponentPreview name="fade-through" />
 
 <InstallBlock name="fade-through" />
+
+## How to build this in Remotion
+
+You don't need `TransitionSeries` with `fade()` or two overlapping `Series.Sequence`s for this. Install the component and pass both texts:
+
+```bash
+npx shadcn@latest add @remocn/fade-through
+```
+
+It is one component, not two sequences: the schedule in `timeline.ts` places the exit and the entrance, and each is an `interpolate()` over an `Easing.bezier` curve, clamped at both ends. Opacity, a few pixels of vertical lift, a 0.99 to 1 scale and a 2px blur all ride on those two curves.
+
+## Good to know
+
+- Length: 90 frames of motion at 30 fps (180 at 60 fps) with the default props. The motion itself is short: the old text leaves over frames 0 to 8 and the new text arrives over frames 9 to 22. The rest of the 90 frames is hold, and the timing does not stretch with the `Sequence` length, so a longer `Sequence` only holds the new text longer. The Usage example below is a 60 fps composition, so the numbers it hands to Remotion are doubled, see [Frame rate](/docs/getting-started/installation#frame-rate).
+- Installs: `remotion` from npm, plus the remocn helpers `glide`, `frame-rate`, `timeline`. The shadcn CLI copies the source into your project.
+- Font: Geist Sans through the `--font-geist-sans` CSS variable, with a system sans fallback. The font is set inline, so change it in the copied file; a `className` font does not override an inline style.
+- Timing: there is no `delay` or `duration` prop, but the `timing` prop moves or stretches the two parts by id, for example `timing={{ enter: { start: 20, stretch: 2 } }}`. Counts are 30 fps frames.
+- The lift, scale and blur have no props to turn them off; they are the `interpolate()` ranges in the copied file.
+- It renders on a transparent background, so place it over your own scene or a `Backdrop`.
 
 ## Usage
 
@@ -134,3 +157,24 @@ export const RemotionRoot = () => (
     },
   ]}
 />
+
+## Common questions
+
+### What's the cleanest way in Remotion to swap one label or stat for another in the same spot?
+
+Install Fade Through with `npx shadcn@latest add @remocn/fade-through` and pass `fromText` and `toText`. The old text fades out, a two-frame gap passes, and the new text fades in, all in about 22 frames.
+
+### Can I change when the swap starts or how long it takes?
+
+Yes, through the `timing` prop: `exit` and `enter` take `start`, `length` or `stretch` in 30 fps frames. You can also wrap the component in a `Sequence` with a `from` to delay the whole swap.
+
+### How does it differ from a TransitionSeries fade?
+
+A `TransitionSeries` fade crossfades two whole scenes at once. Fade Through swaps text in one slot, lets the old text leave fully before the new one arrives, and adds a small lift so the change reads as new content.
+
+## Related effects
+
+- [Per-Word Crossfade](/docs/typography/per-word-crossfade): the incoming phrase arrives word by word.
+- [Line-by-Line Slide](/docs/typography/line-by-line-slide): lines slide in and out with direction.
+- [Micro Scale Fade](/docs/typography/micro-scale-fade): a single calm entrance when there is no outgoing text.
+- [Value Swap](/docs/typography/value-swap): a price or number slides out and in with no layout shift.

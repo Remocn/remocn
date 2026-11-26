@@ -1,6 +1,6 @@
 ---
 title: Hook Uncurl
-description: "Stacked condensed caps lines uncurl into place, ending on 'Just make the video.'"
+description: "Hook text for Remotion: stacked condensed all-caps lines ask a question, then the question mark uncurls and the answer rolls in, like Just make the video."
 component: hook-uncurl
 vibe: playful
 length: 78
@@ -17,11 +17,32 @@ askedAs:
   - "vertical video hook with bold stacked lines"
   - "uncurling caps lines"
   - "tiktok hook text"
+  - "stacked condensed all caps question that answers itself"
+  - "question mark uncurls into a period as the answer rolls in"
 ---
+
+In Remotion, Hook Uncurl stacks a question in condensed all-caps lines, then the question mark uncurls into the answer's period or exclamation mark as the answer rolls in, ending on a line such as "Just make the video.". Use it for a hook at the start of a launch or social video.
 
 <ComponentPreview name="hook-uncurl" />
 
 <InstallBlock name="hook-uncurl" />
+
+## How to build this in Remotion
+
+You don't need `rotateX` and perspective tricks. Install the component and write the question and answer:
+
+```bash
+npx shadcn@latest add @remocn/hook-uncurl
+```
+
+The caps words rise in with `spring()` and `interpolate()`; the question mark is drawn as a curve that straightens over time, and the answer rolls in on the schedule in `timeline.ts`. Letter metrics are measured on a canvas while `delayRender()` holds the first frame.
+
+## Good to know
+
+- Length: 78 frames of motion at 30 fps (156 at 60 fps) with the default props. The demo plays 125 frames, which adds a hold: frames past the end of the motion hold the final frame. The Usage example below is a 60 fps composition, so the numbers it hands to Remotion are doubled, see [Frame rate](/docs/getting-started/installation#frame-rate).
+- Installs: `remotion`, `@remotion/google-fonts` from npm, plus the remocn helpers `glide`, `frame-rate`, `timeline`. The shadcn CLI copies the source into your project.
+- Font: loads Barlow Condensed itself through `@remotion/google-fonts`, so there is nothing to load for the default. Pass `fontFamily` to use your own face, and load that font in your project.
+- `answerAt` (default 40, in 30 fps frames) is when the question mark uncurls; `stagger` (default 3) spaces the question words.
 
 ## Usage
 
@@ -93,7 +114,7 @@ Stacked caps lines enter curled, uncurl into place, then swap in a rolling chang
       name: "fontFamily",
       type: "string",
       default: "\"Barlow Condensed\"",
-      description: "Typeface for the copy. Load the font in your project first.",
+      description: "Typeface for the copy; Barlow Condensed (loaded by the component) by default. Load any other font in your project first.",
     },
     {
       name: "scale",
@@ -121,3 +142,23 @@ Stacked caps lines enter curled, uncurl into place, then swap in a rolling chang
     },
   ]}
 />
+
+## Common questions
+
+### How do I make a hook where stacked condensed caps lines ask a question and end on the answer?
+
+Install Hook Uncurl with `npx shadcn@latest add @remocn/hook-uncurl` and pass `question` and `answer`.
+
+### Do I need to load Barlow Condensed?
+
+No. The component loads it through `@remotion/google-fonts`.
+
+### How long is it?
+
+78 frames at 30 fps (156 at 60 fps); the demo plays 125 to hold on the answer.
+
+## Related effects
+
+- [Glyph Relay](/docs/typography/glyph-relay): a bigger setup-and-twist story ending on a giant question mark.
+- [Full Bleed Type](/docs/typography/full-bleed-type): huge condensed caps words slam in one at a time.
+- [Answer First](/docs/typography/answer-first): the answer lands before the question.

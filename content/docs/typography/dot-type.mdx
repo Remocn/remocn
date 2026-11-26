@@ -1,6 +1,6 @@
 ---
 title: Dot Type
-description: "Words are drawn from a field of round dots in a gradient, with the last word set in the accent."
+description: "Dot-matrix word sequence for Remotion: words like Think, Make, Ship are drawn from a field of round dots that fly from word to word, last word in a gradient."
 component: dot-type
 vibe: tech
 length: 158
@@ -18,11 +18,33 @@ askedAs:
   - "tech title card where letters assemble out of a dot field"
   - "halftone dot lettering"
   - "dot matrix word reveal"
+  - "words drawn from a grid of dots one after another"
+  - "particle dots form each word then reform into the next"
 ---
+
+In Remotion, Dot Type draws words like Think, Make, Ship out of round dots: a dot field collapses into the first word, then the same dots fly apart and reform into each next word, quickly, and the last word takes a gradient accent. Use it for a fast sequence of single words in a launch or brand video.
 
 <ComponentPreview name="dot-type" />
 
 <InstallBlock name="dot-type" />
+
+## How to build this in Remotion
+
+You don't need to wire up canvas `getImageData` sampling and `Series` by hand. Install the component and pass your words:
+
+```bash
+npx shadcn@latest add @remocn/dot-type
+```
+
+Each word is rendered once to an offscreen canvas and sampled with `getImageData` into dot targets; the dots are drawn as SVG paths and moved with `Easing` curves on a schedule from `timeline.ts`. Sampling happens before the first frame, held with `delayRender`.
+
+## Good to know
+
+- Length: 158 frames of motion at 30 fps (316 at 60 fps) with the default props. That is the minimum for its `Sequence`; add your own hold on top (the demo plays 190 frames). The Usage example below is a 60 fps composition, so the numbers it hands to Remotion are doubled, see [Frame rate](/docs/getting-started/installation#frame-rate).
+- Timing: the field drifts for 14 frames, the first word forms over 32, and each next word takes 34 plus `hold`. Length = 46 + (words − 1) × (34 + hold) at 30 fps; with three words and `hold={22}` that is 158.
+- Gradient: the last word runs from `accent` through `#2b3dd8`, `#ff6a3d` and `#ffd9a8` (dark theme). Only `accent` is a prop; `accentLast={false}` keeps the last word plain.
+- Installs: `remotion`, `@remotion/google-fonts` from npm, plus the remocn helpers `frame-rate`, `timeline`. The shadcn CLI copies the source into your project.
+- Font: loads Sora itself through `@remotion/google-fonts`. Pass `fontFamily` to use your own face, and load that font in your project.
 
 ## Usage
 
@@ -89,7 +111,7 @@ A dot field collapses into the first word, then each next word reforms from the 
       name: "fontFamily",
       type: "string",
       default: "\"Sora\"",
-      description: "Typeface for the copy. Load the font in your project first.",
+      description: "Typeface for the copy. The default is loaded for you; load any other font in your project first.",
     },
     {
       name: "fontWeight",
@@ -135,3 +157,19 @@ A dot field collapses into the first word, then each next word reforms from the 
     },
   ]}
 />
+
+## Common questions
+
+### How can I draw words like Think, Make, Ship out of round dots in Remotion?
+
+Install Dot Type with `npx shadcn@latest add @remocn/dot-type` and pass `words`. `count` sets how many dots make up each word.
+
+### How long does it run?
+
+46 + (words − 1) × (34 + hold) frames at 30 fps: 158 for the defaults. Double it at 60 fps.
+
+## Related effects
+
+- [Typewriter](/docs/typography/typewriter): character-by-character text reveal with a deterministic blinking cursor.
+- [Ndot Resolve](/docs/typography/ndot-resolve): a headline scans in as a dot-matrix face, then refreshes letter by letter into solid type.
+- [Strobe Words](/docs/typography/strobe-words): big words strobe in on flashing fields at a tightening rhythm, then land on a poster with the logo.

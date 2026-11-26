@@ -1,6 +1,6 @@
 ---
 title: Intelligence Glow
-description: "A question rises in under a breathing edge glow, the light collapses to a rule, and a serif-led answer resolves."
+description: "AI prompt scene for Remotion: a question rises under a breathing edge glow, the glow collapses into a line, and a serif-led answer resolves word by word."
 component: intelligence-glow
 vibe: premium
 length: 148
@@ -18,11 +18,33 @@ askedAs:
   - "glowing edge light then answer resolves like Apple Intelligence"
   - "ai glow text"
   - "prompt response reveal"
+  - "AI style prompt with breathing edge glow and a resolving answer"
+  - "question under a glowing border, then a serif answer appears"
 ---
+
+In Remotion, Intelligence Glow builds an AI-style prompt scene: a question rises in under a breathing edge glow, the glow collapses into a line, and an answer led by a serif italic word resolves word by word. Use it for an AI feature beat that shows a prompt and its one-line result.
 
 <ComponentPreview name="intelligence-glow" />
 
 <InstallBlock name="intelligence-glow" />
+
+## How to build this in Remotion
+
+You don't need `@remotion/noise`, a typewriter helper or your own font loading. Install the component and pass the question and answer:
+
+```bash
+npx shadcn@latest add @remocn/intelligence-glow
+```
+
+The intro, the thinking glow, the squeeze into a line and the answer words are elements in `timeline.ts`; everything moves with `interpolate()` over `Easing` curves, and the glow is CSS radial gradients drifting across the frame.
+
+## Good to know
+
+- Length: 148 frames of motion at 30 fps (296 at 60 fps) with the default props; the demo plays 180 frames, which adds a hold. The Usage example below is a 60 fps composition, so the numbers it hands to Remotion are doubled, see [Frame rate](/docs/getting-started/installation#frame-rate).
+- Installs: `remotion`, `@remotion/google-fonts` from npm, plus the remocn helpers `glide`, `frame-rate`, `timeline`. The shadcn CLI copies the source into your project.
+- Fonts: loads Instrument Sans for the copy, Instrument Serif italic for the answer's lead word, and Manrope itself, through `@remotion/google-fonts`. `fontFamily` changes the question and answer; the serif lead face is not a prop, so change it in the copied file.
+- Glow colors come from the theme (dark `#FFF4EC`, `#FFB36B`, `#E2457A`; light `#FFC83D`, `#FF8A3D`, `#FF3D9A`, `#7A5CFF`); `intensity` scales the glow.
+- `background="transparent"` drops the stage fill, and the glow still draws on top, so it can sit over other footage.
 
 ## Usage
 
@@ -117,7 +139,7 @@ The question rises in word by word while a colored light breathes around the fra
       name: "fontFamily",
       type: "string",
       default: "\"Instrument Sans\"",
-      description: "Typeface for the copy. Load the font in your project first.",
+      description: "Typeface for the question and answer. Instrument Sans loads itself; load any other face in your project first.",
     },
     {
       name: "scale",
@@ -151,3 +173,20 @@ The question rises in word by word while a colored light breathes around the fra
     },
   ]}
 />
+
+## Common questions
+
+### How do I make an AI prompt scene in Remotion with a glowing edge and a resolving answer?
+
+Install Intelligence Glow with `npx shadcn@latest add @remocn/intelligence-glow` and pass `question`, `answerLead` and `answer`.
+
+### Can I change the serif face of the answer's first word?
+
+Not through a prop: it is Instrument Serif italic. Swap the font in the copied file.
+
+## Related effects
+
+- [Typewriter](/docs/typography/typewriter): the answer typed out with a cursor and no glow.
+- [Answer First](/docs/typography/answer-first): the answer lands before the question.
+- [Soft Blur In](/docs/typography/soft-blur-in): a calm letter-by-letter blur entrance.
+- [Prompt Restyle](/docs/typography/prompt-restyle): typed instructions restyle a headline.

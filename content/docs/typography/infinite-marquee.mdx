@@ -1,6 +1,6 @@
 ---
 title: Infinite Marquee
-description: A continuously scrolling horizontal text strip that loops seamlessly
+description: "Looping text ticker for Remotion: a horizontal scrolling text band that repeats seamlessly, for ambient background motion, a divider strip or a news-ticker lower third."
 component: infinite-marquee
 vibe: clean
 length: 180
@@ -19,11 +19,34 @@ askedAs:
   - "ambient background motion with repeating text"
   - "news ticker text loop"
   - "endless horizontal scroll"
+  - "seamlessly looping horizontal scrolling text ticker"
+  - "scrolling text band as ambient background or divider"
 ---
+
+In Remotion, Infinite Marquee is a seamlessly looping horizontal scrolling text ticker: one line of text repeats and slides sideways for as long as the clip runs. Use it as ambient background motion, a decorative band between sections or a ticker-style lower third.
 
 <ComponentPreview name="infinite-marquee" />
 
 <InstallBlock name="infinite-marquee" />
+
+## How to build this in Remotion
+
+You don't need `@remotion/layout-utils` or a font loader for this. Install the component and pass your text:
+
+```bash
+npx shadcn@latest add @remocn/infinite-marquee
+```
+
+The offset is plain math on the frame: `frame × pixelsPerFrame` wrapped with a modulo over three copies of the text, so there is no `spring()` or `interpolate()` and nothing to schedule. It reads the frame through the remocn `frame-rate` helper, so the scroll covers the same distance per second at any frame rate.
+
+## Good to know
+
+- Length: 180 frames of motion at 30 fps (360 at 60 fps) with the default props. There is no end state: the ticker loops for the whole `durationInFrames`, so make the clip as long as you need. The Usage example below is a 60 fps composition, so the numbers it hands to Remotion are doubled, see [Frame rate](/docs/getting-started/installation#frame-rate).
+- Installs: `remotion` from npm, plus the remocn helpers `frame-rate`. The shadcn CLI copies the source into your project.
+- Font: the text uses Geist Sans through the `--font-geist-sans` CSS variable, with a system sans fallback. The font is set inline on each copy, so change it in the copied file; a `className` font does not override an inline style.
+- Direction: the band scrolls right to left. There is no direction prop.
+- Position: the band is centered vertically in the frame. To place it lower, or make it a strip of a given height, wrap it in your own positioned container.
+- The loop length is estimated from the character count (0.55 × `fontSize` per character), so a much wider or narrower font can show a jump at the wrap. Check it in the preview, or adjust that factor in the copied file.
 
 ## Usage
 
@@ -118,3 +141,20 @@ import { InfiniteMarquee } from "@/components/remocn/infinite-marquee";
     },
   ]}
 />
+
+## Common questions
+
+### How do I make a seamlessly looping scrolling text ticker in Remotion?
+
+Install Infinite Marquee with `npx shadcn@latest add @remocn/infinite-marquee` and pass `text` (end it with a separator such as `· `) plus `pixelsPerFrame` for the speed.
+
+### Can the text be outlined?
+
+Yes. Set `stroke` for outlined text through `-webkit-text-stroke`, colored by `strokeColor`.
+
+## Related effects
+
+- [Blur Out Up](/docs/typography/blur-out-up): text that enters, holds and leaves upward instead of looping.
+- [Mask Reveal Up](/docs/typography/mask-reveal-up): lines that rise from a mask and hold.
+- [Perspective Marquee](/docs/typography/perspective-marquee): a tilted marquee with depth.
+- [Type Wall](/docs/typography/type-wall): rows of one word scroll both ways and fill the frame.

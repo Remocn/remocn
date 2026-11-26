@@ -1,6 +1,6 @@
 ---
 title: Ellipsis Resolve
-description: "Three pulsing dots resolve into a gradient word and a closing period."
+description: "Loading-to-done text animation for Remotion: three pulsing typing dots stretch and turn into a gradient word like Shipped, ending on a period."
 component: ellipsis-resolve
 vibe: clean
 length: 94
@@ -18,11 +18,32 @@ askedAs:
   - "punchy one-word payoff after a typing indicator"
   - "pulsing dots then word"
   - "wait then reveal finished word"
+  - "typing indicator dots turn into a word with a period"
 ---
+
+In Remotion, Ellipsis Resolve turns three pulsing dots into a gradient word like "Shipped" followed by a period: the dots pulse like a typing indicator, stretch apart, and a sweep reveals the word, with the last dot landing as the full stop. Use it for a loading-to-done moment in a product or release video.
 
 <ComponentPreview name="ellipsis-resolve" />
 
 <InstallBlock name="ellipsis-resolve" />
+
+## How to build this in Remotion
+
+You don't need to wire it up from `interpolate()` and `spring()` by hand. Install the component and pass the word:
+
+```bash
+npx shadcn@latest add @remocn/ellipsis-resolve
+```
+
+One scene with a schedule in `timeline.ts`: the dots pulse until `resolveAt`, stretch, and a bar sweeps over `sweepFrames` to reveal the word. Motion uses `interpolate()` with `Easing` curves, and the dot that becomes the period recolors with `interpolateColors`.
+
+## Good to know
+
+- Length: 94 frames of motion at 30 fps (188 at 60 fps) with the default props. That is the minimum for its `Sequence`; add your own hold on top (the demo plays 131 frames). The Usage example below is a 60 fps composition, so the numbers it hands to Remotion are doubled, see [Frame rate](/docs/getting-started/installation#frame-rate).
+- Gradient: the word has a fixed silk sheen (`#F3D6C0` to `#8A7BFF` in dark, `#14163F` to `#8A7BFF` in light). `accent` colors the period dot; `ink` replaces the sheen with one solid color.
+- The demo composition is 131 frames at 30 fps (262 at 60 fps), which adds a hold after the 94 frames of motion.
+- Installs: `remotion`, `@remotion/google-fonts` from npm, plus the remocn helpers `glide`, `frame-rate`, `timeline`. The shadcn CLI copies the source into your project.
+- Font: loads Instrument Serif itself through `@remotion/google-fonts`. Pass `fontFamily` to use your own face, and load that font in your project.
 
 ## Usage
 
@@ -78,7 +99,7 @@ Three dots pulse in turn, stretch apart, and a gradient sweep turns them into th
       name: "fontFamily",
       type: "string",
       default: "\"Instrument Serif\"",
-      description: "Typeface for the copy. Load the font in your project first.",
+      description: "Typeface for the copy. The default is loaded for you; load any other font in your project first.",
     },
     {
       name: "resolveAt",
@@ -124,3 +145,19 @@ Three dots pulse in turn, stretch apart, and a gradient sweep turns them into th
     },
   ]}
 />
+
+## Common questions
+
+### How can three pulsing dots turn into a gradient word like 'Shipped.' in Remotion?
+
+Install Ellipsis Resolve with `npx shadcn@latest add @remocn/ellipsis-resolve` and pass `word`. The period is added for you.
+
+### Can I change the gradient colors?
+
+Only partly: `accent` sets the period and `ink` makes the word one solid color. The sheen stops live in the copied file.
+
+## Related effects
+
+- [Typewriter](/docs/typography/typewriter): character-by-character text reveal with a deterministic blinking cursor.
+- [Focus Blur Resolve](/docs/typography/focus-blur-resolve): a premium focus pull from heavy blur to crisp text, then a soft blur-out exit.
+- [Typed Split Wipe](/docs/typography/typed-split-wipe): a centered cursorless type build exits through opposing fixed-layout glyph wipes.

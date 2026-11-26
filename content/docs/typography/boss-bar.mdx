@@ -1,6 +1,6 @@
 ---
 title: Boss Bar
-description: "A boss HP bar is drained by hits, then 'DEFEATED' slams in beneath 'The old workflow'"
+description: "Video game boss health bar for Remotion: named hits drain the HP bar until it breaks and DEFEATED slams in under the boss name, like The old workflow."
 component: boss-bar
 vibe: playful
 length: 124
@@ -17,11 +17,32 @@ askedAs:
   - "playful gaming framing where features beat a legacy process"
   - "feature recap where each one hits the boss for damage"
   - "viewer sees the old way get knocked out like a final boss"
+  - "HP bar drains with each hit, then a defeated label slams in"
+  - "hp bar breaks and defeated slams in under the old workflow"
 ---
+
+In Remotion, Boss Bar is a video game boss health bar: the HP bar fills, each named hit slams in and drains it, and when the bar breaks a "DEFEATED" label slams in under the boss name, such as "The old workflow". Use it for a playful beat where your features defeat a legacy workflow one hit at a time.
 
 <ComponentPreview name="boss-bar" />
 
 <InstallBlock name="boss-bar" />
+
+## How to build this in Remotion
+
+You don't have to build the bar, hits and slam from `spring()` and `random()`. Install the component and pass the boss and hits:
+
+```bash
+npx shadcn@latest add @remocn/boss-bar
+```
+
+Hits, the bar drain, the shatter and the defeated slam are scheduled in `timeline.ts` and animated with `interpolate()` on `Easing.bezier` curves; the bar is SVG. The defeated impact lands at 44 + (hits − 1) × `hitGap`, shakes the camera and starts the glow.
+
+## Good to know
+
+- Length: 124 frames of motion at 30 fps (248 at 60 fps) with the default props; the demo plays 160 frames, which adds a hold. Its length follows the hits: 72 + (hits − 1) × `hitGap` frames at 30 fps, so the default three hits 26 frames apart give 124. The Usage example below is a 60 fps composition, so the numbers it hands to Remotion are doubled, see [Frame rate](/docs/getting-started/installation#frame-rate).
+- Installs: `remotion`, `@remotion/google-fonts` from npm, plus the remocn helpers `glide`, `frame-rate`, `timeline`. The shadcn CLI copies the source into your project.
+- Fonts: loads Chakra Petch and Manrope itself through `@remotion/google-fonts`. Pass `fontFamily` to use your own face, and load it in your project.
+- A screen shake on the defeated impact is built in. There is no sound; add an `Audio` on that frame in your composition.
 
 ## Usage
 
@@ -99,7 +120,7 @@ A boss HP bar fills in, each named hit slams in and drains the bar, and when it 
       name: "fontFamily",
       type: "string",
       default: "\"Chakra Petch\"",
-      description: "Typeface for the copy. Load the font in your project first.",
+      description: "Typeface for the copy. Chakra Petch loads by default; load any other face in your project first.",
     },
     {
       name: "logo",
@@ -132,3 +153,20 @@ A boss HP bar fills in, each named hit slams in and drains the bar, and when it 
     },
   ]}
 />
+
+## Common questions
+
+### How do I build a video game boss health bar in Remotion that hits drain until DEFEATED slams in?
+
+Install Boss Bar with `npx shadcn@latest add @remocn/boss-bar`, pass `boss="The old workflow"`, `hits` (each a `label` and `damage`) and `defeated`.
+
+### How long does it take with more hits?
+
+72 + (hits − 1) × `hitGap` frames at 30 fps. Double it for a 60 fps composition.
+
+## Related effects
+
+- [Kill Feed](/docs/typography/kill-feed): a streak of wins in a game-style feed.
+- [Round Slam](/docs/typography/round-slam): a ROUND 1 call and a one-word finisher.
+- [Ko Count](/docs/typography/ko-count): a count to ten before a big verdict word.
+- [Got Em](/docs/typography/got-em): a suspense line that explodes into GOT EM.

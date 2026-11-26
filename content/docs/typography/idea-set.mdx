@@ -1,6 +1,6 @@
 ---
 title: Idea Set
-description: "Two ruled lines rise in light italic, then change typeface letter by letter while one phrase turns accent-colored."
+description: "Rough-to-finished text for Remotion: two ruled lines rise in light italic, switch typeface letter by letter, and one phrase turns the accent color."
 component: idea-set
 vibe: clean
 length: 106
@@ -18,11 +18,32 @@ askedAs:
   - "typeset product story with one accent colored phrase"
   - "letters switching fonts"
   - "draft becomes polished text"
+  - "two lines switch typeface letter by letter and one phrase turns accent color"
+  - "napkin sketch to keynote style text that changes font mid line"
 ---
+
+In Remotion, Idea Set is a two-line rough-to-finished beat: both ruled lines rise in light italic, then switch typeface letter by letter, first to mono and then to sans, and one phrase turns the accent color. Use it when the second line is the payoff, such as "Napkin sketch." to "Keynote opener.".
 
 <ComponentPreview name="idea-set" />
 
 <InstallBlock name="idea-set" />
+
+## How to build this in Remotion
+
+You don't need per-letter springs and two `loadFont()` calls of your own. Install the component:
+
+```bash
+npx shadcn@latest add @remocn/idea-set
+```
+
+Each line rises out of an `overflow: hidden` mask with `interpolate()` and `Easing`, then a per-letter wave from `timeline.ts` swaps the glyphs to mono and on to sans. Line widths are measured on a canvas while `delayRender()` holds the first frame.
+
+## Good to know
+
+- Length: 106 frames of motion at 30 fps (212 at 60 fps) with the default props. The demo plays 150 frames, which adds a hold: frames past the end of the motion hold the final frame. The Usage example below is a 60 fps composition, so the numbers it hands to Remotion are doubled, see [Frame rate](/docs/getting-started/installation#frame-rate).
+- Installs: `remotion`, `@remotion/google-fonts` from npm, plus the remocn helpers `glide`, `frame-rate`, `timeline`. The shadcn CLI copies the source into your project.
+- Fonts: loads IBM Plex Sans (regular and italic) and IBM Plex Mono itself through `@remotion/google-fonts`. Pass `fontFamily` to use your own sans, and load that font in your project.
+- `highlight` is matched as text inside the lines (its first occurrence), so it can cover only part of a line.
 
 ## Usage
 
@@ -92,7 +113,7 @@ Each line rises out of a mask above a hairline rule in light italic. After `hold
       name: "fontFamily",
       type: "string",
       default: "\"IBM Plex Sans\"",
-      description: "Typeface for the copy. Load the font in your project first.",
+      description: "Typeface for the copy. IBM Plex Sans loads by default; load any other face in your project first.",
     },
     {
       name: "scale",
@@ -120,3 +141,24 @@ Each line rises out of a mask above a hairline rule in light italic. After `hold
     },
   ]}
 />
+
+## Common questions
+
+### How do I make two ruled lines rise in light italic, switch typeface letter by letter and turn one phrase the accent color?
+
+Install Idea Set with `npx shadcn@latest add @remocn/idea-set`, pass `lines` and set `highlight` to text that appears in them.
+
+### Can the highlight cover only part of a line?
+
+Yes. Any text that appears in the lines works; the first match is colored.
+
+### How long is it?
+
+106 frames at 30 fps (212 at 60 fps); the demo plays 150 to hold the result.
+
+## Related effects
+
+- [Mono Voice](/docs/typography/mono-voice): one line changes voice mid-line without rules.
+- [Mask Reveal Up](/docs/typography/mask-reveal-up): lines rise from a mask and hold.
+- [Diff Swap](/docs/typography/diff-swap): an old line is rewritten into a new one like a code diff.
+- [Mono Settle](/docs/typography/mono-settle): two mono lines settle into proportional type.

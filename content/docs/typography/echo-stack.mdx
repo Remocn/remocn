@@ -1,6 +1,6 @@
 ---
 title: Echo Stack
-description: A word focuses in at the center while outline copies of it unfold above and below and keep drifting, like the one clear line on a spinning drum
+description: "Echo text stack for Remotion: one bold word in focus at the center with outline copies above and below that keep drifting like a spinning drum, looping."
 component: echo-stack
 vibe: premium
 length: 26
@@ -19,11 +19,32 @@ askedAs:
   - "a lasting one-word statement with a spinning drum feel"
   - "outline echoes of a word"
   - "repeating ghost text stack"
+  - "one word in focus with outline copies drifting above and below"
 ---
+
+In Remotion, Echo Stack shows one word in focus at the center with outline copies above and below that keep drifting like a spinning drum, so the screen stays alive while the word holds. Use it for a one-word value or promise that has to hold the screen for a while.
 
 <ComponentPreview name="echo-stack" />
 
 <InstallBlock name="echo-stack" />
+
+## How to build this in Remotion
+
+You don't need `WebkitTextStroke` copies or `@remotion/transitions` for this. Install the component and pass your word:
+
+```bash
+npx shadcn@latest add @remocn/echo-stack
+```
+
+The word focuses in, the echoes unfold out of it, and then the column scrolls one row every `cycle` frames and loops without a seam. Motion uses `interpolate()` and `Easing`; the outline is an SVG filter built from the filled glyphs, so overlapping contours in variable fonts don't show.
+
+## Good to know
+
+- Length: 26 frames of motion at 30 fps (52 at 60 fps) with the default props. That is the minimum for its `Sequence`; add your own hold on top (the demo plays 120 frames). The Usage example below is a 60 fps composition, so the numbers it hands to Remotion are doubled, see [Frame rate](/docs/getting-started/installation#frame-rate).
+- Length: 26 frames is the entrance; after that the drift continues as long as the composition runs.
+- It paints no background and centers the word in its parent, so place it over your own background.
+- Installs: `remotion`, `@remotion/google-fonts` from npm, plus the remocn helpers `glide`, `frame-rate`, `timeline`. The shadcn CLI copies the source into your project.
+- Font: loads Inter itself through `@remotion/google-fonts`. Pass `fontFamily` to use your own face, and load that font in your project.
 
 ## Usage
 
@@ -142,3 +163,19 @@ centers the word in its parent. Sizes scale with `height / 720`.
     },
   ]}
 />
+
+## Common questions
+
+### How can I show one word in focus with outline copies drifting above and below, like a drum?
+
+Install Echo Stack with `npx shadcn@latest add @remocn/echo-stack` and pass `text`. `echoes`, `direction` and `cycle` tune the drum.
+
+### How do I use another font?
+
+Pass `fontFamily` and load that font in your project first, for example with `loadFont()` from `@remotion/google-fonts`. Inter is loaded for you.
+
+## Related effects
+
+- [Focus Blur Resolve](/docs/typography/focus-blur-resolve): a premium focus pull from heavy blur to crisp text, then a soft blur-out exit.
+- [Type Repeater](/docs/typography/type-repeater): an After Effects style repeater on a word, where copies unfold into a tunnel, a spiral or a fan behind it, breathe, then fold back into the word.
+- [Rep Stack](/docs/typography/rep-stack): a caps word scrolls past a gate as a reel of outlined copies, then locks as a cutout.

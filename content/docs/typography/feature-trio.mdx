@@ -1,6 +1,6 @@
 ---
 title: Feature Trio
-description: "Three feature words, 'Fast. Composable. Open source.', rise from masks with progress ticks and notes"
+description: "Three-benefit text beat for Remotion: words like Fast. Composable. Open source. rise from masks with progress ticks and notes, then resolve into one row."
 component: feature-trio
 vibe: clean
 length: 133
@@ -19,11 +19,32 @@ askedAs:
   - "list of three selling points rising from masks with small notes"
   - "three word tagline"
   - "benefit summary with progress ticks"
+  - "three benefit words rise from masks with progress ticks and small notes"
+  - "Fast Composable Open source feature summary beat"
 ---
+
+In Remotion, Feature Trio shows three benefit words like "Fast. Composable. Open source." rising from masks one at a time, with little progress ticks and a note under each, then resolves them into a compact row. Use it as the three-benefit summary beat of a product or launch video.
 
 <ComponentPreview name="feature-trio" />
 
 <InstallBlock name="feature-trio" />
+
+## How to build this in Remotion
+
+You don't need a staggered `Sequence` with `overflow: hidden` masks and `spring()`. Install the component and pass your items:
+
+```bash
+npx shadcn@latest add @remocn/feature-trio
+```
+
+The schedule in `timeline.ts` gives each item a slot of 22 to 40 frames, sized to fit the composition length, then plays the resolve into a row. Each rise, tick and fade is `interpolate()` with `Easing`, clamped at both ends.
+
+## Good to know
+
+- Length: 133 frames of motion at 30 fps (266 at 60 fps) with the default props. The demo plays 165 frames; item slots shrink or grow (22 to 40 frames each) to fit the composition and still keep the `hold` at the end. The Usage example below is a 60 fps composition, so the numbers it hands to Remotion are doubled, see [Frame rate](/docs/getting-started/installation#frame-rate).
+- Installs: `remotion`, `@remotion/google-fonts` from npm, plus the remocn helpers `glide`, `frame-rate`, `timeline`. The shadcn CLI copies the source into your project.
+- Font: loads Bricolage Grotesque and Geist itself through `@remotion/google-fonts`, so nothing is missing at render. Pass `fontFamily` to use your own face, and load that font in your project.
+- The default `items` are exactly "Fast.", "Composable." and "Open source.", with the notes "Drop in a scene and render it in minutes.", "Every piece is a React component you can remix." and "MIT licensed. The code lands in your repo." Pass your own `{ title, description }` objects; up to four are shown.
 
 ## Usage
 
@@ -82,7 +103,7 @@ Each feature title rises from a mask with a note beneath it while progress ticks
       name: "fontFamily",
       type: "string",
       default: "\"Bricolage Grotesque\"",
-      description: "Typeface for the titles. Load the font in your project first.",
+      description: "Typeface for the copy. Bricolage Grotesque loads by default; load any other face in your project first.",
     },
     {
       name: "scale",
@@ -110,3 +131,24 @@ Each feature title rises from a mask with a note beneath it while progress ticks
     },
   ]}
 />
+
+## Common questions
+
+### What's the best way in Remotion to show three benefit words like Fast. Composable. Open source.?
+
+Install Feature Trio with `npx shadcn@latest add @remocn/feature-trio`. Its defaults are those three words; pass `items` with your own titles and notes.
+
+### How many items can it show?
+
+Two to four. Extra items past the fourth are not drawn.
+
+### How is the font loaded?
+
+The component loads Bricolage Grotesque and Geist itself. Only a custom `fontFamily` needs loading in your project.
+
+## Related effects
+
+- [Feature Headline](/docs/typography/feature-headline): one feature with a tag, headline and subhead.
+- [Three Steps](/docs/typography/three-steps): a how-it-works scene with three numbered steps.
+- [Index List](/docs/typography/index-list): a numbered feature list with a highlight band.
+- [Factor Out](/docs/typography/factor-out): several actions sharing one place.

@@ -1,6 +1,6 @@
 ---
 title: Cover Ring
-description: "An audio-style bar meter appears above a headline line that collapses into a closing caption over green light."
+description: "Launch statement over a collage of product photos: tiles flip in around a headline, collapse into an audio-style bar meter, and a closing caption lands over green light."
 component: cover-ring
 vibe: premium
 length: 132
@@ -18,11 +18,33 @@ askedAs:
   - "a beat that goes from loud montage to a quiet closing line"
   - "green glow ending caption with sound bars"
   - "voice level bars caption"
+  - "launch line over product photos that collapse into a bar meter and a caption"
 ---
+
+In Remotion, Cover Ring sets a launch statement over a collage of product photos: the photo tiles flip in around the headline, then collapse into an audio-style bar meter above the line, and a short closing caption lands over green light. Use it for a launch or brand-film beat that goes from a long setup line to a punchline.
 
 <ComponentPreview name="cover-ring" />
 
 <InstallBlock name="cover-ring" />
+
+## How to build this in Remotion
+
+You don't need `@remotion/media-utils` audio data or a `TransitionSeries` of collage scenes. Install the component and pass your photos and copy:
+
+```bash
+npx shadcn@latest add @remocn/cover-ring
+```
+
+It is one scene on a schedule from `timeline.ts`. Tiles are `<Img>` elements that flip in with `spring()` and `interpolate()`; the meter is the same tiles reshaped into bars, so it is a visual, not driven by audio. The ground is a live gradients.sh shader from the remocn `gsh` helper.
+
+## Good to know
+
+- Length: 132 frames of motion at 30 fps (264 at 60 fps) with the default props. The demo composition plays 150 frames, which adds a hold. The Usage example below is a 60 fps composition, so the numbers it hands to Remotion are doubled, see [Frame rate](/docs/getting-started/installation#frame-rate).
+- Installs: `remotion`, `@remotion/google-fonts` from npm, plus the remocn helpers `gsh`, `glide`, `frame-rate`, `timeline`. The shadcn CLI copies the source into your project.
+- Font: loads Geist (the line) and Newsreader italic (the last caption word) itself through `@remotion/google-fonts`. Pass `fontFamily` to use your own face, and load that font in your project.
+- Pass `images` with your own image URLs or `staticFile()` paths. The defaults point at files that only exist in the Remocn repo.
+- The green comes from the dark theme: the `kiruna` shader preset with accent `#8ff0cc`. Pass `fog` (gradient colors), `ground` (a preset id) or `accent` to change it, or `background` for a solid fill.
+- The meter always sits just above the caption; its position is not a prop.
 
 ## Usage
 
@@ -78,7 +100,7 @@ The ground is a live gradients.sh shader (`GshGround`), installed with the compo
       name: "fontFamily",
       type: "string",
       default: "\"Geist\"",
-      description: "Typeface for the copy. Load the font in your project first.",
+      description: "Typeface for the copy. Geist loads by default; load any other face in your project first.",
     },
     {
       name: "fontWeight",
@@ -148,3 +170,24 @@ The ground is a live gradients.sh shader (`GshGround`), installed with the compo
     },
   ]}
 />
+
+## Common questions
+
+### How do I build a launch line over product photos with a bar meter that collapses into a closing caption?
+
+Install Cover Ring with `npx shadcn@latest add @remocn/cover-ring`, pass `images`, `line` and `caption`. The photos collapse into the bar meter and the caption lands under it.
+
+### Is the bar meter driven by audio?
+
+No. The bars are the photo tiles reshaped and animated on the timeline; there is no audio input.
+
+### How do I get the green light?
+
+It is the default dark theme. Change it with `fog`, `ground` or `accent`.
+
+## Related effects
+
+- [Staggered Fade Up](/docs/typography/staggered-fade-up): text only, with no photos.
+- [Photo Caret](/docs/typography/photo-caret): a line written live with photos orbiting the text.
+- [Photo Fill Type](/docs/typography/photo-fill-type): a bold word that opens onto a photo.
+- [Flank Roll Swap](/docs/typography/flank-roll-swap): words roll over on either side of a hero image.

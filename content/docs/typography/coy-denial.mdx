@@ -1,6 +1,6 @@
 ---
 title: Coy Denial
-description: "A huge \"Don't check the site at nine.\" with a sheepish \"(Do.)\" tucked into the corner"
+description: "Huge joke line like Don't check the site at nine. undone by a tiny sheepish (Do.) aside in the corner. A reverse-psychology teaser for launch videos."
 component: coy-denial
 vibe: playful
 length: 144
@@ -19,11 +19,32 @@ askedAs:
   - "comedic launch beat with a huge denial and a small corner note"
   - "funny reverse psychology tease before release day"
   - "big line small punchline in corner"
+  - "huge line undone by a tiny sheepish aside in the corner"
 ---
+
+In Remotion, Coy Denial sets a huge line such as "Don't check the site at nine." and then tucks a tiny sheepish "(Do.)" into the corner that undoes it. Use it for a reverse-psychology teaser or a comedic beat before a launch, one denial and aside after another.
 
 <ComponentPreview name="coy-denial" />
 
 <InstallBlock name="coy-denial" />
+
+## How to build this in Remotion
+
+No need for `fitText`, a `TransitionSeries` of rounds or a manual font setup. Install the component and pass your rounds:
+
+```bash
+npx shadcn@latest add @remocn/coy-denial
+```
+
+Each round is a pair of `say` and `aside`. The big line builds word by word, the aside appears, then the round exits for the next; every move is `interpolate()` over an `Easing` curve on a schedule from `timeline.ts`. The component wraps and sizes the big line itself, balancing it over up to three rows (six in portrait) so the widest row fits the frame, and holds the first frame with `delayRender` until the font is ready.
+
+## Good to know
+
+- Length: 144 frames of motion at 30 fps (288 at 60 fps) with the default props. The demo composition plays 180 frames, which adds a hold. The pace fits the composition: a longer `durationInFrames` gives each round more read time. The Usage example below is a 60 fps composition, so the numbers it hands to Remotion are doubled, see [Frame rate](/docs/getting-started/installation#frame-rate).
+- Installs: `remotion`, `@remotion/google-fonts` from npm, plus the remocn helpers `glide`, `frame-rate`, `timeline`. The shadcn CLI copies the source into your project.
+- Font: loads Funnel Display itself through `@remotion/google-fonts`. Pass `fontFamily` to use your own face, and load that font in your project.
+- Long lines are fine: "Don't check the site at nine." wraps into balanced rows at 1280×720. All rounds share one font size, set by the longest line.
+- `rounds` defaults to two pairs: "Nothing is launching on Thursday." / "(Something is.)" and "Don't check the site at nine." / "(Do.)". Pass one pair for a single gag.
 
 ## Usage
 
@@ -75,7 +96,7 @@ A big statement builds word by word, then a sheepish parenthetical aside appears
       name: "fontFamily",
       type: "string",
       default: "\"Funnel Display\"",
-      description: "Typeface for the copy. Load the font in your project first.",
+      description: "Typeface for the copy. Funnel Display loads by default; load any other face in your project first.",
     },
     {
       name: "stagger",
@@ -115,3 +136,24 @@ A big statement builds word by word, then a sheepish parenthetical aside appears
     },
   ]}
 />
+
+## Common questions
+
+### How do I make a huge line with a tiny sheepish aside in the corner that undoes it?
+
+Install Coy Denial with `npx shadcn@latest add @remocn/coy-denial` and pass `rounds`, for example `[{ say: "Don't check the site at nine.", aside: "(Do.)" }]`.
+
+### Will a long line wrap well?
+
+Yes. The component splits it into balanced rows and scales it to fit, so you don't need `fitText`.
+
+### Do I need to load Funnel Display?
+
+No, the component loads it. Load your own font only if you pass `fontFamily`.
+
+## Related effects
+
+- [Deadpan Box](/docs/typography/deadpan-box): a quote whose attribution is the punchline.
+- [Cut Off](/docs/typography/cut-off): a long explanation interrupted by a short reply.
+- [Answer First](/docs/typography/answer-first): the answer lands before the question.
+- [Out of Context](/docs/typography/out-of-context): a slogan whose last phrase flips the meaning.

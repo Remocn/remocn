@@ -1,6 +1,6 @@
 ---
 title: Factor Out
-description: "Three short imperatives stack above a big blue \"in your editor.\""
+description: "Shared-ending text stack for Remotion: three short action phrases stack up and merge over one big accent line like in your editor, to show they happen in one place."
 component: factor-out
 vibe: clean
 length: 153
@@ -19,11 +19,32 @@ askedAs:
   - "list of imperatives sharing one tool or result"
   - "stacked verbs shared ending"
   - "write render ship in one place"
+  - "three short action phrases stack over a big line showing they happen in one place"
+  - "list of verbs merges into one shared ending in accent blue"
 ---
+
+In Remotion, Factor Out stacks three short action phrases over one big accent line such as "in your editor.", to show they all happen in the same place. Use it for a feature beat where several actions share one location, tool or result.
 
 <ComponentPreview name="factor-out" />
 
 <InstallBlock name="factor-out" />
+
+## How to build this in Remotion
+
+You don't need `@remotion/transitions` or a staggered `Sequence` per line. Install the component and pass the phrases:
+
+```bash
+npx shadcn@latest add @remocn/factor-out
+```
+
+The lines enter, align and merge on the schedule in `timeline.ts`, which scales its pacing to the composition length (between 0.85× and 1.5×). Every move is `interpolate()` with `Easing`, and the tail color uses `interpolateColors()`. Text widths are measured on a canvas before the first frame, held with `delayRender`.
+
+## Good to know
+
+- Length: 153 frames of motion at 30 fps (306 at 60 fps) with the default props. The demo plays 190 frames; the pacing stretches or tightens with the composition length. The Usage example below is a 60 fps composition, so the numbers it hands to Remotion are doubled, see [Frame rate](/docs/getting-started/installation#frame-rate).
+- Installs: `remotion`, `@remotion/google-fonts` from npm, plus the remocn helpers `glide`, `frame-rate`, `timeline`. The shadcn CLI copies the source into your project.
+- Font: loads Rubik itself through `@remotion/google-fonts`. Pass `fontFamily` to use your own face, and load that font in your project.
+- Default accent: `#7CC4FF`, a light blue, on the dark theme's `#2A1033` ground; the light theme uses `#2B7BD6` on `#F3EEF5`. Pass `accent` for an exact brand blue.
 
 ## Usage
 
@@ -87,7 +108,7 @@ Short imperative lines enter one by one and align, then the shared tail merges o
       name: "fontFamily",
       type: "string",
       default: "\"Rubik\"",
-      description: "Typeface for the copy. Load the font in your project first.",
+      description: "Typeface for the copy. Rubik loads by default; load any other face in your project first.",
     },
     {
       name: "fontWeight",
@@ -121,3 +142,24 @@ Short imperative lines enter one by one and align, then the shared tail merges o
     },
   ]}
 />
+
+## Common questions
+
+### How do I stack three action phrases over a big blue line like in your editor in Remotion?
+
+Install Factor Out with `npx shadcn@latest add @remocn/factor-out`, pass the phrases as `heads` and the shared ending as `tail`. The lines stack and merge over the big tail.
+
+### What blue is the tail?
+
+On the dark theme it is `#7CC4FF`; on the light theme `#2B7BD6`. Pass `accent` to set your own.
+
+### Does it work with more or fewer than three phrases?
+
+`heads` is a list, so it takes other counts; the scene paces them to fit the composition length.
+
+## Related effects
+
+- [What Sticks](/docs/typography/what-sticks): separate claims dim toward one.
+- [Feature Trio](/docs/typography/feature-trio): three single feature words with notes.
+- [Chore Fold](/docs/typography/chore-fold): a long list of chores folds away into one line.
+- [Known Terms](/docs/typography/known-terms): familiar terms map to your product.

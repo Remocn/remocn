@@ -1,6 +1,6 @@
 ---
 title: Kinetic Warp
-description: A coarse mesh warp bends a whole word in staccato beats, one axis moving per keyframe
+description: "Mesh warp kinetic typography for Remotion: a heavy display word, visible from the first frame, bends and snaps through a coarse grid warp in staccato steps."
 component: kinetic-warp
 vibe: playful
 length: 100
@@ -19,11 +19,33 @@ askedAs:
   - "mesh distortion text"
   - "warped text pulses"
   - "stretchy word deform"
+  - "heavy word bends and snaps with a coarse mesh warp"
+  - "whole word warps in staccato steps, not letter by letter"
 ---
+
+In Remotion, Kinetic Warp takes a heavy display word that is visible from the first frame and bends and snaps it with a coarse mesh warp in staccato steps, instead of animating letter by letter. Use it for a bold kinetic-typography moment on a short word.
 
 <ComponentPreview name="kinetic-warp" />
 
 <InstallBlock name="kinetic-warp" />
+
+## How to build this in Remotion
+
+You don't need `@remotion/three`, three.js or `@remotion/paths` for this. Install the component and pass the word:
+
+```bash
+npx shadcn@latest add @remocn/kinetic-warp
+```
+
+The text is drawn once onto a 2D canvas, then resampled every frame through a mesh of columns and rows whose control lines follow five keyframed moves from `timeline.ts`, eased with `interpolate()` and an `Easing.bezier` curve. `delayRender` holds the frame until the font has loaded.
+
+## Good to know
+
+- Length: 100 frames of motion at 30 fps (200 at 60 fps) with the default props; the demo plays 120 frames, which adds a hold. The warp is five moves (column right, row down, column left, row up, home) of `keyframeStride` (20) frames each; after the last one the word rests in its straight shape for the rest of the clip. The Usage example below is a 60 fps composition, so the numbers it hands to Remotion are doubled, see [Frame rate](/docs/getting-started/installation#frame-rate).
+- Installs: `remotion` from npm, plus the remocn helpers `frame-rate`, `timeline`. The shadcn CLI copies the source into your project.
+- Font: `sans-serif` by default. Pass `fontFamily`, and `fontUrl` for a webfont stylesheet; the render waits for the font through `document.fonts` before drawing.
+- Positions are in composition pixels for a 1920×1080 frame (`compWidth`, `compHeight`, `colRestX`, `rowRestY` and the other column and row values). At another resolution, set `compWidth` and `compHeight` and retune those values.
+- The word is fully visible from frame 0; it distorts, it does not enter.
 
 ## Usage
 
@@ -209,3 +231,20 @@ The component renders to a canvas, so the font must actually be loaded before th
 />
 
 Inspired by [How to Make Kinetic Warp Text Animation in After Effects](https://www.youtube.com/watch?v=IvTXbHLtod4) by P A N T E R.
+
+## Common questions
+
+### How do I make a heavy word bend and snap with a mesh warp in Remotion?
+
+Install Kinetic Warp with `npx shadcn@latest add @remocn/kinetic-warp` and pass `text` (use `\n` for line breaks), `fontFamily` and `fontUrl`.
+
+### Does it need three.js or WebGL?
+
+No. It warps a 2D canvas, so it renders anywhere Remotion does.
+
+## Related effects
+
+- [Tracking In](/docs/typography/tracking-in): a text entrance where spacing collapses.
+- [Soft Blur In](/docs/typography/soft-blur-in): a soft letter-by-letter entrance.
+- [Per Character Rise](/docs/typography/per-character-rise): letters rise one by one.
+- [RGB Glitch Text](/docs/typography/rgb-glitch-text): a brief RGB-split glitch on a title.

@@ -1,6 +1,6 @@
 ---
 title: Counter Reveal
-description: "A huge front word reveals a second line through the counters of its letters over a gradient."
+description: "Huge word like Beta whose letter holes reveal a second line of text over a gradient, then shrinks away to uncover it. A knockout-text status reveal for launches."
 component: counter-reveal
 vibe: clean
 length: 128
@@ -18,11 +18,32 @@ askedAs:
   - "announcement where the letter counters reveal a subline over a gradient"
   - "a surprise detail discovered inside a huge word"
   - "letter holes reveal"
+  - "huge word reveals a second line through the holes in its letters"
 ---
+
+In Remotion, Counter Reveal shows a huge word like "Beta" whose letter holes reveal a second line of text over a gradient background; the word then shrinks and drifts away to uncover the line. Use it for a one-word status beat such as Beta, Live or New in a launch video.
 
 <ComponentPreview name="counter-reveal" />
 
 <InstallBlock name="counter-reveal" />
+
+## How to build this in Remotion
+
+You don't need to set up an SVG mask, `mix-blend-mode` or `background-clip: text` yourself. Install the component and pass the two lines:
+
+```bash
+npx shadcn@latest add @remocn/counter-reveal
+```
+
+The big word is drawn as SVG glyph outlines whose counters (the holes in B, a, e) are cut into an SVG `mask`, so the line behind shows through them. Letters rise in and the word shrinks away with `interpolate()` over `Easing` curves on a schedule from `timeline.ts`.
+
+## Good to know
+
+- Length: 128 frames of motion at 30 fps (256 at 60 fps) with the default props. The demo composition plays 132 frames, which adds a hold. The Usage example below is a 60 fps composition, so the numbers it hands to Remotion are doubled, see [Frame rate](/docs/getting-started/installation#frame-rate).
+- Installs: `remotion`, `@remotion/google-fonts` from npm, plus the remocn helpers `glide`, `frame-rate`, `timeline`. The shadcn CLI copies the source into your project.
+- Font: loads Sora (weight 500) itself through `@remotion/google-fonts`. Pass `fontFamily` to use your own face, and load that font in your project.
+- Built-in hole outlines exist only for the letters B, a, e and t, so "Beta" works out of the box. Other letters are drawn as plain text without see-through counters; for another word you would add outlines in the copied file.
+- The gradient behind is a fixed blue mesh palette per theme; `accent` (default `#3B5BFD`) does not recolor it. Pass `background` with a solid color or `"transparent"` to replace it.
 
 ## Usage
 
@@ -85,7 +106,7 @@ A giant front word rises letter by letter, then shrinks and drifts away so its c
       name: "fontFamily",
       type: "string",
       default: "\"Sora\"",
-      description: "Typeface for the copy. Load the font in your project first.",
+      description: "Typeface for the copy. Sora loads by default; load any other face in your project first.",
     },
     {
       name: "stagger",
@@ -131,3 +152,24 @@ A giant front word rises letter by letter, then shrinks and drifts away so its c
     },
   ]}
 />
+
+## Common questions
+
+### How do I show a huge word like Beta with a second line visible through the holes in its letters?
+
+Install Counter Reveal with `npx shadcn@latest add @remocn/counter-reveal`, pass `word` and `line`. The line shows through the letter counters, then the word shrinks away.
+
+### Will it work with any word?
+
+Only B, a, e and t have built-in hole outlines. Other letters render solid, so the effect needs letters with counters from that set unless you add outlines.
+
+### Can I change the gradient?
+
+Not with a prop. Pass `background` for a solid color or edit the palette in the copied file.
+
+## Related effects
+
+- [Mask Reveal Up](/docs/typography/mask-reveal-up): a clean line reveal through a mask.
+- [Photo Fill Type](/docs/typography/photo-fill-type): a bold word that opens onto a photo.
+- [Split Word](/docs/typography/split-word): a huge word sliced open for a status word.
+- [Beta Thanks](/docs/typography/beta-thanks): an out-now beat with a thanks to testers.

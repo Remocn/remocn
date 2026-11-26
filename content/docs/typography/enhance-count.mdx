@@ -1,6 +1,6 @@
 ---
 title: Enhance Count
-description: "A blurred, thin line sharpens in place into a heavier weight, with the last word in the accent."
+description: "Blur-to-sharp weight animation for Remotion: text starts blurry and thin, then sharpens into a heavier weight with the last word in an accent color, draft to polished."
 component: enhance-count
 vibe: clean
 length: 87
@@ -18,11 +18,32 @@ askedAs:
   - "a two line statement where the second gets bolder in accent color"
   - "enhance image effect on text"
   - "thin to bold sharpen"
+  - "blurry thin text sharpens into a heavier font weight"
 ---
+
+In Remotion, Enhance Count makes text start as a blurry, thin line and sharpen into a heavier weight, glyph by glyph, with the last word in an accent color, like a draft becoming polished. Use it for a before-and-after message about quality.
 
 <ComponentPreview name="enhance-count" />
 
 <InstallBlock name="enhance-count" />
+
+## How to build this in Remotion
+
+You don't need to set up a variable font with `@remotion/google-fonts` yourself. Install the component:
+
+```bash
+npx shadcn@latest add @remocn/enhance-count
+```
+
+Each glyph's sharpening is a `spring()` that drives both a CSS `blur()` and the `wght` axis through `fontVariationSettings`, sweeping across the text over `span` frames; the rest runs on `interpolate()` and `Easing` curves.
+
+## Good to know
+
+- Length: 87 frames of motion at 30 fps (174 at 60 fps) with the default props. That is the minimum for its `Sequence`; add your own hold on top (the demo plays 120 frames). The Usage example below is a 60 fps composition, so the numbers it hands to Remotion are doubled, see [Frame rate](/docs/getting-started/installation#frame-rate).
+- Accent: `#6D5BFF` in both themes; pass `accent` to change it.
+- The weight animation needs a variable font with a `wght` axis. The default Inter Tight is loaded as a variable font; if you pass `fontFamily`, load a variable face too.
+- Installs: `remotion`, `@remotion/google-fonts` from npm, plus the remocn helpers `frame-rate`, `timeline`. The shadcn CLI copies the source into your project.
+- Font: loads Inter Tight itself through `@remotion/google-fonts`. Pass `fontFamily` to use your own face, and load that font in your project.
 
 ## Usage
 
@@ -82,7 +103,7 @@ The text enters thin and blurred, then each glyph sharpens and gains weight in a
       name: "fontFamily",
       type: "string",
       default: "\"Inter Tight\"",
-      description: "Typeface for the copy. Load the font in your project first.",
+      description: "Typeface for the copy. The default is loaded for you; load any other font in your project first.",
     },
     {
       name: "fontWeight",
@@ -128,3 +149,19 @@ The text enters thin and blurred, then each glyph sharpens and gains weight in a
     },
   ]}
 />
+
+## Common questions
+
+### How do I make text start blurry and thin and sharpen into a heavier weight in Remotion?
+
+Install Enhance Count with `npx shadcn@latest add @remocn/enhance-count`, pass `text` and the `highlight` words. `draftWeight` and `fontWeight` set the start and end weight.
+
+### Which font works?
+
+Any variable font with a weight axis. Inter Tight is loaded for you.
+
+## Related effects
+
+- [Focus Blur Resolve](/docs/typography/focus-blur-resolve): a premium focus pull from heavy blur to crisp text, then a soft blur-out exit.
+- [Weight Wave](/docs/typography/weight-wave): a wave of font weight travels across a line of text and settles on a highlighted word.
+- [Axis Flex](/docs/typography/axis-flex): a gradient word flexes its width and weight like an elastic variable font, then snaps to a final style.

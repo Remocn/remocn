@@ -1,6 +1,6 @@
 ---
 title: Bug Dock
-description: "\"Playing on every screen you ship.\" with a small broadcast logo bug docking at the bottom"
+description: "TV broadcast title for Remotion: the brand logo shrinks into a small corner bug at the bottom while the headline takes over the screen, with one phrase highlighted."
 component: bug-dock
 vibe: social
 length: 114
@@ -19,11 +19,33 @@ askedAs:
   - "title that feels like a tv show with the brand bug"
   - "intro beat where the logo becomes a small watermark"
   - "playing on every screen text with a little logo settling at the bottom"
+  - "brand logo shrinks into a small corner bug while the message takes over"
+  - "tv broadcast style logo bug docks at the bottom"
 ---
+
+In Remotion, Bug Dock is a TV-broadcast style title: the brand lockup shrinks down until only the mark is left, which docks at the bottom of the frame like a corner bug while the main message takes over the screen. Use it for a broadcast-style launch title with one phrase highlighted.
 
 <ComponentPreview name="bug-dock" />
 
 <InstallBlock name="bug-dock" />
+
+## How to build this in Remotion
+
+You don't need `@remotion/transitions` or an `Img` per step. Install the component and pass your name and headline:
+
+```bash
+npx shadcn@latest add @remocn/bug-dock
+```
+
+The name's letters tuck away and the mark docks with `interpolate()` on `Easing.bezier` curves; letter widths are measured on a canvas before the first frame (held with `delayRender`). The headline words rise on the schedule in `timeline.ts`; `tuckAt` moves the tuck.
+
+## Good to know
+
+- Length: 114 frames of motion at 30 fps (228 at 60 fps) with the default props; the demo plays 150 frames, which adds a hold. The timing is fixed: a longer composition only holds the last frame longer. The Usage example below is a 60 fps composition, so the numbers it hands to Remotion are doubled, see [Frame rate](/docs/getting-started/installation#frame-rate).
+- Installs: `remotion`, `@remotion/google-fonts` from npm, plus the remocn helpers `glide`, `frame-rate`, `timeline`. The shadcn CLI copies the source into your project.
+- Fonts: loads Urbanist (variable) and Manrope itself through `@remotion/google-fonts`. Pass `fontFamily` to use your own face, and load it in your project.
+- There is no prop for a custom logo image or SVG. `name="remocn"` draws the remocn mark; any other name uses its first letter as the mark and tucks the rest away. For your own logo, replace the mark in the copied file.
+- The dock position is fixed in the source; there is no prop for corner versus bottom center.
 
 ## Usage
 
@@ -87,7 +109,7 @@ A large logo-and-name lockup fades in, its letters tuck away until only the mark
       name: "fontFamily",
       type: "string",
       default: "\"Urbanist\"",
-      description: "Typeface for the headline and a custom name; the remocn wordmark keeps its own face. Load the font in your project first.",
+      description: "Typeface for the copy. Urbanist loads by default; load any other face in your project first.",
     },
     {
       name: "tuckAt",
@@ -127,3 +149,20 @@ A large logo-and-name lockup fades in, its letters tuck away until only the mark
     },
   ]}
 />
+
+## Common questions
+
+### How do I do a TV-broadcast style title in Remotion where the logo shrinks into a corner bug?
+
+Install Bug Dock with `npx shadcn@latest add @remocn/bug-dock` and pass `name`, `headline` and `highlight`.
+
+### Can I use my own logo?
+
+Not through a prop. The first letter of `name` becomes the mark; swap in your SVG in the copied file.
+
+## Related effects
+
+- [Soft Blur In](/docs/typography/soft-blur-in): the headline alone with no logo lockup.
+- [Logo Enter](/docs/social/logo-enter): a row of brand marks entering.
+- [Feature Headline](/docs/typography/feature-headline): a feature spotlight with a New tag.
+- [Walkout Name](/docs/typography/walkout-name): a boxing-style name intro.
