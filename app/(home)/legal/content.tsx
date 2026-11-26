@@ -71,8 +71,14 @@ export const LEGAL_PARTS: LegalPart[] = [
                 came back and which one you opened, so we can tell whether the
                 search finds what people look for. When an AI agent or crawler
                 reads the Markdown copy of a page, we record the page and the
-                agent’s user agent string. We do not use advertising trackers,
-                we do not build cross-site profiles, and we never sell data.
+                agent’s user agent string. Links to the site in those Markdown
+                copies and in MCP server answers carry tags that name the AI
+                channel and, for MCP answers, the calling client (for example{" "}
+                <code>utm_source=claude&amp;utm_medium=agent</code>), so a visit
+                from a link in an agent’s answer is counted as one. Browsers
+                that identify as automated or as crawlers are not tracked. We do
+                not use advertising trackers, we do not build cross-site
+                profiles, and we never sell data.
               </>
             ),
           },

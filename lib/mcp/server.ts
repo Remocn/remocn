@@ -2,6 +2,7 @@ import "server-only";
 
 import { McpServer } from "@modelcontextprotocol/server";
 import { z } from "zod";
+import { agentLink, mcpAgentSource, tagAgentLinks } from "@/lib/agent-links";
 import { VIBES } from "@/lib/docs-schema";
 import { SITE_URL } from "@/lib/get-llm-text";
 import { readAnatomy, readArchetypeRecipe } from "@/lib/mcp/archetype-files";
@@ -31,6 +32,7 @@ import {
 } from "@/lib/mcp/search";
 import { PREVIEW_WIDGET_HTML } from "@/lib/mcp/widget";
 import { sitePreview } from "@/lib/previews/site-preview";
+import { classifyAgentClient } from "@/lib/search/analytics-shape";
 import { searchCatalog } from "@/lib/search/components";
 import {
   trackAgentComponentFetch,
@@ -90,6 +92,10 @@ function htmlDocsUrl(record: ComponentRecord): string {
 
 function callerUserAgent(): string {
   return mcpRequestContext.getStore()?.userAgent ?? "";
+}
+
+function callerSource(): string {
+  return mcpAgentSource(classifyAgentClient(callerUserAgent()));
 }
 
 function trackFetch(
@@ -306,7 +312,7 @@ export function createRemocnMcpServer(): McpServer {
       const depsLine = deps.length
         ? `\n\nRegistry dependencies (installed automatically): ${deps.map((d) => `\`${d}\``).join(", ")}`
         : "";
-      return text(`${markdown}${depsLine}`);
+      return text(tagAgentLinks(`${markdown}${depsLine}`, callerSource()));
     },
   );
 
@@ -495,10 +501,9 @@ export function createRemocnMcpServer(): McpServer {
         );
       }
       const preview = previewFor(record.name, props);
-      const docsPage = customizedDocsUrl(
-        htmlDocsUrl(record),
-        record.name,
-        props,
+      const docsPage = agentLink(
+        customizedDocsUrl(htmlDocsUrl(record), record.name, props),
+        callerSource(),
       );
       if (!preview) {
         return text(

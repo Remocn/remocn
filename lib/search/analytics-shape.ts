@@ -47,6 +47,10 @@ export function loggedQuery(query: string): string {
   return query.trim().slice(0, MAX_LOGGED_QUERY);
 }
 
+/** Crawlers and search bots, by User-Agent. Shared by the server events and the browser filter. */
+export const CRAWLER_UA =
+  /bot\b|bot[/_-]|crawler|crawling|spider|slurp|facebookexternalhit|feedfetcher|mediapartners/i;
+
 /**
  * Which program is calling, from its User-Agent. A best guess for grouping:
  * clients name themselves freely and most MCP hosts send whatever their HTTP

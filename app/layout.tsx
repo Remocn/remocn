@@ -7,6 +7,7 @@ import { NuqsAdapter } from "nuqs/adapters/next/app";
 import "./globals.css";
 import { OpenPanelComponent } from "@openpanel/nextjs";
 import { SITE_DESCRIPTION } from "@/config/site";
+import { OPENPANEL_FILTER } from "@/lib/analytics-filter";
 import { cn } from "@/lib/utils";
 import { ThemeShortcut } from "./theme-shortcut";
 
@@ -105,9 +106,7 @@ export default function RootLayout({
           trackScreenViews
           trackAttributes
           trackOutgoingLinks
-          // /embed/* runs inside MCP App iframes in chat hosts; its URL carries
-          // the user's props, so nothing there is tracked.
-          filter="function () { return !window.location.pathname.startsWith('/embed/'); }"
+          filter={OPENPANEL_FILTER}
         />
       </body>
     </html>

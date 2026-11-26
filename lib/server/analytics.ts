@@ -2,14 +2,12 @@ import "server-only";
 
 import { OpenPanel } from "@openpanel/sdk";
 import {
+  CRAWLER_UA,
   classifyAgentClient,
   describeQuery,
   loggedQuery,
   type SearchSurface,
 } from "@/lib/search/analytics-shape";
-
-const CRAWLER_UA =
-  /bot\b|bot[/_-]|crawler|crawling|spider|slurp|facebookexternalhit|feedfetcher|mediapartners/i;
 
 let client: OpenPanel | null | undefined;
 
