@@ -1,6 +1,6 @@
 ---
 title: Baseline Drop
-description: "Words fall onto a shared baseline one after another while a gradient streak glows beneath them."
+description: "Falling words for Remotion: the words of a closing tagline drop one after another onto a shared baseline, with a glowing gradient streak drawing in under them."
 component: baseline-drop
 vibe: premium
 length: 94
@@ -18,11 +18,32 @@ askedAs:
   - "closing tagline of three or four words landing heavy"
   - "last beat where each word lands with weight above a gradient glow"
   - "words thud down in sequence while a light streak glows below"
+  - "words of a tagline fall one after another onto a shared baseline"
+  - "glowing gradient streak under words that drop into place"
 ---
+
+In Remotion, Baseline Drop makes the words of a closing tagline fall one after another onto a shared baseline, each landing with a small bounce, while a glowing gradient streak draws in and brightens under the line. Use it for a closing line or tagline where each word should land with weight.
 
 <ComponentPreview name="baseline-drop" />
 
 <InstallBlock name="baseline-drop" />
+
+## How to build this in Remotion
+
+You don't have to stagger `spring()` calls per word or reach for `Series`. Install the component and pass your line:
+
+```bash
+npx shadcn@latest add @remocn/baseline-drop
+```
+
+Each word falls with `interpolate()` on an `Easing.bezier` curve, on a schedule in `timeline.ts` (`stagger` sets the beat between words). The streak under the baseline is an SVG with a CSS mask, drawn and retracted with `interpolate()`.
+
+## Good to know
+
+- Length: 94 frames of motion at 30 fps (188 at 60 fps) with the default props; the demo plays 125 frames, which adds a hold. The timing is fixed: a longer composition only holds the last frame longer. The Usage example below is a 60 fps composition, so the numbers it hands to Remotion are doubled, see [Frame rate](/docs/getting-started/installation#frame-rate).
+- Installs: `remotion`, `@remotion/google-fonts` from npm, plus the remocn helpers `glide`, `frame-rate`, `timeline`. The shadcn CLI copies the source into your project.
+- Font: loads Schibsted Grotesk itself through `@remotion/google-fonts`. Pass `fontFamily` to use your own face, and load that font in your project.
+- The glow uses an aurora gradient (`#A0F0C8`, `#3FB5A3`, `#5147B6`, `#B25C9C`) in the dark theme and a pink-to-gold one in light.
 
 ## Usage
 
@@ -134,3 +155,20 @@ Each word drops from above and lands on a single baseline with a small bounce wh
     },
   ]}
 />
+
+## Common questions
+
+### How can I have the words of a tagline fall one after another onto a shared baseline in Remotion?
+
+Install Baseline Drop with `npx shadcn@latest add @remocn/baseline-drop` and pass `text`, or `words` for explicit splits. `stagger` sets the frames between words.
+
+### Does it work for long lines?
+
+It is built for one short line. For several rows, use Line By Line Slide.
+
+## Related effects
+
+- [Line-by-Line Slide](/docs/typography/line-by-line-slide): a line long enough to need several rows.
+- [Period Drop](/docs/typography/period-drop): a dot that drops in as the full stop.
+- [Tittle Drop](/docs/typography/tittle-drop): dots of the i and j drop in last.
+- [Staggered Fade Up](/docs/typography/staggered-fade-up): a calmer word-by-word rise.

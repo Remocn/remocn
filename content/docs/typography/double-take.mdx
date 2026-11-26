@@ -1,6 +1,6 @@
 ---
 title: Double Take
-description: "\"Read that again.\" above an oversized pink \"One person\" on blue"
+description: "Double-take text slide for Remotion: a sentence crawls in, rewinds and zooms onto one phrase like One person in pink on blue, under a Read that again cue."
 component: double-take
 vibe: playful
 length: 134
@@ -19,11 +19,33 @@ askedAs:
   - "team size or time to build shock claim moment"
   - "one person did this emphasis"
   - "read that again"
+  - "sentence rewinds and zooms onto a giant highlighted phrase"
 ---
+
+In Remotion, Double Take is a slide for a surprising claim: a sentence crawls in word by word, stops, then rewinds and zooms onto one phrase, "One person" by default, which lights up in pink on a blue background under a small "Read that again." cue. Use it for a team-size or time-to-make stat that deserves a second look.
 
 <ComponentPreview name="double-take" />
 
 <InstallBlock name="double-take" />
+
+## How to build this in Remotion
+
+You don't need `fitText` and a hand-tuned zoom. Install the component and pass the sentence, the phrase and the cue:
+
+```bash
+npx shadcn@latest add @remocn/double-take
+```
+
+One scene with a schedule in `timeline.ts`: the words rise with a `stagger`, hold, then the view rewinds and zooms to `focus`, which recolors with `interpolateColors`. Motion uses `interpolate()` and `Easing` curves; the copy is measured before the first frame, held with `delayRender`.
+
+## Good to know
+
+- Length: 134 frames of motion at 30 fps (268 at 60 fps) with the default props. That is the minimum for its `Sequence`; add your own hold on top (the demo plays 160 frames). The Usage example below is a 60 fps composition, so the numbers it hands to Remotion are doubled, see [Frame rate](/docs/getting-started/installation#frame-rate).
+- Colors: the dark theme is a `#2445E5` blue stage with `#FFFFFF` text and a `#FF8FB1` pink phrase; the light theme is white with blue text and `#E0457B` pink. `accent`, `ink` and `background` override them.
+- Length compresses: when `durationInFrames` is shorter than the natural length, the motion speeds up to fit; a longer one holds the zoomed phrase.
+- `scale` makes the zoomed phrase bigger or smaller around the center.
+- Installs: `remotion`, `@remotion/google-fonts` from npm, plus the remocn helpers `glide`, `frame-rate`, `timeline`. The shadcn CLI copies the source into your project.
+- Font: loads Outfit itself through `@remotion/google-fonts`. Pass `fontFamily` to use your own face, and load that font in your project.
 
 ## Usage
 
@@ -87,7 +109,7 @@ A line crawls in word by word, stops, then rewinds and zooms back onto one phras
       name: "fontFamily",
       type: "string",
       default: "\"Outfit\"",
-      description: "Typeface for the copy. Load the font in your project first.",
+      description: "Typeface for the copy. The default is loaded for you; load any other font in your project first.",
     },
     {
       name: "stagger",
@@ -127,3 +149,19 @@ A line crawls in word by word, stops, then rewinds and zooms back onto one phras
     },
   ]}
 />
+
+## Common questions
+
+### How do I make a slide that says 'Read that again.' above a giant pink 'One person' on blue?
+
+Install Double Take with `npx shadcn@latest add @remocn/double-take`. Those are its defaults; pass your own `text`, `focus` and `cue`.
+
+### What are the exact pink and blue?
+
+`#FF8FB1` on `#2445E5` in the dark theme. Pass `accent` and `background` to match your brand.
+
+## Related effects
+
+- [Answer First](/docs/typography/answer-first): the question "Who made this video?" is answered by a big "A pull request."
+- [Inline Highlight](/docs/typography/inline-highlight): animate one word inside a sentence from a base color to a brand color.
+- [Word Pullback](/docs/typography/word-pullback): the camera pulls back from a big word to reveal "The cinematic toolkit for every launch."

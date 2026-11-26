@@ -1,6 +1,6 @@
 ---
 title: Absorb Stack
-description: "A centred stack of small lines, ending in a red \"on top.\", on a dark brown ground"
+description: "Poetic text stack for Remotion: small centered lines settle into a tight block on dark brown, and the last line lands in red. For brand films and closing slogans."
 component: absorb-stack
 vibe: premium
 length: 60
@@ -19,11 +19,34 @@ askedAs:
   - "brand film closing slogan with a final emphasised line"
   - "quiet minimal lines that settle on a red on top"
   - "viewer reads a few small lines and the last one lands with force"
+  - "short poetic statement as a centered stack of small lines"
+  - "stack of small lines on dark brown with the last line in red"
 ---
+
+In Remotion, Absorb Stack sets a short poetic statement as a centered stack of small lines on a dark brown background, with the last line, such as "on top.", in red. The lines fade in from the center outward and ease together into a tight block; use it for a brand film, a closing slogan or a quiet beat between louder scenes.
 
 <ComponentPreview name="absorb-stack" />
 
 <InstallBlock name="absorb-stack" />
+
+## How to build this in Remotion
+
+You don't need to lay this out by hand with `AbsoluteFill` and a font size per line. Install the component and pass your lines:
+
+```bash
+npx shadcn@latest add @remocn/absorb-stack
+```
+
+It is one scene: each ring of lines, counted from the center out, fades in with `interpolate()` on an `Easing.bezier` curve, and the stack pulls together with a `spring()`. The schedule lives in `timeline.ts`, so single lines can be moved or stretched with the `timing` prop.
+
+## Good to know
+
+- Length: 60 frames of motion at 30 fps (120 at 60 fps) with the default props; the demo plays 120 frames, which adds a hold. The timing is fixed: a longer composition only holds the last frame longer. The Usage example below is a 60 fps composition, so the numbers it hands to Remotion are doubled, see [Frame rate](/docs/getting-started/installation#frame-rate).
+- Installs: `remotion`, `@remotion/google-fonts` from npm, plus the remocn helpers `glide`, `frame-rate`, `timeline`. The shadcn CLI copies the source into your project.
+- Font: loads Jost (variable) itself through `@remotion/google-fonts`. Pass `fontFamily` to use your own face, and load that font in your project.
+- Default colors, dark theme: ground `#2A1C17`, lines `#E8C9B0`, accent `#C8102E`. Light theme: ground `#EAD3C3`, lines `#2A1C17`, same red accent. Override with `background`, `ink` and `accent`.
+- The text is not forced to lowercase: lines render exactly as you type them. The defaults just happen to be lowercase.
+- The accent goes on the last line unless you set `accentLine` (a zero-based index).
 
 ## Usage
 
@@ -119,3 +142,20 @@ A stack of small lowercase lines fades in from the center outward, spread wide, 
     },
   ]}
 />
+
+## Common questions
+
+### How do I set a short poetic statement as a centered stack of lines in Remotion, with the last line in red?
+
+Install Absorb Stack with `npx shadcn@latest add @remocn/absorb-stack` and pass `lines`, one string per line. The last line takes the red accent (`#C8102E`) on a dark brown ground by default.
+
+### Can I change which line is red?
+
+Yes. `accentLine` picks the line by zero-based index, and `accent` sets the color.
+
+## Related effects
+
+- [Full Bleed Type](/docs/typography/full-bleed-type): one big loud headline instead of a stack.
+- [Line-by-Line Slide](/docs/typography/line-by-line-slide): lines that reveal one at a time with a delay.
+- [What Sticks](/docs/typography/what-sticks): a stack that dims toward one highlighted claim.
+- [Serif Rise](/docs/typography/serif-rise): a single editorial serif line with a red ending.

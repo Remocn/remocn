@@ -1,6 +1,6 @@
 ---
 title: Feature Chips Flow
-description: "Rows of feature pills stream by, then snap into a cluster around the logo"
+description: "Feature pills animation for Remotion: rows of feature chips stream across the screen, then snap into a cluster around the product logo, for a feature overview."
 component: feature-chips-flow
 vibe: playful
 length: 108
@@ -17,11 +17,32 @@ askedAs:
   - "show how many capabilities the product has in a flowing wall of chips"
   - "pill tags around logo"
   - "streaming badges cluster"
+  - "rows of feature pills stream by then cluster around a logo"
 ---
+
+In Remotion, Feature Chips Flow animates rows of feature pills streaming across the screen, then snaps the first ones into a cluster around the product logo while the rest dissolve. Use it for a feature overview in a launch or product video.
 
 <ComponentPreview name="feature-chips-flow" />
 
 <InstallBlock name="feature-chips-flow" />
+
+## How to build this in Remotion
+
+You don't need d3-force, a marquee or `measureText` for this. Install the component and pass your features:
+
+```bash
+npx shadcn@latest add @remocn/feature-chips-flow
+```
+
+One scene with a schedule in `timeline.ts`: the rows stream, the headliners peel out at `converge`, and the name lands 38 frames later. The cluster snaps with `spring()`; the stream uses `interpolate()` with `Easing.bezier` curves.
+
+## Good to know
+
+- Length: 108 frames of motion at 30 fps (216 at 60 fps) with the default props. That is the minimum for its `Sequence`; add your own hold on top (the demo plays 170 frames). The Usage example below is a 60 fps composition, so the numbers it hands to Remotion are doubled, see [Frame rate](/docs/getting-started/installation#frame-rate).
+- `features` takes strings or `FeatureChip` objects: `{ label, icon?, variant? }`, where `variant` is `neutral`, `accent` or `outline` and `icon` is one of the built-in names (captions, export, transitions, palette, grid, spring, wave, type, sun, layers, cursor, phone, camera, code, moon, clock, terminal, play, image, chart).
+- The center shows the remocn logo by default. For your brand pass `name` and a `logo` node; the logo sits before the name. There is no logo-only mode: to drop the text, edit the copied file.
+- Installs: `remotion`, `@remotion/google-fonts` from npm, plus the remocn helpers `glide`, `frame-rate`, `timeline`. The shadcn CLI copies the source into your project.
+- Font: loads Geist and Manrope itself through `@remotion/google-fonts`. Pass `fontFamily` to use your own face, and load that font in your project.
 
 ## Usage
 
@@ -99,7 +120,7 @@ Rows of feature chips stream across the frame, the first ones converge and snap 
       name: "fontFamily",
       type: "string",
       default: "\"Geist\"",
-      description: "Typeface for the copy. Load the font in your project first.",
+      description: "Typeface for the copy. The default is loaded for you; load any other font in your project first.",
     },
     {
       name: "scale",
@@ -133,3 +154,19 @@ Rows of feature chips stream across the frame, the first ones converge and snap 
     },
   ]}
 />
+
+## Common questions
+
+### How do I animate feature pills streaming across the screen and snapping around the product logo?
+
+Install Feature Chips Flow with `npx shadcn@latest add @remocn/feature-chips-flow` and pass `features`, `name` and `logo`.
+
+### How many features land in the cluster?
+
+About the first 22; the rest stream by and dissolve.
+
+## Related effects
+
+- [Feature Trio](/docs/typography/feature-trio): three feature words, 'Fast. Composable. Open source.', rise from masks with progress ticks and notes.
+- [Logo Enter](/docs/social/logo-enter): a stacked group of round brand chips that spring in one-by-one, then hold.
+- [Word Stack](/docs/typography/word-stack): caps words push up into a tight poster stack, and the last one turns into a serif gradient italic.

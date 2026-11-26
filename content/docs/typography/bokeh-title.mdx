@@ -1,6 +1,6 @@
 ---
 title: Bokeh Title
-description: "A serif headline sharpens out of drifting bokeh lights that first form a pattern."
+description: "Bokeh title for Remotion: blurry drifting bokeh lights form a pattern, then defocus as a serif headline resolves. A premium or lifestyle brand intro."
 component: bokeh-title
 vibe: premium
 length: 152
@@ -18,11 +18,31 @@ askedAs:
   - "premium lifestyle opening title with blurred lights"
   - "cinematic opener where lights form a pattern first"
   - "headline resolves from soft drifting light circles"
+  - "serif headline resolves out of blurry drifting bokeh lights"
+  - "bokeh lights form a pattern before a premium brand intro title"
 ---
+
+In Remotion, Bokeh Title makes a serif headline resolve out of blurry, drifting bokeh lights: a focus pull first snaps the lights into a pattern, then they defocus again as the title and subtitle come into focus. Use it as the opening title of a premium or lifestyle launch.
 
 <ComponentPreview name="bokeh-title" />
 
 <InstallBlock name="bokeh-title" />
+
+## How to build this in Remotion
+
+You don't need `@remotion/noise` or a canvas particle system. Install the component and pass your title:
+
+```bash
+npx shadcn@latest add @remocn/bokeh-title
+```
+
+The lights are SVG shapes blurred with CSS `filter`, placed on the pattern with `getLength` and `getPointAtLength` from `@remotion/paths`; focus and color move with `interpolate()` and `interpolateColors()` on `Easing.bezier` curves. `pattern` and `shape` pick the arrangement and aperture, `hold` how long the pattern stays sharp.
+
+## Good to know
+
+- Length: 152 frames of motion at 30 fps (304 at 60 fps) with the default props; the demo plays 190 frames, which adds a hold. The timing is fixed: a longer composition only holds the last frame longer. The Usage example below is a 60 fps composition, so the numbers it hands to Remotion are doubled, see [Frame rate](/docs/getting-started/installation#frame-rate).
+- Installs: `remotion`, `@remotion/google-fonts`, `@remotion/paths` from npm, plus the remocn helpers `glide`, `frame-rate`, `timeline`. The shadcn CLI copies the source into your project.
+- Fonts: loads Instrument Serif, Instrument Sans and Manrope itself through `@remotion/google-fonts`, so there is no font to load. Pass `fontFamily` to use your own face, and load it in your project.
 
 ## Usage
 
@@ -154,3 +174,20 @@ Out-of-focus bokeh lights drift, a focus pull snaps them into a mark or grid pat
     },
   ]}
 />
+
+## Common questions
+
+### How can I make a serif headline in Remotion that resolves out of blurry drifting bokeh lights?
+
+Install Bokeh Title with `npx shadcn@latest add @remocn/bokeh-title`, pass `title` and `subtitle`, and choose `pattern` and `shape` for the lights.
+
+### How long should the composition be?
+
+At least 152 frames at 30 fps (304 at 60 fps). The Usage example's 380 frames at 60 fps adds a hold.
+
+## Related effects
+
+- [Tracking In](/docs/typography/tracking-in): crisp, fast type with no atmosphere.
+- [Aspect Slit](/docs/typography/aspect-slit): a cinematic title card through a slit.
+- [Focus Blur Resolve](/docs/typography/focus-blur-resolve): a word that pulls into focus from blur.
+- [Fog Rise](/docs/typography/fog-rise): display text that materializes out of fog.

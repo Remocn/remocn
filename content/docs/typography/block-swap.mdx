@@ -1,6 +1,6 @@
 ---
 title: Block Swap
-description: "A solid block wipes over each line and the next line replaces it, ending with a highlighted word on a pill."
+description: "Block swap text rewrite for Remotion: solid blocks wipe over each word and morph into the next line, rewriting one statement into another and ending on a highlighted pill word."
 component: block-swap
 vibe: clean
 length: 120
@@ -18,11 +18,33 @@ askedAs:
   - "rewrite a statement into a better one with a pill highlight at end"
   - "two step message from problem to solution text"
   - "block slides across the text and new text appears with a highlighted word"
+  - "solid block wipes over each line and replaces it with new text"
+  - "rewrite one statement into another ending on a highlighted pill"
 ---
+
+In Remotion, Block Swap rewrites one statement into another: a solid block wipes over each word, morphs into the shape of the next line's words and uncovers the new text, finishing with one highlighted word on a gradient pill. Use it for a beat where a problem line is replaced by the answer.
 
 <ComponentPreview name="block-swap" />
 
 <InstallBlock name="block-swap" />
+
+## How to build this in Remotion
+
+You don't need to build this from clip-path wipes and `measureText`. Install the component and pass your lines:
+
+```bash
+npx shadcn@latest add @remocn/block-swap
+```
+
+Words are measured on a canvas before the first frame (held with `delayRender`), then each block covers, morphs and wipes with `interpolate()` on `Easing.bezier` curves; colors cross with `interpolateColors()`. The swaps are scheduled per line in `timeline.ts`.
+
+## Good to know
+
+- Length: 120 frames of motion at 30 fps (240 at 60 fps) with the default props; the demo plays 150 frames, which adds a hold. The length grows with the number of lines and words and with `hold`, the frames between swaps. The Usage example below is a 60 fps composition, so the numbers it hands to Remotion are doubled, see [Frame rate](/docs/getting-started/installation#frame-rate).
+- Installs: `remotion`, `@remotion/google-fonts` from npm, plus the remocn helpers `glide`, `frame-rate`, `timeline`. The shadcn CLI copies the source into your project.
+- Font: loads Space Grotesk itself through `@remotion/google-fonts`. Pass `fontFamily` to use your own face, and load that font in your project.
+- `highlight` must match a whole word of the last line. The match ignores case and trailing punctuation; if nothing matches, there is no pill.
+- The pill gradient runs from `accent` (default `#3B5BFD`) through `#2F7BFF` to `#FF7A3D`. Only `accent` is a prop; the other stops are constants in the copied file.
 
 ## Usage
 
@@ -127,3 +149,20 @@ Each word of the first line is covered by a block that morphs into the next line
     },
   ]}
 />
+
+## Common questions
+
+### How can I rewrite one statement into another in Remotion by wiping a solid block over each line?
+
+Install Block Swap with `npx shadcn@latest add @remocn/block-swap`, pass `lines` as an array of sentences and `highlight` as the word on the last line to put on the pill.
+
+### Does highlight need to match exactly?
+
+It must be a whole word of the last line; case and trailing punctuation are ignored.
+
+## Related effects
+
+- [Mask Reveal Up](/docs/typography/mask-reveal-up): a single line revealed from a mask.
+- [Rewrite Bars](/docs/typography/rewrite-bars): bars sweep across a headline and rewrite it.
+- [Strikethrough Replace](/docs/typography/strikethrough-replace): a line struck through and replaced.
+- [Select Replace](/docs/typography/select-replace): an editor-style selection replaced with new words.

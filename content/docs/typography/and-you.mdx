@@ -1,6 +1,6 @@
 ---
 title: And You
-description: "A list of audiences (\"For the founder who...\") ends on a big \"and you.\""
+description: "Who-it's-for list for Remotion: audience lines like For the founder who... scroll in one by one, then a big and you. lands, addressed to the viewer."
 component: and-you
 vibe: playful
 length: 127
@@ -19,11 +19,33 @@ askedAs:
   - "inclusive closing line that speaks to the viewer"
   - "near the end of video address everyone who could use the product"
   - "list of personas that finishes by pointing at the viewer"
+  - "who it is for sequence ending on a big and you"
+  - "list of audiences that ends by addressing the viewer"
 ---
+
+In Remotion, And You is a who-it's-for sequence: lines like "For the founder who…" scroll in one by one, stack, dim, and then a big "and you." lands, addressed to the viewer. Use it near the end of a launch video to list the audiences and finish on the person watching.
 
 <ComponentPreview name="and-you" />
 
 <InstallBlock name="and-you" />
+
+## How to build this in Remotion
+
+You don't need `Series` or `TransitionSeries` to chain the lines. Install the component and pass your clauses:
+
+```bash
+npx shadcn@latest add @remocn/and-you
+```
+
+It is one scene: the clauses and the last line rise with `interpolate()` on `Easing.bezier` curves, scheduled in `timeline.ts`. Line widths are measured on a canvas before the first frame (held with `delayRender`), so the stack wraps without jumping.
+
+## Good to know
+
+- Length: 127 frames of motion at 30 fps (254 at 60 fps) with the default props; the demo plays 180 frames, which adds a hold. It spaces the clauses to fit the composition: each clause gets between 14 and 30 frames (30 fps), so a longer composition is paced slower up to that limit. The Usage example below is a 60 fps composition, so the numbers it hands to Remotion are doubled, see [Frame rate](/docs/getting-started/installation#frame-rate).
+- Installs: `remotion`, `@remotion/google-fonts` from npm, plus the remocn helpers `glide`, `frame-rate`, `timeline`. The shadcn CLI copies the source into your project.
+- Font: loads Gabarito itself through `@remotion/google-fonts`. Pass `fontFamily` to use your own face, and load that font in your project.
+- Default colors, dark theme: ground `#3B1E6E`, text `#FFFFFF`, accent `#FF7A6B`.
+- Pacing is in 30 fps frames at any composition frame rate: at 60 fps pass twice the frames to Remotion and the clauses play at the same speed in seconds.
 
 ## Usage
 
@@ -114,3 +136,20 @@ A list of audiences scrolls in clause by clause, each one stacking under the las
     },
   ]}
 />
+
+## Common questions
+
+### How do I do a who-it's-for sequence in Remotion that ends on a big and you.?
+
+Install And You with `npx shadcn@latest add @remocn/and-you`, pass `clauses` (one string per audience, such as "For the founder who…") and `last` for the closing words.
+
+### How many clauses fit?
+
+Three to five short clauses read best. The scene is spaced for the composition length, so more clauses get less time each (down to 14 frames).
+
+## Related effects
+
+- [Feature Trio](/docs/typography/feature-trio): three short benefit words instead of audiences.
+- [What Sticks](/docs/typography/what-sticks): separate claims that dim toward one.
+- [Point Expand](/docs/typography/point-expand): each line as a full-screen beat.
+- [They Are You](/docs/typography/they-are-you): statements about they that flip to you.

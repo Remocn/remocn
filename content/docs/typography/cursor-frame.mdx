@@ -1,6 +1,6 @@
 ---
 title: Cursor Frame
-description: "A selection frame with handles and a size badge is dragged and resized around a headline, rewrapping it."
+description: "Design-tool text animation for Remotion: a selection box with corner handles and a width/height badge is dragged and resized around a headline so it rewraps."
 component: cursor-frame
 vibe: clean
 length: 184
@@ -18,11 +18,33 @@ askedAs:
   - "product video about layout where the text rewraps as the frame resizes"
   - "Figma style resize handles on text"
   - "drag handles resize headline"
+  - "selection box with handles and size badge resizes a headline"
+  - "drag and resize a text box so the headline rewraps"
 ---
+
+In Remotion, Cursor Frame makes a scene look like a design tool: a mouse cursor drags a selection box with corner handles and a width/height badge around a headline, then resizes it so the text rewraps onto two lines. Use it in a product video about layout, editing or a design tool, where the headline should respond to the frame live.
 
 <ComponentPreview name="cursor-frame" />
 
 <InstallBlock name="cursor-frame" />
+
+## How to build this in Remotion
+
+You don't need to rebuild it with `fillTextBox` or `fitText` from `@remotion/layout-utils` plus keyframed `interpolate()` calls. Install the component and pass your headline:
+
+```bash
+npx shadcn@latest add @remocn/cursor-frame
+```
+
+It is one scene driven by a schedule in `timeline.ts`: the cursor press, drag and resize, and the frame clearing each get a start frame, and the motion runs on `interpolate()` with `Easing.bezier` curves. The words are measured in the DOM before the first frame (held with `delayRender`), so each word can glide to its new line when the box narrows instead of the paragraph jumping.
+
+## Good to know
+
+- Length: 184 frames of motion at 30 fps (368 at 60 fps) with the default props. That is the minimum for its `Sequence`; add your own hold on top (the demo plays 230 frames). The Usage example below is a 60 fps composition, so the numbers it hands to Remotion are doubled, see [Frame rate](/docs/getting-started/installation#frame-rate).
+- The drag path, the target box sizes and the wrap are fixed in the scene: the headline always rewraps once, onto two lines. To change the path, edit the copied file.
+- `showCursor={false}` hides the mouse pointer and keeps the frame, handles and badge.
+- Installs: `remotion`, `@remotion/google-fonts` from npm, plus the remocn helpers `glide`, `frame-rate`, `timeline`. The shadcn CLI copies the source into your project.
+- Font: loads Geist and Geist Mono itself through `@remotion/google-fonts`. Pass `fontFamily` to use your own face, and load that font in your project.
 
 ## Usage
 
@@ -79,7 +101,7 @@ Words fade in, a cursor presses and drags a selection frame over them, then resi
       name: "fontFamily",
       type: "string",
       default: "\"Geist\"",
-      description: "Typeface for the copy. Load the font in your project first.",
+      description: "Typeface for the copy. The default is loaded for you; load any other font in your project first.",
     },
     {
       name: "fontWeight",
@@ -119,3 +141,20 @@ Words fade in, a cursor presses and drags a selection frame over them, then resi
     },
   ]}
 />
+
+## Common questions
+
+### How do I make a Remotion scene that looks like a design tool, with a selection box resized around a headline?
+
+Install Cursor Frame with `npx shadcn@latest add @remocn/cursor-frame` and pass `title`. The cursor drags and resizes the box, the badge counts the size, and the headline rewraps.
+
+### Can I set the box sizes or the drag path with props?
+
+No. They are constants in the copied file; `accent` colors the frame, handles and badge.
+
+## Related effects
+
+- [Staggered Fade Up](/docs/typography/staggered-fade-up): words slide up and fade in sequentially with a wave-like cascade.
+- [Typewriter](/docs/typography/typewriter): character-by-character text reveal with a deterministic blinking cursor.
+- [Marker Highlight](/docs/typography/marker-highlight): a colored marker block draws behind a phrase while the text color shifts.
+- [Selection Snap](/docs/typography/selection-snap): a thin word in a loose viewfinder snaps into a design-tool selection while it goes from Thin to Black, pops its handles and counts up a size badge.

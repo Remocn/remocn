@@ -1,6 +1,6 @@
 ---
 title: Deadpan Box
-description: "A flat, deadpan quote in a blue box with a small attribution line"
+description: "Deadpan punchline quote card for Remotion: a flat quote sits in a blue box, then a small attribution line flips the joke and the brand signs off."
 component: deadpan-box
 vibe: clean
 length: 126
@@ -19,11 +19,32 @@ askedAs:
   - "minimal bold testimonial style card with a deadpan tone"
   - "a joke moment in a launch video with a quiet quote"
   - "blue quote box attribution"
+  - "quiet quote in a blue box with an attribution that flips the joke"
 ---
+
+In Remotion, Deadpan Box is a punchline scene: a flat, quiet quote sits in a blue box for a beat, then the box floods the frame and a small attribution line underneath flips the meaning of the joke. Use it for a dry joke or a minimal quote card in a launch or social video that ends on your brand.
 
 <ComponentPreview name="deadpan-box" />
 
 <InstallBlock name="deadpan-box" />
+
+## How to build this in Remotion
+
+You don't need to compose it from `spring()`, `Sequence` and a font loader. Install the component and pass the quote and attribution:
+
+```bash
+npx shadcn@latest add @remocn/deadpan-box
+```
+
+One scene with a schedule in `timeline.ts`: the brand masthead grows into the quote box, the quote lines rise, the box floods at `punchAt`, then the attribution and the sign-off follow. Motion uses `interpolate()` with `Easing` curves; the quote is measured before the first frame, held with `delayRender`.
+
+## Good to know
+
+- Length: 126 frames of motion at 30 fps (252 at 60 fps) with the default props. That is the minimum for its `Sequence`; add your own hold on top (the demo plays 150 frames). The Usage example below is a 60 fps composition, so the numbers it hands to Remotion are doubled, see [Frame rate](/docs/getting-started/installation#frame-rate).
+- The masthead intro, the flood to full frame and the brand sign-off are part of the scene; there is no prop to turn them off. Move the flood with `punchAt`, or swap the mark with `brand` and `logo`.
+- The blue is a gradient field built from `accent` (`#3B5BFD` by default).
+- Installs: `remotion`, `@remotion/google-fonts` from npm, plus the remocn helpers `glide`, `frame-rate`, `timeline`. The shadcn CLI copies the source into your project.
+- Font: loads Schibsted Grotesk and Manrope itself through `@remotion/google-fonts`. Pass `fontFamily` to use your own face, and load that font in your project.
 
 ## Usage
 
@@ -93,7 +114,7 @@ A small box showing the brand logo grows to hug a flat quote, which holds for a 
       name: "fontFamily",
       type: "string",
       default: "\"Schibsted Grotesk\"",
-      description: "Typeface for the copy. Load the font in your project first.",
+      description: "Typeface for the copy. The default is loaded for you; load any other font in your project first.",
     },
     {
       name: "stagger",
@@ -139,3 +160,20 @@ A small box showing the brand logo grows to hug a flat quote, which holds for a 
     },
   ]}
 />
+
+## Common questions
+
+### How do I make a Remotion punchline scene with a quiet quote in a blue box and an attribution that flips it?
+
+Install Deadpan Box with `npx shadcn@latest add @remocn/deadpan-box` and pass `quote`, `attribution` and `brand`.
+
+### Can the box stay small instead of flooding the frame?
+
+Not with props: the flood is part of the scene. Set `punchAt` to move it, or edit the copied file.
+
+## Related effects
+
+- [Quote Hero](/docs/typography/quote-hero): a big pull quote with an underlined italic phrase and a named founder attribution.
+- [Soft Blur In](/docs/typography/soft-blur-in): per-character fade-in with a gentle blur and upward motion.
+- [Coy Denial](/docs/typography/coy-denial): a huge "Don't check the site at nine." with a sheepish "(Do.)" tucked into the corner.
+- [Said Who](/docs/typography/said-who): a big serif pull quote, "Took me one evening.", with a backend-engineer attribution.

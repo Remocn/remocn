@@ -1,6 +1,6 @@
 ---
 title: Axis Flex
-description: "A gradient word flexes its width and weight like an elastic variable font, then snaps to a final style"
+description: "Variable font animation for Remotion: one gradient word stretches and thickens like elastic, flexing width and weight on a wave before each letter snaps to a final style."
 component: axis-flex
 vibe: playful
 length: 124
@@ -19,11 +19,33 @@ askedAs:
   - "show off flexibility with a single stretching word"
   - "type forward title that snaps to final style after morphing"
   - "viewer watches the letters stretch and thicken then settle"
+  - "gradient word stretches and thickens like an elastic variable font"
+  - "animate font width and weight axes then snap to a final style"
 ---
+
+In Remotion, Axis Flex animates a single gradient word so it stretches and thickens like an elastic variable font: each letter rides a wave between a light condensed cut and a wide medium cut, changing width and weight, then snaps to a final style with a spring. Use it for a beat about flexibility or range, or to show off a variable typeface.
 
 <ComponentPreview name="axis-flex" />
 
 <InstallBlock name="axis-flex" />
+
+## How to build this in Remotion
+
+You don't need Roboto Flex or a hand-written `font-variation-settings` loop. Install the component and pass your word:
+
+```bash
+npx shadcn@latest add @remocn/axis-flex
+```
+
+It drives the `wdth` and `wght` axes of Mona Sans per letter with `interpolate()` and `Easing.bezier`, and the final snap is a `spring()` (damping 14, stiffness 170). Letter widths are measured before the first frame (held with `delayRender`) so the word stays centered while it flexes.
+
+## Good to know
+
+- Length: 124 frames of motion at 30 fps (248 at 60 fps) with the default props; the demo plays 150 frames, which adds a hold. The timing is fixed: a longer composition only holds the last frame longer. The Usage example below is a 60 fps composition, so the numbers it hands to Remotion are doubled, see [Frame rate](/docs/getting-started/installation#frame-rate).
+- Installs: `remotion`, `@remotion/google-fonts` from npm, plus the remocn helpers `glide`, `frame-rate`, `timeline`. The shadcn CLI copies the source into your project.
+- Font: loads Mona Sans as a variable font itself through `@remotion/google-fonts`. A font you pass through `fontFamily` must have `wdth` and `wght` axes, and you load it.
+- `settleAt` is in 30 fps frames at any composition frame rate (default 84), so you don't rescale it for 60 fps.
+- The final style is `wdth 120, wght 460`, the wave runs between `wdth 75, wght 200` and `wdth 125, wght 500`. There is no prop for them: change the `FINAL`, `LOW` and `HIGH` constants in the copied file.
 
 ## Usage
 
@@ -119,3 +141,20 @@ Each letter rides an equalizer wave between a light condensed cut and a wide med
     },
   ]}
 />
+
+## Common questions
+
+### How would I animate a single gradient word in Remotion so it stretches and thickens like an elastic variable font?
+
+Install Axis Flex with `npx shadcn@latest add @remocn/axis-flex` and pass `word` and `line`. It flexes width and weight per letter, then snaps each letter to the final style at `settleAt`.
+
+### Can I choose the final weight and width?
+
+Not through props. Edit the `FINAL` constant in the copied file.
+
+## Related effects
+
+- [Weight Wave](/docs/typography/weight-wave): a weight swell across the letters with no width change.
+- [Font Cycle](/docs/typography/font-cycle): one word flipping through different typefaces.
+- [Shed Weight](/docs/typography/shed-weight): one line at growing sizes with optical weights.
+- [Enhance Count](/docs/typography/enhance-count): a thin blurry line that sharpens into a heavier weight.

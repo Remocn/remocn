@@ -1,6 +1,6 @@
 ---
 title: Beta Thanks
-description: "\"Remocn is out\" with a green \"out\", thanking the beta testers below"
+description: "Launch closing card for Remotion: logo plus a status word like is out. in green, with a thank-you line to the beta testers underneath. For release videos."
 component: beta-thanks
 vibe: clean
 length: 94
@@ -19,11 +19,33 @@ askedAs:
   - "closing thanks to the early access community"
   - "status announcement where one word like beta is highlighted green"
   - "end of release video thanking the people who tested early"
+  - "product is out closing beat with out in green"
+  - "thank you to the beta testers at the end of a launch video"
 ---
+
+In Remotion, Beta Thanks is a closing beat that says your product is out, with the status word in green, and a thank-you to the beta testers underneath. The logo and a small tag such as "beta" appear, the tag slides into place as "is out." lands, then the thanks line fades in; use it to end a release or early-access video.
 
 <ComponentPreview name="beta-thanks" />
 
 <InstallBlock name="beta-thanks" />
+
+## How to build this in Remotion
+
+You don't need `create-video` boilerplate or a font loader for this. Install the component and pass your words:
+
+```bash
+npx shadcn@latest add @remocn/beta-thanks
+```
+
+It is one scene: the logo, tag and status words rise with `interpolate()` on `Easing.bezier` curves, scheduled in `timeline.ts`. Layout waits for the fonts with `delayRender`.
+
+## Good to know
+
+- Length: 94 frames of motion at 30 fps (188 at 60 fps) with the default props; the demo plays 130 frames, which adds a hold. It speeds up to fit a shorter composition and keeps its pace in a longer one. The Usage example below is a 60 fps composition, so the numbers it hands to Remotion are doubled, see [Frame rate](/docs/getting-started/installation#frame-rate).
+- Installs: `remotion`, `@remotion/google-fonts` from npm, plus the remocn helpers `glide`, `frame-rate`, `timeline`. The shadcn CLI copies the source into your project.
+- Fonts: loads Big Shoulders and Manrope itself through `@remotion/google-fonts`. Pass `fontFamily` to use your own face, and load it in your project.
+- Every word of `status` takes the accent. Default accent: `#2BD96B` green in the dark theme, `#0E9F4B` in light; set `accent` for your brand green. To color only "out.", pass `status="out."`.
+- `logo` takes your own React node; without it the remocn mark is drawn.
 
 ## Usage
 
@@ -138,3 +160,20 @@ The logo and a small tag appear, the tag lifts out and slides into place beside 
     },
   ]}
 />
+
+## Common questions
+
+### How do I make a closing beat in Remotion saying our product is out, with out in green and a thanks to beta testers?
+
+Install Beta Thanks with `npx shadcn@latest add @remocn/beta-thanks`, pass your `logo`, `status="is out."` and the thank-you in `before` and `after`. The status words take the green accent.
+
+### Can only one word of the status be green?
+
+The accent covers every word of `status`, so put only the word you want green in `status`.
+
+## Related effects
+
+- [Embargo Lift](/docs/typography/embargo-lift): a launch with a long list of facts revealed from redaction bars.
+- [Inline Highlight](/docs/typography/inline-highlight): one word that shifts to a brand color inside a sentence.
+- [Post Script](/docs/typography/post-script): a thank-you followed by a P.S. call to action.
+- [Lights Out](/docs/typography/lights-out): a countdown that slams in the product name.

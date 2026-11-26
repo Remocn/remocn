@@ -1,6 +1,6 @@
 ---
 title: Embargo Lift
-description: "\"remocn is free, open source and out today\" in condensed type with a green accent"
+description: "Redacted text reveal for Remotion: a launch-day announcement shows black redaction bars over key words, then the bars lift one by one, with a green accent word."
 component: embargo-lift
 vibe: clean
 length: 102
@@ -19,11 +19,34 @@ askedAs:
   - "launch day message revealing free and open source in condensed type"
   - "redaction bars lifting"
   - "censor bars removed reveal"
+  - "black redaction bars lift off a launch announcement"
+  - "censored text bars reveal the key words"
 ---
+
+In Remotion, Embargo Lift reveals a launch-day announcement from behind black redaction bars: the lines show with phrases blacked out under an embargo slug, the slug flips to "lifted", and the bars lift one at a time to reveal the words, the last one in green. Use it for a launch announcement like free, open source and out today.
 
 <ComponentPreview name="embargo-lift" />
 
 <InstallBlock name="embargo-lift" />
+
+## How to build this in Remotion
+
+You don't need GSAP or `TransitionSeries` for a redaction reveal. Install the component and mark the hidden phrases with square brackets:
+
+```bash
+npx shadcn@latest add @remocn/embargo-lift
+```
+
+One scene with a schedule in `timeline.ts`: the slug flips, then each bar lifts `stagger` frames after the last. Motion uses `interpolate()` with `Easing` curves; lines are measured before the first frame, held with `delayRender`.
+
+## Good to know
+
+- Length: 102 frames of motion at 30 fps (204 at 60 fps) with the default props. That is the minimum for its `Sequence`; add your own hold on top (the demo plays 140 frames). The Usage example below is a 60 fps composition, so the numbers it hands to Remotion are doubled, see [Frame rate](/docs/getting-started/installation#frame-rate).
+- The bars are drawn in the text color. `accent` colors the words revealed under the highlighted bar, not the bar itself: `#2BD96B` green in the dark theme, `#0E9F4B` in light.
+- Defaults: `lines` are remocn is [free], / [open source] / and [out today]. and the slug reads Embargoed until 9:00 a.m. Pass `slug` and `liftedSlug` with your own wording.
+- If `durationInFrames` is shorter than the natural length, the lifts speed up to fit.
+- Installs: `remotion`, `@remotion/google-fonts` from npm, plus the remocn helpers `glide`, `frame-rate`, `timeline`. The shadcn CLI copies the source into your project.
+- Font: loads Big Shoulders itself through `@remotion/google-fonts`. Pass `fontFamily` to use your own face, and load that font in your project.
 
 ## Usage
 
@@ -75,7 +98,7 @@ The lines show with bracketed phrases hidden behind redaction bars under an emba
     {
       name: "accent",
       type: "string",
-      description: "Color of the highlighted bar; defaults to the theme accent.",
+      description: "Color of the words revealed under the highlighted bar; defaults to the theme accent.",
     },
     {
       name: "ink",
@@ -91,7 +114,7 @@ The lines show with bracketed phrases hidden behind redaction bars under an emba
       name: "fontFamily",
       type: "string",
       default: "\"Big Shoulders\"",
-      description: "Typeface for the copy. Load the font in your project first.",
+      description: "Typeface for the copy. The default is loaded for you; load any other font in your project first.",
     },
     {
       name: "fontWeight",
@@ -131,3 +154,19 @@ The lines show with bracketed phrases hidden behind redaction bars under an emba
     },
   ]}
 />
+
+## Common questions
+
+### How can I reveal a launch announcement from behind black redaction bars in Remotion?
+
+Install Embargo Lift with `npx shadcn@latest add @remocn/embargo-lift`, wrap each hidden phrase in `lines` in square brackets, and pass `slug` and `liftedSlug`.
+
+### Does the accent color the bar or the text?
+
+The text: the phrase under the highlighted bar is set in `accent`. `highlight` picks which bar, the last by default.
+
+## Related effects
+
+- [Mask Reveal Up](/docs/typography/mask-reveal-up): lines reveal upward with a soft masked feel and compact stagger.
+- [Beta Thanks](/docs/typography/beta-thanks): "Remocn is out" with a green "out", thanking the beta testers below.
+- [Stripe Mask](/docs/typography/stripe-mask): slanted stripes mask a two-sentence bold headline into view.

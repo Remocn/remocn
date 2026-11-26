@@ -1,6 +1,6 @@
 ---
 title: Diff Swap
-description: "A code-diff style edit rewrites a before line into the after line with the changed part highlighted."
+description: "Code-diff text animation for Remotion: an old painful line is marked as a deletion and rewritten into the new one, with the changed part highlighted."
 component: diff-swap
 vibe: tech
 length: 102
@@ -19,11 +19,33 @@ askedAs:
   - "changelog moment with one line removed and one added highlighted"
   - "red and green line change"
   - "before line rewritten to after"
+  - "code diff style edit with removed and added lines"
 ---
+
+In Remotion, Diff Swap animates a code-diff style edit: the old, painful line is marked with a minus and struck as a deletion, the new line rises in as an addition with a plus, and the changed part is highlighted in the accent color. Use it in a dev-tool video to show the old way replaced by the new one.
 
 <ComponentPreview name="diff-swap" />
 
 <InstallBlock name="diff-swap" />
+
+## How to build this in Remotion
+
+You don't need Shiki, Code Hike or a diff library for a one-line rewrite. Install the component and pass both lines:
+
+```bash
+npx shadcn@latest add @remocn/diff-swap
+```
+
+One scene with a schedule in `timeline.ts`: the removed row is marked, the added row rises, and at `foldAt` the removed row folds away and the added one grows. Motion uses `interpolate()` with `Easing` curves; lines are measured before the first frame, held with `delayRender`.
+
+## Good to know
+
+- Length: 102 frames of motion at 30 fps (204 at 60 fps) with the default props. That is the minimum for its `Sequence`; add your own hold on top (the demo plays 125 frames). The Usage example below is a 60 fps composition, so the numbers it hands to Remotion are doubled, see [Frame rate](/docs/getting-started/installation#frame-rate).
+- Only the `after` line gets the highlight; the `before` line is shown whole as the removed text.
+- The lines are set in Instrument Sans; Geist Mono is used only for the minus and plus signs, so the layout is not a monospace code block.
+- `foldAt` is a frame on the 30 fps scene timeline and plays faster or slower with `speed`, like every other timing in the scene.
+- Installs: `remotion`, `@remotion/google-fonts` from npm, plus the remocn helpers `glide`, `frame-rate`, `timeline`. The shadcn CLI copies the source into your project.
+- Font: loads Instrument Sans and Geist Mono itself through `@remotion/google-fonts`. Pass `fontFamily` to use your own face, and load that font in your project.
 
 ## Usage
 
@@ -90,7 +112,7 @@ The `before` line is struck through as a deletion while the `after` line appears
       name: "fontFamily",
       type: "string",
       default: "\"Instrument Sans\"",
-      description: "Typeface for the copy. Load the font in your project first.",
+      description: "Typeface for the copy. The default is loaded for you; load any other font in your project first.",
     },
     {
       name: "fontWeight",
@@ -130,3 +152,20 @@ The `before` line is struck through as a deletion while the `after` line appears
     },
   ]}
 />
+
+## Common questions
+
+### How do I animate a code-diff style edit in Remotion?
+
+Install Diff Swap with `npx shadcn@latest add @remocn/diff-swap` and pass `before`, `after` and the `highlight` part of `after`.
+
+### I need to animate real code blocks, not one line.
+
+Use [Code Morph](/docs/ui-blocks/code-morph) for code that morphs between versions.
+
+## Related effects
+
+- [Strikethrough Replace](/docs/typography/strikethrough-replace): draws a strike line through the old text, then fades the new text in beneath it for an editorial correction.
+- [Code Morph](/docs/ui-blocks/code-morph): a code panel morphs between versions of a file, with surviving tokens gliding to their new line and column while removed code dissolves and new code fades in.
+- [Select Replace](/docs/typography/select-replace): a phrase is selected like text in an editor, deleted, and replaced with new styled words.
+- [Typo Fix](/docs/typography/typo-fix): a misspelled word is caught and corrected in place inside a short line.

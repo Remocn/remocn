@@ -1,6 +1,6 @@
 ---
 title: Drop Timer
-description: "A countdown to a drop ends in a huge gradient 'LIVE NOW' with a URL and logo"
+description: "Product drop countdown for Remotion: a clock counts down and smashes into a huge full-bleed gradient LIVE NOW with your logo and URL, for a launch teaser."
 component: drop-timer
 vibe: playful
 length: 111
@@ -17,11 +17,32 @@ askedAs:
   - "build hype before a launch then reveal it is live"
   - "countdown to live now"
   - "launch day timer payoff"
+  - "countdown clock slams into a huge gradient live now"
 ---
+
+In Remotion, Drop Timer is a product-drop teaser: a clock counts down, holds on 00:00:00, then slams into a huge full-bleed gradient "LIVE NOW" with your logo and URL. Use it for a launch countdown or a drop announcement in a social or teaser video.
 
 <ComponentPreview name="drop-timer" />
 
 <InstallBlock name="drop-timer" />
+
+## How to build this in Remotion
+
+You don't need `@remotion/motion-blur`, `@remotion/shapes` or `TransitionSeries` for this. Install the component and pass your labels:
+
+```bash
+npx shadcn@latest add @remocn/drop-timer
+```
+
+One scene with a schedule in `timeline.ts`: one tick per counted second, a hold on zero, then the smash, the payoff word, the brand and the URL. Everything runs on `interpolate()` with `Easing` curves, so frames render the same at any concurrency.
+
+## Good to know
+
+- Length: 111 frames of motion at 30 fps (222 at 60 fps) with the default props. That is the minimum for its `Sequence`; add your own hold on top (the demo plays 140 frames). The Usage example below is a 60 fps composition, so the numbers it hands to Remotion are doubled, see [Frame rate](/docs/getting-started/installation#frame-rate).
+- Duration: 33 + `from` × `tick` + `hold` frames at 30 fps. The defaults (5 × 14 + 8) give 111; `from={10}` gives 181.
+- Payoff gradient: dark uses `#1d2a8f`, `#2f7bff`, `#ff7a3d`, `#ffe2c4`; light uses `#ff3d9a`, `#ff8a3d`, `#ffc83d`, `#7a5cff`. They are not props: `background` swaps in a solid fill, `accent` only colors the live dot.
+- Installs: `remotion`, `@remotion/google-fonts` from npm, plus the remocn helpers `glide`, `frame-rate`, `timeline`. The shadcn CLI copies the source into your project.
+- Font: loads Big Shoulders, Geist Mono and Manrope itself through `@remotion/google-fonts`. Pass `fontFamily` to use your own face, and load that font in your project.
 
 ## Usage
 
@@ -123,7 +144,7 @@ A clock counts down from `from` seconds, one film second per `tick` frames, and 
       name: "fontFamily",
       type: "string",
       default: "\"Big Shoulders\"",
-      description: "Typeface for the copy. Load the font in your project first.",
+      description: "Typeface for the copy. The default is loaded for you; load any other font in your project first.",
     },
     {
       name: "scale",
@@ -151,3 +172,20 @@ A clock counts down from `from` seconds, one film second per `tick` frames, and 
     },
   ]}
 />
+
+## Common questions
+
+### How do I make a countdown that slams into a gradient 'LIVE NOW' in Remotion?
+
+Install Drop Timer with `npx shadcn@latest add @remocn/drop-timer` and pass `label`, `from`, `live`, `name` and `url`.
+
+### How long should the composition be?
+
+At least 33 + from × tick + hold frames at 30 fps (111 by default), doubled at 60 fps. Add a hold for the payoff.
+
+## Related effects
+
+- [Escalate Cards](/docs/typography/escalate-cards): cards flash one word each, accelerating until the last word fills the frame over a date.
+- [Ko Count](/docs/typography/ko-count): a ten-count of hard-cut numerals ends in a full-frame gradient word slam with a serif subline.
+- [Sold Out](/docs/typography/sold-out): a stock counter races to zero, then a tilted chrome 'SOLD OUT' band slams across.
+- [Landing Confirmed](/docs/typography/landing-confirmed): an altitude readout counts down to a hard stop, then a slammed confirmation gives way to a gradient title.

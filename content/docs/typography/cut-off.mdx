@@ -1,6 +1,6 @@
 ---
 title: Cut Off
-description: "A line is cut off by a white reply card: \"Or let the code cut it.\""
+description: "Interrupted-sentence joke for Remotion: a long, boring explanation types in and is cut off mid-word by a white reply card with a short better answer."
 component: cut-off
 vibe: playful
 length: 110
@@ -19,11 +19,32 @@ askedAs:
   - "before and after where a slow way is cut short by the code"
   - "reply bubble interrupting text"
   - "text interrupted by white card"
+  - "long boring explanation cut off mid sentence by a white card"
 ---
+
+In Remotion, Cut Off is a text joke where a long, boring explanation types in word by word and gets interrupted mid-word by a white card that answers it, for example "Or let the code cut it." Use it for a before-and-after beat where a slow workflow is cut short by a simple one.
 
 <ComponentPreview name="cut-off" />
 
 <InstallBlock name="cut-off" />
+
+## How to build this in Remotion
+
+You don't need a hand-built typewriter with `interpolate()` and `fitText`. Install the component and pass the two lines:
+
+```bash
+npx shadcn@latest add @remocn/cut-off
+```
+
+One scene with a schedule in `timeline.ts`: the words of `line` arrive at even gaps, the broken last word types per letter (`charFrames`), then the card cuts in and the reply lands. Motion uses `interpolate()` with `Easing` curves; text is measured on a canvas before the first frame, held with `delayRender`.
+
+## Good to know
+
+- Length: 110 frames of motion at 30 fps (220 at 60 fps) with the default props. That is the minimum for its `Sequence`; add your own hold on top (the demo plays 150 frames). The Usage example below is a 60 fps composition, so the numbers it hands to Remotion are doubled, see [Frame rate](/docs/getting-started/installation#frame-rate).
+- Length stretch: the word gaps of `line` stretch to fit `durationInFrames`, so the setup reads slower in a longer composition.
+- Card color: in the dark theme the reply card is `#FFFFFF` with `#0A0A0A` text and the highlight is `#FF3EA5`; in the light theme the card is black. `replyBackground` overrides the card fill.
+- Installs: `remotion`, `@remotion/google-fonts` from npm, plus the remocn helpers `glide`, `frame-rate`, `timeline`. The shadcn CLI copies the source into your project.
+- Font: loads Syne itself through `@remotion/google-fonts`. Pass `fontFamily` to use your own face, and load that font in your project.
 
 ## Usage
 
@@ -92,7 +113,7 @@ A line types in word by word and breaks off mid-word with a dash, then a card cu
       name: "fontFamily",
       type: "string",
       default: "\"Syne\"",
-      description: "Typeface for the copy. Load the font in your project first.",
+      description: "Typeface for the copy. The default is loaded for you; load any other font in your project first.",
     },
     {
       name: "charFrames",
@@ -126,3 +147,20 @@ A line types in word by word and breaks off mid-word with a dash, then a card cu
     },
   ]}
 />
+
+## Common questions
+
+### How do I make a Remotion text joke where a long explanation is interrupted by a white card?
+
+Install Cut Off with `npx shadcn@latest add @remocn/cut-off`, pass the boring sentence as `line`, the answer as `reply` and the phrase to color as `highlight`.
+
+### Is the card white by default?
+
+Yes in the dark theme (`#FFFFFF`). In the light theme it is black; pass `replyBackground` to set it yourself.
+
+## Related effects
+
+- [Coy Denial](/docs/typography/coy-denial): a huge "Don't check the site at nine." with a sheepish "(Do.)" tucked into the corner.
+- [No Buts](/docs/typography/no-buts): a muted objection builds in the corner and a larger reply answers it, repeating, with the last reply in accent.
+- [Peek Shut](/docs/typography/peek-shut): a question sits above a thin line that opens on an image sliver, snaps shut, then a refusal lands.
+- [Deadpan Box](/docs/typography/deadpan-box): a flat quote sits in a blue box, then a small attribution line flips the joke and the brand signs off.

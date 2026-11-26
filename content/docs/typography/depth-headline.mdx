@@ -1,6 +1,6 @@
 ---
 title: Depth Headline
-description: "A huge serif headline sits behind a gradient sphere that slides in front of it for a sense of depth."
+description: "Layered depth headline for Remotion: a huge serif title sits behind a gradient sphere or cutout image that rises in front of it, for a hero product name."
 component: depth-headline
 vibe: premium
 length: 62
@@ -18,11 +18,33 @@ askedAs:
   - "opening title that feels three dimensional through depth layering"
   - "premium product name with a floating orb overlapping the letters"
   - "title with orb in front"
+  - "huge serif title behind a sphere that moves in front of it"
+  - "text behind object depth effect for a hero word"
 ---
+
+In Remotion, Depth Headline puts a huge serif headline behind a gradient sphere that rises in front of it, so the title feels layered with depth. Use it for a product name or hero word, and pass a transparent cutout image with `src` to put your own product in front of the type instead of the sphere.
 
 <ComponentPreview name="depth-headline" />
 
 <InstallBlock name="depth-headline" />
+
+## How to build this in Remotion
+
+You don't need `@remotion/three` or React Three Fiber for this; it is flat layers in z order. Install the component:
+
+```bash
+npx shadcn@latest add @remocn/depth-headline
+```
+
+The headline, the sphere (or your `<Img>` cutout) and the caption are stacked layers moved with `interpolate()` and `Easing` curves. The sphere is a CSS mesh gradient, so there is no WebGL to render.
+
+## Good to know
+
+- Length: 62 frames of motion at 30 fps (124 at 60 fps) with the default props. That is the minimum for its `Sequence`; add your own hold on top (the demo plays 120 frames). The Usage example below is a 60 fps composition, so the numbers it hands to Remotion are doubled, see [Frame rate](/docs/getting-started/installation#frame-rate).
+- Sphere colors: a mesh of `#ecdcf2` lilac, `#8796ee` periwinkle and `#0e1645` navy with `accent` (`#3B5BFD` by default) as the main blue; only `accent` is a prop.
+- The sphere rises from the bottom of the frame; its path has no prop. `riseFrames` sets how long the rise takes.
+- Installs: `remotion`, `@remotion/google-fonts` from npm, plus the remocn helpers `glide`, `frame-rate`, `timeline`. The shadcn CLI copies the source into your project.
+- Font: loads Fraunces and Manrope itself through `@remotion/google-fonts`. Pass `fontFamily` to use your own face, and load that font in your project.
 
 ## Usage
 
@@ -103,7 +125,7 @@ The headline opens and rises behind a sphere that glides across the frame, with 
       name: "fontFamily",
       type: "string",
       default: "\"Fraunces\"",
-      description: "Typeface for the copy. Load the font in your project first.",
+      description: "Typeface for the copy. The default is loaded for you; load any other font in your project first.",
     },
     {
       name: "fontWeight",
@@ -144,3 +166,19 @@ The headline opens and rises behind a sphere that glides across the frame, with 
     },
   ]}
 />
+
+## Common questions
+
+### How do I get a huge serif headline to sit behind a sphere so it feels layered?
+
+Install Depth Headline with `npx shadcn@latest add @remocn/depth-headline`, pass `title`, and either keep the gradient sphere or pass `src` with a transparent PNG.
+
+### Do I need to load Fraunces?
+
+No. The component loads Fraunces and Manrope itself through `@remotion/google-fonts`.
+
+## Related effects
+
+- [Staggered Fade Up](/docs/typography/staggered-fade-up): words slide up and fade in sequentially with a wave-like cascade.
+- [Photo Fill Type](/docs/typography/photo-fill-type): a word cut out of the stage opens onto a photo that fills the frame, followed by a caption.
+- [Full Bleed Type](/docs/typography/full-bleed-type): huge condensed caps words slam in one at a time, the last lit by a sunrise gradient.
