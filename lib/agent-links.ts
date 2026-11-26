@@ -23,10 +23,17 @@ export function mcpAgentSource(client: string): string {
   return client === "unknown" || client === "other" ? "mcp" : client;
 }
 
+/**
+ * A root-relative link (`/docs/x`) comes back absolute when tagged: a person
+ * clicks it from an agent's answer, where it no longer has remocn.dev as base.
+ */
 export function agentLink(href: string, source: string): string {
   let url: URL;
   try {
-    url = new URL(href);
+    url = new URL(
+      href,
+      href.startsWith("/") && !href.startsWith("//") ? SITE_ORIGIN : undefined,
+    );
   } catch {
     return href;
   }
@@ -42,7 +49,7 @@ export function agentLink(href: string, source: string): string {
   return url.toString();
 }
 
-const LINK_TARGET = /\]\((https?:\/\/[^\s)]+)/g;
+const LINK_TARGET = /\]\((https?:\/\/[^\s)]+|\/(?!\/)[^\s)]*)/g;
 const FENCE = /^ {0,3}(`{3,}|~{3,})/;
 
 /** Tag the destination of every Markdown link outside fenced code. */

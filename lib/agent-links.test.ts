@@ -41,6 +41,14 @@ describe("agentLink", () => {
     }
   });
 
+  test("resolves root-relative links against the site", () => {
+    expect(agentLink("/docs/x#props", "mcp")).toBe(
+      "https://remocn.dev/docs/x?utm_source=mcp&utm_medium=agent#props",
+    );
+    expect(agentLink("/docs/x.md", "mcp")).toBe("/docs/x.md");
+    expect(agentLink("//evil.com/docs", "mcp")).toBe("//evil.com/docs");
+  });
+
   test("leaves other sites and already tagged links alone", () => {
     expect(agentLink("https://github.com/Remocn/remocn", "claude")).toBe(
       "https://github.com/Remocn/remocn",
@@ -73,6 +81,17 @@ describe("tagAgentLinks", () => {
         '- [Title](https://remocn.dev/stars?utm_source=chatgpt&utm_medium=agent "Stars")',
         "- `npx remotion elements use https://remocn.dev/docs/typography/ink-underline`",
       ].join("\n"),
+    );
+  });
+
+  test("resolves and tags root-relative page links", () => {
+    expect(
+      tagAgentLinks(
+        "Pairs with [Positioning](/docs/captions/positioning) and [raw](/docs/captions/positioning.md).",
+        "claude",
+      ),
+    ).toBe(
+      "Pairs with [Positioning](https://remocn.dev/docs/captions/positioning?utm_source=claude&utm_medium=agent) and [raw](/docs/captions/positioning.md).",
     );
   });
 
