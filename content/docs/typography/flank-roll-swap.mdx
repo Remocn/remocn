@@ -1,6 +1,6 @@
 ---
 title: Flank Roll Swap
-description: "Two flanking words roll into new words around a photo placed in the middle of the line."
+description: "Word swap around a photo for Remotion: two words on either side of an image in the middle of a line roll letter by letter into new words, like a studio name to out now."
 component: flank-roll-swap
 vibe: premium
 length: 88
@@ -19,11 +19,32 @@ askedAs:
   - "brand line with a picture sitting in the middle of the sentence"
   - "image between words"
   - "inline photo with rolling words"
+  - "two words on either side of a photo roll over into new words"
+  - "release announcement swaps studio name for out now around a hero image"
 ---
+
+In Remotion, Flank Roll Swap puts two words on either side of a photo in the middle of a line and rolls them letter by letter into new words, like swapping a studio name for "Out now". Use it for a release announcement around a hero image.
 
 <ComponentPreview name="flank-roll-swap" />
 
 <InstallBlock name="flank-roll-swap" />
+
+## How to build this in Remotion
+
+You don't need `fitText`, `TransitionSeries` or a hand-built letter roll. Install the component and pass both pairs and your images:
+
+```bash
+npx shadcn@latest add @remocn/flank-roll-swap
+```
+
+The card, the side words and each letter roll are scheduled in `timeline.ts`; letters roll with `interpolate()` and `Easing`, the card pops with `spring()`, and images are drawn with Remotion's `Img`. Word widths are measured on a canvas before the first frame, held with `delayRender`. The ground is a live gradients.sh shader (`GshGround`).
+
+## Good to know
+
+- Length: 88 frames of motion at 30 fps (176 at 60 fps) with the default props. The demo plays 126 frames, which adds a hold after the swap. The Usage example below is a 60 fps composition, so the numbers it hands to Remotion are doubled, see [Frame rate](/docs/getting-started/installation#frame-rate).
+- Installs: `remotion`, `@remotion/google-fonts` from npm, plus the remocn helpers `gsh`, `glide`, `frame-rate`, `timeline`. The shadcn CLI copies the source into your project.
+- Font: loads Hanken Grotesk itself through `@remotion/google-fonts`. Pass `fontFamily` to use your own face, and load that font in your project.
+- A single image works: the pictures cycle with `images[cut % images.length]`, so one image just stays in place while the words roll.
 
 ## Usage
 
@@ -146,3 +167,24 @@ The ground is a live gradients.sh shader (`GshGround`), installed with the compo
     },
   ]}
 />
+
+## Common questions
+
+### How do I make two words on either side of a photo roll into new words in Remotion?
+
+Install Flank Roll Swap with `npx shadcn@latest add @remocn/flank-roll-swap`, pass `from` and `to` as two-word pairs and your image URLs in `images`. Each side rolls letter by letter into its new word.
+
+### Can I use one image?
+
+Yes. With one image the photo stays the same through the swap.
+
+### Why don't the default photos show in my project?
+
+They are `staticFile()` paths that only exist in the Remocn repo. Pass your own URLs in `images`.
+
+## Related effects
+
+- [Width Lock](/docs/typography/width-lock): a plain text swap with no images.
+- [Photo Fill Type](/docs/typography/photo-fill-type): a bold word opens onto a photo.
+- [Layout Swap](/docs/typography/layout-swap): a headline grows line by line.
+- [Word Gap Media](/docs/typography/word-gap-media): a video or image slides into a gap in a sentence.

@@ -1,6 +1,6 @@
 ---
 title: Got Em
-description: "A suspense line resolves into an exploded 'GOT 'EM' over a gradient sunburst"
+description: "Giveaway payoff for Remotion: a suspense line with a ticking ellipsis explodes into a huge GOT EM title over a gradient sunburst, with a subline below."
 component: got-em
 vibe: playful
 length: 90
@@ -17,11 +17,33 @@ askedAs:
   - "playful win moment with exploded letters"
   - "sunburst text explosion"
   - "gotcha reveal text"
+  - "suspense line explodes into a huge payoff word over a gradient sunburst"
+  - "giveaway winner reveal with sunburst rays behind big text"
 ---
+
+In Remotion, Got Em is a giveaway payoff: a suspense line with an animated ellipsis holds, then explodes into a huge "GOT 'EM" over a gradient sunburst, with a subline beneath. Use it for a giveaway, contest entry or drop reveal.
 
 <ComponentPreview name="got-em" />
 
 <InstallBlock name="got-em" />
+
+## How to build this in Remotion
+
+You don't need `@remotion/shapes`, `@remotion/motion-blur` or a conic-gradient hack. Install the component:
+
+```bash
+npx shadcn@latest add @remocn/got-em
+```
+
+The sunburst rays are SVG polygons, and the ellipsis, the flash and the slam of the title run on `interpolate()` with `Easing` curves scheduled in `timeline.ts`.
+
+## Good to know
+
+- Length: 90 frames of motion at 30 fps (180 at 60 fps) with the default props. The demo plays 140 frames, which adds a hold: frames past the end of the motion hold the final frame. The Usage example below is a 60 fps composition, so the numbers it hands to Remotion are doubled, see [Frame rate](/docs/getting-started/installation#frame-rate).
+- Installs: `remotion`, `@remotion/google-fonts` from npm, plus the remocn helpers `glide`, `frame-rate`, `timeline`. The shadcn CLI copies the source into your project.
+- Fonts: loads Unbounded (the title), Geist and Manrope itself through `@remotion/google-fonts`. Pass `fontFamily` to change the title face, and load that font in your project.
+- Sunburst colors are fixed per theme: dark uses `#3d4dff`, `#e2457a`, `#ffb36b`, `#fff4ec` on `#0A0A0B`; light uses `#ffb36b`, `#e2457a`, `#3d4dff` on `#F5F4F0`. `accent` is accepted but not used, so to recolor the rays edit the `rays` arrays in the copied file. The `rays` prop sets how many rays there are (default 40).
+- `pause` (default 14) is how many frames the suspense line holds before the payoff.
 
 ## Usage
 
@@ -132,3 +154,24 @@ A suspense line with an animated ellipsis holds, then the payoff explodes in hug
     },
   ]}
 />
+
+## Common questions
+
+### How can I do a giveaway payoff in Remotion where a suspense line explodes into a huge GOT 'EM over a sunburst?
+
+Install Got Em with `npx shadcn@latest add @remocn/got-em` and pass `pending`, `title`, `subline` and your `logo`.
+
+### Can I change the sunburst colors?
+
+Not through props: the ray colors live in the copied file, one set per theme.
+
+### How long is it?
+
+90 frames at 30 fps (180 at 60 fps) with the defaults; the demo plays 140 to hold on the payoff.
+
+## Related effects
+
+- [Drop Timer](/docs/typography/drop-timer): a countdown builds up to the reveal.
+- [Blur Out Up](/docs/typography/blur-out-up): a calm exit instead of a slam.
+- [Sold Out](/docs/typography/sold-out): a stock counter drains and a SOLD OUT band slams across.
+- [Ko Count](/docs/typography/ko-count): a count to ten before a big verdict word.

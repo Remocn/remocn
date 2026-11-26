@@ -1,6 +1,6 @@
 ---
 title: Headline to Line
-description: "A headline settles and its phrase collapses toward a single line over a glowing horizon"
+description: "Hero headline that collapses into one line in Remotion: words pop in, shrink into a sentence over a glowing horizon, and a longer description types on."
 component: headline-to-line
 vibe: clean
 length: 93
@@ -19,11 +19,33 @@ askedAs:
   - "introduction that goes from title to a longer explanation"
   - "title shrinks into one line"
   - "horizon glow headline"
+  - "hero headline collapses into one line while a description finishes typing"
+  - "big title shrinks into a sentence over a glowing horizon"
 ---
+
+In Remotion, Headline to Line pops a hero headline in word by word, then collapses it into a single line over a glowing horizon while a longer description types on after it with a blinking caret. Use it for a hero opener that turns into the one-line pitch.
 
 <ComponentPreview name="headline-to-line" />
 
 <InstallBlock name="headline-to-line" />
+
+## How to build this in Remotion
+
+You don't need `fitText()` plus a separate typewriter. Install the component:
+
+```bash
+npx shadcn@latest add @remocn/headline-to-line
+```
+
+The words pop with `spring()`, the collapse and the typing run on `interpolate()` and `Easing`, and text widths are measured while `delayRender()` holds the first frame. The glow is a live gradients.sh shader (`GshGround`), installed with the component as `@remocn/gsh`.
+
+## Good to know
+
+- Length: 93 frames of motion at 30 fps (186 at 60 fps) with the default props. The demo plays 132 frames, which adds a hold: frames past the end of the motion hold the final frame. The Usage example below is a 60 fps composition, so the numbers it hands to Remotion are doubled, see [Frame rate](/docs/getting-started/installation#frame-rate).
+- Installs: `remotion`, `@remotion/google-fonts` from npm, plus the remocn helpers `gsh`, `glide`, `frame-rate`, `timeline`. The shadcn CLI copies the source into your project.
+- Font: loads Geist itself through `@remotion/google-fonts`. Pass `fontFamily` to use your own face, and load that font in your project.
+- Ground presets: `earthshine` in dark and `paper-crease` in light by default. `ground` takes any preset id: `afterhours`, `blue-hour`, `charcoal-satin`, `cobalt-rise`, `coldlight`, `comet`, `copper`, `corona`, `cyan-drift`, `earthshine`, `ember`, `europa`, `film-blue`, `flood`, `garnet`, `glasswork`, `greenhouse`, `hearth`, `iris`, `kiln`, `kiruna`, `lantern`, `low-orbit`, `lunar`, `mercury`, `nightfold`, `nova`, `paper-crease`, `petal-arc`, `polar`, `projector`, `refraction`, `riptide`, `solar-wind`, `solstice`, `spectral-sea`, `spotlight`, `static-sunset`, `velvet-hour`. Pass `background` for a solid fill instead.
+- `charsPerFrame` (default 1) sets the typing speed, so a longer `continuation` takes more frames; give the composition room for it.
 
 ## Usage
 
@@ -139,3 +161,23 @@ The ground is a live gradients.sh shader (`GshGround`), installed with the compo
     },
   ]}
 />
+
+## Common questions
+
+### How can I make a hero headline settle, then collapse into one line over a glowing horizon while a description types out?
+
+Install Headline to Line with `npx shadcn@latest add @remocn/headline-to-line` and pass `words`, `accentIndex` and `continuation`.
+
+### Which glow presets can I use?
+
+Any gradients.sh preset id listed above, through `ground`.
+
+### How long is it?
+
+93 frames at 30 fps (186 at 60 fps) with the default text; the demo plays 132.
+
+## Related effects
+
+- [Typewriter](/docs/typography/typewriter): the headline only types, with no collapse.
+- [Focus Front Swap](/docs/typography/focus-front-swap): focus moves between lines of a pitch.
+- [Bokeh Title](/docs/typography/bokeh-title): a serif headline resolves from blurred lights.

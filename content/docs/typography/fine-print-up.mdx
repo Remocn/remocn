@@ -1,6 +1,6 @@
 ---
 title: Fine Print Up
-description: "\"No account and no watermark. Ever.\" in a big serif with tiny fine print at the bottom"
+description: "Fine print text animation for Remotion: big serif promises like No watermark. Ever. shrink into tiny fine print at the bottom of the frame, for terms or license beats."
 component: fine-print-up
 vibe: premium
 length: 221
@@ -19,11 +19,33 @@ askedAs:
   - "reassurance ending with no account no watermark"
   - "fine print line"
   - "small print under big claim"
+  - "big serif promise with tiny fine print at the bottom of the frame"
+  - "each promise shrinks into a fine print line under a closing claim"
 ---
+
+In Remotion, Fine Print Up shows a big serif line like "No account and no watermark. Ever." and then turns each promise into a tiny fine-print line at the bottom of the frame. Use it for a terms, pricing or licensing beat where the fine print is the selling point.
 
 <ComponentPreview name="fine-print-up" />
 
 <InstallBlock name="fine-print-up" />
+
+## How to build this in Remotion
+
+You don't need `@remotion/google-fonts` setup or `@remotion/layout-utils` by hand. Install the component and pass your lines:
+
+```bash
+npx shadcn@latest add @remocn/fine-print-up
+```
+
+The schedule in `timeline.ts` spaces the lines to fit the composition, then places the closing line. Every shrink and travel is `interpolate()` with `Easing`, colors use `interpolateColors()`, and text is measured on a canvas before the first frame, held with `delayRender`, so wrapped lines don't jump.
+
+## Good to know
+
+- Length: 221 frames of motion at 30 fps (442 at 60 fps) with the default props. The demo plays 300 frames. Lines are spread to fill the composition, at least 50 frames apart, and the closing lands 52 frames after the last line starts: two lines need at least about 128 frames, three about 178. The Usage example below is a 60 fps composition, so the numbers it hands to Remotion are doubled, see [Frame rate](/docs/getting-started/installation#frame-rate).
+- Installs: `remotion`, `@remotion/google-fonts` from npm, plus the remocn helpers `glide`, `frame-rate`, `timeline`. The shadcn CLI copies the source into your project.
+- Font: loads Gloock itself through `@remotion/google-fonts`. Pass `fontFamily` to use your own face, and load that font in your project.
+- `closing` is drawn only when it is non-empty: `closing=""` hides it, and `closing="Ever."` replaces the default "That's all the fine print." with nothing left over.
+- The fine-print marks are asterisks (`*`, `**`, `***`…), one per line. There is no prop to turn them off; they are the `marks` array in the copied file.
 
 ## Usage
 
@@ -115,3 +137,24 @@ Each line is set big in turn with a star mark, then shrinks and travels down to 
     },
   ]}
 />
+
+## Common questions
+
+### How can I show a big serif line with tiny fine print at the bottom in Remotion?
+
+Install Fine Print Up with `npx shadcn@latest add @remocn/fine-print-up` and pass `lines` and `closing`. Each line is set big, then shrinks and travels down into the fine print.
+
+### Can I drop the closing line?
+
+Yes, pass `closing=""`.
+
+### Can I hide the star marks?
+
+Not with a prop. Edit the `marks` array in the copied file.
+
+## Related effects
+
+- [What Sticks](/docs/typography/what-sticks): claims dim toward one highlight instead of moving to the footer.
+- [Plain License](/docs/typography/plain-license): legal clauses get replaced by short plain words.
+- [Feature Trio](/docs/typography/feature-trio): three short benefit words.
+- [Whole Page](/docs/typography/whole-page): a manifesto that fills the page.

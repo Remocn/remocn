@@ -1,6 +1,6 @@
 ---
 title: Font Cycle
-description: "One word rapidly cycles through typefaces, each labeled, before settling in its final face"
+description: "Font roulette for Remotion: one word flips rapidly through many typefaces, each labeled with its font name, then lands on the final font. For branding beats."
 component: font-cycle
 vibe: playful
 length: 102
@@ -19,11 +19,32 @@ askedAs:
   - "type customization demo that settles on the final font"
   - "typeface slot machine"
   - "font showcase cycling"
+  - "one word rapidly flips through different typefaces with font name labels"
+  - "font roulette that slows down and lands on the final typeface"
 ---
+
+In Remotion, Font Cycle makes one word flip rapidly through lots of different typefaces, each labeled with its font name, then slow down and land on the final font with a gradient sheen. Use it for a branding beat, a type or customization pitch, or any moment where the chosen typeface is the reveal.
 
 <ComponentPreview name="font-cycle" />
 
 <InstallBlock name="font-cycle" />
+
+## How to build this in Remotion
+
+You don't have to build a font list with `getAvailableFonts()` and swap it frame by frame. Install the component and pass your word:
+
+```bash
+npx shadcn@latest add @remocn/font-cycle
+```
+
+The word is a single element whose face changes on a schedule from `timeline.ts` that starts fast and slows down; the settle and the sheen run on `interpolate()` with `Easing` curves. Each face's width is measured on a canvas while `delayRender()` holds the first frame, so the guides and label stay aligned as the face changes.
+
+## Good to know
+
+- Length: 102 frames of motion at 30 fps (204 at 60 fps) with the default props. The demo plays 130 frames, which adds a hold: frames past the end of the motion hold the final frame. The Usage example below is a 60 fps composition, so the numbers it hands to Remotion are doubled, see [Frame rate](/docs/getting-started/installation#frame-rate).
+- Installs: `remotion`, `@remotion/google-fonts` from npm, plus the remocn helpers `glide`, `frame-rate`, `timeline`. The shadcn CLI copies the source into your project.
+- Fonts: loads its default faces itself through `@remotion/google-fonts`: Instrument Serif, JetBrains Mono, Playfair Display Italic, Oswald, Fredoka, Bricolage Grotesque and Syne in the cycle, and Manrope for the final face.
+- Brand fonts: pass `fonts` and `final` as `FontCycleFace` objects, `{ family, label, weight?, style?, tracking? }`. Load each family in your project first, for example with `loadFont()` from `@remotion/google-fonts/<Family>`, and pass the `fontFamily` it returns as `family`; `label` is the name shown under the word.
 
 ## Usage
 
@@ -142,3 +163,24 @@ The word swaps through the `fonts` list for `passes` rounds, starting fast and s
     },
   ]}
 />
+
+## Common questions
+
+### How do I make one word flip through different typefaces in Remotion, each labeled with its name?
+
+Install Font Cycle with `npx shadcn@latest add @remocn/font-cycle` and pass `word`. It cycles the faces in `fonts` for `passes` rounds with the font name under the word (`showLabel`), then lands in the `final` face.
+
+### Can I cycle through my own brand fonts?
+
+Yes. Load them in your project, then pass them as `fonts` and `final` objects with `family` and `label`.
+
+### How long does the cycle take?
+
+102 frames at 30 fps (204 at 60 fps) with the defaults. `beat` and `passes` change how many swaps it makes.
+
+## Related effects
+
+- [Axis Flex](/docs/typography/axis-flex): one variable font flexing in width and weight instead of different faces.
+- [Case Flip](/docs/typography/case-flip): the casing changes instead of the typeface.
+- [Focus Blur Resolve](/docs/typography/focus-blur-resolve): the word just lands, with no cycling.
+- [Shed Weight](/docs/typography/shed-weight): one line repeated at growing sizes, each with its own optical weight.

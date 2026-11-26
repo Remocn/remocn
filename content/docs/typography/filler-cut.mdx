@@ -1,6 +1,6 @@
 ---
 title: Filler Cut
-description: "A transcript has its filler words cut, leaving a clean line, 'Ship your launch video today.'"
+description: "Filler-word removal for Remotion: a spoken transcript with um and like gets its filler words cut out and collapses into one clean line, for captions or editing demos."
 component: filler-cut
 vibe: premium
 length: 114
@@ -19,11 +19,32 @@ askedAs:
   - "messy sentence before and after cleanup"
   - "transcript cleanup"
   - "delete ums from subtitles"
+  - "transcript where um and like get cut out and it collapses into a clean line"
+  - "remove filler words from speech animation for a captions tool demo"
 ---
+
+In Remotion, Filler Cut animates a transcript where filler words like "um" get cut out, so it collapses into a clean line such as "Ship your launch video today." Use it in a captions, podcast or editing-tool demo that shows filler words being removed from speech.
 
 <ComponentPreview name="filler-cut" />
 
 <InstallBlock name="filler-cut" />
+
+## How to build this in Remotion
+
+You don't need `@remotion/captions` or `@remotion/layout-utils` for this beat. Install the component and pass the messy and clean text:
+
+```bash
+npx shadcn@latest add @remocn/filler-cut
+```
+
+The schedule in `timeline.ts` lines up each spoken word, the mark, each cut, the reflow and the final set; every move is `interpolate()` with `Easing`. Word widths are measured on a canvas before the first frame, held with `delayRender`, so the remaining words close the gaps through `transform` without a layout jump.
+
+## Good to know
+
+- Length: 114 frames of motion at 30 fps (228 at 60 fps) with the default props. The demo plays 150 frames, which adds a hold. The length grows with the number of words and cuts: each extra cut adds `stagger` frames. The Usage example below is a 60 fps composition, so the numbers it hands to Remotion are doubled, see [Frame rate](/docs/getting-started/installation#frame-rate).
+- Installs: `remotion`, `@remotion/google-fonts` from npm, plus the remocn helpers `glide`, `frame-rate`, `timeline`. The shadcn CLI copies the source into your project.
+- Font: loads Schibsted Grotesk and Geist Mono (for the timecode) itself through `@remotion/google-fonts`. Pass `fontFamily` to use your own face, and load that font in your project.
+- The words of `keep` are matched in order against the transcript, and every transcript word left unmatched is cut. `showTime={false}` hides the timecode.
 
 ## Usage
 
@@ -140,3 +161,24 @@ A spoken-style transcript appears with filler words marked, the filler is cut ou
     },
   ]}
 />
+
+## Common questions
+
+### How do I animate a transcript in Remotion where filler words like um get cut out?
+
+Install Filler Cut with `npx shadcn@latest add @remocn/filler-cut` and pass `transcript` (with the filler), `keep` (the clean line) and `highlight`. The filler is marked, cut one piece at a time and the rest reflows into the clean line.
+
+### Do I need to load Schibsted Grotesk?
+
+No, it loads itself. Only a custom `fontFamily` needs loading.
+
+### How long should the composition be?
+
+At least 114 frames at 30 fps (228 at 60 fps) for the default transcript; add your own hold after the line sets.
+
+## Related effects
+
+- [Diff Swap](/docs/typography/diff-swap): a before line rewritten into an after line.
+- [Typo Fix](/docs/typography/typo-fix): a misspelled word corrected in place.
+- [Block Swap](/docs/typography/block-swap): a solid block wipes each line and replaces it.
+- [Karaoke](/docs/captions/components/caption-karaoke): word-timed captions for real speech.

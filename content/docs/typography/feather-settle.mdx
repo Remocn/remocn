@@ -1,6 +1,6 @@
 ---
 title: Feather Settle
-description: "Words drift down and sway like feathers before settling into a sentence, with one phrase highlighted."
+description: "Floating feather text for Remotion: words drift down, sway side to side and settle into a sentence with one phrase highlighted, for a calm sign-off or soft landing."
 component: feather-settle
 vibe: clean
 length: 111
@@ -18,11 +18,32 @@ askedAs:
   - "slow soft sign off that feels light and safe"
   - "swaying falling words"
   - "gentle drifting text arrival"
+  - "words float down and sway like feathers, then form a sentence"
+  - "calm sign off where falling words settle and one phrase is highlighted"
 ---
+
+In Remotion, Feather Settle makes words drift down and sway like feathers before settling into a sentence, with one phrase highlighted in an accent color. Use it for a calm sign-off, a reassuring closing line or a soft landing at the end of a launch video.
 
 <ComponentPreview name="feather-settle" />
 
 <InstallBlock name="feather-settle" />
+
+## How to build this in Remotion
+
+You don't need `@remotion/noise` or a per-word `spring()` for the drift. Install the component and pass your line:
+
+```bash
+npx shadcn@latest add @remocn/feather-settle
+```
+
+Each word falls on its own schedule from `timeline.ts`: its drop, sway and tilt are `interpolate()` curves with `Easing`, so the motion is exact on every frame. Word widths are measured on a canvas before the first frame, held with `delayRender`, so the settled sentence sits centered without a layout jump.
+
+## Good to know
+
+- Length: 111 frames of motion at 30 fps (222 at 60 fps) with the default props. Each word starts `stagger` frames after the previous one and falls for `fall` frames, so the length is 4 + (words − 1) × `stagger` + `fall`. The demo plays 150 frames. Nothing exits: once settled, the sentence holds until the end of a longer composition. The Usage example below is a 60 fps composition, so the numbers it hands to Remotion are doubled, see [Frame rate](/docs/getting-started/installation#frame-rate).
+- Installs: `remotion`, `@remotion/google-fonts` from npm, plus the remocn helpers `glide`, `frame-rate`, `timeline`. The shadcn CLI copies the source into your project.
+- Font: loads Lexend itself through `@remotion/google-fonts`. Pass `fontFamily` to use your own face, and load that font in your project.
+- Default colors: dark theme `#3A2F25` ground, `#EFE6D8` ink and `#9DBF9E` accent for the highlight; light theme `#EFE6D8`, `#3A2F25` and `#5E8B60`.
 
 ## Usage
 
@@ -134,3 +155,24 @@ Each word falls from above with a gentle side-to-side sway and tilt, staggered i
     },
   ]}
 />
+
+## Common questions
+
+### How do I make words drift down like feathers and settle into a sentence in Remotion?
+
+Install Feather Settle with `npx shadcn@latest add @remocn/feather-settle`, pass `text` and the `highlight` phrase. Each word falls with a gentle sway and tilt and lands in place.
+
+### Does the sentence stay on screen after it settles?
+
+Yes. There is no exit, so the settled sentence holds for the rest of the composition.
+
+### Do I need to load a font?
+
+No, it loads Lexend itself. Only a custom `fontFamily` needs loading in your project.
+
+## Related effects
+
+- [Rush Type](/docs/typography/rush-type): a fast, forceful word-by-word entrance.
+- [Baseline Drop](/docs/typography/baseline-drop): words drop and land on a shared baseline instead of floating.
+- [Soft Blur In](/docs/typography/soft-blur-in): a controlled letter-by-letter blur reveal.
+- [Staggered Fade Up](/docs/typography/staggered-fade-up): a neutral word-by-word rise.

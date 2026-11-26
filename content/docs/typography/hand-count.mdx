@@ -1,6 +1,6 @@
 ---
 title: Hand Count
-description: A number that counts up in stop-motion poses, rewritten by hand at every pose
+description: "Stop-motion number count for Remotion: a price or stat counts up as if rewritten by hand at each step, instead of rolling digits. For paper-style handmade scenes."
 component: hand-count
 vibe: paper
 length: 54
@@ -19,11 +19,33 @@ askedAs:
   - "stop motion number counting"
   - "handmade counter"
   - "count up in pen"
+  - "number counts up like stop motion, rewritten by hand at each step"
+  - "handmade paper scene price counter without rolling digits"
 ---
+
+In Remotion, Hand Count makes a number count up like stop-motion: at every step it looks rewritten by hand in a marker font, instead of rolling digits. Use it for a price, stat or count in a handmade paper or scrapbook scene.
 
 <ComponentPreview name="hand-count" />
 
 <InstallBlock name="hand-count" />
+
+## How to build this in Remotion
+
+You don't need rough.js or an `interpolate()` counter with a hold-frame trick. Install the component:
+
+```bash
+npx shadcn@latest add @remocn/hand-count
+```
+
+The value advances on the quantized stop-motion clock from `@remocn/stop-motion`: one pose every `step` frames, with a small seeded jitter per pose, eased in-out by default. It lands exactly on `to` and stops jittering there. Size its `Sequence` with the exported `handCountDuration()`.
+
+## Good to know
+
+- Length: 54 frames of motion at 30 fps (108 at 60 fps) with the default props. The demo plays 90 frames, which adds a hold. The Usage example below is a 60 fps composition, so the numbers it hands to Remotion are doubled, see [Frame rate](/docs/getting-started/installation#frame-rate).
+- Installs: `remotion`, `@remotion/google-fonts` from npm, plus the remocn helpers `stop-motion`, `frame-rate`, `timeline`. The shadcn CLI copies the source into your project.
+- Font: loads Caveat itself through `@remotion/google-fonts`. Pass `fontFamily` to use another hand, and load it in your project.
+- Formatting: the value is printed with `toFixed(decimals)` plus `prefix` and `suffix`, so there are no thousands separators (1284 shows as 1284). For 1,284, change the format function in the copied file to use `toLocaleString()`.
+- `step` is counted in 30 fps frames, so `3` is ten poses a second at any composition frame rate.
 
 ## Usage
 
@@ -217,3 +239,24 @@ of the shot is a distraction, not a texture; ambient motion in this kit is
     },
   ]}
 />
+
+## Common questions
+
+### How do I make a number count up like stop-motion in Remotion, rewritten by hand at each step?
+
+Install Hand Count with `npx shadcn@latest add @remocn/hand-count` and pass `to`, plus `prefix` such as `"$"` for a price.
+
+### Can it show 1,000 with a comma?
+
+Not as shipped; it uses `toFixed()`. Swap in `toLocaleString()` in the copied file.
+
+### How do I size the Sequence?
+
+Use `handCountDuration({ delay, durationSteps, step })`, which returns the frame the number settles on.
+
+## Related effects
+
+- [Rolling Number](/docs/typography/rolling-number): a slick odometer roll for a product UI or dashboard.
+- [Number Wheel](/docs/typography/number-wheel): a mechanical number wheel.
+- [Handwrite](/docs/typography/handwrite): handwritten words on the same stop-motion clock.
+- [Ink Underline](/docs/typography/ink-underline): a hand-dragged ink underline under the number.

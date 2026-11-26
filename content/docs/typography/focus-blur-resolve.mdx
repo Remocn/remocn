@@ -1,6 +1,6 @@
 ---
 title: Focus Blur Resolve
-description: A premium focus pull from heavy blur to crisp text, then a soft blur-out exit
+description: "Camera-lens focus pull for text in Remotion: a hero word pulls into focus from heavy blur, holds sharp, then softly blurs out at the end of the composition."
 component: focus-blur-resolve
 vibe: premium
 length: 90
@@ -20,11 +20,33 @@ askedAs:
   - "title that feels like a lens snapping into focus"
   - "rack focus title"
   - "blurry text coming into focus"
+  - "hero word pulls into focus from heavy blur like a camera lens"
+  - "text sharpens from blur then softly blurs out at the end"
 ---
+
+In Remotion, Focus Blur Resolve makes a hero word pull into focus from heavy blur like a camera lens, hold sharp, then softly blur out at the end. Use it for a premium title, a hero word or a short phrase in a launch or brand video.
 
 <ComponentPreview name="focus-blur-resolve" />
 
 <InstallBlock name="focus-blur-resolve" />
+
+## How to build this in Remotion
+
+You don't need to wire `interpolate()` to a CSS `blur()` filter yourself. Install the component and pass your text:
+
+```bash
+npx shadcn@latest add @remocn/focus-blur-resolve
+```
+
+The entrance and the exit come from `timeline.ts` and are two `interpolate()` curves on `Easing.bezier`: blur, a small lift and a 1.01 to 1 scale on the way in, blur and lift on the way out. The exit is pinned to the end of the composition, so the hold in the middle is whatever is left.
+
+## Good to know
+
+- Length: 90 frames of motion at 30 fps (180 at 60 fps) with the default props. The entrance takes 23 frames and the exit the last 16 frames of the composition; everything between is the sharp hold. The Usage example below is a 60 fps composition, so the numbers it hands to Remotion are doubled, see [Frame rate](/docs/getting-started/installation#frame-rate).
+- Installs: `remotion` from npm, plus the remocn helpers `glide`, `frame-rate`, `timeline`. The shadcn CLI copies the source into your project.
+- Font: Geist Sans through the `--font-geist-sans` CSS variable, with a system sans fallback. The font is set inline, so change it in the copied file; a `className` font does not override an inline style.
+- Timing: there are no duration or easing props, but the `timing` prop moves or stretches `enter` and `exit` by id, for example `timing={{ enter: { stretch: 1.5 } }}`. Easing curves live in the copied file.
+- It ships single-theme on a transparent background (`#171717` text); set `color` or place it in a `Backdrop`.
 
 ## Usage
 
@@ -119,3 +141,24 @@ export const RemotionRoot = () => (
     },
   ]}
 />
+
+## Common questions
+
+### How do I make a word in Remotion pull into focus from heavy blur like a camera lens?
+
+Install Focus Blur Resolve with `npx shadcn@latest add @remocn/focus-blur-resolve` and pass `text` and `blur` (default 14). It sharpens in over 23 frames, holds, and blurs out over the last 16.
+
+### Can I change how long the focus pull takes?
+
+Yes, with the `timing` prop (`enter` and `exit`, in 30 fps frames) or `speed` for the whole arc.
+
+### Can I skip the blur out at the end?
+
+Push the exit past the end with `timing={{ exit: { start: 9999 } }}`.
+
+## Related effects
+
+- [Blur Out Up](/docs/typography/blur-out-up): arrives clean and exits with an upward blur.
+- [Soft Blur In](/docs/typography/soft-blur-in): letters blur in one by one.
+- [Fog Rise](/docs/typography/fog-rise): a big word materializes out of fog from the center out.
+- [Tracking In](/docs/typography/tracking-in): letter spacing collapses while blur clears.

@@ -1,6 +1,6 @@
 ---
 title: Glyph Relay
-description: "\"Building a product\" hands off between lines until a giant question mark resolves into \"Launching it?\""
+description: "Setup-and-twist text for Remotion: a phrase like Building a product hands off between lines until a giant question mark resolves into Launching it?"
 component: glyph-relay
 vibe: premium
 length: 114
@@ -17,11 +17,33 @@ askedAs:
   - "rhetorical question reveal that resolves into the answer"
   - "text handoff giant question mark"
   - "building vs launching twist"
+  - "phrase hands off between lines until a giant question mark resolves the twist"
+  - "building a product then launching it question twist"
 ---
+
+In Remotion, Glyph Relay hands a phrase such as "Building a product" off between lines, piece by piece, until a giant question mark resolves into the twist, "Launching it?". Use it for a setup-and-twist story beat or a rhetorical question that turns into the pitch.
 
 <ComponentPreview name="glyph-relay" />
 
 <InstallBlock name="glyph-relay" />
+
+## How to build this in Remotion
+
+You don't need a `TransitionSeries` of three slides. Install the component and write the three lines:
+
+```bash
+npx shadcn@latest add @remocn/glyph-relay
+```
+
+It is one scene: the hand-offs, the question mark's growth and its drop run on `spring()` and `interpolate()` with timings from `timeline.ts`, and colors change with `interpolateColors()`. The ground is a live gradients.sh shader (`GshGround`), installed with the component as `@remocn/gsh`. It doesn't need `fitText()` or `measureText()` from `@remotion/layout-utils`.
+
+## Good to know
+
+- Length: 114 frames of motion at 30 fps (228 at 60 fps) with the default props. The demo plays 146 frames, which adds a hold: frames past the end of the motion hold the final frame. The Usage example below is a 60 fps composition, so the numbers it hands to Remotion are doubled, see [Frame rate](/docs/getting-started/installation#frame-rate).
+- Installs: `remotion`, `@remotion/google-fonts` from npm, plus the remocn helpers `gsh`, `glide`, `frame-rate`, `timeline`. The shadcn CLI copies the source into your project.
+- Fonts: loads Onest and Instrument Serif italic itself through `@remotion/google-fonts`. Pass `fontFamily` to use your own face, and load that font in your project.
+- The story has three parts: `line1` and `line2` are each a pair of text parts (defaults `["Building a", "product"]` and `["is", "easy."]`), and `line3` is the twist. The middle line is part of the hand-off, so write one for your story.
+- Pass `background` (a color or `"transparent"`) to replace the shader ground with a solid fill.
 
 ## Usage
 
@@ -139,3 +161,23 @@ The ground is a live gradients.sh shader (`GshGround`), installed with the compo
     },
   ]}
 />
+
+## Common questions
+
+### How do I animate a phrase handing off between lines until a giant question mark resolves into the twist?
+
+Install Glyph Relay with `npx shadcn@latest add @remocn/glyph-relay` and pass `line1`, `line2` and `line3`, for example "Building a product", "is easy." and "Launching it?".
+
+### Can I drop the shader background?
+
+Yes. Pass `background` with a solid color, or `"transparent"` to composite it over your own layer.
+
+### How long should it run?
+
+At least 114 frames at 30 fps (228 at 60 fps). The demo uses 146 for a hold on the last line.
+
+## Related effects
+
+- [Hook Uncurl](/docs/typography/hook-uncurl): a simple question-and-answer swap in stacked caps.
+- [Slide Doors](/docs/typography/slide-doors): a straight sequence of three lines.
+- [Answer First](/docs/typography/answer-first): the answer lands before the question.

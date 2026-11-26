@@ -1,6 +1,6 @@
 ---
 title: Glyph Anatomy
-description: A word builds as in a font editor, with metric guides, anchors along each contour and Bézier handles that pull straight segments into curves before the glyphs fill
+description: "Font editor animation for Remotion: metric guidelines, anchor points and Bezier handles pull a word's outlines into curves before the letters fill. For design and type tools."
 component: glyph-anatomy
 vibe: tech
 length: 66
@@ -19,11 +19,32 @@ askedAs:
   - "behind the scenes of letter construction before the glyph fills"
   - "vector path anchors on text"
   - "font editor animation"
+  - "word constructed like a font editor with guidelines, anchors and bezier handles"
+  - "anchor points and handles pull straight segments into curves before the fill"
 ---
+
+In Remotion, Glyph Anatomy constructs a word the way a font editor shows it: metric guidelines draw across, anchor points pop along each contour, and Bézier handles pull straight segments into curves before the letters fill in. Use it for a design tool or type product, a course, a talk or a type specimen.
 
 <ComponentPreview name="glyph-anatomy" />
 
 <InstallBlock name="glyph-anatomy" />
+
+## How to build this in Remotion
+
+You don't have to parse glyphs and animate them with `@remotion/paths` yourself. Install the component:
+
+```bash
+npx shadcn@latest add @remocn/glyph-anatomy
+```
+
+It reads the real outlines of the font with `opentype.js`, converts TrueType quadratic curves to cubics so each curve shows one handle on each end, and animates guides, anchors and handles with `interpolate()` and `Easing`. The font file is fetched while `delayRender()` holds the render, and `continueRender()` releases it once the font is parsed, so no frame renders before the outlines exist.
+
+## Good to know
+
+- Length: 66 frames of motion at 30 fps (132 at 60 fps) with the default props. The demo plays 96 frames, which adds a hold: frames past the end of the motion hold the final frame. The Usage example below is a 60 fps composition, so the numbers it hands to Remotion are doubled, see [Frame rate](/docs/getting-started/installation#frame-rate).
+- Installs: `remotion`, `opentype.js`, `@remotion/google-fonts` from npm, plus the remocn helpers `frame-rate`, `timeline`. The shadcn CLI copies the source into your project.
+- Font: the outlines come from `fontUrl`, Inter ExtraBold from Google Fonts' static CDN by default, so the default needs network access at render time. `fontUrl` accepts any `.ttf`, `.otf` or `.woff` URL; for offline renders put the file in `public/` and pass `fontUrl={staticFile("MyFont.ttf")}`. The small labels use Inter through `@remotion/google-fonts`.
+- `keepPoints` keeps the anchors, handles and guides on screen after the fill; `guides={false}` drops the metric lines.
 
 ## Usage
 
@@ -125,3 +146,24 @@ any `.ttf`, `.otf` or `.woff` file. The labels use Inter from
     },
   ]}
 />
+
+## Common questions
+
+### How do I animate a word in Remotion like a font editor, with guidelines, anchor points and Bézier handles?
+
+Install Glyph Anatomy with `npx shadcn@latest add @remocn/glyph-anatomy` and pass `text`. Guides draw, anchors pop along the contours, handles pull the segments into curves, and the glyphs fill.
+
+### Does it work without network access?
+
+Yes, if you serve the font yourself: pass a local file through `fontUrl` with `staticFile()`. The default Inter URL is fetched from Google's CDN.
+
+### Does the render wait for the font?
+
+Yes. The component calls `delayRender()` until the font file is fetched and parsed.
+
+## Related effects
+
+- [Outline Trace](/docs/typography/outline-trace): the outline draws itself without points or handles.
+- [Selection Snap](/docs/typography/selection-snap): a design-tool selection box around the word instead of its construction.
+- [Soft Blur In](/docs/typography/soft-blur-in): a quiet reveal.
+- [Kerning Snap](/docs/typography/kerning-snap): letters snap into proper kerning, for a typesetting beat.

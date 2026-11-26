@@ -1,6 +1,6 @@
 ---
 title: Hidden Word
-description: "A word is found hidden letter by letter inside a sentence and lifted out as a large italic title"
+description: "Hidden word reveal for Remotion: a key word is found letter by letter inside a sentence, then its letters lift out to form a big serif italic headline."
 component: hidden-word
 vibe: premium
 length: 152
@@ -19,11 +19,33 @@ askedAs:
   - "premium wordplay beat extracting a word in italic"
   - "find the word in the sentence"
   - "word lifted out of a phrase"
+  - "key word hidden in a sentence found letter by letter then lifted out"
+  - "letters light up inside a paragraph and fly out to spell a headline"
 ---
+
+In Remotion, Hidden Word hides a key word inside a sentence: its letters are found one by one, light up in place, and then lift out to form a big serif italic headline. Use it for a reveal beat where the point is already hiding in the copy.
 
 <ComponentPreview name="hidden-word" />
 
 <InstallBlock name="hidden-word" />
+
+## How to build this in Remotion
+
+You don't need `measureText()` and per-letter springs. Install the component and pass the sentence and the word:
+
+```bash
+npx shadcn@latest add @remocn/hidden-word
+```
+
+The letters are located in the sentence, lit with `interpolateColors()` and flown into place with `interpolate()` and `Easing`. Layout uses the Hanken Grotesk and Instrument Serif metrics built into the file, so there is no measuring step and no `fitText()`.
+
+## Good to know
+
+- Length: 152 frames of motion at 30 fps (304 at 60 fps) with the default props. The demo plays 186 frames, which adds a hold: frames past the end of the motion hold the final frame. The Usage example below is a 60 fps composition, so the numbers it hands to Remotion are doubled, see [Frame rate](/docs/getting-started/installation#frame-rate).
+- Installs: `remotion`, `@remotion/google-fonts` from npm, plus the remocn helpers `glide`, `frame-rate`, `timeline`. The shadcn CLI copies the source into your project.
+- Fonts: loads Hanken Grotesk (the sentence) and Instrument Serif italic (the headline word) itself through `@remotion/google-fonts`. `fontFamily` changes the sentence only, and the layout keeps Hanken Grotesk metrics, so another face may set looser or tighter. The headline is always Instrument Serif italic.
+- Which letters are picked: `text` must contain the letters of `word` in order, case-insensitive. When a letter appears several times, the component picks the occurrences spread most evenly across the sentence and prefers an exact case match. There is no prop to choose a specific occurrence.
+- `stagger` (default 6) is the frames between letters as they lift out.
 
 ## Usage
 
@@ -127,3 +149,23 @@ The sentence fades in line by line, the letters of `word` light up in order insi
     },
   ]}
 />
+
+## Common questions
+
+### How do I make a text reveal in Remotion where a key word hidden in a sentence is found letter by letter and lifted out as a headline?
+
+Install Hidden Word with `npx shadcn@latest add @remocn/hidden-word` and pass `text` and `word`.
+
+### Can I choose which occurrence of a letter is used?
+
+No. It picks letters spread evenly across the sentence; reword the sentence if it picks the wrong one.
+
+### Can the headline use another font?
+
+Not with a prop. It is Instrument Serif italic, loaded in the copied file.
+
+## Related effects
+
+- [Inline Highlight](/docs/typography/inline-highlight): highlight a word in place, without moving letters.
+- [Word Stream](/docs/typography/word-stream): phrases build word by word at voiceover pace.
+- [Focus Blur Resolve](/docs/typography/focus-blur-resolve): one word pulls into focus.

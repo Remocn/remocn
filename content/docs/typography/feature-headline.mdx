@@ -1,6 +1,6 @@
 ---
 title: Feature Headline
-description: "A tag pill opens from the left, then a headline rises word by word with a supporting subhead."
+description: "Feature announcement title for Remotion: a small New pill expands from the left, a headline rises word by word and a short subhead follows, for feature spotlights."
 component: feature-headline
 vibe: premium
 length: 39
@@ -18,11 +18,32 @@ askedAs:
   - "chapter title in a product tour introducing a feature"
   - "badge pill headline subhead"
   - "announce a new feature title card"
+  - "New pill expands from the left, then a headline rises in word by word"
+  - "feature announcement scene with tag, one line headline and subhead"
 ---
+
+In Remotion, Feature Headline builds a feature announcement scene: a small "New" pill expands from the left, then a headline rises in word by word with a short subhead underneath. Use it as a feature spotlight or a chapter title in a product tour or launch video.
 
 <ComponentPreview name="feature-headline" />
 
 <InstallBlock name="feature-headline" />
+
+## How to build this in Remotion
+
+You don't need `TransitionSeries`, `Series` or `premountFor` for this beat. Install the component and pass your copy:
+
+```bash
+npx shadcn@latest add @remocn/feature-headline
+```
+
+Everything plays in one scene from the schedule in `timeline.ts`: the pill, each headline word and the subhead are `interpolate()` calls with an `Easing` ease-out, clamped at both ends. It exits by itself over the last 12 frames of the composition when `exit` is on.
+
+## Good to know
+
+- Length: 39 frames of motion at 30 fps (78 at 60 fps) with the default props. The demo plays 90 frames, which adds a hold; with `exit` on, the exit runs over the composition's last 12 frames, so keep the composition longer than the entrance. The Usage example below is a 60 fps composition, so the numbers it hands to Remotion are doubled, see [Frame rate](/docs/getting-started/installation#frame-rate).
+- Installs: `remotion`, `@remotion/google-fonts` from npm, plus the remocn helpers `glide`, `frame-rate`, `timeline`. The shadcn CLI copies the source into your project.
+- Font: loads Geist and Geist Mono itself through `@remotion/google-fonts`. Pass `fontFamily` to use your own face, and load that font in your project.
+- Line length: the headline is not forced onto one line. It sets at full size on up to two lines, then shrinks to no less than 72% of that size, and lines wrap with balanced lengths. There is no `fontSize` prop; `scale` resizes the whole foreground.
 
 ## Usage
 
@@ -165,3 +186,24 @@ A pill with a tag and label opens, the headline words rise in turn with `highlig
     },
   ]}
 />
+
+## Common questions
+
+### How do I build a feature announcement in Remotion with a New pill, a headline rising word by word and a subhead?
+
+Install Feature Headline with `npx shadcn@latest add @remocn/feature-headline` and pass `tag`, `label`, `headline`, `highlight` and `subhead`. The pill opens first, the words rise in, then the subhead.
+
+### Will a long headline stay on one line?
+
+Not always. It sets on up to two lines at full size and shrinks toward 72% for longer copy. Use a short headline or lower `scale` for a single line.
+
+### Can I turn off the exit?
+
+Yes, set `exit={false}` and the scene holds on the last frame.
+
+## Related effects
+
+- [Tracking In](/docs/typography/tracking-in): a centered cinematic title with no tag.
+- [Blur Out Up](/docs/typography/blur-out-up): a bare text exit.
+- [Typewriter](/docs/typography/typewriter): a typed headline.
+- [Feature Trio](/docs/typography/feature-trio): three benefit words in one beat.

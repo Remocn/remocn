@@ -1,6 +1,6 @@
 ---
 title: Hot Stage
-description: "A headline pushes down and falls away for the next line while a faint mono mission log lights up."
+description: "Staged closing text for Remotion: each headline pushes the last one down and away while a faint monospace mission log lights up build, render, ship."
 component: hot-stage
 vibe: tech
 length: 112
@@ -19,11 +19,33 @@ askedAs:
   - "developer tool launch with a faint mission log"
   - "stage by stage text"
   - "headline dropping out"
+  - "headline pushes down and falls away as the next line arrives"
+  - "faint monospace mission log lights up build render ship"
 ---
+
+In Remotion, Hot Stage is a closing sequence where each new headline pushes the previous one down so it dims and falls away, while a faint monospace mission log lights up one entry per line, such as build, render, ship. Use it for a closing beat that walks through stages.
 
 <ComponentPreview name="hot-stage" />
 
 <InstallBlock name="hot-stage" />
+
+## How to build this in Remotion
+
+You don't need a `TransitionSeries` with one sequence per line. Install the component:
+
+```bash
+npx shadcn@latest add @remocn/hot-stage
+```
+
+It is one scene: every `stage` frames the next line pushes in with a flash of thin vent ticks, moved with `interpolate()` and `Easing`, and the matching log entry lights. Line and log widths are measured on a canvas while `delayRender()` holds the first frame.
+
+## Good to know
+
+- Length: 112 frames of motion at 30 fps (224 at 60 fps) with the default props. The demo plays 155 frames, which adds a hold: frames past the end of the motion hold the final frame. The Usage example below is a 60 fps composition, so the numbers it hands to Remotion are doubled, see [Frame rate](/docs/getting-started/installation#frame-rate).
+- Installs: `remotion`, `@remotion/google-fonts` from npm, plus the remocn helpers `glide`, `frame-rate`, `timeline`. The shadcn CLI copies the source into your project.
+- Fonts: loads Space Grotesk (the headlines) and Space Mono (the log) itself through `@remotion/google-fonts`. `fontFamily` changes the headlines only; the log stays Space Mono unless you edit the copied file.
+- Log and lines: log entry `i` lights with line `i`. If `log` has more entries than `lines`, the extra entries light one after another after the last line; lines without an entry just don't light one.
+- `stage` (default 44) is the frames between lines and `hold` (default 30) the hold on the last one, both in 30 fps frames.
 
 ## Usage
 
@@ -124,3 +146,23 @@ The first line fades up beside a dim monospaced log. Every `stage` frames the ne
     },
   ]}
 />
+
+## Common questions
+
+### How do I build a closing sequence where a headline pushes down and falls away while a mono log lights up build, render, ship?
+
+Install Hot Stage with `npx shadcn@latest add @remocn/hot-stage`, pass your `lines` and a `log` with one entry per line.
+
+### Can the log use another font?
+
+Not with a prop: it is Space Mono, loaded in the copied file.
+
+### What if log and lines have different lengths?
+
+Extra log entries light after the last line; extra lines simply have no log entry.
+
+## Related effects
+
+- [Cool Down](/docs/typography/cool-down): one calm line with a caption instead of a staged log.
+- [Indent Steps](/docs/typography/indent-steps): lines step in like indented code.
+- [Line-by-Line Slide](/docs/typography/line-by-line-slide): a multi-line entrance with a matching exit.

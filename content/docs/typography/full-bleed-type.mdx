@@ -1,6 +1,6 @@
 ---
 title: Full Bleed Type
-description: "Huge condensed caps words slam in one at a time, the last lit by a sunrise gradient"
+description: "Huge condensed all-caps slam text for Remotion: slogan words slam onto the screen one at a time, full bleed, and the last word lights up with a sunrise gradient."
 component: full-bleed-type
 vibe: playful
 length: 57
@@ -17,11 +17,33 @@ askedAs:
   - "fast slogan with giant caps filling the screen"
   - "bold caps slam"
   - "sunrise gradient final word"
+  - "slam huge condensed all caps words onto the screen one at a time"
+  - "fast slogan where the last word is lit by a sunrise gradient"
 ---
+
+In Remotion, Full Bleed Type slams huge condensed all-caps words onto the screen one at a time for a fast slogan, and lights the last word with a sunrise gradient. Use it for a punchy kinetic-typography beat in a launch, sports-style or social video.
 
 <ComponentPreview name="full-bleed-type" />
 
 <InstallBlock name="full-bleed-type" />
+
+## How to build this in Remotion
+
+You don't need `fitText`, `@remotion/motion-blur` or a `Sequence` per word. Install the component and pass your words:
+
+```bash
+npx shadcn@latest add @remocn/full-bleed-type
+```
+
+Each word slams on the schedule in `timeline.ts`, one every `beat` frames; the slam, settle and lock are `interpolate()` with `Easing`. The sunrise is an SVG gradient that climbs through the last word.
+
+## Good to know
+
+- Length: 57 frames of motion at 30 fps (114 at 60 fps) with the default props. The length is about (words − 1) × `beat` + 24 frames: the last word slams, settles and locks. The demo plays 96 frames. The Usage example below is a 60 fps composition, so the numbers it hands to Remotion are doubled, see [Frame rate](/docs/getting-started/installation#frame-rate).
+- Installs: `remotion`, `@remotion/google-fonts` from npm, plus the remocn helpers `glide`, `frame-rate`, `timeline`. The shadcn CLI copies the source into your project.
+- Font: loads Barlow Condensed itself through `@remotion/google-fonts`. Pass `fontFamily` to use your own face, and load that font in your project.
+- The sunrise colors are fixed, not props: dark theme `#fff1e2`, `#ff8a3d`, `#a3301a`, light theme `#ff8a3d`, `#a3301a`, `#2a0d0a`. `accent` is ignored; edit the `rise` array in the copied file for your brand.
+- Words are trimmed and set in caps for you.
 
 ## Usage
 
@@ -115,3 +137,24 @@ Each word slams in huge in condensed caps, one per `beat` frames, and the last w
     },
   ]}
 />
+
+## Common questions
+
+### How can I slam huge condensed all-caps words onto the screen one at a time in Remotion?
+
+Install Full Bleed Type with `npx shadcn@latest add @remocn/full-bleed-type` and pass `words` and `beat`. Each word slams in full frame and the last one is lit by a sunrise gradient.
+
+### Can I change the sunrise gradient colors?
+
+Not with a prop. Edit the `rise` colors in the copied file.
+
+### Do I need to load the condensed font?
+
+No, it loads Barlow Condensed itself.
+
+## Related effects
+
+- [Edge Fit](/docs/typography/edge-fit): one word fitted edge to edge with a caption.
+- [Chunk Stack](/docs/typography/chunk-stack): a stacked multi-word slogan with a highlighter.
+- [Strobe Words](/docs/typography/strobe-words): verbs strobe on flashing color fields.
+- [Word Stack](/docs/typography/word-stack): caps words push up into a poster stack.

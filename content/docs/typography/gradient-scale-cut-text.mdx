@@ -1,6 +1,6 @@
 ---
 title: Gradient Scale Cut Text
-description: An oversized gradient reveal snaps to a compact blurred line that settles into focus
+description: "Editorial hard cut for Remotion titles: a huge gradient-filled word snaps to a small blurred line that sharpens into focus. Abrupt on purpose, not a smooth zoom."
 component: gradient-scale-cut-text
 vibe: premium
 length: 36
@@ -19,11 +19,33 @@ askedAs:
   - "gradient headline that jump cuts and settles in focus"
   - "scale cut headline"
   - "huge to tiny text snap"
+  - "title starts huge with a gradient then hard cuts to a small blurred line"
+  - "abrupt editorial jump from a giant word to a small focused title"
 ---
+
+In Remotion, Gradient Scale Cut Text starts a title huge with a gradient fill, then hard-cuts to a small blurred line that sharpens into focus. The jump is abrupt and editorial on purpose, not a smooth zoom; use it for an opening title or an "Introducing" card.
 
 <ComponentPreview name="gradient-scale-cut-text" />
 
 <InstallBlock name="gradient-scale-cut-text" />
+
+## How to build this in Remotion
+
+You don't need a `Series` of two sequences for the cut. Install the component:
+
+```bash
+npx shadcn@latest add @remocn/gradient-scale-cut-text
+```
+
+It is one component with two layers. The giant word wipes in through a CSS `mask-image` over a `background-clip: text` gradient, `cutFrame` swaps it for the compact line on one exact frame, and the compact line's blur and slide settle with `interpolate()` and `Easing.out(Easing.cubic)`.
+
+## Good to know
+
+- Length: 36 frames of motion at 30 fps (72 at 60 fps) with the default props. The Usage example below is a 60 fps composition, so the numbers it hands to Remotion are doubled, see [Frame rate](/docs/getting-started/installation#frame-rate).
+- Installs: `remotion` from npm, plus the remocn helpers `frame-rate`, `timeline`. The shadcn CLI copies the source into your project.
+- The Usage example's 72 frames at 60 fps are the same 36 frames at 30 fps.
+- Font: set inline to Arial / Helvetica / sans-serif, with no font to load. Only `fontWeight` is a prop; to use another face, edit the `FONT_FAMILY` constant in the copied file.
+- Defaults: gradient `#f04a14` to `#f3f1f1`, ghost text `#170b0a`, background `#000000`, cut at frame 13, compact blur 12 px.
 
 ## Usage
 
@@ -179,3 +201,23 @@ restart after the cut. `settleTravel` controls the compact entrance distance,
     },
   ]}
 />
+
+## Common questions
+
+### How do I animate a title that starts huge with a gradient, then hard-cuts to a small blurred line that sharpens?
+
+Install Gradient Scale Cut Text with `npx shadcn@latest add @remocn/gradient-scale-cut-text` and pass `text`. Tune the cut with `cutFrame`, the blur with `compactBlur` and the slide with `settleTravel`.
+
+### Can I change the font?
+
+Only the weight through `fontWeight`. The family is a constant in the copied file.
+
+### Why does it cut instead of zooming?
+
+The cut is the effect. For a continuous scale change use Scale Down Fade or Zoom Words.
+
+## Related effects
+
+- [Scale Down Fade](/docs/typography/scale-down-fade): a continuous, calm scale-down instead of a cut.
+- [Zoom Words](/docs/typography/zoom-words): huge words with a camera move, continuous.
+- [Shimmer Sweep](/docs/typography/shimmer-sweep): a shine across text that is already visible.

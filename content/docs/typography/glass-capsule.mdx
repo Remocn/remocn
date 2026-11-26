@@ -1,6 +1,6 @@
 ---
 title: Glass Capsule
-description: "A glass capsule slides over the focus word of a two-line headline and magnifies it in italic."
+description: "Liquid glass magnifier for Remotion: a glass capsule slides over one key word in a two-line headline, magnifies it and turns it serif italic. For premium titles."
 component: glass-capsule
 vibe: premium
 length: 94
@@ -18,11 +18,32 @@ askedAs:
   - "premium title with a magnifier glass highlight"
   - "glass pill magnify"
   - "lens effect on keyword"
+  - "slide a glass capsule over one word to magnify it and switch it to italic"
+  - "liquid glass lens over a keyword in a headline"
 ---
+
+In Remotion, Glass Capsule slides a glass capsule over one key word in a two-line headline, magnifies that word and switches it to a serif italic. Use it for a premium title or launch line where one word carries the point.
 
 <ComponentPreview name="glass-capsule" />
 
 <InstallBlock name="glass-capsule" />
+
+## How to build this in Remotion
+
+You don't need `backdrop-filter` or a hand-made SVG displacement filter. Install the component and name the word:
+
+```bash
+npx shadcn@latest add @remocn/glass-capsule
+```
+
+The lens is an SVG filter built into the component: `feDisplacementMap` bends the word under the capsule, so it renders the same in the preview and in `npx remotion render`. The lines rise and the capsule glides with `interpolate()` and `Easing`, and the text is measured on a canvas while `delayRender()` holds the first frame. It doesn't need `fitText()` or `measureText()` from `@remotion/layout-utils`.
+
+## Good to know
+
+- Length: 94 frames of motion at 30 fps (188 at 60 fps) with the default props. The demo plays 140 frames, which adds a hold: frames past the end of the motion hold the final frame. The Usage example below is a 60 fps composition, so the numbers it hands to Remotion are doubled, see [Frame rate](/docs/getting-started/installation#frame-rate).
+- Installs: `remotion`, `@remotion/google-fonts` from npm, plus the remocn helpers `glide`, `frame-rate`, `timeline`. The shadcn CLI copies the source into your project.
+- Fonts: loads Instrument Sans (the lines) and Instrument Serif italic (the magnified word) itself through `@remotion/google-fonts`. `fontFamily` changes the lines only; the focus word always switches to Instrument Serif italic, so swap that `loadFont` call in the copied file for another italic face.
+- `focus` has to be a word that appears in `lines`. `magnify` (default `1.1`) sets how much the capsule enlarges it.
 
 ## Usage
 
@@ -123,3 +144,24 @@ The two lines rise in, then a glass capsule glides over `focus`, magnifies it an
     },
   ]}
 />
+
+## Common questions
+
+### How can I slide a glass capsule over one word in Remotion so it magnifies it and switches it to italic?
+
+Install Glass Capsule with `npx shadcn@latest add @remocn/glass-capsule`, pass two `lines` and the `focus` word. The capsule glides over it, magnifies it and swaps it to a serif italic.
+
+### Can I change the italic font?
+
+Not with a prop. The italic is Instrument Serif, loaded in the copied file; edit that import to use another face.
+
+### How long should the composition be?
+
+At least 94 frames at 30 fps (188 at 60 fps). The demo uses 140 so the result holds.
+
+## Related effects
+
+- [Marker Highlight](/docs/typography/marker-highlight): a flat marker block behind the word instead of glass.
+- [Blur Out Up](/docs/typography/blur-out-up): the whole line changes, not one word.
+- [Inline Highlight](/docs/typography/inline-highlight): a color shift on one word, no lens.
+- [Pinned Word](/docs/typography/pinned-word): one italic keyword stays fixed while the words around it change.
