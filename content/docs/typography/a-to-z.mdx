@@ -1,6 +1,6 @@
 ---
 title: A to Z
-description: "An alphabet gag where a big letter column rolls from A to Z and lands on a final entry"
+description: "Alphabet gag for Remotion: a tall letter column rolls like a slot machine from A to Z, each feature starts with the next letter, and the finale lands on Z."
 component: a-to-z
 vibe: playful
 length: 128
@@ -19,11 +19,32 @@ askedAs:
   - "playful alphabet joke where letters roll up to Z"
   - "abc style recap of everything the product does ending on the last letter"
   - "a tall column of letters spins through the alphabet and stops on the punchline"
+  - "slot machine list that rolls through letters and lands on a Z item"
+  - "A is for, B is for feature recap with a big rolling letter"
 ---
+
+In Remotion, A to Z is an alphabet gag: a huge letter column rolls like a slot machine next to a text column, so each feature reads "A is for…", "B is for…", and the roll flicks through the remaining letters to land on a final Z entry. Use it for a playful feature recap or a closing punchline in a launch or changelog video.
 
 <ComponentPreview name="a-to-z" />
 
 <InstallBlock name="a-to-z" />
+
+## How to build this in Remotion
+
+You don't have to hand-roll it with `spring()`, `Series` and a translateY slot-machine list. Install the component and pass your entries:
+
+```bash
+npx shadcn@latest add @remocn/a-to-z
+```
+
+Under the hood it is one scene, not a `Sequence` per letter: the schedule in `timeline.ts` gives each entry a start frame, and the letter and text columns roll with `interpolate()` over an `Easing.bezier` curve, clamped at both ends. Text widths are measured on a canvas before the first frame (held with `delayRender`), so a long entry wraps without the layout jumping.
+
+## Good to know
+
+- Length: 128 frames of motion at 30 fps (256 at 60 fps) with the default props; the demo plays 165 frames, which adds a hold. The pacing stretches to fit whatever `durationInFrames` you give it, so a longer composition rolls slower rather than freezing. The Usage example below is a 60 fps composition, so the numbers it hands to Remotion are doubled, see [Frame rate](/docs/getting-started/installation#frame-rate).
+- The big letter is always the first letter of each entry. The finale is not forced to Z: it lands on the first letter of `finale`, so "zero lock-in." ends on Z and "you." would end on Y. The flick runs through every letter between the last entry and the finale.
+- Installs: `remotion`, `@remotion/google-fonts` from npm, plus the remocn helpers `glide`, `frame-rate`, `timeline`. The shadcn CLI copies the source into your project.
+- Font: loads Unbounded itself through `@remotion/google-fonts`. Pass `fontFamily` to use your own face, and load that font in your project.
 
 ## Usage
 
@@ -133,3 +154,24 @@ A huge letter column and a text column roll together: each entry shows its first
     },
   ]}
 />
+
+## Common questions
+
+### Is there a way in Remotion to do an alphabet gag where letters roll from A to Z?
+
+Yes. A to Z rolls a tall column of letters from A toward Z while each feature starts with the next letter, then lands on a final item. Install it with `npx shadcn@latest add @remocn/a-to-z` and pass `entries` in alphabetical order plus a `finale`.
+
+### Does the last item have to start with Z?
+
+No. The roll lands on the first letter of `finale`. Start it with Z for the full alphabet joke.
+
+### How long should the composition be?
+
+At least 128 frames at 30 fps (256 at 60 fps). Anything longer stretches the rolls and the final hold.
+
+## Related effects
+
+- [Index List](/docs/typography/index-list): a numbered feature list with a highlight band, when the items are not alphabetical.
+- [Slot Machine Roll](/docs/typography/slot-machine-roll): a slot-machine roll on a single value.
+- [Staggered Fade Up](/docs/typography/staggered-fade-up): a plain stacked list without the roll.
+- [Inline Word Roll](/docs/typography/inline-word-roll): one word rolls through options after a fixed lead.

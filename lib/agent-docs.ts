@@ -134,7 +134,7 @@ const WHEN_TO_USE = [
 /** Link lists, in llms.txt section format, for the machine endpoints. */
 const AGENT_TOOLS = [
   "## Agent tools",
-  `- [Component index](${SITE_URL}/llms-components.txt): every installable component with its use / avoid signal, natural length, vibe and dependencies`,
+  `- [Component index](${SITE_URL}/llms-components.txt): every installable component with what it looks like on screen, its use / avoid signal, natural length, vibe and dependencies`,
   `- [MCP server](${MCP_DOCS_URL}.md): hosted MCP for building Remotion videos at ${MCP_URL}. Remote, read-only, no auth; it does not render video. Search components, read one, plan a video, preview a component. The page covers tools and setup for Claude Code, Claude Desktop, Cursor, VS Code and Codex`,
   `- [Remotion MCP servers compared](${SITE_URL}${MCP_GUIDE_PATH}.md): which Remotion MCP servers are free, which need a key, which render frames, with a dated table and FAQ`,
   `- [Best Claude Code skills for making videos](${SITE_URL}/docs/guides/claude-code-video-skills.md): Remotion's Agent Skills, Remocn's skill, plugin and MCP server, HyperFrames and FFmpeg skills in one dated table (install command, licence, cost, render location)`,
@@ -411,7 +411,7 @@ export function buildLlmsTxt(pages: IndexPage[], facts?: CatalogFacts): string {
   );
   lines.push(
     `\nBuilding a video? Start at [/llms-components.txt](${SITE_URL}/llms-components.txt) — every` +
-      " installable component in one table with its use / avoid signal, natural length, vibe and" +
+      " installable component in one table with what it looks like on screen, its use / avoid signal, natural length, vibe and" +
       " dependencies, linking to each component's full page.",
   );
   const textEffects = componentCount(sections.get("typography"));
@@ -422,6 +422,7 @@ export function buildLlmsTxt(pages: IndexPage[], facts?: CatalogFacts): string {
       `\nLooking for text animations? Remocn has ${textEffects} animated text effects for Remotion${captionNote}.` +
         ` [Remotion text animations](${SITE_URL}${TEXT_GUIDE_PATH}.md) answers how to animate text in Remotion and has a picker table;` +
         ` [Kinetic typography in Remotion](${SITE_URL}${KINETIC_GUIDE_PATH}.md) covers cuts over tweens, rhythm on a frame clock and the components built on beats;` +
+        ` [Typography](${SITE_URL}/docs/typography.md) has a "find a text effect by what it looks like" table (alphabet gag, slot-machine list, acronym expand, cinematic title slit, typewriter caret, kill feed, gooey morph, bokeh title and more), so search by the look rather than the name;` +
         ` [/llms-full/typography.txt](${sectionCorpusUrl("typography")}) has every text component's props and usage in one file.`,
     );
   }

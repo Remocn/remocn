@@ -48,7 +48,8 @@ export function GET() {
     "# Remocn Component Index",
     "",
     "> Router for every installable Remocn component. Scan the tables, pick candidates by",
-    "> `Use for` / `Avoid for`, then fetch only the component pages you need.",
+    "> `Looks like` / `Use for` / `Avoid for`, then fetch only the component pages you need.",
+    "> `Looks like` describes the effect on screen in plain words, the way people ask for it.",
     "",
     `Full reference for one component — props, examples, all use / don't-use notes — lives at its`,
     "Docs link below. Every docs URL also serves raw Markdown: append `.md`.",
@@ -84,9 +85,9 @@ export function GET() {
   for (const [key, pages] of sections) {
     lines.push("", `## ${sectionTitle(key)}`, "");
     lines.push(
-      "| Component | Use for | Avoid for | Length | Vibe | Tier | Deps | Docs |",
+      "| Component | Looks like | Use for | Avoid for | Length | Vibe | Tier | Deps | Docs |",
     );
-    lines.push("|---|---|---|---|---|---|---|---|");
+    lines.push("|---|---|---|---|---|---|---|---|---|");
 
     for (const page of pages.sort((a, b) =>
       a.slugs.join("/").localeCompare(b.slugs.join("/")),
@@ -102,6 +103,7 @@ export function GET() {
         [
           "",
           `\`${name}\``,
+          cell(data.description),
           cell(data.useWhen?.[0]),
           cell(data.avoidWhen?.[0]),
           data.length ? formatLength(data.length).replace(" @ 30fps", "") : "—",
