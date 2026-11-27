@@ -118,13 +118,8 @@ const WEIGHTS = {
   vibe: 1,
 } as const;
 
-export function scoreComponent(
-  record: ComponentRecord,
-  queryTokens: string[],
-  rawQuery: string,
-): number {
-  if (queryTokens.length === 0) return 0;
-  const fields = {
+function recordFields(record: ComponentRecord) {
+  return {
     name: tokenize(record.name.replace(/-/g, " ")),
     title: tokenize(record.title),
     description: tokenize(record.description),
@@ -133,6 +128,15 @@ export function scoreComponent(
     askedAs: tokenize(record.askedAs.join(" ")),
     vibe: record.vibe ? [record.vibe] : [],
   };
+}
+
+export function scoreComponent(
+  record: ComponentRecord,
+  queryTokens: string[],
+  rawQuery: string,
+): number {
+  if (queryTokens.length === 0) return 0;
+  const fields = recordFields(record);
 
   let score = 0;
   let matchedTokens = 0;
@@ -171,6 +175,23 @@ function passesFilters(
     if (record.length > maxLength) return false;
   }
   return true;
+}
+
+/**
+ * Share of the query's words that hit any field of the record, from 0 to 1.
+ * The keyword ranking's own notion of coverage, reused to tell how well its
+ * top result fits.
+ */
+export function queryCoverage(
+  record: ComponentRecord,
+  queryTokens: string[],
+): number {
+  if (queryTokens.length === 0) return 0;
+  const words = Object.values(recordFields(record));
+  const matched = queryTokens.filter((token) =>
+    words.some((field) => fieldHit(token, field)),
+  );
+  return matched.length / queryTokens.length;
 }
 
 export interface ScoredComponent {
@@ -259,6 +280,17 @@ export function normalizeName(input: string): string {
       .split("/")
       .pop() ?? "";
   return last.replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+}
+
+/** Longest component name a failed lookup records; real names are shorter. */
+export const MAX_REQUESTED_NAME = 64;
+
+/**
+ * A name an agent asked for that matched no component, in the catalog's own
+ * form (`Lower Third` → `lower-third`), so the same miss groups as one value.
+ */
+export function requestedName(input: string): string {
+  return normalizeName(input).slice(0, MAX_REQUESTED_NAME);
 }
 
 /** Closest known names for an unknown lookup: substring hits first, then edit distance. */

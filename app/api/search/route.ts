@@ -38,7 +38,7 @@ export async function GET(request: Request) {
 
   const catalog = getCatalog();
   const started = performance.now();
-  const [docs, { results: components, mode }] = await Promise.all([
+  const [docs, { results: components, mode, top }] = await Promise.all([
     docsSearch.search(fullTextQuery(query), {
       tag,
       locale: url.searchParams.get("locale") ?? undefined,
@@ -47,7 +47,7 @@ export async function GET(request: Request) {
     // A tag narrows the search to one slice of the docs; the component
     // ranking knows nothing about tags, so it stays out of a tagged search.
     tag
-      ? { results: [], mode: undefined }
+      ? { results: [], mode: undefined, top: undefined }
       : searchCatalog({ query, limit: COMPONENT_RESULTS }),
   ]);
 
@@ -61,6 +61,7 @@ export async function GET(request: Request) {
       query,
       results: components.map((record) => record.name),
       mode,
+      top,
       latencyMs: performance.now() - started,
     });
   }

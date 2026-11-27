@@ -2,8 +2,12 @@ import { describe, expect, it } from "bun:test";
 import {
   type ComponentRecord,
   closestNames,
+  MAX_REQUESTED_NAME,
   normalizeName,
+  queryCoverage,
+  requestedName,
   searchComponents,
+  tokenize,
 } from "./search";
 
 function record(
@@ -148,5 +152,30 @@ describe("ranking regressions", () => {
       query: "typewriter headline",
     });
     expect(first.name).toBe("typewriter");
+  });
+});
+
+describe("queryCoverage", () => {
+  it("is the share of query words any field matches", () => {
+    const clock = record("clock-sweep", {
+      description: "A clock hand sweeps a wedge",
+    });
+
+    expect(queryCoverage(clock, tokenize("clock hand"))).toBe(1);
+    expect(queryCoverage(clock, tokenize("clock lower third"))).toBeCloseTo(
+      1 / 3,
+    );
+    expect(queryCoverage(clock, [])).toBe(0);
+  });
+});
+
+describe("requestedName", () => {
+  it("groups spellings of the same missing name", () => {
+    expect(requestedName("Lower Third")).toBe("lower-third");
+    expect(requestedName("@remocn/lower-third")).toBe("lower-third");
+  });
+
+  it("cuts a pasted sentence down", () => {
+    expect(requestedName("word ".repeat(100))).toHaveLength(MAX_REQUESTED_NAME);
   });
 });
