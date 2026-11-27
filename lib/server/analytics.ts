@@ -1,13 +1,16 @@
 import "server-only";
 
 import { OpenPanel } from "@openpanel/sdk";
+import { requestedName } from "@/lib/mcp/search";
 import {
   CRAWLER_UA,
   classifyAgentClient,
   describeQuery,
   loggedQuery,
   type SearchSurface,
+  topMatchShape,
 } from "@/lib/search/analytics-shape";
+import type { TopMatch } from "@/lib/search/hybrid";
 
 let client: OpenPanel | null | undefined;
 
@@ -72,6 +75,8 @@ export interface AgentSearch {
   results: string[];
   /** `keyword` when the semantic index or model was not available. */
   mode?: "hybrid" | "keyword";
+  /** How well the first result fits, from \`searchCatalog\`. */
+  top?: TopMatch;
   latencyMs: number;
   vibe?: string;
   maxLength?: number;
@@ -101,6 +106,7 @@ export function trackAgentSearch(search: AgentSearch): void {
     has_results: search.results.length > 0,
     top_components: search.results.slice(0, 6).join(","),
     ...(search.mode ? { mode: search.mode } : {}),
+    ...(search.top ? topMatchShape(search.top) : {}),
     latency_ms: Math.round(search.latencyMs),
     ...(search.vibe ? { vibe: search.vibe } : {}),
     ...(search.maxLength !== undefined ? { max_length: search.maxLength } : {}),
@@ -111,7 +117,9 @@ export function trackAgentSearch(search: AgentSearch): void {
  * An agent asked for one component by name (`get_component`,
  * `preview_component`). Set against the searches that returned that component,
  * it is the closest thing to a click: the agent went on to read or show it.
- * `found: false` is a name the agent made up or misread.
+ * `found: false` is a name the agent made up or misread; `requested` keeps
+ * that name, normalized and cut short, to show which components agents expect
+ * the catalog to have.
  */
 export function trackAgentComponentFetch(fetch: {
   tool: "get_component" | "preview_component";
@@ -128,5 +136,6 @@ export function trackAgentComponentFetch(fetch: {
     tool: fetch.tool,
     component: fetch.found ? fetch.component : "",
     found: fetch.found,
+    ...(fetch.found ? {} : { requested: requestedName(fetch.component) }),
   });
 }

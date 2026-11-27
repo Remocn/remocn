@@ -253,7 +253,7 @@ export function createRemocnMcpServer(): McpServer {
     },
     async ({ query, vibe, maxLength, limit }) => {
       const started = performance.now();
-      const { results, mode } = await searchCatalog({
+      const { results, mode, top } = await searchCatalog({
         query,
         vibe,
         maxLength,
@@ -265,6 +265,7 @@ export function createRemocnMcpServer(): McpServer {
         query,
         results: results.map((r) => r.name),
         mode,
+        top,
         latencyMs: performance.now() - started,
         vibe,
         maxLength,

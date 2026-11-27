@@ -4,6 +4,7 @@ import {
   classifyAgentClient,
   describeQuery,
   loggedQuery,
+  topMatchShape,
 } from "./analytics-shape";
 
 describe("describeQuery", () => {
@@ -48,5 +49,14 @@ describe("browserActor", () => {
     expect(browserActor("Mozilla/5.0 Chrome/140", true)).toBe("agent");
     expect(browserActor("Mozilla/5.0 Claude-Agent/1.0", false)).toBe("agent");
     expect(browserActor("Mozilla/5.0 Chrome/140", false)).toBe("human");
+  });
+});
+
+describe("topMatchShape", () => {
+  it("rounds the score for charts and keeps the verdict", () => {
+    expect(topMatchShape({ score: 0.28734, weak: true })).toEqual({
+      top_score: 0.29,
+      weak: true,
+    });
   });
 });

@@ -1,6 +1,7 @@
 import {
   type ComponentRecord,
   normalizeName,
+  queryCoverage,
   rankComponents,
   searchComponents,
   tokenize,
@@ -125,14 +126,7 @@ function namedComponents(
   const words = tokenize(query);
   const exact = normalizeName(query);
   const named = candidates
-    .filter((record) => {
-      if (record.name === exact) return true;
-      const parts = record.name.split("-");
-      return (
-        parts.every((part) => words.includes(part)) &&
-        parts.length * 2 >= words.length
-      );
-    })
+    .filter((record) => callsByName(record, words, exact))
     .map((record) => record.name);
   const order = (name: string) => {
     if (name === exact) return -1;
@@ -140,4 +134,70 @@ function namedComponents(
     return index === -1 ? Number.POSITIVE_INFINITY : index;
   };
   return named.sort((a, b) => order(a) - order(b));
+}
+
+function callsByName(
+  record: ComponentRecord,
+  words: string[],
+  exact: string,
+): boolean {
+  if (record.name === exact) return true;
+  const parts = record.name.split("-");
+  return (
+    parts.every((part) => words.includes(part)) &&
+    parts.length * 2 >= words.length
+  );
+}
+
+/**
+ * Below this a search counts as weak: the catalog most likely has nothing
+ * for the need. One value per mode, because the scores are not comparable.
+ * Measured on `evals/search/golden.json`, the catalog gaps from the agent
+ * queries of November 2026 (lower third, Ken Burns, dip to black) and a
+ * sample of real agent queries; the numbers are in the PR that added them.
+ */
+export const WEAK_BELOW = { hybrid: 0.3, keyword: 0.5 } as const;
+
+export interface TopMatch {
+  /** 0 to 1; 1 when the query calls the component by name. */
+  score: number;
+  weak: boolean;
+}
+
+/**
+ * How well the first result fits the query. The fused ranking is made of
+ * ranks, so it always has a first place and says nothing about distance; the
+ * score is read from the half that measures distance.
+ *
+ * With semantic hits: how far the result's cosine stands above the median
+ * component's, as a share of the room left above that median. e5 puts every
+ * component within a narrow band of cosines whose floor moves with the query
+ * (a long description is close to everything), so the raw cosine of the top
+ * hit tells a gap from a match worse than its lift above the floor. Without
+ * them: the share of the query's words the result matches.
+ *
+ * `undefined` for an empty query, which lists the catalog rather than
+ * searching it, and when nothing came back.
+ */
+export function topMatch(
+  query: string,
+  top: ComponentRecord | undefined,
+  semantic: SemanticHit[] | null,
+): TopMatch | undefined {
+  if (!top || query.trim() === "") return undefined;
+  const words = tokenize(query);
+  const mode = semantic ? "hybrid" : "keyword";
+  let score: number;
+  if (callsByName(top, words, normalizeName(query))) score = 1;
+  else if (semantic) score = semanticLift(top.name, semantic);
+  else score = queryCoverage(top, words);
+  return { score, weak: score < WEAK_BELOW[mode] };
+}
+
+function semanticLift(name: string, semantic: SemanticHit[]): number {
+  const cosine = semantic.find((hit) => hit.name === name)?.score;
+  if (cosine === undefined || semantic.length === 0) return 0;
+  const median = semantic[Math.floor(semantic.length / 2)].score;
+  if (median >= 1) return 0;
+  return Math.min(1, Math.max(0, (cosine - median) / (1 - median)));
 }

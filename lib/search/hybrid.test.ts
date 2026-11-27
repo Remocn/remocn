@@ -1,6 +1,12 @@
 import { describe, expect, it } from "bun:test";
 import type { ComponentRecord } from "@/lib/mcp/search";
-import { fuseRankings, hybridSearch, rankByVectors } from "./hybrid";
+import {
+  fuseRankings,
+  hybridSearch,
+  rankByVectors,
+  topMatch,
+  WEAK_BELOW,
+} from "./hybrid";
 
 function record(
   name: string,
@@ -153,5 +159,64 @@ describe("hybridSearch", () => {
     const results = hybridSearch(records, "clock", null, 5);
 
     expect(results.map((r) => r.name)).toEqual(["clock-sweep"]);
+  });
+});
+
+describe("topMatch", () => {
+  const clock = record("clock-sweep", {
+    description: "A clock hand sweeps a wedge",
+  });
+  // A catalog of five: the median component sits at 0.8.
+  const semantic = (top: number) => [
+    { name: "clock-sweep", score: top },
+    { name: "a", score: 0.82 },
+    { name: "b", score: 0.8 },
+    { name: "c", score: 0.79 },
+    { name: "d", score: 0.78 },
+  ];
+
+  it("measures how far the result stands above the median component", () => {
+    const match = topMatch("time passing", clock, semantic(0.9));
+
+    expect(match?.score).toBeCloseTo(0.5);
+    expect(match?.weak).toBe(false);
+  });
+
+  it("calls a result barely above the catalog's floor weak", () => {
+    const match = topMatch("lower third", clock, semantic(0.84));
+
+    expect(match?.score).toBeCloseTo(0.2);
+    expect(match?.weak).toBe(true);
+  });
+
+  it("puts the hybrid threshold between those two", () => {
+    expect(WEAK_BELOW.hybrid).toBeGreaterThan(0.2);
+    expect(WEAK_BELOW.hybrid).toBeLessThan(0.5);
+  });
+
+  it("trusts a component the query calls by name", () => {
+    const match = topMatch("clock sweep", clock, semantic(0.8));
+
+    expect(match).toEqual({ score: 1, weak: false });
+  });
+
+  it("scores the keyword fallback by the share of words matched", () => {
+    expect(topMatch("clock hand", clock, null)).toEqual({
+      score: 1,
+      weak: false,
+    });
+    expect(topMatch("clock lower third", clock, null)?.weak).toBe(true);
+  });
+
+  it("calls a query the keyword fallback cannot read weak", () => {
+    expect(topMatch("нижняя плашка", clock, null)).toEqual({
+      score: 0,
+      weak: true,
+    });
+  });
+
+  it("has nothing to say without a query or a result", () => {
+    expect(topMatch("  ", clock, semantic(0.9))).toBeUndefined();
+    expect(topMatch("clock", undefined, semantic(0.9))).toBeUndefined();
   });
 });

@@ -5,6 +5,8 @@
  * can split any of them by `actor`.
  */
 
+import type { TopMatch } from "@/lib/search/hybrid";
+
 export type SearchActor = "human" | "agent";
 
 /** Where the search came from: the ⌘K dialog, an MCP tool call, or a direct call to `/api/search`. */
@@ -45,6 +47,18 @@ export function describeQuery(query: string): QueryShape {
 
 export function loggedQuery(query: string): string {
   return query.trim().slice(0, MAX_LOGGED_QUERY);
+}
+
+/**
+ * How well a search's first result fits, as event properties. The score is
+ * rounded: two decimals are all a chart can use, and `weak` already carries
+ * the threshold of the mode the search ran in.
+ */
+export function topMatchShape(top: TopMatch): {
+  top_score: number;
+  weak: boolean;
+} {
+  return { top_score: Math.round(top.score * 100) / 100, weak: top.weak };
 }
 
 /** Crawlers and search bots, by User-Agent. Shared by the server events and the browser filter. */
