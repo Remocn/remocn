@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { agentLink } from "@/lib/agent-links";
 import { getCatalog } from "@/lib/mcp/catalog";
-import { customizedDocsUrl } from "@/lib/mcp/config";
 import { componentPage } from "@/lib/mcp/format";
 import { sitePreview } from "@/lib/previews/site-preview";
 import { previewManifest } from "@/registry/__manifest__";
@@ -13,7 +12,8 @@ import { StandaloneLink } from "./standalone-link";
  * Chrome-less player for one registry component, made to be iframed — the MCP
  * App view behind `preview_component` / `plan_video` loads it. Optional
  * `?props=<url-encoded JSON>` is merged over the component's demo defaults.
- * Opened in a tab of its own, it links on to the docs page with the same props.
+ * Opened in a tab of its own, it links on to the docs page. The link carries
+ * neither the props nor a referrer: the docs page is tracked, the props are not.
  */
 
 /** `utm_source` of the link from a standalone embed page; the calling agent is not known here. */
@@ -71,10 +71,7 @@ export default async function EmbedPage({
       />
       {record && (
         <StandaloneLink
-          href={agentLink(
-            customizedDocsUrl(componentPage(record), name, props),
-            EMBED_AGENT_SOURCE,
-          )}
+          href={agentLink(componentPage(record), EMBED_AGENT_SOURCE)}
         />
       )}
     </main>

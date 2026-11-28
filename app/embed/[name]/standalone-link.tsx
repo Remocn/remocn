@@ -14,6 +14,7 @@ export function StandaloneLink({ href }: { href: string }) {
   return (
     <a
       href={href}
+      rel="noreferrer"
       className="fixed bottom-4 left-1/2 -translate-x-1/2 rounded-full bg-background/80 px-3 py-1 text-sm text-muted-foreground underline underline-offset-4 backdrop-blur hover:text-foreground"
     >
       Customize & install on remocn.dev
