@@ -39,9 +39,15 @@ const regex = (pattern: RegExp) =>
 /**
  * OpenPanel's `filter` option, inlined into the init script as JavaScript: the
  * same rules as `isAutomatedBrowser`, decided once per page load, plus the
- * `/embed/*` exclusion (those pages run inside MCP App iframes in chat hosts
- * and carry the user's props in their URL). Every browser event goes through
- * it, screen views and outgoing links included.
+ * `/embed/*` rule. Every browser event goes through it, screen views and
+ * outgoing links included.
+ *
+ * `/embed/*` pages run inside MCP App iframes in chat hosts, where they send
+ * nothing. Opened as a tab of their own (`window.top === window`), they are a
+ * person following a preview link from an agent and are counted, but their
+ * URL carries the agent's props: the filter cuts the query off `__path`
+ * before the event leaves. The SDK (`@openpanel/sdk` 1.3) sends the same
+ * event object it hands to the filter, so the edit is what gets sent.
  */
 export const OPENPANEL_FILTER = `(function () {
   var ua = navigator.userAgent || "";
@@ -51,7 +57,14 @@ export const OPENPANEL_FILTER = `(function () {
     ${regex(HEADLESS_UA)}.test(ua) ||
     ${regex(CRAWLER_UA)}.test(ua) ||
     (!${regex(MOBILE_UA)}.test(ua) && chrome !== null && Number(chrome[1]) < ${MIN_DESKTOP_CHROME});
-  return function () {
-    return !automated && !window.location.pathname.startsWith("/embed/");
+  return function (event) {
+    if (automated) return false;
+    if (!window.location.pathname.startsWith("/embed/")) return true;
+    if (window.top !== window) return false;
+    var properties = event && event.payload && event.payload.properties;
+    if (properties && typeof properties.__path === "string") {
+      properties.__path = properties.__path.split(/[?#]/)[0];
+    }
+    return true;
   };
 })()`;

@@ -36,22 +36,30 @@ const CASES: [string, string, boolean, boolean][] = [
   ["Chrome 99 on Windows 10", CHROME_99_WIN10, false, true],
 ];
 
+type Event = { payload: { properties: Record<string, unknown> } };
+
 /** Runs the inlined filter string the way the OpenPanel init script does. */
 function runFilter(
   userAgent: string,
   webdriver: boolean,
   pathname = "/docs/x",
+  { framed = false, event }: { framed?: boolean; event?: Event } = {},
 ) {
   const make = new Function(
     "navigator",
     "window",
     `return ${OPENPANEL_FILTER};`,
   );
-  const filter = make(
-    { userAgent, webdriver },
-    { location: { pathname } },
-  ) as () => boolean;
-  return filter();
+  const win: Record<string, unknown> = { location: { pathname } };
+  win.top = framed ? {} : win;
+  const filter = make({ userAgent, webdriver }, win) as (
+    event?: Event,
+  ) => boolean;
+  return filter(event);
+}
+
+function screenView(path: string): Event {
+  return { payload: { properties: { __path: path, __title: "Embed" } } };
 }
 
 describe("isAutomatedBrowser", () => {
@@ -69,7 +77,34 @@ describe("OPENPANEL_FILTER", () => {
     });
   }
 
-  test("drops /embed/ pages for everyone", () => {
-    expect(runFilter(CHROME_131_MAC, false, "/embed/fade-in")).toBe(false);
+  test("drops /embed/ pages inside a chat host's iframe", () => {
+    expect(
+      runFilter(CHROME_131_MAC, false, "/embed/fade-in", { framed: true }),
+    ).toBe(false);
+  });
+
+  test("sends /embed/ pages opened as a tab, without the props in the URL", () => {
+    const event = screenView(
+      'https://remocn.dev/embed/fade-in?props={"text":"secret"}#t',
+    );
+    expect(runFilter(CHROME_131_MAC, false, "/embed/fade-in", { event })).toBe(
+      true,
+    );
+    expect(event.payload.properties.__path).toBe(
+      "https://remocn.dev/embed/fade-in",
+    );
+  });
+
+  test("leaves the path of other pages as it is", () => {
+    const event = screenView("https://remocn.dev/docs/x?utm_source=claude");
+    expect(runFilter(CHROME_131_MAC, false, "/docs/x", { event })).toBe(true);
+    expect(event.payload.properties.__path).toBe(
+      "https://remocn.dev/docs/x?utm_source=claude",
+    );
+  });
+
+  test("still drops automated browsers on a standalone /embed/ page", () => {
+    expect(runFilter(GOOGLEBOT, false, "/embed/fade-in")).toBe(false);
+    expect(runFilter(CHROME_131_MAC, true, "/embed/fade-in")).toBe(false);
   });
 });

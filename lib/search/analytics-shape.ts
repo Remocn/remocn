@@ -61,36 +61,70 @@ export function topMatchShape(top: TopMatch): {
   return { top_score: Math.round(top.score * 100) / 100, weak: top.weak };
 }
 
-/** Crawlers and search bots, by User-Agent. Shared by the server events and the browser filter. */
+/**
+ * Crawlers and search bots, by User-Agent. Shared by the server events and the
+ * browser filter. The named ones identify as crawlers without the word "bot":
+ * Google's non-search fetchers, skill and agent-site indexers, Exa, Baidu.
+ */
 export const CRAWLER_UA =
-  /bot\b|bot[/_-]|crawler|crawling|spider|slurp|facebookexternalhit|feedfetcher|mediapartners/i;
+  /bot\b|bot[/_-]|crawler|crawling|spider|slurp|facebookexternalhit|feedfetcher|mediapartners|googleother|google-extended|skillscan|firecrawl|webindexer|agentwebmap|exasearch|exauser|baidu/i;
+
+/**
+ * Fetchers that run because a person asked an assistant to read a page. Their
+ * User-Agent links to the vendor's bot or crawler docs page
+ * (`+https://openai.com/bot`), which `CRAWLER_UA` would otherwise match.
+ */
+const USER_FETCHER_UA =
+  /ChatGPT-User|Claude-User|Perplexity-User|MistralAI-User|OpenCode-User|Google-?Agent|Gemini-Deep-Research/i;
+
+/** A crawler, not a fetch a person set off. This is the `crawler` property of the server events. */
+export function isCrawlerUA(userAgent: string): boolean {
+  return CRAWLER_UA.test(userAgent) && !USER_FETCHER_UA.test(userAgent);
+}
 
 /**
  * Which program is calling, from its User-Agent. A best guess for grouping:
  * clients name themselves freely and most MCP hosts send whatever their HTTP
  * library sends, so `script` and `other` are large buckets by nature.
+ *
+ * AI vendors keep their own name for their crawlers too (GPTBot is
+ * `chatgpt`); `crawler` on the event tells them apart. Every other crawler
+ * is `crawler`, checked before `gemini` because Googlebot and GoogleOther
+ * are Google's but not Gemini.
  */
-const AGENT_CLIENTS: [string, RegExp][] = [
+const NAMED_CLIENTS: [string, RegExp][] = [
   ["codex", /codex/i],
   ["claude", /claude|anthropic/i],
   ["chatgpt", /chatgpt|openai|oai-/i],
   ["cursor", /cursor/i],
   ["vscode", /vscode|visual studio code|copilot/i],
   ["windsurf", /windsurf|codeium/i],
-  ["gemini", /gemini|google/i],
+  ["opencode", /opencode/i],
+  ["cline", /\bcline\b/i],
+  ["aider", /\baider\b/i],
+  ["zed", /\bzed\b/i],
+  ["antigravity", /antigravity/i],
   ["perplexity", /perplexity/i],
   ["mistral", /mistral/i],
+];
+
+const AFTER_CRAWLERS: [string, RegExp][] = [
+  ["gemini", /gemini|google-?agent/i],
   [
     "script",
-    /node|undici|bun\/|deno|python|httpx|aiohttp|go-http|curl|wget|axios|okhttp/i,
+    /node|undici|bun\/|deno|python|httpx|aiohttp|go-http|curl|wget|axios|okhttp|powershell/i,
   ],
   ["browser", /mozilla/i],
 ];
 
 export function classifyAgentClient(userAgent: string): string {
   if (!userAgent.trim()) return "unknown";
+  const named = NAMED_CLIENTS.find(([, pattern]) => pattern.test(userAgent));
+  if (named) return named[0];
+  if (isCrawlerUA(userAgent)) return "crawler";
   return (
-    AGENT_CLIENTS.find(([, pattern]) => pattern.test(userAgent))?.[0] ?? "other"
+    AFTER_CRAWLERS.find(([, pattern]) => pattern.test(userAgent))?.[0] ??
+    "other"
   );
 }
 
