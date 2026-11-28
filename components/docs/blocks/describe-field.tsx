@@ -121,6 +121,29 @@ function useShowAgent(): [boolean, (next: boolean) => void] {
   return [show, change];
 }
 
+const HIDDEN_KEY = "remocn:describe-hidden";
+
+/**
+ * Whether the visitor folded the dock away to see what it covers; kept in
+ * this browser, so it stays folded on the next page too.
+ */
+function useHidden(): [boolean, (next: boolean) => void] {
+  const [hidden, setHidden] = useState(false);
+  useEffect(() => {
+    try {
+      if (localStorage.getItem(HIDDEN_KEY) === "1") setHidden(true);
+    } catch {}
+  }, []);
+  const change = (next: boolean) => {
+    setHidden(next);
+    try {
+      if (next) localStorage.setItem(HIDDEN_KEY, "1");
+      else localStorage.removeItem(HIDDEN_KEY);
+    } catch {}
+  };
+  return [hidden, change];
+}
+
 async function fetchPresets(name: string): Promise<Preset[]> {
   try {
     const response = await fetch(
@@ -244,6 +267,11 @@ export function DescribeField({
   const [showAgent, setShowAgent] = useShowAgent();
   const switchId = useId();
   const [historyOpen, setHistoryOpen] = useState(false);
+  const [hidden, setHidden] = useHidden();
+  // Where focus goes after the dock folds or unfolds: the control that
+  // replaced the one just pressed, so keyboard users don't land on <body>.
+  const moveFocus = useRef(false);
+  const showButton = useRef<HTMLButtonElement>(null);
   const form = useRef<HTMLFormElement>(null);
   const request = useRef(0);
   const submitButton = useRef<HTMLButtonElement>(null);
@@ -254,6 +282,19 @@ export function DescribeField({
   const typed = useTypedExample(!text && !focused && !reducedMotion);
 
   useEffect(() => setMounted(true), []);
+
+  useEffect(() => {
+    if (!moveFocus.current) return;
+    moveFocus.current = false;
+    if (hidden) showButton.current?.focus();
+    else form.current?.querySelector("input")?.focus();
+  }, [hidden]);
+
+  const fold = (next: boolean) => {
+    moveFocus.current = true;
+    setHistoryOpen(false);
+    setHidden(next);
+  };
 
   useEffect(() => {
     let live = true;
@@ -358,6 +399,42 @@ export function DescribeField({
 
   const working = busy || tuning;
 
+  // Folded, the dock is a small pill at the right edge of where it was, so
+  // it no longer covers the preview or the controls under it.
+  const width = box ? Math.min(600, box.width - 32) : 0;
+  const folded = (
+    <div
+      data-agent-hidden=""
+      data-describe-dock=""
+      className="pointer-events-none fixed inset-x-0 bottom-0 z-40"
+    >
+      <Button
+        ref={showButton}
+        onClick={() => fold(false)}
+        style={box ? { left: box.left + width / 2 } : undefined}
+        className={cn(
+          "pointer-events-auto absolute bottom-6 inline-flex h-9 cursor-pointer items-center gap-1.5 rounded-full bg-card pr-3 pl-3.5 text-[13px] font-medium text-muted-foreground shadow-[inset_0_0_0_1px_var(--color-border),0_8px_24px_-8px_rgb(14_16_18/24%)] outline-none transition-colors duration-150 hover:text-foreground focus-visible:ring-2 focus-visible:ring-foreground/40 motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-2 motion-safe:duration-300",
+          box
+            ? "-translate-x-full max-md:right-4 max-md:left-auto! max-md:translate-x-0"
+            : "right-4",
+          "max-md:bottom-[max(12px,env(safe-area-inset-bottom))] max-md:h-11",
+        )}
+      >
+        Describe
+        <svg viewBox="0 0 24 24" aria-hidden="true" className="size-3">
+          <path
+            d="m6 15 6-6 6 6"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      </Button>
+    </div>
+  );
+
   const dock = (
     // The agent bridge sets props directly; this field calls a paid model.
     <div
@@ -370,11 +447,7 @@ export function DescribeField({
         className="absolute inset-x-0 bottom-0 h-40 bg-linear-to-b from-transparent to-background/75"
       />
       <div
-        style={
-          box
-            ? { left: box.left, width: Math.min(600, box.width - 32) }
-            : undefined
-        }
+        style={box ? { left: box.left, width } : undefined}
         className={cn(
           "pointer-events-auto absolute bottom-6 flex flex-col gap-2.5 rounded-2xl bg-card py-2.5 pr-2.5 pl-3.5 text-card-foreground shadow-[inset_0_0_0_1px_var(--color-border),0_18px_50px_-12px_rgb(14_16_18/28%),0_2px_6px_rgb(14_16_18/6%)] motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-3 motion-safe:duration-500",
           box
@@ -457,6 +530,23 @@ export function DescribeField({
                 </svg>
               </CollapsibleTrigger>
             ) : null}
+            <Button
+              aria-label="Hide"
+              title="Hide"
+              onClick={() => fold(true)}
+              className="-my-1 -mr-1 grid size-6 shrink-0 cursor-pointer place-items-center rounded-md text-muted-foreground outline-none transition-colors duration-150 hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-foreground/40 max-md:size-8"
+            >
+              <svg viewBox="0 0 24 24" aria-hidden="true" className="size-3.5">
+                <path
+                  d="m6 9 6 6 6-6"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </Button>
           </div>
         </Collapsible>
         <form
@@ -554,5 +644,6 @@ export function DescribeField({
     </div>
   );
 
-  return mounted ? createPortal(dock, document.body) : null;
+  if (!mounted) return null;
+  return createPortal(hidden ? folded : dock, document.body);
 }
