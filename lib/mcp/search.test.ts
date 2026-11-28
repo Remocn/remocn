@@ -69,6 +69,15 @@ const RECORDS: ComponentRecord[] = [
 ];
 
 describe("searchComponents", () => {
+  it("matches vocalized and unvocalized Arabic queries via the Arabic motion lexicon", () => {
+    const res1 = searchComponents(RECORDS, { query: "كِتَابَة آلة كَاتِبَة" });
+    expect(res1.map((r) => r.name)[0]).toBe("typewriter");
+    const res2 = searchComponents(RECORDS, { query: "عَدَّاد أَرْقَام" });
+    expect(res2.map((r) => r.name)[0]).toBe("rolling-number");
+    const res3 = searchComponents(RECORDS, { query: "انْتِقَال ضَبَابِي" });
+    expect(res3.map((r) => r.name)).toContain("whip-pan");
+  });
+
   it("ranks the exact name first", () => {
     const [first] = searchComponents(RECORDS, { query: "number wheel" });
     expect(first.name).toBe("number-wheel");

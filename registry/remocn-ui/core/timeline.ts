@@ -23,7 +23,26 @@ export function clamp01(t: number): number {
   return Math.max(0, Math.min(1, t));
 }
 
+export function isArabicText(text: string): boolean {
+  return /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]/.test(text || "");
+}
+
+export function splitGraphemes(text: string): string[] {
+  if (!text) return [];
+  if (typeof Intl !== "undefined" && "Segmenter" in Intl) {
+    const seg = new Intl.Segmenter("ar", { granularity: "grapheme" });
+    return Array.from(seg.segment(text), (s) => s.segment);
+  }
+  return Array.from(text);
+}
+
 export function revealedText(full: string, count: number): string {
+  if (!full) return "";
+  if (isArabicText(full) || /[\uD800-\uDBFF]/.test(full)) {
+    const clusters = splitGraphemes(full);
+    const c = Math.max(0, Math.min(clusters.length, Math.floor(count)));
+    return clusters.slice(0, c).join("");
+  }
   const c = Math.max(0, Math.min(full.length, Math.floor(count)));
   return full.slice(0, c);
 }

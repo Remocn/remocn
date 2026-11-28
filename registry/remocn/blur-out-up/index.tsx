@@ -38,6 +38,7 @@ export function BlurOutUp(props: BlurOutUpProps) {
   const tl = useTimeline(blurOutUpTimeline, props, durationInFrames, timing);
 
   const words = text.split(" ");
+  const isRtl = /[\u0600-\u06FF]/.test(text || "");
 
   const enterEasing = Easing.bezier(0.22, 1, 0.36, 1);
   const exitEasing = Easing.bezier(0.64, 0, 0.78, 0);
@@ -59,9 +60,11 @@ export function BlurOutUp(props: BlurOutUpProps) {
           fontSize,
           fontWeight,
           color,
-          letterSpacing: "-0.03em",
-          fontFamily:
-            "var(--font-geist-sans), -apple-system, BlinkMacSystemFont, sans-serif",
+          direction: isRtl ? "rtl" : undefined,
+          letterSpacing: isRtl ? "0em" : "-0.03em",
+          fontFamily: isRtl
+            ? "'Cairo', 'Tajawal', 'Noto Sans Arabic', var(--font-geist-sans), sans-serif"
+            : "var(--font-geist-sans), -apple-system, BlinkMacSystemFont, sans-serif",
         }}
       >
         {words.map((word, i) => {
