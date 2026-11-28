@@ -22,6 +22,12 @@ import {
   MCP_APP_MIME_TYPE,
   PREVIEW_RESOURCE_URI,
 } from "@/lib/mcp/config";
+import {
+  componentPage,
+  formatRow,
+  previewLink,
+  withPreviewLink,
+} from "@/lib/mcp/format";
 import { mcpRequestContext } from "@/lib/mcp/request-context";
 import {
   type ComponentRecord,
@@ -42,7 +48,7 @@ import { previewManifest } from "@/registry/__manifest__";
 
 const SERVER_INFO = { name: "remocn", version: "1.0.0" };
 
-const INSTRUCTIONS = `Remocn is a shadcn registry of Remotion video components. Find components with search_components: describe what the scene should show or say (in any language), or pass a name or keywords. Read one with get_component before writing code against it, and use plan_video to turn a brief into a beat-by-beat storyboard. Install with \`npx shadcn@latest add @remocn/<name>\`. Full index: ${SITE_URL}/llms-components.txt`;
+const INSTRUCTIONS = `Remocn is a shadcn registry of Remotion video components. Find components with search_components: describe what the scene should show or say (in any language), or pass a name or keywords. Read one with get_component before writing code against it, and use plan_video to turn a brief into a beat-by-beat storyboard. When you pick components, show the user their preview links (the "Preview & customize" URLs) so they can watch and tweak each one. Install with \`npx shadcn@latest add @remocn/<name>\`. Full index: ${SITE_URL}/llms-components.txt`;
 
 const MAX_PROPS_JSON = 4000;
 // The endpoint is public and unauthenticated; every text input is bounded so
@@ -79,15 +85,6 @@ function text(body: string, structuredContent?: Record<string, unknown>) {
 
 function errorText(body: string): TextResult {
   return { content: [{ type: "text", text: body }], isError: true };
-}
-
-function lengthLabel(length: ComponentRecord["length"]): string {
-  if (length === undefined) return "—";
-  return typeof length === "number" ? `${length}f` : length;
-}
-
-function htmlDocsUrl(record: ComponentRecord): string {
-  return record.docs.replace(/\.md$/, "");
 }
 
 function callerUserAgent(): string {
@@ -151,23 +148,13 @@ function unknownComponent(input: string): TextResult {
   return errorText(`No Remocn component named "${input}". ${suggestion}`);
 }
 
-function formatRow(r: ComponentRecord): string {
-  const facts = [r.section, r.vibe, lengthLabel(r.length), r.tier]
-    .filter(Boolean)
-    .join(" · ");
-  const lines = [`- \`${r.name}\` — ${r.title} (${facts})`];
-  if (r.useWhen[0]) lines.push(`  Use: ${r.useWhen[0]}`);
-  if (r.avoidWhen[0]) lines.push(`  Avoid: ${r.avoidWhen[0]}`);
-  lines.push(`  Docs: ${r.docs} · Install: \`${r.install}\``);
-  return lines.join("\n");
-}
-
-function compactRow(r: ComponentRecord) {
+function compactRow(r: ComponentRecord, source: string) {
   return {
     name: r.name,
     title: r.title,
     section: r.section,
     docs: r.docs,
+    page: previewLink(r, source),
     vibe: r.vibe ?? null,
     length: r.length ?? null,
     tier: r.tier ?? null,
@@ -232,7 +219,7 @@ export function createRemocnMcpServer(): McpServer {
     {
       title: "Search Remocn components",
       description:
-        "Search Remocn Remotion components by what they do or by the need they serve; matches by meaning as well as by words. Returns name, docs .md URL, vibe, length (frames @30fps; double it in a 60 fps composition), use/avoid notes and install command.",
+        "Search Remocn Remotion components by what they do or by the need they serve; matches by meaning as well as by words. Returns name, docs .md URL, a preview page link to show the user, vibe, length (frames @30fps; double it in a 60 fps composition), use/avoid notes and install command.",
       inputSchema: z.object({
         query: z
           .string()
@@ -283,9 +270,11 @@ export function createRemocnMcpServer(): McpServer {
         );
       }
       const header = `${results.length} Remocn components for "${query}"${filters ? ` (${filters})` : ""}. Lengths are frames of motion @30fps — a floor for the Sequence, add hold on top. Components keep their timing at any frame rate: in a 60 fps composition hand Remotion twice the length.`;
-      return text(`${header}\n\n${results.map(formatRow).join("\n")}`, {
-        results: results.map(compactRow),
-      });
+      const source = callerSource();
+      return text(
+        `${header}\n\n${results.map((r) => formatRow(r, source)).join("\n")}`,
+        { results: results.map((r) => compactRow(r, source)) },
+      );
     },
   );
 
@@ -313,7 +302,14 @@ export function createRemocnMcpServer(): McpServer {
       const depsLine = deps.length
         ? `\n\nRegistry dependencies (installed automatically): ${deps.map((d) => `\`${d}\``).join(", ")}`
         : "";
-      return text(tagAgentLinks(`${markdown}${depsLine}`, callerSource()));
+      const source = callerSource();
+      return text(
+        withPreviewLink(
+          tagAgentLinks(`${markdown}${depsLine}`, source),
+          record,
+          source,
+        ),
+      );
     },
   );
 
@@ -503,7 +499,7 @@ export function createRemocnMcpServer(): McpServer {
       }
       const preview = previewFor(record.name, props);
       const docsPage = agentLink(
-        customizedDocsUrl(htmlDocsUrl(record), record.name, props),
+        customizedDocsUrl(componentPage(record), record.name, props),
         callerSource(),
       );
       if (!preview) {

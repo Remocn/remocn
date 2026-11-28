@@ -72,8 +72,9 @@ export const LEGAL_PARTS: LegalPart[] = [
                 search finds what people look for. When an AI agent or crawler
                 reads the Markdown copy of a page, we record the page and the
                 agent’s user agent string. Links to the site in those Markdown
-                copies and in MCP server answers carry tags that name the AI
-                channel and, for MCP answers, the calling client (for example{" "}
+                copies, in MCP server answers and on component preview pages
+                carry tags that name the AI channel and, for MCP answers, the
+                calling client (for example{" "}
                 <code>utm_source=claude&amp;utm_medium=agent</code>), so a visit
                 from a link in an agent’s answer is counted as one. Browsers
                 that identify as automated or as crawlers are not tracked. We do
@@ -128,8 +129,12 @@ export const LEGAL_PARTS: LegalPart[] = [
             body: (
               <>
                 Component previews shown inside Claude or ChatGPT load pages
-                from <code>remocn.dev/embed</code>. Those pages run no
-                analytics, so the props in their address are not recorded.
+                from <code>remocn.dev/embed</code>. Inside a chat those pages
+                run no analytics. When you open a preview page in a browser tab
+                of its own, for example from a link an agent gave you, we count
+                the visit like any other page view, with the component’s name in
+                the address; the props in the rest of the address are removed
+                before the event is sent, so they are not recorded.
               </>
             ),
           },

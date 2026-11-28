@@ -3,9 +3,9 @@ import "server-only";
 import { OpenPanel } from "@openpanel/sdk";
 import { requestedName } from "@/lib/mcp/search";
 import {
-  CRAWLER_UA,
   classifyAgentClient,
   describeQuery,
+  isCrawlerUA,
   loggedQuery,
   type SearchSurface,
   topMatchShape,
@@ -33,7 +33,7 @@ function openPanel(): OpenPanel | null {
 }
 
 export function isCrawler(userAgent: string): boolean {
-  return CRAWLER_UA.test(userAgent);
+  return isCrawlerUA(userAgent);
 }
 
 export async function trackRegistryInstall(
