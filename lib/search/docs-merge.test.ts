@@ -4,6 +4,7 @@ import {
   type ComponentHit,
   fullTextQuery,
   mergeDocsResults,
+  splitSegmentRows,
 } from "./docs-merge";
 
 const clock: ComponentHit = {
@@ -175,5 +176,77 @@ describe("fullTextQuery", () => {
 
   it("passes through a query made only of function words", () => {
     expect(fullTextQuery("how do i")).toBe("how do i");
+  });
+});
+
+describe("mergeDocsResults with groups", () => {
+  const tabs: ComponentHit = {
+    name: "tabs",
+    title: "Tabs",
+    description: "Tabs switch panels",
+    url: "/docs/ui/tabs",
+    section: "ui",
+  };
+
+  it("puts a heading row above each group and shows a component once", () => {
+    const merged = mergeDocsResults(
+      "clock sweep, tab switcher",
+      [text("/docs/guides/timing#minutes", "five minutes")],
+      [clock, tabs],
+      COMPONENT_URLS,
+      [
+        { query: "clock sweep", hits: [clock] },
+        { query: "tab switcher", hits: [tabs, clock] },
+        { query: "only repeats", hits: [clock] },
+      ],
+    );
+
+    expect(merged.map((r) => [r.id, r.type])).toEqual([
+      ["segment:0", "heading"],
+      ["component:clock-sweep", "page"],
+      ["component:clock-sweep:description", "text"],
+      ["segment:1", "heading"],
+      ["component:tabs", "page"],
+      ["component:tabs:description", "text"],
+      ["/docs/guides/timing#minutes-text", "text"],
+    ]);
+    expect(merged[0]).toMatchObject({
+      content: "clock sweep",
+      url: "/docs/numbers/clock-sweep",
+    });
+  });
+});
+
+describe("splitSegmentRows", () => {
+  it("takes the headings out of the list and keys them by the row below", () => {
+    const rows = [
+      { id: "segment:0", content: "clock sweep" },
+      { id: "component:clock-sweep", content: "Clock Sweep" },
+      { id: "component:clock-sweep:description", content: "…" },
+      { id: "segment:1", content: "tab switcher" },
+      { id: "component:tabs", content: "Tabs" },
+      { id: "/docs/guides/timing", content: "Timing" },
+    ];
+
+    const { items, headings } = splitSegmentRows(rows);
+
+    expect(items.map((r) => r.id)).toEqual([
+      "component:clock-sweep",
+      "component:clock-sweep:description",
+      "component:tabs",
+      "/docs/guides/timing",
+    ]);
+    expect([...headings]).toEqual([
+      ["component:clock-sweep", "clock sweep"],
+      ["component:tabs", "tab switcher"],
+    ]);
+  });
+
+  it("leaves results without groups as they are", () => {
+    const rows = [{ id: "component:tabs", content: "Tabs" }];
+    expect(splitSegmentRows(rows)).toEqual({
+      items: rows,
+      headings: new Map(),
+    });
   });
 });

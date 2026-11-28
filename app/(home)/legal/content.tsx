@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { GITHUB_URL, SUPPORT_EMAIL } from "@/config/site";
 
-export const LAST_UPDATED = "November 18, 2026";
+export const LAST_UPDATED = "November 28, 2026";
 
 export type LegalItem = { title: ReactNode; body: ReactNode };
 
@@ -69,12 +69,14 @@ export const LEGAL_PARTS: LegalPart[] = [
                 which components people actually use. When you use the docs
                 search, we also record what you searched for, how many results
                 came back and which one you opened, so we can tell whether the
-                search finds what people look for. When an AI agent or crawler
-                reads the Markdown copy of a page, we record the page and the
-                agent’s user agent string. Links to the site in those Markdown
-                copies, in MCP server answers and on component preview pages
-                carry tags that name the AI channel and, for MCP answers, the
-                calling client (for example{" "}
+                search finds what people look for. When the search splits a
+                query that asks for several things into groups, we also record
+                how many groups there were and which group the opened result was
+                in. When an AI agent or crawler reads the Markdown copy of a
+                page, we record the page and the agent’s user agent string.
+                Links to the site in those Markdown copies, in MCP server
+                answers and on component preview pages carry tags that name the
+                AI channel and, for MCP answers, the calling client (for example{" "}
                 <code>utm_source=claude&amp;utm_medium=agent</code>), so a visit
                 from a link in an agent’s answer is counted as one. Browsers
                 that identify as automated or as crawlers are not tracked. We do
@@ -122,7 +124,7 @@ export const LEGAL_PARTS: LegalPart[] = [
         items: [
           {
             title: "MCP server.",
-            body: "The server is stateless and has no accounts. Search queries sent to the search tool are recorded, cut to 200 characters, so we can see what agents look for and whether the search finds it. A recorded query is not tied to an account or an IP address; it is stored with the name of the calling client, the catalog components that came back, a score of how closely the best of them fits the query and how long the answer took. Keep confidential details out of search queries. Video briefs and component props are used to build the answer and then discarded. We also count calls to the other tools: which tool ran and which component it asked for. When the requested name matches no component, the name is recorded as sent, reduced to lowercase letters, digits and hyphens and cut to 64 characters, so we can see which components agents expect us to have. The standard access logs described above apply, as for the rest of the site.",
+            body: "The server is stateless and has no accounts. Search queries sent to the search tool are recorded, cut to 200 characters, so we can see what agents look for and whether the search finds it. A recorded query is not tied to an account or an IP address; it is stored with the name of the calling client, the catalog components that came back, a score of how closely the best of them fits the query and how long the answer took. When the search splits a query that asks for several things into parts, we also record how many parts there were and the same score for each part; the text of the parts is not recorded beyond the query itself. Keep confidential details out of search queries. Video briefs and component props are used to build the answer and then discarded. We also count calls to the other tools: which tool ran and which component it asked for. When the requested name matches no component, the name is recorded as sent, reduced to lowercase letters, digits and hyphens and cut to 64 characters, so we can see which components agents expect us to have. The standard access logs described above apply, as for the rest of the site.",
           },
           {
             title: "Previews in chat.",

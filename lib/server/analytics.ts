@@ -8,6 +8,7 @@ import {
   isCrawlerUA,
   loggedQuery,
   type SearchSurface,
+  segmentsShape,
   topMatchShape,
 } from "@/lib/search/analytics-shape";
 import type { TopMatch } from "@/lib/search/hybrid";
@@ -77,6 +78,8 @@ export interface AgentSearch {
   mode?: "hybrid" | "keyword";
   /** How well the first result fits, from \`searchCatalog\`. */
   top?: TopMatch;
+  /** The groups of a query `searchCatalog` split into parts. */
+  segments?: { top?: TopMatch }[];
   latencyMs: number;
   vibe?: string;
   maxLength?: number;
@@ -107,6 +110,7 @@ export function trackAgentSearch(search: AgentSearch): void {
     top_components: search.results.slice(0, 6).join(","),
     ...(search.mode ? { mode: search.mode } : {}),
     ...(search.top ? topMatchShape(search.top) : {}),
+    ...segmentsShape(search.segments),
     latency_ms: Math.round(search.latencyMs),
     ...(search.vibe ? { vibe: search.vibe } : {}),
     ...(search.maxLength !== undefined ? { max_length: search.maxLength } : {}),

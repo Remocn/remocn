@@ -5,6 +5,7 @@ import {
   describeQuery,
   isCrawlerUA,
   loggedQuery,
+  segmentsShape,
   topMatchShape,
 } from "./analytics-shape";
 
@@ -176,6 +177,26 @@ describe("topMatchShape", () => {
     expect(topMatchShape({ score: 0.28734, weak: true })).toEqual({
       top_score: 0.29,
       weak: true,
+    });
+  });
+});
+
+describe("segmentsShape", () => {
+  it("counts a search that was not split as one part", () => {
+    expect(segmentsShape(undefined)).toEqual({ segments: 1 });
+  });
+
+  it("counts the parts, the weak ones, and lists each part's score", () => {
+    expect(
+      segmentsShape([
+        { top: { score: 0.5812, weak: false } },
+        { top: { score: 0.27, weak: true } },
+        {},
+      ]),
+    ).toEqual({
+      segments: 3,
+      weak_segments: 1,
+      segment_scores: "0.58,0.27,",
     });
   });
 });

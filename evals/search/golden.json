@@ -312,5 +312,169 @@
   { "query": "whip pan", "expect": ["whip-pan"], "kind": "keyword" },
   { "query": "stepper", "expect": ["stepper"], "kind": "keyword" },
   { "query": "toggle switch", "expect": ["switch"], "kind": "keyword" },
-  { "query": "button", "expect": ["button"], "kind": "keyword" }
+  { "query": "button", "expect": ["button"], "kind": "keyword" },
+  {
+    "query": "end card with logo website url call to action, lower third name plate, screen recording inside window frame mockup",
+    "source": "agent",
+    "parts": [
+      { "expect": ["cta-collapse-mark", "url-bar-cta"] },
+      { "gap": true, "note": "lower third (P10)" }
+    ],
+    "kind": "brief"
+  },
+  {
+    "query": "Subtle premium keyword emphasis, fine underline drawing, annotation labels on an existing screen recording; preserve readability, no large zoom, no full screen overlay",
+    "source": "agent",
+    "parts": [
+      {
+        "expect": [
+          "inline-highlight",
+          "marker-highlight",
+          "caption-highlight-box"
+        ]
+      },
+      { "expect": ["ink-underline", "caption-underline"] },
+      { "expect": ["ui-callout", "caption-label-maker"] }
+    ],
+    "kind": "brief"
+  },
+  {
+    "query": "gameplay video background with UI overlay, callout arrows, step-by-step guide, word captions for vertical short",
+    "source": "agent",
+    "parts": [
+      { "expect": ["ink-arrow", "ui-callout", "flow-arrow"] },
+      {
+        "expect": [
+          "stepper",
+          "three-steps",
+          "onboarding-stepper-flow",
+          "indent-steps"
+        ]
+      },
+      {
+        "expect": [
+          "caption-active-pop",
+          "caption-word-pop",
+          "caption-bounce-in",
+          "caption-stack"
+        ]
+      }
+    ],
+    "kind": "brief"
+  },
+  {
+    "query": "highlight marker wipe behind already visible multiline Chinese quote text sentence, reference annotation arrow path draw connector callout",
+    "source": "agent",
+    "parts": [
+      { "expect": ["marker-highlight", "caption-marker"] },
+      { "expect": ["ink-arrow", "ui-callout", "flow-arrow"] }
+    ],
+    "kind": "brief"
+  },
+  {
+    "query": "animated connectors glowing data flow path between nodes and two column comparison board",
+    "source": "agent",
+    "parts": [
+      { "expect": ["flow-builder", "node-trail", "sankey-flow"] },
+      {
+        "expect": ["versus-split", "before-after", "spec-sheet", "area-compare"]
+      }
+    ],
+    "kind": "brief"
+  },
+  {
+    "query": "Editorial Motion Graphics minimal deep-black photographic fine grain vignette dark clean matte texture, very faint graph paper engineering drawing blueprint grids calibration corner crop marks ticks f",
+    "source": "agent",
+    "parts": [{ "expect": ["blueprint", "grid-cell"] }],
+    "kind": "brief"
+  },
+  {
+    "query": "playful music lyric caption speech bubble, pixel art typography, title card, end credit outro transitions",
+    "source": "agent",
+    "parts": [
+      { "expect": ["message-bubble", "caption-drop", "caption-bounce-in"] },
+      { "expect": ["title-converge", "feature-headline", "band-open"] }
+    ],
+    "kind": "brief"
+  },
+  {
+    "query": "Line boil hand drawn chalk drawn reveal marker circle textured paper",
+    "source": "agent",
+    "parts": [
+      { "expect": ["line-boil"] },
+      { "expect": ["scribble-circle"] },
+      { "expect": ["paper-wobble"] }
+    ],
+    "kind": "brief"
+  },
+  {
+    "query": "whip pan camera zoom slide transition kinetic headline workflow diagram",
+    "source": "agent",
+    "parts": [
+      { "expect": ["whip-pan"] },
+      { "expect": ["flow-builder", "node-trail"] }
+    ],
+    "kind": "brief"
+  },
+  {
+    "query": "logo reveal, then pricing table, then testimonial quotes",
+    "parts": [
+      {
+        "expect": ["logo-construct", "logo-enter", "ink-bloom", "flood-sting"]
+      },
+      { "expect": ["pricing-reveal", "price-page"] },
+      { "expect": ["testimonial-stack", "quote-hero", "said-who"] }
+    ],
+    "kind": "brief"
+  },
+  {
+    "query": "typing terminal command; confetti when it succeeds; github stars counter",
+    "parts": [
+      { "expect": ["terminal-simulator", "terminal-cursor-zoom"] },
+      { "expect": ["confetti"] },
+      { "expect": ["github-stars"] }
+    ],
+    "kind": "brief"
+  },
+  {
+    "query": "sign our name in glowing neon handwriting, slow drifting shot over dashboard widgets",
+    "parts": [
+      { "expect": ["light-trail-write", "neon-sign"] },
+      { "expect": ["infinite-bento-pan"] }
+    ],
+    "kind": "brief"
+  },
+  {
+    "query": "whip pan / light leak",
+    "parts": [{ "expect": ["whip-pan"] }, { "expect": ["light-leak"] }],
+    "kind": "brief"
+  },
+  {
+    "query": "текст печатается как на машинке, а потом взрываются конфетти",
+    "lang": "ru",
+    "parts": [
+      { "expect": ["typewriter", "caption-typewriter"] },
+      { "expect": ["confetti"] }
+    ],
+    "kind": "brief"
+  },
+  {
+    "query": "заставка с логотипом, затем график роста выручки и в конце призыв скачать",
+    "lang": "ru",
+    "parts": [
+      { "expect": ["logo-construct", "logo-enter", "bounce-logo"] },
+      { "expect": ["animated-bar-chart", "growth-line", "animated-line-chart"] }
+    ],
+    "kind": "brief"
+  },
+  {
+    "query": "打字机标题，然后数字计数器，最后是标志动画",
+    "lang": "zh",
+    "parts": [
+      { "expect": ["typewriter", "caption-typewriter"] },
+      { "expect": ["rolling-number", "counter-reveal", "number-wheel"] },
+      { "expect": ["logo-construct", "logo-enter", "bounce-logo"] }
+    ],
+    "kind": "brief"
+  }
 ]

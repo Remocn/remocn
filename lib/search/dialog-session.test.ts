@@ -126,4 +126,35 @@ describe("SearchDialogSession", () => {
 
     expect(names()).toEqual([]);
   });
+
+  it("counts the groups of a split query and names the group of a pick", () => {
+    const { instance, events } = session();
+    const grouped: SearchRow[] = [
+      { id: "segment:0", url: "/docs/numbers/clock-sweep", type: "heading" },
+      ...clock.slice(0, 2),
+      { id: "segment:1", url: "/docs/ui/tabs", type: "heading" },
+      { id: "component:tabs", url: "/docs/ui/tabs", type: "page" },
+      ...clock.slice(2),
+    ];
+
+    instance.results("clock sweep, tab switcher", grouped);
+    instance.select(grouped[4]);
+
+    expect(events[0][1]).toMatchObject({ segments: 2, component_count: 2 });
+    expect(events[1][1]).toMatchObject({
+      component: "tabs",
+      segment: 2,
+      position: 2,
+    });
+  });
+
+  it("reports a search that was not split as one group and no group for a pick", () => {
+    const { instance, events } = session();
+
+    instance.results("timing", clock);
+    instance.select(clock[3]);
+
+    expect(events[0][1]).toMatchObject({ segments: 1 });
+    expect(events[1][1]).not.toHaveProperty("segment");
+  });
 });
