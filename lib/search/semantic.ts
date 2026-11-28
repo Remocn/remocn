@@ -127,14 +127,23 @@ export async function semanticRankAll(
   const loaded = loadIndex();
   if (!loaded) return null;
 
+  // Past the deadline the answer no longer waits for the vectors, so the
+  // loop stops instead of embedding the rest for nobody.
+  let expired = false;
   const timeout = new Promise<null>((resolve) => {
-    setTimeout(() => resolve(null), EMBED_TIMEOUT_MS).unref();
+    setTimeout(() => {
+      expired = true;
+      resolve(null);
+    }, EMBED_TIMEOUT_MS).unref();
   });
   const vectors = await Promise.race([
     loadEmbedder().then(async (embed) => {
       if (!embed) return null;
       const out: Float32Array[] = [];
-      for (const query of queries) out.push(await embed(QUERY_PREFIX + query));
+      for (const query of queries) {
+        if (expired) return null;
+        out.push(await embed(QUERY_PREFIX + query));
+      }
       return out;
     }),
     timeout,

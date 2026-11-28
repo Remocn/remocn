@@ -144,6 +144,13 @@ const MIN_WEIGHT = 2;
  */
 export const MAX_SEGMENTS = 5;
 
+/**
+ * Parts ranked at most, one embedding each. Joining neighbours can fold a
+ * few parts into one group, so this leaves room above `MAX_SEGMENTS`; past
+ * it, parts are named as omitted without costing a model call.
+ */
+export const MAX_RANKED_PARTS = MAX_SEGMENTS * 2;
+
 function clean(part: string): string {
   return part
     .replace(/^[\s\-–—*>:()[\]"'“”«»]+|^\d+[.)]\s+/u, "")
@@ -313,10 +320,15 @@ export async function searchQuery(
     top: topMatch(query, whole[0], semantic),
   };
   if (!single.top?.weak) return single;
-  const parts = splitQuery(query);
-  if (parts.length < 2) return single;
+  const allParts = splitQuery(query);
+  if (allParts.length < 2) return single;
+  const parts = allParts.slice(0, MAX_RANKED_PARTS);
 
+  // Scores of the two modes are not comparable (`WEAK_BELOW`): a ranking
+  // the model could not finish keeps the whole query's answer rather than
+  // weighing keyword parts against a semantic whole.
   const ranked = semantic ? await rankAll(parts) : null;
+  if (semantic && !ranked) return single;
   const partSemantic = parts.map((_, i) => ranked?.[i] ?? null);
   const groups = mergeSameIntent(
     parts.map((part, i) =>
@@ -334,6 +346,7 @@ export async function searchQuery(
     ranked && joined.length > 0
       ? await rankAll(joined.map((g) => queries[g]))
       : null;
+  if (ranked && joined.length > 0 && !rejoined) return single;
   const semanticOf = (g: number): SemanticHit[] | null =>
     shown[g].length === 1
       ? partSemantic[shown[g][0]]
@@ -352,9 +365,12 @@ export async function searchQuery(
     segments.length;
   if (meanFit - single.top.score < SPLIT_GAIN) return single;
 
-  const omitted = groups
-    .slice(MAX_SEGMENTS)
-    .map((group) => group.map((i) => parts[i]).join(", "));
+  const omitted = [
+    ...groups
+      .slice(MAX_SEGMENTS)
+      .map((group) => group.map((i) => parts[i]).join(", ")),
+    ...allParts.slice(MAX_RANKED_PARTS),
+  ];
   return {
     ...single,
     results: interleave(segments.map((segment) => segment.results)).slice(

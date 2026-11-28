@@ -48,6 +48,8 @@ interface GoldenPart {
   expect?: string[];
   /** The catalog has nothing for this part; its group should read as weak. */
   gap?: boolean;
+  /** Words of the query this part is, to find its group: required with `gap`. */
+  part?: string;
   note?: string;
 }
 
@@ -201,7 +203,10 @@ function scoreParts(
       grouped: best,
       gap: Boolean(part.gap),
       weak: part.gap
-        ? groups.some((g) => g.top?.weak)
+        ? Boolean(
+            groups.find((g) => part.part && g.query.includes(part.part))?.top
+              ?.weak,
+          )
         : Boolean(groups[at]?.top?.weak),
     };
   });

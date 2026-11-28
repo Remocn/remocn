@@ -318,7 +318,11 @@
     "source": "agent",
     "parts": [
       { "expect": ["cta-collapse-mark", "url-bar-cta"] },
-      { "gap": true, "note": "lower third (P10)" }
+      {
+        "gap": true,
+        "part": "lower third name plate",
+        "note": "lower third (P10)"
+      }
     ],
     "kind": "brief"
   },

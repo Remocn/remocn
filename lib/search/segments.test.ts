@@ -3,6 +3,7 @@ import type { ComponentRecord } from "@/lib/mcp/search";
 import { hybridSearch, type SemanticHit } from "./hybrid";
 import {
   contentWeight,
+  MAX_RANKED_PARTS,
   MAX_SEGMENTS,
   mergeSameIntent,
   searchQuery,
@@ -256,6 +257,32 @@ describe("searchQuery", () => {
     const answer = await searchQuery(catalog, parts.join(", "), fakeRankAll);
     expect(answer.segments).toHaveLength(MAX_SEGMENTS);
     expect(answer.omitted).toEqual(parts.slice(MAX_SEGMENTS));
+  });
+
+  it("keeps the whole answer when the model gives out after the whole query", async () => {
+    let calls = 0;
+    const answer = await searchQuery(
+      catalog,
+      "logo reveal, pricing table, testimonial wall",
+      async (queries) => (calls++ === 0 ? fakeRankAll(queries) : null),
+    );
+    expect(answer.mode).toBe("hybrid");
+    expect(answer.segments).toBeUndefined();
+  });
+
+  it("embeds at most MAX_RANKED_PARTS parts and names the rest", async () => {
+    const embedded: number[] = [];
+    const parts = Array.from({ length: 30 }, (_, i) => `pricing card${i}`);
+    const answer = await searchQuery(
+      catalog,
+      ["logo reveal", ...parts].join(", "),
+      async (queries) => {
+        embedded.push(queries.length);
+        return fakeRankAll(queries);
+      },
+    );
+    expect(Math.max(...embedded)).toBeLessThanOrEqual(MAX_RANKED_PARTS);
+    expect(answer.omitted).toContain("pricing card29");
   });
 
   it("keeps a brief whole when its parts fit no better than the whole", async () => {
