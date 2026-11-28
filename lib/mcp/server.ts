@@ -38,8 +38,11 @@ import {
 } from "@/lib/mcp/search";
 import { PREVIEW_WIDGET_HTML } from "@/lib/mcp/widget";
 import { sitePreview } from "@/lib/previews/site-preview";
-import { classifyAgentClient } from "@/lib/search/analytics-shape";
-import { searchCatalog } from "@/lib/search/components";
+import {
+  classifyAgentClient,
+  topMatchShape,
+} from "@/lib/search/analytics-shape";
+import { type SegmentSearch, searchCatalog } from "@/lib/search/components";
 import {
   trackAgentComponentFetch,
   trackAgentSearch,
@@ -48,7 +51,7 @@ import { previewManifest } from "@/registry/__manifest__";
 
 const SERVER_INFO = { name: "remocn", version: "1.0.0" };
 
-const INSTRUCTIONS = `Remocn is a shadcn registry of Remotion video components. Find components with search_components: describe what the scene should show or say (in any language), or pass a name or keywords. Read one with get_component before writing code against it, and use plan_video to turn a brief into a beat-by-beat storyboard. When you pick components, show the user their preview links (the "Preview & customize" URLs) so they can watch and tweak each one. Install with \`npx shadcn@latest add @remocn/<name>\`. Full index: ${SITE_URL}/llms-components.txt`;
+const INSTRUCTIONS = `Remocn is a shadcn registry of Remotion video components. Find components with search_components: describe what the scene should show or say (in any language), or pass a name or keywords. A query that lists several scenes comes back grouped, one group per scene. Read one with get_component before writing code against it, and use plan_video to turn a brief into a beat-by-beat storyboard. When you pick components, show the user their preview links (the "Preview & customize" URLs) so they can watch and tweak each one. Install with \`npx shadcn@latest add @remocn/<name>\`. Full index: ${SITE_URL}/llms-components.txt`;
 
 const MAX_PROPS_JSON = 4000;
 // The endpoint is public and unauthenticated; every text input is bounded so
@@ -57,6 +60,13 @@ const MAX_NAME = 200;
 const MAX_QUERY = 500;
 const MAX_BRIEF = 2000;
 const MAX_SUGGEST_INPUT = 64;
+/**
+ * Results per group when a query is split into scenes. Every group repeats
+ * the full row format, so five scenes of three rows already fill a screen of
+ * the agent's context; `limit` can raise it up to the cap.
+ */
+const SEGMENT_RESULTS = 3;
+const MAX_SEGMENT_RESULTS = 5;
 
 const READ_ONLY = {
   readOnlyHint: true,
@@ -164,6 +174,42 @@ function compactRow(r: ComponentRecord, source: string) {
   };
 }
 
+/**
+ * The answer to a query split into scenes: one section per scene, under the
+ * part of the query it answers. A weak group says so, so the agent does not
+ * pick from it as if it were a match; parts past the cap are named, so a
+ * storyboard longer than one search is not silently cut short.
+ */
+function formatSegments(
+  query: string,
+  filters: string,
+  timing: string,
+  segments: SegmentSearch[],
+  omitted: string[] | undefined,
+  source: string,
+): string {
+  const lines = [
+    `"${query}" asks for ${segments.length + (omitted?.length ?? 0)} things${filters ? ` (${filters})` : ""}; Remocn components grouped by each. ${timing}`,
+  ];
+  segments.forEach((segment, i) => {
+    const fit = segment.top
+      ? segment.top.weak
+        ? ` — weak match (${segment.top.score.toFixed(2)}): the catalog may have nothing close; rephrase this part or build it`
+        : ` — match ${segment.top.score.toFixed(2)}`
+      : "";
+    lines.push("", `## ${i + 1}. ${segment.query}${fit}`);
+    if (segment.results.length === 0) lines.push("No components match.");
+    for (const record of segment.results) lines.push(formatRow(record, source));
+  });
+  if (omitted) {
+    lines.push(
+      "",
+      `Not searched (more than ${segments.length} parts): ${omitted.map((part) => `"${part}"`).join(", ")}. Search them separately, or use plan_video for a storyboard of the whole brief.`,
+    );
+  }
+  return lines.join("\n");
+}
+
 function previewFor(name: string, props?: Record<string, unknown>) {
   const entry = sitePreview(name);
   if (!entry) return undefined;
@@ -219,7 +265,7 @@ export function createRemocnMcpServer(): McpServer {
     {
       title: "Search Remocn components",
       description:
-        "Search Remocn Remotion components by what they do or by the need they serve; matches by meaning as well as by words. Returns name, docs .md URL, a preview page link to show the user, vibe, length (frames @30fps; double it in a 60 fps composition), use/avoid notes and install command.",
+        "Search Remocn Remotion components by what they do or by the need they serve; matches by meaning as well as by words. Returns name, docs .md URL, a preview page link to show the user, vibe, length (frames @30fps; double it in a 60 fps composition), use/avoid notes and install command. A query that lists several scenes or effects (comma-separated, or one after another) is answered in groups, one per scene, each with its own match quality; for a whole video brief, plan_video returns a storyboard.",
       inputSchema: z.object({
         query: z
           .string()
@@ -234,17 +280,26 @@ export function createRemocnMcpServer(): McpServer {
           .positive()
           .optional()
           .describe("Max motion length in frames @30fps"),
-        limit: z.number().int().min(1).max(MAX_LIMIT).optional(),
+        limit: z
+          .number()
+          .int()
+          .min(1)
+          .max(MAX_LIMIT)
+          .optional()
+          .describe(
+            `Results to return; per group (at most ${MAX_SEGMENT_RESULTS}) when the query is split into scenes`,
+          ),
       }),
       annotations: readOnly("Search Remocn components"),
     },
     async ({ query, vibe, maxLength, limit }) => {
       const started = performance.now();
-      const { results, mode, top } = await searchCatalog({
+      const { results, mode, top, segments, omitted } = await searchCatalog({
         query,
         vibe,
         maxLength,
         limit,
+        segmentLimit: Math.min(limit ?? SEGMENT_RESULTS, MAX_SEGMENT_RESULTS),
       });
       trackAgentSearch({
         surface: "mcp",
@@ -253,6 +308,7 @@ export function createRemocnMcpServer(): McpServer {
         results: results.map((r) => r.name),
         mode,
         top,
+        segments,
         latencyMs: performance.now() - started,
         vibe,
         maxLength,
@@ -269,8 +325,23 @@ export function createRemocnMcpServer(): McpServer {
           { results: [] },
         );
       }
-      const header = `${results.length} Remocn components for "${query}"${filters ? ` (${filters})` : ""}. Lengths are frames of motion @30fps — a floor for the Sequence, add hold on top. Components keep their timing at any frame rate: in a 60 fps composition hand Remotion twice the length.`;
+      const timing =
+        "Lengths are frames of motion @30fps — a floor for the Sequence, add hold on top. Components keep their timing at any frame rate: in a 60 fps composition hand Remotion twice the length.";
       const source = callerSource();
+      if (segments) {
+        return text(
+          formatSegments(query, filters, timing, segments, omitted, source),
+          {
+            segments: segments.map((segment) => ({
+              query: segment.query,
+              ...(segment.top ? topMatchShape(segment.top) : {}),
+              results: segment.results.map((r) => compactRow(r, source)),
+            })),
+            ...(omitted ? { omitted } : {}),
+          },
+        );
+      }
+      const header = `${results.length} Remocn components for "${query}"${filters ? ` (${filters})` : ""}. ${timing}`;
       return text(
         `${header}\n\n${results.map((r) => formatRow(r, source)).join("\n")}`,
         { results: results.map((r) => compactRow(r, source)) },

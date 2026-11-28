@@ -133,8 +133,9 @@ export function mergeDocsResults(
   docs: SortedResult[],
   components: ComponentHit[],
   componentUrls: ReadonlySet<string>,
+  groups?: ComponentGroup[],
 ): SortedResult[] {
-  const groups = groupByPage(docs);
+  const pagesByUrl = groupByPage(docs);
   const queryWords = tokenize(query).filter(
     (word) => !FUNCTION_WORDS.has(word),
   );
@@ -142,7 +143,7 @@ export function mergeDocsResults(
 
   const guides: SortedResult[] = [];
   const rest: SortedResult[] = [];
-  for (const [url, group] of groups) {
+  for (const [url, group] of pagesByUrl) {
     if (shown.has(url)) continue;
     if (!componentUrls.has(url) && namesTitle(group, queryWords)) {
       // A long guide matches on dozens of lines; all of them above the
@@ -155,8 +156,8 @@ export function mergeDocsResults(
     } else rest.push(...group);
   }
 
-  const componentRows = components.flatMap((component): SortedResult[] => {
-    const breadcrumbs = groups
+  const componentRow = (component: ComponentHit): SortedResult[] => {
+    const breadcrumbs = pagesByUrl
       .get(component.url)
       ?.find((r) => r.type === "page")?.breadcrumbs ?? [
       sectionLabel(component.section),
@@ -176,7 +177,72 @@ export function mergeDocsResults(
         content: component.description,
       },
     ];
-  });
+  };
+  const componentRows = groups
+    ? groupedRows(groups).flatMap((row) =>
+        "hit" in row ? componentRow(row.hit) : [row],
+      )
+    : components.flatMap(componentRow);
 
   return [...guides, ...componentRows, ...rest];
+}
+
+/** Components that answer one part of a query split into parts. */
+export interface ComponentGroup {
+  /** The part of the query, shown above its components. */
+  query: string;
+  hits: ComponentHit[];
+}
+
+export const SEGMENT_ID = "segment:";
+
+/**
+ * A heading row per group, then its components. A component already shown
+ * under an earlier group is not repeated, and a group left with none is
+ * dropped. The heading is a `heading` row pointing at its first component,
+ * so a client that renders fumadocs results as they come still shows it
+ * sensibly; the docs dialog turns it into a label (`splitSegmentRows`).
+ */
+function groupedRows(
+  groups: ComponentGroup[],
+): (SortedResult | { hit: ComponentHit })[] {
+  const seen = new Set<string>();
+  return groups.flatMap((group, index) => {
+    const hits = group.hits.filter((hit) => !seen.has(hit.url));
+    for (const hit of hits) seen.add(hit.url);
+    if (hits.length === 0) return [];
+    return [
+      {
+        id: `${SEGMENT_ID}${index}`,
+        url: hits[0].url,
+        type: "heading" as const,
+        content: group.query,
+      },
+      ...hits.map((hit) => ({ hit })),
+    ];
+  });
+}
+
+/**
+ * The dialog's view of grouped results: the rows to list, without the group
+ * headings, and each heading's text keyed by the row it stands above. A
+ * heading is a label, not a result, so keyboard navigation and selection
+ * skip it.
+ */
+export function splitSegmentRows<T extends { id: string; content: unknown }>(
+  rows: T[],
+): { items: T[]; headings: Map<string, string> } {
+  const items: T[] = [];
+  const headings = new Map<string, string>();
+  let pending: string | undefined;
+  for (const row of rows) {
+    if (row.id.startsWith(SEGMENT_ID)) {
+      pending = String(row.content);
+      continue;
+    }
+    if (pending !== undefined) headings.set(row.id, pending);
+    pending = undefined;
+    items.push(row);
+  }
+  return { items, headings };
 }

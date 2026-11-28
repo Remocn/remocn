@@ -3,6 +3,7 @@ import {
   loggedQuery,
   type SearchActor,
 } from "@/lib/search/analytics-shape";
+import { SEGMENT_ID } from "@/lib/search/docs-merge";
 
 /**
  * Turns what happens in one opening of the docs search dialog into analytics
@@ -53,6 +54,22 @@ function pages(rows: SearchRow[]): string[] {
   return [...new Set(rows.map((row) => pageOf(row.url)))];
 }
 
+/** Group headings of a query the search split into parts. */
+function segmentCount(rows: SearchRow[]): number {
+  return rows.filter((row) => row.id.startsWith(SEGMENT_ID)).length;
+}
+
+/** 1-based group the row is listed under, or undefined outside any group. */
+function segmentOf(rows: SearchRow[], selected: SearchRow): number | undefined {
+  let group: number | undefined;
+  for (const row of rows) {
+    if (row.id.startsWith(SEGMENT_ID)) group = (group ?? 0) + 1;
+    else if (!row.id.startsWith(COMPONENT_ID)) group = undefined;
+    if (row.id === selected.id) return group;
+  }
+  return undefined;
+}
+
 export class SearchDialogSession {
   private shown: Shown | undefined;
   private timer: ReturnType<typeof setTimeout> | undefined;
@@ -88,11 +105,13 @@ export class SearchDialogSession {
     const component = row.id.startsWith(COMPONENT_ID)
       ? row.id.slice(COMPONENT_ID.length).split(":")[0]
       : undefined;
+    const segment = segmentOf(shown.rows, row);
     this.emit("search_result_selected", {
       ...this.base(shown.query),
       url: pageOf(row.url),
       kind: component ? "component" : "docs",
       ...(component ? { component } : {}),
+      ...(segment !== undefined ? { segment } : {}),
       row_type: row.type,
       position: pages(shown.rows).indexOf(pageOf(row.url)) + 1,
     });
@@ -140,6 +159,7 @@ export class SearchDialogSession {
       result_count: pages(rows).length,
       component_count: componentNames(rows).length,
       has_results: rows.length > 0,
+      segments: Math.max(1, segmentCount(rows)),
     };
   }
 }

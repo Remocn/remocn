@@ -114,21 +114,45 @@ function loadEmbedder(): Promise<Embed | null> {
 export async function semanticRank(
   query: string,
 ): Promise<SemanticHit[] | null> {
+  return (await semanticRankAll([query]))?.[0] ?? null;
+}
+
+/**
+ * `semanticRank` for several queries at once, the parts of one split query:
+ * all of them or none, so the parts of one answer never mix ranking modes.
+ */
+export async function semanticRankAll(
+  queries: string[],
+): Promise<SemanticHit[][] | null> {
   const loaded = loadIndex();
   if (!loaded) return null;
 
+  // Past the deadline the answer no longer waits for the vectors, so the
+  // loop stops instead of embedding the rest for nobody.
+  let expired = false;
   const timeout = new Promise<null>((resolve) => {
-    setTimeout(() => resolve(null), EMBED_TIMEOUT_MS).unref();
+    setTimeout(() => {
+      expired = true;
+      resolve(null);
+    }, EMBED_TIMEOUT_MS).unref();
   });
-  const vector = await Promise.race([
-    loadEmbedder().then((embed) =>
-      embed ? embed(QUERY_PREFIX + query) : null,
-    ),
+  const vectors = await Promise.race([
+    loadEmbedder().then(async (embed) => {
+      if (!embed) return null;
+      const out: Float32Array[] = [];
+      for (const query of queries) {
+        if (expired) return null;
+        out.push(await embed(QUERY_PREFIX + query));
+      }
+      return out;
+    }),
     timeout,
   ]).catch(() => null);
-  if (!vector) return null;
+  if (!vectors) return null;
 
-  return rankByVectors(vector, loaded.vectors, loaded.rows, loaded.dim);
+  return vectors.map((vector) =>
+    rankByVectors(vector, loaded.vectors, loaded.rows, loaded.dim),
+  );
 }
 
 /**

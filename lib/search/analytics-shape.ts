@@ -62,6 +62,29 @@ export function topMatchShape(top: TopMatch): {
 }
 
 /**
+ * How a search split into parts did, part by part, as event properties: how
+ * many parts, how many found nothing close, and each part's score in order.
+ * Still one event per search; a search that was not split counts as one
+ * part, so `segments` is always there to group by.
+ */
+export function segmentsShape(segments: { top?: TopMatch }[] | undefined): {
+  segments: number;
+  weak_segments?: number;
+  segment_scores?: string;
+} {
+  if (!segments) return { segments: 1 };
+  return {
+    segments: segments.length,
+    weak_segments: segments.filter((segment) => segment.top?.weak).length,
+    segment_scores: segments
+      .map((segment) =>
+        segment.top ? topMatchShape(segment.top).top_score : "",
+      )
+      .join(","),
+  };
+}
+
+/**
  * Crawlers and search bots, by User-Agent. Shared by the server events and the
  * browser filter. The named ones identify as crawlers without the word "bot":
  * Google's non-search fetchers, skill and agent-site indexers, Exa, Baidu.
