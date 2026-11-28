@@ -69,7 +69,6 @@ const RECORDS: ComponentRecord[] = [
 ];
 
 describe("searchComponents", () => {
-
   it("matches vocalized and unvocalized Arabic queries via the Arabic motion lexicon", () => {
     const res1 = searchComponents(RECORDS, { query: "كِتَابَة آلة كَاتِبَة" });
     expect(res1.map((r) => r.name)[0]).toBe("typewriter");

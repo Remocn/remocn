@@ -80,37 +80,41 @@ export function installCommand(name: string): string {
   return `npx shadcn@latest add @remocn/${name}`;
 }
 
-const ARABIC_DIACRITICS_RE = /[\u0610-\u061A\u064B-\u065F\u0670\u06D6-\u06ED\u0640]/g;
+const ARABIC_DIACRITICS_RE =
+  /[\u0610-\u061A\u064B-\u065F\u0670\u06D6-\u06ED\u0640]/g;
 const ARABIC_LEXICON: Record<string, string[]> = {
-  "آلة": ["typewriter", "typed"],
-  "الة": ["typewriter", "typed"],
-  "كاتبة": ["typewriter", "caret"],
-  "كتابة": ["typewriter", "handwrite"],
-  "ضبابي": ["blur", "reveal"],
-  "تمويه": ["blur", "focus"],
-  "عداد": ["counter", "rolling", "number"],
-  "أرقام": ["number", "counter", "metric"],
-  "ارقام": ["number", "counter", "metric"],
-  "إحصائيات": ["metric", "counter", "chart"],
-  "احصائيات": ["metric", "counter", "chart"],
-  "انتقال": ["transition", "wipe", "pan"],
-  "مسح": ["wipe", "transition"],
-  "خلفية": ["background", "shader", "gradient"],
-  "تدرج": ["gradient", "shader"],
-  "شعار": ["logo", "brand", "sting"],
-  "مقدمة": ["intro", "teaser", "opening"],
-  "ترجمة": ["caption", "subtitle"],
-  "نصوص": ["text", "typography", "caption"],
-  "زر": ["button", "click"],
-  "حوار": ["dialog", "modal"],
-  "قائمة": ["menu", "dropdown", "accordion"],
-  "مخطط": ["chart", "graph"],
-  "محادثة": ["chat", "message", "claude"],
-  "وكيل": ["agent", "claude", "terminal"],
+  آلة: ["typewriter", "typed"],
+  الة: ["typewriter", "typed"],
+  كاتبة: ["typewriter", "caret"],
+  كتابة: ["typewriter", "handwrite"],
+  ضبابي: ["blur", "reveal"],
+  تمويه: ["blur", "focus"],
+  عداد: ["counter", "rolling", "number"],
+  أرقام: ["number", "counter", "metric"],
+  ارقام: ["number", "counter", "metric"],
+  إحصائيات: ["metric", "counter", "chart"],
+  احصائيات: ["metric", "counter", "chart"],
+  انتقال: ["transition", "wipe", "pan"],
+  مسح: ["wipe", "transition"],
+  خلفية: ["background", "shader", "gradient"],
+  تدرج: ["gradient", "shader"],
+  شعار: ["logo", "brand", "sting"],
+  مقدمة: ["intro", "teaser", "opening"],
+  ترجمة: ["caption", "subtitle"],
+  نصوص: ["text", "typography", "caption"],
+  زر: ["button", "click"],
+  حوار: ["dialog", "modal"],
+  قائمة: ["menu", "dropdown", "accordion"],
+  مخطط: ["chart", "graph"],
+  محادثة: ["chat", "message", "claude"],
+  وكيل: ["agent", "claude", "terminal"],
 };
 
 export function tokenize(text: string): string[] {
-  const cleaned = (text || "").normalize("NFC").replace(ARABIC_DIACRITICS_RE, "").toLowerCase();
+  const cleaned = (text || "")
+    .normalize("NFC")
+    .replace(ARABIC_DIACRITICS_RE, "")
+    .toLowerCase();
   const rawTokens = cleaned
     .split(/[^a-z0-9\u0621-\u064a]+/)
     .filter((t) => t.length > 1 && !STOPWORDS.has(t));
